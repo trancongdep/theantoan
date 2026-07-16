@@ -135,11 +135,15 @@
         }
 
         function generateQRs() {
-            // Chuẩn hóa chính xác đường dẫn khao-sat cho mã QR
-            const baseLink = "https://theantoan.vn/khao-sat/";
-            document.getElementById('linkFree').href = baseLink;
-            document.getElementById('linkFree').innerText = baseLink;
-            qr.makeCode(baseLink);
+            // Thay thế đường dẫn QR bằng domain hosting tĩnh mặc định của Firebase để giấu domain chính
+            const secureLink = "https://theantoan-fea9e.web.app/khao-sat/";
+            
+            // Cập nhật text hiển thị trên bảng điều khiển admin để anh tiện theo dõi
+            document.getElementById('linkFree').href = secureLink;
+            document.getElementById('linkFree').innerText = secureLink;
+            
+            // Tạo mã QR ẩn danh
+            qr.makeCode(secureLink);
         }
     </script>
 </body>
