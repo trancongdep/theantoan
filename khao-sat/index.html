@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Khai Báo Thông Tin & Đánh Giá Khóa Học An Toàn Lao Động</title>
     <meta name="description" content="Cổng tiếp nhận thông tin học viên và khảo sát ý kiến chất lượng khóa huấn luyện an toàn vệ sinh lao động trực tuyến.">
-    <link rel="canonical" href="https://theantoan.vn/khaosat/" />
     
-    <!-- Nhúng Firebase App và Database (Không cần nhúng module Auth ở trang học viên) -->
+    <!-- Chuẩn hóa thẻ canonical theo đúng cấu trúc thư mục khao-sat -->
+    <link rel="canonical" href="https://theantoan.vn/khao-sat/" />
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -53,7 +54,6 @@
             </ol>
         </div>
 
-        <!-- Khối xử lý hiển thị nút hành động thời gian thực -->
         <div id="actionArea">
             <span class="loading-text">Đang đồng bộ dữ liệu lớp học...</span>
         </div>
@@ -64,7 +64,6 @@
     </div>
 
     <script>
-        // Cấu hình tương thích Firebase đồng bộ với hệ thống dữ liệu
         const firebaseConfig = {
             apiKey: "AIzaSyCkBRre5ajocg0EIuOchb6QknsdL6Qq9FA",
             authDomain: "theantoan-fea9e.firebaseapp.com",
@@ -79,16 +78,13 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Lắng nghe sự thay đổi trạng thái liên tục từ cơ sở dữ liệu Firebase
         database.ref('surveyConfig').on('value', (snapshot) => {
             const data = snapshot.val();
             const actionArea = document.getElementById('actionArea');
             
             if (data && data.formUrl) {
-                // Nhúng liên kết đích mở tại tab riêng để tích lũy thời gian chạy ngầm SEO
                 actionArea.innerHTML = `<a href="${data.formUrl}" target="_blank" class="btn-link">BẮT ĐẦU KHAI BÁO &rarr;</a>`;
                 
-                // Kích hoạt chế độ né tránh trợ giảng đối thủ
                 if (data.isSecure === true) {
                     document.getElementById('normalHeader').style.setProperty('display', 'none', 'important');
                     document.getElementById('brandName').innerText = "HỆ THỐNG KHẢO SÁT LỚP HỌC";
