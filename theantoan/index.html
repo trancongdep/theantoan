@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký Khai Báo Thông Tin Học Viên Lớp An Toàn Điện</title>
+    <meta name="description" content="Hệ thống tiếp nhận thông tin và cấp thẻ an toàn điện cho học viên lớp an toàn điện VSIP. Đăng ký thông tin trực tuyến nhanh chóng.">
+    <link rel="canonical" href="https://theantoan.vn/theantoandien.html" />
+    
+    <style>
+        :root {
+            --primary-color: #1a252f;
+            --accent-color: #27ae60;
+            --danger-color: #e74c3c;
+            --text-color: #333;
+            --card-bg: #fff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: var(--text-color); background-color: #f4f6f7; padding: 20px 10px; }
+        
+        .wrapper { max-width: 650px; margin: 0 auto; background: var(--card-bg); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 25px; }
+        h1 { font-size: 22px; text-align: center; color: var(--primary-color); margin-bottom: 20px; text-transform: uppercase; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        
+        /* FORM STYLES */
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #444; }
+        input[type="text"], input[type="tel"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; }
+        input[type="file"] { display: block; margin-top: 5px; }
+        
+        .btn-submit { width: 100%; background-color: var(--accent-color); color: #fff; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.3s ease; margin-top: 10px; }
+        .btn-submit:hover { background-color: #219653; }
+
+        /* PREVIEW CARD STYLES */
+        .result-container { display: none; margin-top: 30px; border-top: 2px dashed #bdc3c7; padding-top: 25px; }
+        .result-title { font-size: 18px; text-align: center; color: var(--accent-color); font-weight: bold; margin-bottom: 15px; }
+        
+        .safety-card { width: 100%; max-width: 450px; margin: 0 auto; border: 3px solid var(--primary-color); border-radius: 6px; background: #fff; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .card-header { background: var(--primary-color); color: #fff; text-align: center; padding: 10px; font-weight: bold; font-size: 14px; line-height: 1.3; }
+        .card-body { display: flex; padding: 15px; gap: 15px; }
+        .card-photo { width: 100px; height: 130px; border: 1px solid #ddd; background: #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+        .card-photo img { width: 100%; height: 100%; object-fit: cover; }
+        .card-info { flex-grow: 1; font-size: 13px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+        .card-info p { margin: 0; line-height: 1.4; color: #2c3e50; }
+        .card-info strong { color: #000; }
+        .card-footer { background: #f8f9fa; text-align: center; padding: 5px; font-size: 11px; color: #7f8c8d; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <h1>Thông Tin Học Viên Lớp An Toàn Điện</h1>
+        
+        <!-- Form nhập dữ liệu đầu vào -->
+        <form id="registrationForm" onsubmit="handleRegistration(event)">
+            <div class="form-group">
+                <label for="fullName">Họ và tên học viên <span style="color: var(--danger-color);">*</span></label>
+                <input type="text" id="fullName" required placeholder="Ví dụ: Nguyễn Văn A">
+            </div>
+            
+            <div class="form-group">
+                <label for="company">Cơ quan / Đơn vị công tác <span style="color: var(--danger-color);">*</span></label>
+                <input type="text" id="company" required placeholder="Ví dụ: Công ty Điện lực...">
+            </div>
+            
+            <div class="form-group">
+                <label for="safetyLevel">Xếp loại bậc an toàn điện <span style="color: var(--danger-color);">*</span></label>
+                <select id="safetyLevel" required>
+                    <option value="">-- Chọn bậc an toàn --</option>
+                    <option value="Bậc 1/5">Bậc 1/5</option>
+                    <option value="Bậc 2/5">Bậc 2/5</option>
+                    <option value="Bậc 3/5">Bậc 3/5</option>
+                    <option value="Bậc 4/5">Bậc 4/5</option>
+                    <option value="Bậc 5/5">Bậc 5/5</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="phoneNumber">Số điện thoại liên hệ <span style="color: var(--danger-color);">*</span></label>
+                <input type="tel" id="phoneNumber" required placeholder="Ví dụ: 0963xxxxxx">
+            </div>
+
+            <div class="form-group">
+                <label for="avatar">Tải lên ảnh thẻ (Tỷ lệ 3x4 hoặc ảnh chân dung) <span style="color: var(--danger-color);">*</span></label>
+                <input type="file" id="avatar" accept="image/*" required>
+            </div>
+
+            <button type="submit" class="btn-submit">ĐĂNG KÝ HOÀN THÀNH</button>
+        </form>
+
+        <!-- Khu vực hiển thị kết quả (Thẻ An toàn Điện trực quan) -->
+        <div id="resultContainer" class="result-container">
+            <div class="result-title">✓ Đăng Ký Thông Tin Thành Công!</div>
+            
+            <div class="safety-card">
+                <div class="card-header">
+                    THẺ CHỨNG NHẬN HUẤN LUYỆN KHÓA AN TOÀN ĐIỆN
+                </div>
+                <div class="card-body">
+                    <div class="card-photo" id="photoPreview">
+                        <span style="font-size: 11px; color: #95a5a6; text-align: center; padding: 5px;">Chưa có ảnh</span>
+                    </div>
+                    <div class="card-info">
+                        <p>Họ tên: <strong id="lblPreviewName">...</strong></p>
+                        <p>Đơn vị: <strong id="lblPreviewCompany">...</strong></p>
+                        <p>Nội dung: <strong>Huấn luyện An toàn điện định kỳ</strong></p>
+                        <p>Xếp loại: <strong id="lblPreviewLevel" style="color: var(--danger-color);">...</strong></p>
+                        <p>SĐT: <strong id="lblPreviewPhone">...</strong></p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    Hệ thống xác thực thông tin điện tử &copy; 2026 theantoan.vn
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleRegistration(event) {
+            event.preventDefault(); // Ngăn chặn tải lại trang mặc định của form
+
+            // Lấy dữ liệu từ các trường input
+            const name = document.getElementById('fullName').value;
+            const company = document.getElementById('company').value;
+            const level = document.getElementById('safetyLevel').value;
+            const phone = document.getElementById('phoneNumber').value;
+            const avatarInput = document.getElementById('avatar');
+
+            // Cập nhật text vào Thẻ hiển thị kết quả
+            document.getElementById('lblPreviewName').innerText = name;
+            document.getElementById('lblPreviewCompany').innerText = company;
+            document.getElementById('lblPreviewLevel').innerText = level;
+            document.getElementById('lblPreviewPhone').innerText = phone;
+
+            // Xử lý đọc file hình ảnh bằng FileReader API
+            const file = avatarInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const photoPreview = document.getElementById('photoPreview');
+                    photoPreview.innerHTML = `<img src="${e.target.result}" alt="Ảnh thẻ học viên ${name}">`;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // Hiển thị khối kết quả
+            document.getElementById('resultContainer').style.display = 'block';
+            
+            // Tự động cuộn màn hình xuống vùng hiển thị kết quả để tối ưu UI người dùng
+            document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+
+</body>
+</html>
