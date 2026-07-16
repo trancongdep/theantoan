@@ -70,12 +70,12 @@
         <h2>Mã QR Tra Cứu Lớp Học</h2>
         <div id="qrcode"></div>
         <div class="qr-links">
-            <p>Link hệ thống: <a id="linkFree" href="#" target="_blank">https://theantoan.vn/khaosat</a></p>
+            <p>Link hệ thống: <a id="linkFree" href="#" target="_blank">https://theantoan.vn/khao-sat</a></p>
         </div>
     </div>
 
     <script>
-        // Cấu hình Firebase chính thức của bạn
+        // Cấu hình Firebase chính thức của anh Đẹp
         const firebaseConfig = {
             apiKey: "AIzaSyCkBRre5ajocg0EIuOchb6QknsdL6Qq9FA",
             authDomain: "theantoan-fea9e.firebaseapp.com",
@@ -87,13 +87,11 @@
             measurementId: "G-G5R89QH44C"
         };
         
-        // Khởi tạo Firebase ứng dụng
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const database = firebase.database();
         let qr = new QRCode(document.getElementById("qrcode"), { width: 180, height: 180 });
 
-        // Xử lý logic đăng nhập tài khoản admin
         function loginAdmin() {
             const email = document.getElementById('adminEmail').value;
             const pass = document.getElementById('adminPassword').value;
@@ -110,7 +108,6 @@
                 });
         }
 
-        // Đọc cấu hình thực tế từ Realtime Database
         function loadCurrentConfig() {
             database.ref('surveyConfig').once('value', (snapshot) => {
                 const data = snapshot.val();
@@ -122,7 +119,6 @@
             });
         }
 
-        // Đẩy dữ liệu cấu hình mới lên cơ sở dữ liệu
         function updateConfig() {
             const url = document.getElementById('ggFormUrl').value;
             const secure = document.getElementById('secureMode').checked;
@@ -138,9 +134,9 @@
             });
         }
 
-        // Khởi xuất mã QR tĩnh tham chiếu cố định
         function generateQRs() {
-            const baseLink = "https://theantoan.vn/khaosat/";
+            // Chuẩn hóa chính xác đường dẫn khao-sat cho mã QR
+            const baseLink = "https://theantoan.vn/khao-sat/";
             document.getElementById('linkFree').href = baseLink;
             document.getElementById('linkFree').innerText = baseLink;
             qr.makeCode(baseLink);
