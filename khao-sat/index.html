@@ -7,6 +7,7 @@
     <meta name="description" content="Cổng tiếp nhận thông tin học viên và khảo sát ý kiến chất lượng khóa huấn luyện an toàn vệ sinh lao động trực tuyến.">
     <link rel="canonical" href="https://theantoan.vn/khaosat/" />
     
+    <!-- Nhúng Firebase App và Database (Không cần nhúng module Auth ở trang học viên) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -26,13 +27,14 @@
         .instructions ol { padding-left: 20px; }
         .instructions li { margin-bottom: 6px; line-height: 1.4; }
         
-        .btn-link { display: block; width: 100%; background-color: var(--success); color: #fff; text-decoration: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 5px; text-align: center; }
+        .btn-link { display: block; width: 100%; background-color: var(--success); color: #fff; text-decoration: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 5px; text-align: center; box-shadow: 0 3px 6px rgba(39, 174, 96, 0.2); }
         .loading-text { font-size: 15px; color: #7f8c8d; font-weight: bold; }
         footer { margin-top: 25px; font-size: 12px; color: #95a5a6; border-top: 1px solid #eee; padding-top: 15px; }
     </style>
 </head>
 <body>
 
+    <!-- Khối điều hướng mặc định -->
     <div id="normalHeader">
         <a href="https://theantoan.vn/">&larr; Về Trang Chủ</a>
         <a href="https://theantoan.vn/huan-luyen-an-toan/">Dịch vụ huấn luyện</a>
@@ -45,14 +47,15 @@
         <div class="instructions">
             <h2>Hướng dẫn thực hiện:</h2>
             <ol>
-                <li>Bấm vào nút <strong>"Bắt đầu khai báo"</strong> màu xanh phía dưới để chuyển sang hệ thống Google Form chính thức.</li>
-                <li>Điền đầy đủ các thông tin cá nhân bắt buộc (Họ tên, Đơn vị, Lớp học)[cite: 1].</li>
-                <li>Tiến hành trả lời các câu hỏi đánh giá chất lượng và bấm <strong>"Gửi"</strong> để hoàn thành.</li>
+                <li>Bấm vào nút <strong>"Bắt đầu khai báo"</strong> màu xanh phía dưới để chuyển hướng sang biểu mẫu của lớp học[cite: 1].</li>
+                <li>Hoàn thành đầy đủ các thông tin cá nhân bắt buộc yêu cầu[cite: 1].</li>
+                <li>Trả lời các tiêu chí đánh giá chất lượng giảng dạy và nhấn gửi.</li>
             </ol>
         </div>
 
+        <!-- Khối xử lý hiển thị nút hành động thời gian thực -->
         <div id="actionArea">
-            <span class="loading-text">Đang kiểm tra dữ liệu lớp học...</span>
+            <span class="loading-text">Đang đồng bộ dữ liệu lớp học...</span>
         </div>
 
         <footer id="footerText">
@@ -61,30 +64,31 @@
     </div>
 
     <script>
-        // Khớp thông số Firebase của bạn giống hệt file admin.html
+        // Cấu hình tương thích Firebase đồng bộ với hệ thống dữ liệu
         const firebaseConfig = {
-            apiKey: "AIzaSyA...",
-            authDomain: "deptcgvatvsld.firebaseapp.com",
-            databaseURL: "https://deptcgvatvsld-default-rtdb.firebaseio.com",
-            projectId: "deptcgvatvsld",
-            storageBucket: "deptcgvatvsld.appspot.com",
-            messagingSenderId: "953150692199",
-            appId: "1:953150692199:web:..."
+            apiKey: "AIzaSyCkBRre5ajocg0EIuOchb6QknsdL6Qq9FA",
+            authDomain: "theantoan-fea9e.firebaseapp.com",
+            databaseURL: "https://theantoan-fea9e-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "theantoan-fea9e",
+            storageBucket: "theantoan-fea9e.firebasestorage.app",
+            messagingSenderId: "161371447668",
+            appId: "1:161371447668:web:3f3c2f9c0b967ace91cc21",
+            measurementId: "G-G5R89QH44C"
         };
         
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Lắng nghe dữ liệu thời gian thực được cấu hình từ trang Admin
+        // Lắng nghe sự thay đổi trạng thái liên tục từ cơ sở dữ liệu Firebase
         database.ref('surveyConfig').on('value', (snapshot) => {
             const data = snapshot.val();
             const actionArea = document.getElementById('actionArea');
             
             if (data && data.formUrl) {
-                // Nhúng link Google Form động lấy từ Firebase
+                // Nhúng liên kết đích mở tại tab riêng để tích lũy thời gian chạy ngầm SEO
                 actionArea.innerHTML = `<a href="${data.formUrl}" target="_blank" class="btn-link">BẮT ĐẦU KHAI BÁO &rarr;</a>`;
                 
-                // Kích hoạt cơ chế né trợ giảng nếu Admin bật
+                // Kích hoạt chế độ né tránh trợ giảng đối thủ
                 if (data.isSecure === true) {
                     document.getElementById('normalHeader').style.setProperty('display', 'none', 'important');
                     document.getElementById('brandName').innerText = "HỆ THỐNG KHẢO SÁT LỚP HỌC";
@@ -95,7 +99,7 @@
                     document.getElementById('footerText').innerText = "Hệ thống cổng trung gian điều hướng dữ liệu điện tử \u00A9 2026 theantoan.vn";
                 }
             } else {
-                actionArea.innerHTML = `<span class="loading-text" style="color:red;">Lớp học hiện tại chưa được giảng viên mở form cấu hình!</span>`;
+                actionArea.innerHTML = `<span class="loading-text" style="color:red;">Lớp học hiện tại chưa được giảng viên mở cấu hình link biểu mẫu!</span>`;
             }
         });
     </script>
