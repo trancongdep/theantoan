@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Điều Khiển Giảng Viên - theantoan.vn</title>
+    <!-- Nhúng thư viện Firebase SDK chính thức -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- Nhúng thư viện tạo mã QR tự động -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root { --primary: #1a252f; --accent: #27ae60; --danger: #e74c3c; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f4f6f7; color: #333; padding: 20px; }
+        .box { max-width: 600px; margin: 40px auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1, h2 { text-align: center; margin-bottom: 20px; color: var(--primary); text-transform: uppercase; font-size: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: #fff; font-size: 15px; margin-top: 10px; }
+        .btn-primary { background: var(--primary); }
+        .btn-success { background: var(--accent); }
+        .toggle-area { display: flex; align-items: center; gap: 10px; margin: 15px 0; background: #fdfefe; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; }
+        #adminPanel { display: none; }
+        #qrcode { margin: 20px auto; display: flex; justify-content: center; }
+        .qr-links { text-align: center; margin-top: 10px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <!-- KHỐI 1: FORM ĐĂNG NHẬP BẢO MẬT -->
+    <div id="loginPanel" class="box">
+        <h1>Đăng Nhập Quản Trị Hệ Thống</h1>
+        <div class="form-group">
+            <label>Email quản trị</label>
+            <input type="text" id="adminEmail" placeholder="admin@theantoan.vn">
+        </div>
+        <div class="form-group">
+            <label>Mật khẩu</label>
+            <input type="password" id="adminPassword" placeholder="••••••••">
+        </div>
+        <button class="btn btn-primary" onclick="loginAdmin()">ĐĂNG NHẬP HỆ THỐNG</button>
+    </div>
+
+    <!-- KHỐI 2: BẢNG ĐIỀU KHIỂN SAU KHI ĐĂNG NHẬP THÀNH CÔNG -->
+    <div id="adminPanel" class="box">
+        <h2>Cấu Hình Biểu Mẫu Khảo Sát</h2>
+        
+        <div class="form-group">
+            <label>Đường dẫn Google Form hiện tại</label>
+            <input type="text" id="ggFormUrl" placeholder="https://docs.google.com/forms/...[cite: 1]">
+        </div>
+
+        <div class="toggle-area">
+            <input type="checkbox" id="secureMode" style="width: 20px; height: 20px; cursor: pointer;">
+            <label for="secureMode" style="margin-bottom: 0; cursor: pointer; color: var(--danger);">
+                Kích hoạt chế độ bảo mật (Có trợ giảng của đối thủ đi cùng)
+            </label>
+        </div>
+
+        <button class="btn btn-success" onclick="updateConfig()">CẬP NHẬT CẤU HÌNH HỆ THỐNG</button>
+        
+        <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+        
+        <h2>Mã QR Tra Cứu Lớp Học</h2>
+        <div id="qrcode"></div>
+        <div class="qr-links">
+            <p>Link quét gốc: <a id="linkFree" href="#" target="_blank">theantoan.vn/khaosat</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Bắt buộc thay thế thông số cấu hình Firebase thực tế của bạn tại đây
+        const firebaseConfig = {
+            apiKey: "AIzaSyA...",
+            authDomain: "deptcgvatvsld.firebaseapp.com",
+            databaseURL: "https://deptcgvatvsld-default-rtdb.firebaseio.com",
+            projectId: "deptcgvatvsld",
+            storageBucket: "deptcgvatvsld.appspot.com",
+            messagingSenderId: "953150692199",
+            appId: "1:953150692199:web:..."
+        };
+        
+        // Khởi tạo Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        let qr = new QRCode(document.getElementById("qrcode"), { width: 180, height: 180 });
+
+        // Logic xử lý Đăng nhập quyền Admin
+        function loginAdmin() {
+            const email = document.getElementById('adminEmail').value;
+            const pass = document.getElementById('adminPassword').value;
+
+            auth.signInWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    document.getElementById('loginPanel').style.display = 'none';
+                    document.getElementById('adminPanel').style.display = 'block';
+                    loadCurrentConfig();
+                })
+                .catch((error) => {
+                    alert("Tài khoản hoặc mật khẩu quản trị không chính xác!");
+                });
+        }
+
+        // Tải cấu hình dữ liệu thời gian thực hiện tại từ Firebase
+        function loadCurrentConfig() {
+            database.ref('surveyConfig').once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    document.getElementById('ggFormUrl').value = data.formUrl || '';
+                    document.getElementById('secureMode').checked = data.isSecure || false;
+                }
+                generateQRs();
+            });
+        }
+
+        // Cập nhật thay đổi cấu hình lên cơ sở dữ liệu Firebase
+        function updateConfig() {
+            const url = document.getElementById('ggFormUrl').value;
+            const secure = document.getElementById('secureMode').checked;
+
+            database.ref('surveyConfig').set({
+                formUrl: url,
+                isSecure: secure
+            }).then(() => {
+                alert("Hệ thống đã cập nhật dữ liệu thành công!");
+                generateQRs();
+            }).catch((err) => {
+                alert("Lỗi cập nhật: " + err.message);
+            });
+        }
+
+        // Tạo mã QR động tham chiếu trực tiếp trang trung gian
+        function generateQRs() {
+            const baseLink = "https://theantoan.vn/khao-sat/";
+            document.getElementById('linkFree').href = baseLink;
+            document.getElementById('linkFree').innerText = baseLink;
+            qr.makeCode(baseLink);
+        }
+    </script>
+</body>
+</html>
