@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Audit Tủ Điện De Heus</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 15px; color: #333; }
+        .container { max-width: 550px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { color: #0056b3; text-align: center; font-size: 20px; margin-top: 10px; }
+        
+        /* Navigation Tabs */
+        .tab-nav { display: flex; border-bottom: 2px solid #0056b3; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: #e9ecef; cursor: pointer; font-weight: bold; font-size: 14px; color: #555; }
+        .tab-btn.active { background: #0056b3; color: #fff; }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        select, input, button { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; }
+        button { background: #0056b3; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #004494; }
+        .btn-admin { background: #27ae60; }
+        .btn-admin:hover { background: #1e8449; }
+        
+        .hidden { display: none; }
+        .result-box { margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 4px; }
+        .alert-red { color: #d9534f; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- MENU CHUYỂN TÁC VỤ AUDIT / ADMIN -->
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('auditTab')">KIỂM TRA TỦ ĐIỆN</button>
+        <button class="tab-btn" onclick="switchTab('adminTab')">QUẢN TRỊ (ADMIN)</button>
+    </div>
+
+    <!-- TAB 1: GIAO DIỆN KIỂM TRA CHO KỸ THUẬT VIÊN -->
+    <div id="auditTab">
+        <h2>Audit Tủ Điện De Heus</h2>
+        
+        <div class="form-group">
+            <label for="panelSelect">Chọn Mã Tủ Điện:</label>
+            <select id="panelSelect" onchange="loadPanelData()">
+                <option value="">-- Chọn tủ --</option>
+                <option value="DB-10">Tủ DB-10</option>
+                <option value="MSB-F1A">Tủ MSB-F1A</option>
+            </select>
+        </div>
+
+        <div id="panelDetails" class="hidden">
+            <div class="form-group">
+                <p><strong>Khu vực:</strong> <span id="txtArea"></span></p>
+                <p><strong>Mã bản vẽ:</strong> <span id="txtDwgCode"></span></p>
+                <p><strong>Bản vẽ kỹ thuật:</strong> <a id="linkPdf" href="#" target="_blank">Xem Bản Vẽ PDF</a></p>
+            </div>
+            
+            <div class="form-group">
+                <label for="cameraInput">Chụp ảnh thực tế tủ điện:</label>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="previewAndUploadImage(event)">
+            </div>
+            
+            <div id="loading" class="hidden" style="text-align: center; color: #0056b3; font-weight: bold;">Đang xử lý đối chiếu thiết bị...</div>
+        </div>
+
+        <div id="resultSection" class="hidden result-box">
+            <h3>Kết quả Đối chiếu</h3>
+            <p><strong>Trạng thái:</strong> <span id="txtStatus" class="alert-red"></span></p>
+            <p><strong>Phát hiện lệch:</strong> <span id="txtDiscrepancy"></span></p>
+            <p><a id="linkImage" href="#" target="_blank">Xem ảnh thực tế trên Drive</a></p>
+        </div>
+    </div>
+
+    <!-- TAB 2: TRANG ADMIN CẬP NHẬT DỮ LIỆU TỦ & UPLOAD BẢN VẼ -->
+    <div id="adminTab" class="hidden">
+        <h2 style="color: #27ae60;">Cập Nhật Dữ Liệu Tủ Điện Gốc</h2>
+        
+        <div class="form-group">
+            <label for="adminPanelId">Mã Tủ Điện (Viết liền không dấu):</label>
+            <input type="text" id="adminPanelId" placeholder="Ví dụ: DB-10, MCC-02">
+        </div>
+
+        <div class="form-group">
+            <label for="adminKhuVuc">Khu Vực Tác Nghiệp:</label>
+            <input type="text" id="adminKhuVuc" placeholder="Ví dụ: Nhà máy De Heus - Khu nghiền">
+        </div>
+
+        <div class="form-group">
+            <label for="adminMaBanVe">Mã Bản Vẽ Kỹ Thuật:</label>
+            <input type="text" id="adminMaBanVe" placeholder="Ví dụ: DWG-MCC02-2026">
+        </div>
+
+        <div class="form-group">
+            <label for="adminPdfFile">Tải lên file bản vẽ PDF mới (Google Drive):</label>
+            <input type="file" id="adminPdfFile" accept="application/pdf">
+        </div>
+
+        <button class="btn-admin" onclick="submitAdminUpdate()">LƯU VÀ CẬP NHẬT DỮ LIỆU GỐC</button>
+        <div id="adminLoading" class="hidden" style="text-align: center; color: #27ae60; font-weight: bold; margin-top: 10px;">Đang upload bản vẽ và ghi nhận cơ sở dữ liệu...</div>
+    </div>
+</div>
+
+<script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyps0gf596AoYEig2JdfmTeeda8uotx9iv9OwZYq99NOOqp0SQnXcDrYSqEXNTpn9F3/exec";
+
+    // Hàm chuyển đổi giữa trang Audit và trang Admin
+    function switchTab(tabId) {
+        document.getElementById("auditTab").classList.add("hidden");
+        document.getElementById("adminTab").classList.add("hidden");
+        document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+        
+        document.getElementById(tabId).classList.remove("hidden");
+        event.currentTarget.classList.add("active");
+    }
+
+    // Tải dữ liệu tủ từ Google Sheet
+    function loadPanelData() {
+        const panelId = document.getElementById("panelSelect").value;
+        if (!panelId) {
+            document.getElementById("panelDetails").classList.add("hidden");
+            return;
+        }
+
+        fetch(`${GAS_URL}?action=getPanelData&id=${panelId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    document.getElementById("txtArea").innerText = data.panel.khuVuc;
+                    document.getElementById("txtDwgCode").innerText = data.panel.maBanVe || "Chưa có mã";
+                    document.getElementById("linkPdf").href = data.panel.linkPdf || "#";
+                    document.getElementById("panelDetails").classList.remove("hidden");
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error("Lỗi kết nối:", error));
+    }
+
+    // Chụp và tải ảnh đối chiếu thiết bị
+    function previewAndUploadImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64Image = e.target.result;
+            const panelId = document.getElementById("panelSelect").value;
+            
+            document.getElementById("loading").classList.remove("hidden");
+
+            fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "verifyPanel",
+                    panelId: panelId,
+                    imagebase64: base64Image,
+                    technician: "KTV_NguyenVanA"
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("loading").classList.add("hidden");
+                if (data.status === "success") {
+                    document.getElementById("txtStatus").innerText = data.safetyStatus;
+                    document.getElementById("txtDiscrepancy").innerText = data.discrepancy;
+                    document.getElementById("linkImage").href = data.imageUrl;
+                    document.getElementById("resultSection").classList.remove("hidden");
+                } else {
+                    alert("Lỗi xử lý: " + data.message);
+                }
+            })
+            .catch(error => {
+                document.getElementById("loading").classList.add("hidden");
+                console.error("Lỗi:", error);
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Admin cập nhật thông tin tủ và upload file PDF bản vẽ
+    function submitAdminUpdate() {
+        const panelId = document.getElementById("adminPanelId").value.trim();
+        const khuVuc = document.getElementById("adminKhuVuc").value.trim();
+        const maBanVe = document.getElementById("adminMaBanVe").value.trim();
+        const pdfFile = document.getElementById("adminPdfFile").files[0];
+
+        if (!panelId || !khuVuc) {
+            alert("Vui lòng điền tối thiểu Mã Tủ Điện và Khu Vực!");
+            return;
+        }
+
+        document.getElementById("adminLoading").classList.remove("hidden");
+
+        const payload = {
+            action: "adminUpdatePanel",
+            panelId: panelId,
+            khuVuc: khuVuc,
+            maBanVe: maBanVe,
+            pdfBase64: ""
+        };
+
+        if (pdfFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                payload.pdfBase64 = e.target.result;
+                sendAdminData(payload);
+            };
+            reader.readAsDataURL(pdfFile);
+        } else {
+            sendAdminData(payload);
+        }
+    }
+
+    function sendAdminData(payload) {
+        fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("adminLoading").classList.add("hidden");
+            if (data.status === "success") {
+                alert(data.message);
+                // Thêm lựa chọn vào ô select box ở màn hình kiểm tra
+                const select = document.getElementById("panelSelect");
+                const option = document.createElement("option");
+                option.value = payload.panelId.toUpperCase();
+                option.text = "Tủ " + payload.panelId.toUpperCase();
+                select.add(option);
+            } else {
+                alert("Lỗi cập nhật: " + data.message);
+            }
+        })
+        .catch(err => {
+            document.getElementById("adminLoading").classList.add("hidden");
+            console.error("Lỗi admin:", err);
+        });
+    }
+</script>
+
+</body>
+</html>
