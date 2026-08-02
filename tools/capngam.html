@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Công Cụ Tính Toán & Lựa Chọn Tiết Diện Cáp Ngầm</title>
     <meta name="description" content="Phần mềm tính toán lựa chọn tiết diện cáp ngầm trung thế và cao thế theo QCVN 26:2025/BCT, TCVN 5935-2 / IEC 60502-2.">
-    <!-- Font Awesome & Chart/PDF Libraries -->
+    <!-- Font Awesome & HTML2PDF Libraries -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -19,6 +19,8 @@
             --border-color: #dcdfe6;
             --success-color: #27ae60;
             --danger-color: #c0392b;
+            --warning-bg: #fff9e6;
+            --warning-border: #f1c40f;
         }
 
         * {
@@ -104,11 +106,6 @@
             font-size: 0.9rem;
         }
 
-        .form-group label small {
-            font-weight: normal;
-            color: #7f8c8d;
-        }
-
         .input-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -157,7 +154,6 @@
             background: #d35400;
         }
 
-        /* Result Styles */
         .result-box {
             background: #eef6ff;
             border-left: 5px solid var(--primary-color);
@@ -169,6 +165,7 @@
         .result-item {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             padding: 8px 0;
             border-bottom: 1px dashed #d0e1f9;
             font-size: 0.95rem;
@@ -197,6 +194,31 @@
 
         .badge-pass { background-color: var(--success-color); }
         .badge-fail { background-color: var(--danger-color); }
+
+        .solution-box {
+            background-color: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .solution-box h4 {
+            color: #d35400;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .solution-box ul {
+            padding-left: 20px;
+            font-size: 0.9rem;
+        }
+
+        .solution-box li {
+            margin-bottom: 5px;
+        }
 
         .spec-table {
             width: 100%;
@@ -240,13 +262,13 @@
                 <div class="card-title"><i class="fa-solid fa-sliders"></i> 1. Thông Số Đầu Vào Tải & Lưới Điện</div>
                 
                 <div class="form-group">
-                    <label>Cấp điện áp danh định ($U$):</label>
-                    <select id="voltage" onchange="updateXLPEThickness()">
+                    <label>Cấp điện áp danh định (U):</label>
+                    <select id="voltage" onchange="calculateCable()">
                         <option value="0.4">Hạ áp 0.4 kV</option>
                         <option value="6">6 kV</option>
                         <option value="10">10 kV</option>
                         <option value="15">15 kV</option>
-                        <option value="22" selected>22 kV (Phổ phổ biến)</option>
+                        <option value="22" selected>22 kV (Phổ biến)</option>
                         <option value="35">35 kV</option>
                         <option value="110">110 kV</option>
                     </select>
@@ -254,42 +276,42 @@
 
                 <div class="input-row">
                     <div class="form-group">
-                        <label>Công suất tác dụng $P$ (MW):</label>
+                        <label>Công suất tác dụng P (MW):</label>
                         <input type="number" id="powerP" value="5.5" step="0.1" min="0">
                     </div>
                     <div class="form-group">
-                        <label>Hệ số công suất ($\cos\phi$):</label>
+                        <label>Hệ số công suất (cos phi):</label>
                         <input type="number" id="cosPhi" value="0.85" step="0.01" min="0.1" max="1">
                     </div>
                 </div>
 
                 <div class="input-row">
                     <div class="form-group">
-                        <label>Thời gian phụ tải max $T_{max}$ (h/năm):</label>
+                        <label>Thời gian phụ tải max Tmax (h/năm):</label>
                         <input type="number" id="tMax" value="4000" step="100">
                     </div>
                     <div class="form-group">
                         <label>Tải đỉnh ban đêm:</label>
                         <select id="nightLoad">
-                            <option value="no" selected>Không ($J_{kt}$ chuẩn)</option>
-                            <option value="yes">Có ($J_{kt} + 40\%$)</option>
+                            <option value="no" selected>Không (Jkt chuẩn)</option>
+                            <option value="yes">Có (Jkt + 40%)</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="input-row">
                     <div class="form-group">
-                        <label>Dòng ngắn mạch $I_{sc}$ (kA):</label>
+                        <label>Dòng ngắn mạch Isc (kA):</label>
                         <input type="number" id="iSC" value="12.5" step="0.1">
                     </div>
                     <div class="form-group">
-                        <label>Thời gian cắt $t$ (s):</label>
+                        <label>Thời gian cắt t (s):</label>
                         <input type="number" id="tCut" value="0.5" step="0.1">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Chiều dài tuyến cáp $L$ (km):</label>
+                    <label>Chiều dài tuyến cáp L (km):</label>
                     <input type="number" id="lengthL" value="1.2" step="0.1">
                 </div>
             </div>
@@ -316,7 +338,7 @@
 
                 <div class="input-row">
                     <div class="form-group">
-                        <label>Nhiệt độ đất/môi trường ($^\circ\text{C}$):</label>
+                        <label>Nhiệt độ đất/môi trường (độ C):</label>
                         <input type="number" id="tempEnv" value="25" step="1">
                     </div>
                     <div class="form-group">
@@ -326,7 +348,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Số lượng cáp đặt song song ($n$):</label>
+                    <label>Số lượng cáp đặt song song (n):</label>
                     <select id="parallelGroup">
                         <option value="1" selected>1 mạch (Độc lập)</option>
                         <option value="2">2 cáp song song</option>
@@ -346,40 +368,50 @@
                 
                 <div class="result-box">
                     <div class="result-item">
-                        <span class="label">Dòng điện tính toán ($I_{tt}$):</span>
+                        <span class="label">Dòng điện tính toán (Itt):</span>
                         <span class="value" id="resItt">0 A</span>
                     </div>
                     <div class="result-item">
-                        <span class="label">Mật độ dòng kinh tế ($J_{kt}$):</span>
+                        <span class="label">Mật độ dòng kinh tế (Jkt):</span>
                         <span class="value" id="resJkt">0 A/mm²</span>
                     </div>
                     <div class="result-item">
-                        <span class="label">Tiết diện kinh tế ($S_{kt}$):</span>
+                        <span class="label">Tiết diện kinh tế (Skt):</span>
                         <span class="value" id="resSkt">0 mm²</span>
                     </div>
                 </div>
 
                 <div class="result-box">
                     <div class="result-item">
-                        <span class="label">Tiết diện đề xuất ($S_{std}$):</span>
-                        <span class="value" style="font-size: 1.2rem; color: #27ae60;" id="resSstd">-- mm²</span>
+                        <span class="label">Tiết diện đang chọn (S_std):</span>
+                        <span class="value" style="font-size: 1.2rem; color: #0056b3;" id="resSstd">-- mm²</span>
                     </div>
                     <div class="result-item">
-                        <span class="label">Độ ổn định nhiệt ngắn mạch ($S_{min\_sc}$):</span>
+                        <span class="label">Tiết diện chịu ngắn mạch (S_min_sc):</span>
                         <span class="value" id="resSsc">0 mm²</span>
                     </div>
                     <div class="result-item">
-                        <span class="label">Dòng CP sau hiệu chỉnh ($I_{cp\_hc}$):</span>
+                        <span class="label">Dòng CP sau hiệu chỉnh (I_cp_hc):</span>
                         <span class="value" id="resIhc">0 A</span>
                     </div>
                     <div class="result-item">
-                        <span class="label">Tổn thất điện áp ($\Delta U\%$):</span>
+                        <span class="label">Tổn thất điện áp (Delta U%):</span>
                         <span class="value" id="resDU">0 %</span>
                     </div>
                 </div>
 
                 <div id="checkResults">
-                    <!-- Dynamic Badges / Verification list -->
+                    <!-- Dynamic Badges -->
+                </div>
+
+                <!-- Suggested Solutions Box -->
+                <div id="solutionContainer" style="display: none;">
+                    <div class="solution-box">
+                        <h4><i class="fa-solid fa-triangle-exclamation"></i> ĐỀ XUẤT HƯỚNG XỬ LÝ KỸ THUẬT:</h4>
+                        <ul id="solutionList">
+                            <!-- Solutions injected by JS -->
+                        </ul>
+                    </div>
                 </div>
             </div>
 
@@ -403,11 +435,11 @@
                         <td id="resEarthWire">-- mm²</td>
                     </tr>
                     <tr>
-                        <td>Lực kéo cáp tối đa cho phép ($F_{max}$)</td>
+                        <td>Lực kéo cáp tối đa (F_max)</td>
                         <td id="resPullForce">-- N</td>
                     </tr>
                     <tr>
-                        <td>Bán kính uốn cong min ($R_{min}$)</td>
+                        <td>Bán kính uốn cong min (R_min)</td>
                         <td id="resBending">-- mm</td>
                     </tr>
                 </table>
@@ -423,17 +455,13 @@
 </div>
 
 <script>
-    // Dãy tiết diện tiêu chuẩn (mm2)
     const STANDARD_SECTIONS = [50, 70, 95, 120, 150, 185, 240, 300, 400, 500];
 
-    // Bảng tra dòng điện lâu dài cho phép cơ sở Is (A) trong đất (định mức tham chiếu)
-    // Dữ liệu tham khảo tiêu chuẩn IEC cho XLPE 22kV Cu/Al
     const BASE_CURRENT = {
         'Cu': {50: 215, 70: 260, 95: 310, 120: 355, 150: 395, 185: 450, 240: 520, 300: 585, 400: 665, 500: 750},
         'Al': {50: 165, 70: 200, 95: 240, 120: 275, 150: 305, 185: 350, 240: 405, 300: 460, 400: 525, 500: 595}
     };
 
-    // Điện trở R (Ohm/km) & Điện kháng X (Ohm/km) tham chiếu cáp trung thế XLPE
     const CABLE_IMPEDANCE = {
         50: {R_Cu: 0.494, R_Al: 0.822, X: 0.112},
         70: {R_Cu: 0.342, R_Al: 0.568, X: 0.105},
@@ -448,67 +476,59 @@
     };
 
     function calculateCable() {
-        // 1. Lấy tham số đầu vào
-        const U = parseFloat(document.getElementById('voltage').value); // kV
-        const P = parseFloat(document.getElementById('powerP').value); // MW
+        const U = parseFloat(document.getElementById('voltage').value); 
+        const P = parseFloat(document.getElementById('powerP').value); 
         const cosPhi = parseFloat(document.getElementById('cosPhi').value);
         const tMax = parseFloat(document.getElementById('tMax').value);
         const isNight = document.getElementById('nightLoad').value === 'yes';
-        const iSC = parseFloat(document.getElementById('iSC').value); // kA
-        const tCut = parseFloat(document.getElementById('tCut').value); // s
-        const L = parseFloat(document.getElementById('lengthL').value); // km
+        const iSC = parseFloat(document.getElementById('iSC').value); 
+        const tCut = parseFloat(document.getElementById('tCut').value); 
+        const L = parseFloat(document.getElementById('lengthL').value); 
         
-        const mat = document.getElementById('material').value; // Cu/Al
-        const coreType = parseInt(document.getElementById('coreType').value); // 1 or 3
+        const mat = document.getElementById('material').value; 
+        const coreType = parseInt(document.getElementById('coreType').value); 
         const temp = parseFloat(document.getElementById('tempEnv').value);
         const depth = parseFloat(document.getElementById('depth').value);
         const nGroup = parseInt(document.getElementById('parallelGroup').value);
 
-        // 2. Tính dòng điện làm việc I_tt (A)
-        const S_MVA = P / cosPhi;
-        const I_tt = (P * 1000) / (Math.sqrt(3) * U * cosPhi * nGroup); // Tính cho mỗi sợi cáp nếu đi song song
+        // 1. Tính Itt
+        const I_tt = (P * 1000) / (Math.sqrt(3) * U * cosPhi * nGroup); 
         document.getElementById('resItt').innerText = I_tt.toFixed(1) + ' A';
 
-        // 3. Tra mật độ dòng điện kinh tế J_kt (A/mm2) theo QCVN 26:2025/BCT
+        // 2. Tra Jkt
         let jKT = 0;
         if (mat === 'Cu') {
             if (tMax <= 3000) jKT = 3.5;
             else if (tMax <= 5000) jKT = 3.1;
             else jKT = 2.7;
-        } else { // Al
+        } else {
             if (tMax <= 3000) jKT = 1.9;
             else if (tMax <= 5000) jKT = 1.7;
             else jKT = 1.6;
         }
-        if (isNight) jKT *= 1.4; // Tăng 40% nếu tải ban đêm
+        if (isNight) jKT *= 1.4; 
 
         document.getElementById('resJkt').innerText = jKT.toFixed(2) + ' A/mm²';
 
-        // 4. Tính tiết diện kinh tế S_kt
+        // 3. Tính Skt
         let S_kt = I_tt / jKT;
         document.getElementById('resSkt').innerText = S_kt.toFixed(1) + ' mm²';
 
-        // 5. Chọn tiết diện chuẩn lớn hơn gần nhất
+        // 4. Chọn tiết diện chuẩn ban đầu theo Skt
         let S_std = STANDARD_SECTIONS.find(s => s >= S_kt) || 500;
 
-        // 6. Kiểm tra ổn định nhiệt khi ngắn mạch (S_min_sc)
+        // 5. Kiểm tra ngắn mạch S_min_sc
         const K_mat = (mat === 'Cu') ? 0.141 : 0.0927;
         const S_min_sc = (iSC * Math.sqrt(tCut)) / K_mat;
         document.getElementById('resSsc').innerText = S_min_sc.toFixed(1) + ' mm²';
 
-        // Đảm bảo S_std thoả mãn điều kiện ngắn mạch
-        if (S_std < S_min_sc) {
-            S_std = STANDARD_SECTIONS.find(s => s >= S_min_sc) || 500;
-        }
-
-        // Kiểm tra điều kiện vầng quang cho điện áp >= 110kV
         if (U >= 110 && S_std < 70) S_std = 70;
 
         document.getElementById('resSstd').innerText = S_std + ' mm²';
 
-        // 7. Kiểm tra dòng phát nóng lâu dài có hiệu chỉnh (I_cp_hc)
+        // 6. Hiệu chỉnh dòng cho phép I_cp_hc
         let Kt = 1.0;
-        if (temp > 20) Kt = Math.sqrt((90 - temp) / (90 - 20)); // Công thức hiệu chỉnh nhiệt độ XLPE
+        if (temp > 20) Kt = Math.sqrt((90 - temp) / (90 - 20)); 
         let Kd = 1.0;
         if (depth > 0.8) Kd = 0.98 - (depth - 0.8) * 0.05;
         let Kg = 1.0;
@@ -520,48 +540,89 @@
         const I_cp_hc = I_s * Kt * Kd * Kg;
         document.getElementById('resIhc').innerText = I_cp_hc.toFixed(1) + ' A (I_cơ sở = ' + I_s + 'A)';
 
-        // 8. Tính tổn thất điện áp Delta U%
-        const sinPhi = Math.sin(Math.acos(cosPhi));
-        const Q = P * Math.tan(Math.acos(cosPhi)); // MVAr
+        // 7. Tính Delta U%
+        const Q = P * Math.tan(Math.acos(cosPhi)); 
         const R_km = (mat === 'Cu') ? CABLE_IMPEDANCE[S_std].R_Cu : CABLE_IMPEDANCE[S_std].R_Al;
         const X_km = CABLE_IMPEDANCE[S_std].X;
 
         const R_total = R_km * L;
         const X_total = X_km * L;
 
-        // Công thức Delta U%
         const deltaU = ((P * R_total + Q * X_total) / (nGroup * Math.pow(U, 2))) * 100;
         document.getElementById('resDU').innerText = deltaU.toFixed(2) + ' %';
 
-        // 9. Đánh giá kết quả & Hiển thị Badges
-        const checkDiv = document.getElementById('checkResults');
-        checkDiv.innerHTML = '';
-
+        // 8. Đánh giá kiểm tra
         let passThermal = I_cp_hc >= I_tt;
         let passSC = S_std >= S_min_sc;
         let passDU = deltaU <= 5.0;
 
-        checkDiv.innerHTML += `
+        const checkDiv = document.getElementById('checkResults');
+        checkDiv.innerHTML = `
             <div class="result-item">
-                <span>Tải lâu dài ($I_{cp\_hc} \\ge I_{tt}$):</span>
+                <span>Tải lâu dài (I_cp_hc >= Itt):</span>
                 <span class="badge ${passThermal ? 'badge-pass' : 'badge-fail'}">${passThermal ? 'ĐẠT' : 'KHÔNG ĐẠT'}</span>
             </div>
             <div class="result-item">
-                <span>Ổn định nhiệt ngắn mạch ($S \\ge S_{min\_sc}$):</span>
+                <span>Ổn định nhiệt ngắn mạch (S_std >= S_min_sc):</span>
                 <span class="badge ${passSC ? 'badge-pass' : 'badge-fail'}">${passSC ? 'ĐẠT' : 'KHÔNG ĐẠT'}</span>
             </div>
             <div class="result-item">
-                <span>Tổn thất điện áp ($\\Delta U\\% \\le 5\\%$):</span>
+                <span>Tổn thất điện áp (Delta U% <= 5%):</span>
                 <span class="badge ${passDU ? 'badge-pass' : 'badge-fail'}">${passDU ? 'ĐẠT' : 'KHÔNG ĐẠT'}</span>
             </div>
         `;
 
-        // 10. Điền thông số kỹ thuật chi tiết
+        // 9. Xử lý Đề xuất nếu có yếu tố không đạt
+        const solContainer = document.getElementById('solutionContainer');
+        const solList = document.getElementById('solutionList');
+        solList.innerHTML = '';
+
+        if (!passThermal || !passSC || !passDU) {
+            solContainer.style.display = 'block';
+
+            if (!passThermal) {
+                // Tải lâu dài không đạt
+                let nextS = STANDARD_SECTIONS.find(s => BASE_CURRENT[mat][s] * Kt * Kd * Kg >= I_tt);
+                if (nextS) {
+                    solList.innerHTML += `<li><b>Quá tải lâu dài:</b> Đề xuất tăng tiết diện cáp lên tối thiểu <b>${nextS} mm²</b> để đảm bảo dòng cho phép sau hiệu chỉnh (I_cp_hc >= ${I_tt.toFixed(1)} A).</li>`;
+                } else {
+                    solList.innerHTML += `<li><b>Quá tải lâu dài:</b> Tiết diện đơn cáp vượt giới hạn. Đề xuất tăng số lượng mạch cáp song song (n = ${nGroup + 1}) để chia tải.</li>`;
+                }
+            }
+
+            if (!passSC) {
+                // Ngắn mạch không đạt
+                let scS = STANDARD_SECTIONS.find(s => s >= S_min_sc) || 500;
+                solList.innerHTML += `<li><b>Không ổn định nhiệt ngắn mạch:</b> Tiết diện hiện tại (${S_std} mm²) nhỏ hơn tiết diện chịu ngắn mạch tối thiểu (${S_min_sc.toFixed(1)} mm²). Đề xuất nâng tiết diện cáp lên <b>${scS} mm²</b> hoặc giảm thời gian cắt rơ-le (t).</li>`;
+            }
+
+            if (!passDU) {
+                // Tổn thất điện áp không đạt
+                if (mat === 'Al') {
+                    solList.innerHTML += `<li><b>Tổn thất điện áp lớn (Delta U = ${deltaU.toFixed(2)}% > 5%):</b> Đề xuất chuyển đổi từ lõi Nhôm (Al) sang lõi Đồng (Cu) để giảm điện trở tuyến cáp.</li>`;
+                } else {
+                    let duS = STANDARD_SECTIONS.find(s => {
+                        let r = CABLE_IMPEDANCE[s].R_Cu * L;
+                        let x = CABLE_IMPEDANCE[s].X * L;
+                        let du = ((P * r + Q * x) / (nGroup * Math.pow(U, 2))) * 100;
+                        return du <= 5.0;
+                    });
+                    if (duS) {
+                        solList.innerHTML += `<li><b>Tổn thất điện áp lớn (Delta U = ${deltaU.toFixed(2)}% > 5%):</b> Đề xuất tăng tiết diện cáp lên <b>${duS} mm²</b> hoặc tăng thêm số mạch đi song song (n = ${nGroup + 1}).</li>`;
+                    } else {
+                        solList.innerHTML += `<li><b>Tổn thất điện áp vượt giới hạn:</b> Đề xuất tăng số mạch cáp đi song song (n = ${nGroup + 1}) để giảm tổng trở tuyến dây.</li>`;
+                    }
+                }
+            }
+        } else {
+            solContainer.style.display = 'none';
+        }
+
+        // 10. Điền thông số chi tiết
         updateDetailedSpecs(U, mat, coreType, S_std);
     }
 
     function updateDetailedSpecs(U, mat, coreType, S_std) {
-        // Bề dày XLPE theo cấp điện áp
         let xlpe = "2.5 - 3.2";
         if (U == 10) xlpe = "3.4";
         else if (U == 15) xlpe = "4.5";
@@ -570,31 +631,22 @@
         else if (U >= 110) xlpe = "15.0 - 18.0";
         document.getElementById('resXLPE').innerText = xlpe + ' mm';
 
-        // Tiết diện dây tiếp địa màn chắn
-        let earthWire = (U <= 35) ? "≥ 16" : "≥ 35";
+        let earthWire = (U <= 35) ? ">= 16" : ">= 35";
         document.getElementById('resEarthWire').innerText = earthWire + ' mm²';
 
-        // Lực kéo tối đa F_max
-        const sigma = (mat === 'Cu') ? 70 : 40; // N/mm2
+        const sigma = (mat === 'Cu') ? 70 : 40; 
         const F_max = sigma * S_std * coreType;
         document.getElementById('resPullForce').innerText = F_max.toLocaleString('vi-VN') + ' N (' + (F_max/9.81).toFixed(0) + ' kg)';
 
-        // Bán kính uốn cong R_min
-        // Đường kính ngoài ước tính D ~ sqrt(S_std) * factor
         const approxD = Math.sqrt(S_std) * (coreType === 3 ? 3.2 : 2.0);
         const rFactor = (coreType === 3) ? 12 : 15;
         const R_min = rFactor * approxD;
-        document.getElementById('resBending').innerText = '≥ ' + R_min.toFixed(0) + ' mm (Thi công thực tế: ' + (R_min * 1.5).toFixed(0) + ' mm)';
+        document.getElementById('resBending').innerText = '>= ' + R_min.toFixed(0) + ' mm (Thi công thực tế: ' + (R_min * 1.5).toFixed(0) + ' mm)';
 
-        // Mã hiệu cáp
         let codeMat = (mat === 'Cu') ? 'C' : 'A';
         let codeCore = coreType + 'x' + S_std;
         let cableCode = `${codeMat}XV/SE/SWA ${codeCore} mm² - ${U}kV`;
         document.getElementById('resCableCode').innerText = cableCode;
-    }
-
-    function updateXLPEThickness() {
-        calculateCable();
     }
 
     function exportPDF() {
@@ -609,7 +661,6 @@
         html2pdf().set(opt).from(element).save();
     }
 
-    // Chạy tính toán ngay lần đầu tải trang
     window.onload = function() {
         calculateCable();
     };
