@@ -2,7 +2,7 @@
   "name": "VDC Safety PPE App",
   "short_name": "VDC Safety",
   "description": "Ứng dụng PWA kiểm tra bảo hộ lao động bằng AI",
-  "start_url": "./index.html",
+  "start_url": "https://theantoan.com/tools/ppe.html",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#00e676",
