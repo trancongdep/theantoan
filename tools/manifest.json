@@ -1,0 +1,17 @@
+{
+  "name": "VDC Safety PPE App",
+  "short_name": "VDC Safety",
+  "description": "Ứng dụng PWA kiểm tra bảo hộ lao động bằng AI",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#00e676",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1162/1162483.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
