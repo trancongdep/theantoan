@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOTO Mobile v1.14</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #2f3640;
+            --primary: #00a8ff;
+            --danger: #e84118;
+            --success: #4cd137;
+            --warning: #f1c40f;
+            --text: #f5f6fa;
+            --sidebar-w: 85%; 
+            --header-h: 56px;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text);
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            height: var(--header-h); background: #1e272e;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; border-bottom: 2px solid #444;
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 2000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        #btn-menu {
+            background: transparent; border: none; color: white;
+            font-size: 1.8rem; padding: 10px; cursor: pointer;
+        }
+        .app-title { font-weight: 800; font-size: 1.1rem; color: var(--primary); }
+        .user-info { font-size: 0.8rem; color: #ccc; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            position: fixed; top: var(--header-h); bottom: 0; left: -100%;
+            width: var(--sidebar-w); background: #222;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 3000; overflow-y: auto;
+            border-right: 1px solid #444;
+        }
+        .sidebar.active { left: 0; }
+
+        .menu-group { border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .menu-header { padding: 15px 20px 5px; font-size: 0.75rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; }
+        .menu-item {
+            padding: 15px 20px; display: flex; align-items: center; gap: 15px;
+            color: #ecf0f1; border-bottom: 1px solid #2f3640; cursor: pointer; font-size: 1rem;
+        }
+        .menu-item:active { background: rgba(255,255,255,0.1); }
+        .menu-item.active { background: rgba(0,168,255,0.15); border-left: 5px solid var(--primary); color: white; }
+        .tool-icon { font-size: 1.4rem; width: 30px; text-align: center; }
+
+        .backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 2500; display: none; backdrop-filter: blur(2px);
+        }
+        .backdrop.show { display: block; }
+
+        /* --- CONTENT & TABS --- */
+        .main-content { margin-top: var(--header-h); height: calc(100vh - var(--header-h)); overflow-y: auto; background: #2f3640; position: relative; }
+        .tab-view { display: none; padding: 20px; flex-direction: column; align-items: center; min-height: 100%; }
+        .tab-view.show { display: flex; }
+
+        .card { background: #353b48; border-radius: 12px; padding: 20px; width: 100%; box-sizing: border-box; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; position: relative; z-index: 1;}
+
+        /* --- DEVICE VISUALS --- */
+        .fan-frame {
+            width: 180px; height: 180px; border: 8px solid #7f8c8d; border-radius: 50%;
+            background: #222; margin: 20px auto; position: relative; display: flex; align-items: center; justify-content: center;
+        }
+        .blade { width: 160px; height: 20px; background: silver; position: absolute; border-radius: 10px; }
+        .spin { animation: spin 0.2s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Controls */
+        .controls-container {
+            width: 100%; z-index: 100; position: relative; background: #353b48; 
+            padding: 10px; border-radius: 8px; margin-top: 10px;
+        }
+        .controls-row { display: flex; gap: 15px; justify-content: center; width: 100%; margin-bottom: 15px; }
+        .btn { padding: 15px 25px; border: none; border-radius: 8px; font-weight: bold; color: white; font-size: 1rem; flex: 1; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
+        .btn-success { background: var(--success); color: #2f3640; }
+        .btn-danger { background: var(--danger); }
+        .btn-permit { background: var(--warning); color: #2f3640; width: 100%; font-size: 1.1rem; border: 2px solid #f39c12; }
+
+        /* --- ELECTRICAL VISUALS --- */
+        .panel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+        .cb-unit { background: #2f3640; border: 2px solid #555; border-radius: 8px; height: 160px; position: relative; display: flex; flex-direction: column; align-items: center; }
+        .cb-touch-area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
+        .cb-lever { width: 50px; height: 40px; background: var(--danger); margin-top: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; transition: 0.3s; }
+        .cb-lever.off { transform: translateY(50px); background: var(--success); }
+        
+        /* Items Visualization */
+        .lock-container { position: absolute; top: 10px; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        .vis-hasp { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-size: 3rem; z-index: 6; filter: drop-shadow(0 0 3px orange); }
+        
+        /* Multiple Locks Stacked */
+        .vis-lock { position: absolute; left: 50%; transform: translateX(-50%); font-size: 2rem; z-index: 7; filter: drop-shadow(2px 2px 2px black); }
+        .lock-1 { top: 40px; margin-left: -10px; }
+        .lock-2 { top: 50px; margin-left: 10px; color: yellow; }
+        .lock-3 { top: 60px; margin-left: -5px; color: cyan; }
+
+        .vis-tag { position: absolute; top: 70px; left: 50%; transform: translateX(-50%) rotate(-10deg); font-size: 2rem; z-index: 8; filter: drop-shadow(0 4px 4px #000); }
+
+        /* --- WORKER ANIMATION (LAYER FIX) --- */
+        .worker-container {
+            position: absolute; 
+            /* Vị trí ban đầu: Đứng ngay cạnh thiết bị */
+            bottom: 200px; 
+            left: 20px; 
+            /* Z-Index rất cao để đè lên mọi thiết bị */
+            z-index: 200; 
+            transition: transform 3s linear;
+            pointer-events: none; /* Cho phép bấm xuyên qua */
+        }
+        .worker-svg { width: 100px; height: 150px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.8)); }
+        
+        /* Animation states */
+        .worker-walk-out { transform: translateX(400px); opacity: 0; } /* Đi ra */
+        .worker-walk-in { transform: translateX(120px); } /* Đi vào sửa máy */
+
+        .shocked { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) infinite; }
+        .shocked .worker-body { fill: #e74c3c !important; }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0) rotate(-5deg); }
+            20%, 80% { transform: translate3d(4px, 0, 0) rotate(5deg); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0) rotate(-5deg); }
+            40%, 60% { transform: translate3d(6px, 0, 0) rotate(5deg); }
+        }
+
+        #shock-flash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 0, 0, 0.5); z-index: 9000; display: none;
+            animation: flash 0.1s infinite;
+        }
+        @keyframes flash { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+
+        /* --- HUD & OVERLAYS --- */
+        #active-tool-hud {
+            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9); border: 2px solid var(--primary);
+            padding: 10px 20px; border-radius: 50px;
+            display: none; align-items: center; gap: 10px;
+            z-index: 1500; animation: bounceIn 0.3s;
+        }
+        #active-tool-hud.show { display: flex; }
+        .hud-close { background: #e74c3c; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-left: 10px; cursor: pointer; }
+        @keyframes bounceIn { from { transform: translateX(-50%) scale(0.5); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+
+        #reset-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 9999;
+            display: none; align-items: center; justify-content: center; flex-direction: column;
+            animation: fadeIn 1s ease-in;
+        }
+        .reset-btn {
+            padding: 20px 40px; font-size: 1.5rem; background: var(--primary); color: white;
+            border: none; border-radius: 50px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 20px var(--primary); animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        .toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: rgba(50, 50, 50, 0.95); color: white; padding: 12px 20px; 
+            border-radius: 50px; font-size: 0.9rem; text-align: center; white-space: nowrap;
+            opacity: 0; pointer-events: none; transition: 0.3s; z-index: 5000;
+        }
+        .toast.show { opacity: 1; bottom: 40px; }
+
+        .log-panel {
+            background: #000; color: #0f0; font-family: monospace; font-size: 0.8rem;
+            padding: 10px; height: 200px; overflow-y: auto; border-radius: 5px;
+            margin-top: 10px; border: 1px solid #333; text-align: left;
+        }
+        .log-entry { margin-bottom: 5px; border-bottom: 1px dashed #333; padding-bottom: 2px; }
+        .log-danger { color: #e74c3c; font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+    <div id="shock-flash"></div>
+
+    <div id="reset-overlay">
+        <h1 style="color: var(--danger); text-transform: uppercase; margin-bottom: 30px;">Đã xảy ra tai nạn</h1>
+        <button class="reset-btn" onclick="resetSimulation()">🔄 LÀM BÀI MỚI</button>
+    </div>
+
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            <button id="btn-menu" onclick="toggleSidebar()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+            <div class="app-title">LOTO Mobile v1.14</div>
+        </div>
+        <div class="user-info" id="user-display">Guest</div>
+    </div>
+
+    <div id="active-tool-hud">
+        <div style="font-size:1.5rem" id="hud-icon">🔧</div>
+        <div style="font-weight:bold; color:white; font-size:0.9rem" id="hud-text">...</div>
+        <div class="hud-close" onclick="clearTool()">✕</div>
+    </div>
+    <div class="backdrop" id="backdrop" onclick="closeSidebar()"></div>
+    <div id="toast" class="toast">Hệ thống sẵn sàng</div>
+
+    <div id="screen-login" class="tab-view show" style="justify-content: center; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; background: #2f3640;">
+        <div class="card" style="max-width: 350px;">
+            <h2 style="color:var(--primary)">ĐĂNG NHẬP</h2>
+            <button class="btn btn-danger" onclick="doLogin()">Google Login</button>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="menu-group">
+            <div class="menu-header">Khu Vực</div>
+            <div class="menu-item active" onclick="nav('tab-device')"><span class="tool-icon">🏭</span> Máy Móc</div>
+            <div class="menu-item" onclick="nav('tab-electrical')"><span class="tool-icon">⚡</span> Tủ Điện</div>
+            <div class="menu-item" onclick="nav('tab-store')"><span class="tool-icon">📦</span> Kho & Tài Liệu</div>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-header">Dụng Cụ</div>
+            <div class="menu-item" onclick="selectTool('hasp')"><span class="tool-icon">🔗</span> Khóa Kéo Dài</div>
+            <div class="menu-item" onclick="selectTool('lock')"><span class="tool-icon">🔒</span> Ổ Khóa</div>
+            <div class="menu-item" onclick="selectTool('tag')"><span class="tool-icon">🏷️</span> Thẻ Cảnh Báo</div>
+            <div class="menu-item" onclick="selectTool('keybox')"><span class="tool-icon">🗃️</span> Hộp Key Box</div>
+            <div class="menu-item" onclick="selectTool('meter')"><span class="tool-icon">⚡</span> Đồng Hồ VOM</div>
+            <div class="menu-item" onclick="selectTool('speaker')"><span class="tool-icon">📢</span> Loa Thông Báo</div>
+        </div>
+
+        <div class="menu-group" id="menu-instructor" style="display:none; border-top: 2px solid var(--danger);">
+             <div class="menu-header" style="color:var(--danger)">Giảng Viên</div>
+             <div class="menu-item" onclick="nav('tab-instructor')"><span class="tool-icon">🎓</span> Log & Giám Sát</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        
+        <div id="tab-device" class="tab-view">
+            <div id="worker-npc" class="worker-container">
+                <svg class="worker-svg" viewBox="0 0 100 200">
+                    <circle cx="50" cy="30" r="20" fill="#f1c40f" stroke="#333" stroke-width="2"/>
+                    <rect class="worker-body" x="25" y="50" width="50" height="80" fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+                    <line x1="25" y1="60" x2="10" y2="100" stroke="#f39c12" stroke-width="8" stroke-linecap="round"/>
+                    <line x1="75" y1="60" x2="90" y2="100" stroke="#f39c12" stroke-width="8" stroke-linecap="round"/>
+                    <line x1="35" y1="130" x2="35" y2="190" stroke="#333" stroke-width="10" stroke-linecap="round"/>
+                    <line x1="65" y1="130" x2="65" y2="190" stroke="#333" stroke-width="10" stroke-linecap="round"/>
+                </svg>
+            </div>
+
+            <div class="card" onclick="handleTapMachine()" style="position: relative; z-index: 1;">
+                <h3 style="margin:0; color:var(--primary)">QUẠT SỐ 02</h3>
+                <div class="fan-frame">
+                    <div class="blade spin" id="blade1"></div>
+                    <div class="blade spin" id="blade2" style="transform: rotate(120deg);"></div>
+                    <div class="blade spin" id="blade3" style="transform: rotate(240deg);"></div>
+                </div>
+                <h3 id="machine-status" style="color:var(--success)">ĐANG CHẠY</h3>
+            </div>
+            
+            <div class="controls-container">
+                <div class="controls-row">
+                    <button class="btn btn-success" onclick="toggleMachine(true)">START</button>
+                    <button class="btn btn-danger" onclick="toggleMachine(false)">STOP</button>
+                </div>
+                <button class="btn btn-permit" onclick="handlePermit()">📝 CHO PHÉP LÀM VIỆC</button>
+            </div>
+        </div>
+
+        <div id="tab-electrical" class="tab-view">
+            <div class="card">
+                <h3 style="margin:0; color:var(--primary)">TỦ ĐIỆN DB-01</h3>
+                <div class="panel-grid">
+                    <div class="cb-unit">
+                        <span style="font-size:0.7rem; margin-top:5px;">LIGHT</span>
+                        <div class="cb-lever" id="cb1-lever">ON</div>
+                        <div class="cb-touch-area" onclick="handleTapCB(1)"></div>
+                    </div>
+                    <div class="cb-unit" style="border-color:var(--primary);">
+                        <span style="font-size:0.7rem; margin-top:5px; color:var(--primary); font-weight:bold;">FAN</span>
+                        <div class="cb-lever" id="cb2-lever">ON</div>
+                        <div class="lock-container" id="cb2-locks">
+                            </div>
+                        <div id="cb2-tag-viz"></div>
+                        <div class="cb-touch-area" onclick="handleTapCB(2)"></div>
+                    </div>
+                    <div class="cb-unit">
+                        <span style="font-size:0.7rem; margin-top:5px;">SOCK</span>
+                        <div class="cb-lever" id="cb3-lever">ON</div>
+                        <div class="cb-touch-area" onclick="handleTapCB(3)"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-store" class="tab-view">
+            <div class="card" style="background:white; color:#333; text-align: left;">
+                <h3 style="text-align: center;">SƠ ĐỒ ĐƠN TUYẾN DB-01</h3>
+                <svg width="100%" height="250" viewBox="0 0 350 250">
+                    <defs>
+                        <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#333" /></marker>
+                    </defs>
+                    <text x="10" y="20" font-weight="bold" font-size="14">BUSBAR 380V</text>
+                    <line x1="20" y1="30" x2="20" y2="230" stroke="red" stroke-width="6"/>
+                    <path d="M23 110 L80 110" stroke="black" stroke-width="2" fill="none"/>
+                    <rect x="80" y="100" width="40" height="20" stroke="blue" stroke-width="3" fill="none"/>
+                    <text x="85" y="115" font-size="10" fill="blue" font-weight="bold">CB-2</text>
+                    <path d="M120 110 L160 110" stroke="black" stroke-width="2"/>
+                    <rect x="160" y="100" width="30" height="20" stroke="#555" fill="#ddd"/>
+                    <text x="162" y="115" font-size="8">KM2</text> 
+                    <path d="M190 110 L220 110" stroke="black" stroke-width="2"/>
+                    <rect x="220" y="100" width="30" height="20" stroke="#555" fill="#ddd"/>
+                    <text x="222" y="115" font-size="8">OL</text>
+                    <line x1="250" y1="110" x2="280" y2="110" stroke="black" stroke-width="2" marker-end="url(#arrow)"/>
+                    <circle cx="295" cy="110" r="15" fill="#333"/>
+                    <text x="280" y="140" font-size="12" font-weight="bold">M2 (QUẠT)</text>
+                </svg>
+            </div>
+        </div>
+
+        <div id="tab-instructor" class="tab-view">
+             <div class="card" style="text-align: left;">
+                 <h3 style="color:var(--warning); margin:0;">GIÁM SÁT</h3>
+                 <div id="log-container" class="log-panel"></div>
+                 <button class="btn btn-danger" onclick="resetSimulation()" style="margin-top:10px;">SOFT RESET</button>
+             </div>
+        </div>
+
+    </div>
+
+    <script>
+        // CONFIG
+        const firebaseConfig = { apiKey: "AIzaSyCzWjfcD5Dgq7V-i2izb9tKLR6QM6qWPQo", authDomain: "tavietnam-78ae8.firebaseapp.com", projectId: "tavietnam-78ae8", storageBucket: "tavietnam-78ae8.firebasestorage.app", messagingSenderId: "670121705534", appId: "1:670121705534:web:1027ad98550573ad37116f" };
+        firebase.initializeApp(firebaseConfig);
+
+        // STATE
+        let currentTool = null;
+        let sys = { 
+            cb2: true, 
+            has_hasp: false, // Trạng thái có Hasp hay chưa
+            lock_count: 0,   // Số lượng khóa trên Hasp
+            tagged: false 
+        };
+        let userName = "Guest";
+        let workerPresent = true;
+
+        // AUTH
+        function doLogin() {
+            const p = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(p).then(r => onUser(r.user)).catch(e => {
+                if(location.protocol==='file:') onUser({email: prompt("Test:", "deptc.gvatvsld@gmail.com")});
+            });
+        }
+        function onUser(u) {
+            document.getElementById('screen-login').classList.remove('show');
+            userName = u.email.split('@')[0];
+            document.getElementById('user-display').innerText = userName;
+            nav('tab-device');
+            logAction("Đăng nhập");
+            if(u.email === 'deptc.gvatvsld@gmail.com') document.getElementById('menu-instructor').style.display = 'block';
+        }
+
+        // NAVIGATION
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('backdrop').classList.toggle('show'); }
+        function closeSidebar() { document.getElementById('sidebar').classList.remove('active'); document.getElementById('backdrop').classList.remove('show'); }
+        function nav(tabId) {
+            document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('show'));
+            document.getElementById(tabId).classList.add('show');
+            closeSidebar();
+        }
+
+        // TOOL SELECTION
+        function selectTool(type) {
+            currentTool = type;
+            const map = { lock: "Ổ Khóa", hasp: "Khóa Kéo Dài", tag: "Thẻ", keybox: "Key Box", meter: "VOM", speaker: "Loa" };
+            document.getElementById('active-tool-hud').classList.add('show');
+            document.getElementById('hud-icon').innerText = "🔧";
+            document.getElementById('hud-text').innerText = map[type];
+            closeSidebar();
+            logAction(`Lấy dụng cụ: ${map[type]}`);
+        }
+        function clearTool() {
+            currentTool = null;
+            document.getElementById('active-tool-hud').classList.remove('show');
+        }
+
+        // INTERACTIONS
+        function toggleMachine(run) {
+            const blades = document.querySelectorAll('.blade');
+            const st = document.getElementById('machine-status');
+            if(run && sys.cb2) {
+                blades.forEach(b => b.style.animation = "spin 0.2s linear infinite");
+                st.innerText = "ĐANG CHẠY"; st.style.color = "var(--success)";
+                logAction("Bấm START");
+            } else {
+                blades.forEach(b => b.style.animation = "none");
+                st.innerText = "ĐÃ DỪNG"; st.style.color = "#bdc3c7";
+                logAction("Bấm STOP");
+            }
+        }
+
+        function handleTapCB(id) {
+            if (id === 2) {
+                const vizContainer = document.getElementById('cb2-locks');
+                
+                // --- CASE: HASP ---
+                if (currentTool === 'hasp') {
+                    if(sys.cb2) { showToast("⚡ Còn điện!"); logAction("Lỗi: Kẹp Hasp khi còn điện"); return; }
+                    if(sys.has_hasp) { showToast("Đã kẹp Hasp rồi!"); return; }
+                    
+                    sys.has_hasp = true;
+                    updateLockVisuals();
+                    logAction("Đã kẹp khóa kéo dài (Hasp)");
+                    clearTool();
+                } 
+                // --- CASE: LOCK ---
+                else if (currentTool === 'lock') {
+                    if(sys.cb2) { showToast("⚡ Còn điện!"); return; }
+                    
+                    // Logic: Nếu chưa có Hasp, móc khóa đơn. Nếu có Hasp, móc thêm khóa vào Hasp.
+                    if (sys.has_hasp) {
+                         sys.lock_count++;
+                         updateLockVisuals();
+                         logAction(`Đã thêm ổ khóa số ${sys.lock_count} vào Hasp`);
+                         showToast(`Đã thêm khóa (${sys.lock_count})`);
+                         clearTool(); // Auto clear or keep adding? Let's clear for simplicity
+                    } else {
+                        // Single lock mode (No Hasp)
+                        if(sys.lock_count > 0) { showToast("Đã có khóa đơn rồi"); return; }
+                        sys.lock_count = 1;
+                        updateLockVisuals();
+                        logAction("Đã khóa an toàn (Khóa đơn)");
+                        clearTool();
+                    }
+                } 
+                // --- CASE: TAG ---
+                else if (currentTool === 'tag') {
+                    if(sys.lock_count === 0) { showToast("⚠️ Khóa trước!"); return; }
+                    sys.tagged = true;
+                    document.getElementById('cb2-tag-viz').innerHTML = '<div class="vis-tag">🏷️</div>';
+                    logAction("Đã treo thẻ"); clearTool();
+                } 
+                // --- CASE: METER ---
+                else if (currentTool === 'meter') {
+                    showToast("⏳ Đang đo...");
+                    setTimeout(() => {
+                        const res = sys.cb2 ? "380V" : "0V";
+                        showToast(`Kết quả: ${res}`);
+                        logAction(`Đo điện áp: ${res}`);
+                    }, 1000);
+                } 
+                // --- CASE: TOGGLE SWITCH ---
+                else if (!currentTool) {
+                    if(sys.lock_count > 0 || sys.has_hasp) { showToast("⛔ Đã khóa LOTO!"); return; }
+                    sys.cb2 = !sys.cb2;
+                    toggleMachine(sys.cb2);
+                    const el = document.getElementById('cb2-lever');
+                    sys.cb2 ? (el.classList.remove('off'), el.innerText="ON") : (el.classList.add('off'), el.innerText="OFF");
+                    logAction(`Gạt CB-2: ${sys.cb2 ? 'ON' : 'OFF'}`);
+                }
+            } else {
+                if(!currentTool) {
+                    const el = document.getElementById(`cb${id}-lever`);
+                    el.classList.toggle('off'); el.innerText = el.classList.contains('off') ? "OFF" : "ON";
+                }
+            }
+        }
+        
+        function updateLockVisuals() {
+            const container = document.getElementById('cb2-locks');
+            let html = '';
+            
+            // Render Hasp if present
+            if(sys.has_hasp) {
+                html += '<div class="vis-hasp">🔗</div>';
+            }
+            
+            // Render Locks on top
+            if(sys.lock_count > 0) {
+                 // Nếu có hasp, render nhiều khóa chồng lên
+                 if(sys.has_hasp) {
+                     if(sys.lock_count >= 1) html += '<div class="vis-lock lock-1">🔒</div>';
+                     if(sys.lock_count >= 2) html += '<div class="vis-lock lock-2">🔒</div>';
+                     if(sys.lock_count >= 3) html += '<div class="vis-lock lock-3">🔒</div>';
+                 } else {
+                     // Khóa đơn
+                     html += '<div class="vis-lock">🔒</div>';
+                 }
+            }
+            container.innerHTML = html;
+        }
+
+        function handleTapMachine() {
+            if(currentTool === 'speaker') {
+                logAction("Phát loa thông báo");
+                showToast("📢 Đã thông báo");
+                speak("Chú ý! Chuẩn bị cắt điện máy số 2.");
+                
+                // Worker leaves
+                if(workerPresent) {
+                    setTimeout(() => {
+                        document.getElementById('worker-npc').classList.add('worker-walk-out');
+                        workerPresent = false;
+                        logAction("Công nhân đã rời đi");
+                    }, 2000);
+                }
+                clearTool();
+            }
+        }
+
+        function handlePermit() {
+            logAction("Cấp phép làm việc");
+            const worker = document.getElementById('worker-npc');
+            const svg = worker.querySelector('.worker-svg');
+            
+            worker.className = 'worker-container'; 
+            svg.classList.remove('shocked');
+            setTimeout(() => worker.classList.add('worker-walk-in'), 100);
+
+            setTimeout(() => {
+                let unsafe = false;
+                if(sys.cb2) unsafe = true;
+                if(sys.lock_count === 0) unsafe = true; // Must have at least 1 lock
+
+                if(unsafe) {
+                    svg.classList.add('shocked');
+                    document.getElementById('shock-flash').style.display = 'block';
+                    logAction("TAI NẠN: ĐIỆN GIẬT", true);
+                    showToast("⚡ TAI NẠN!");
+                    
+                    setTimeout(() => {
+                         document.getElementById('shock-flash').style.display = 'none';
+                         document.getElementById('reset-overlay').style.display = 'flex';
+                    }, 10000);
+                } else {
+                    logAction("An toàn. Bắt đầu sửa chữa.", false);
+                    showToast("✅ An toàn.");
+                }
+            }, 1500);
+        }
+
+        function resetSimulation() {
+            sys = { cb2: true, has_hasp: false, lock_count: 0, tagged: false };
+            updateLockVisuals();
+            document.getElementById('cb2-tag-viz').innerHTML = '';
+            
+            const el = document.getElementById('cb2-lever');
+            el.classList.remove('off'); el.innerText = "ON";
+            toggleMachine(true);
+
+            // Reset worker
+            workerPresent = true;
+            const worker = document.getElementById('worker-npc');
+            const svg = worker.querySelector('.worker-svg');
+            worker.className = 'worker-container';
+            svg.classList.remove('shocked');
+
+            document.getElementById('reset-overlay').style.display = 'none';
+            document.getElementById('shock-flash').style.display = 'none';
+            
+            nav('tab-device');
+            logAction("--- SOFT RESET ---");
+            showToast("Đã làm mới");
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'vi-VN';
+                speechSynthesis.speak(u);
+            }
+        }
+
+        function logAction(action, isDanger = false) {
+            const container = document.getElementById('log-container');
+            const time = new Date().toLocaleTimeString();
+            const dangerClass = isDanger ? 'log-danger' : '';
+            container.innerHTML += `<div class="log-entry"><span style="color:#888">[${time}]</span> <span style="color:var(--primary)">${userName}:</span> <span class="${dangerClass}">${action}</span></div>`;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showToast(m) {
+            const t = document.getElementById('toast');
+            t.innerText = m; t.classList.add('show');
+            setTimeout(()=>t.classList.remove('show'), 2500);
+        }
+
+    </script>
+</body>
+</html>
