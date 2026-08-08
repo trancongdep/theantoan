@@ -1,5 +1,5 @@
-// QUẢN LÝ PHIÊN BẢN ỨNG DỤNG (Bắt đầu 0.1, tăng 0.1 mỗi lần -> 0.10)
-const APP_VERSION = "0.10";
+// QUẢN LÝ PHIÊN BẢN ỨNG DỤNG
+const APP_VERSION = "0.11";
 
 // CẤU HÌNH FIREBASE - PROJECT: THEANTOAN-FEA9E
 const firebaseConfig = {
@@ -13,7 +13,6 @@ const firebaseConfig = {
     measurementId: "G-G5R89QH44C"
 };
 
-// Khởi tạo Firebase SDK
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -26,29 +25,24 @@ let sys = {
     lock_count: 0,   
     tagged: false 
 };
-let userName = "Guest";
+let userName = "Giảng Viên An Toàn";
 let workerPresent = true;
 
-// CẬP NHẬT PHIÊN BẢN LÊN GIAO DIỆN KHI TẢI TRANG
+// KHỞI TẠO TỰ ĐỘNG KHI TẢI TRANG (KHÔNG CẦN ĐĂNG NHẬP)
 document.addEventListener("DOMContentLoaded", () => {
-    const vLogin = document.getElementById("login-version-display");
     const vHeader = document.getElementById("header-version-display");
-    if (vLogin) vLogin.textContent = `v${APP_VERSION}`;
     if (vHeader) vHeader.textContent = `v${APP_VERSION}`;
-});
+    
+    const userDisp = document.getElementById('user-display');
+    if (userDisp) userDisp.innerText = userName;
 
-// LẮNG NGHE TỰ ĐỘNG ĐĂNG NHẬP DỰA TRÊN PHIÊN ĐÃ LƯU
-firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-        onUser(user);
-    }
+    // Mở mặc định tab Máy Móc
+    nav('tab-device');
+    logAction("Hệ thống sẵn sàng (Chế độ Thử nghiệm Direct)");
 });
 
 // PHÍM TẮT DESKTOP
 window.addEventListener('keydown', (e) => {
-    const loginScreen = document.getElementById('screen-login');
-    if (loginScreen && loginScreen.style.display !== 'none' && loginScreen.classList.contains('show')) return;
-    
     switch(e.key) {
         case '1': selectTool('hasp'); break;
         case '2': selectTool('lock'); break;
@@ -64,64 +58,6 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-// ĐĂNG NHẬP GOOGLE
-function doLogin() {
-    showToast("Đang kết nối Google...");
-    const provider = new firebase.auth.GoogleAuthProvider();
-    
-    firebase.auth().signInWithPopup(provider)
-        .then((result) => {
-            onUser(result.user);
-        })
-        .catch((error) => {
-            console.warn("Google Auth Popup Warning/Blocked:", error);
-            showToast("Không mở được Popup. Đang chuyển Đăng nhập Nhanh...");
-            doQuickLogin();
-        });
-}
-
-// ĐĂNG NHẬP NHANH (DỰ PHÒNG KHI POPUP BỊ CHẶN HOẶC MÔI TRƯỜNG THỬ NGHIỆM)
-function doQuickLogin() {
-    const fallbackEmail = prompt(
-        "Nhập email làm việc của bạn để vào ứng dụng:", 
-        "deptc.gvatvsld@gmail.com"
-    );
-    
-    if (fallbackEmail && fallbackEmail.trim() !== "") {
-        onUser({ email: fallbackEmail.trim() });
-    } else {
-        onUser({ email: "guest@theantoan.vn" });
-    }
-}
-
-// XỬ LÝ CHUYỂN MÀN HÌNH SAU KHI ĐĂNG NHẬP THÀNH CÔNG
-function onUser(u) {
-    if (!u) return;
-    const userEmail = u.email || "guest@theantoan.vn";
-    userName = userEmail.split('@')[0];
-    
-    // 1. ẨN TRIỆT ĐỂ MÀN HÌNH ĐĂNG NHẬP (ÉP STYLE)
-    const loginScreen = document.getElementById('screen-login');
-    if (loginScreen) {
-        loginScreen.classList.remove('show');
-        loginScreen.setAttribute('style', 'display: none !important');
-    }
-    
-    // 2. CẬP NHẬT TÊN NGƯỜI DÙNG
-    const userDisp = document.getElementById('user-display');
-    if (userDisp) userDisp.innerText = userName;
-    
-    // 3. ÉP MỞ TẤT CẢ TÁC VỤ ỨNG DỤNG
-    nav('tab-device');
-    
-    logAction(`Đăng nhập thành công (${userEmail})`);
-    
-    if (userEmail === 'deptc.gvatvsld@gmail.com') {
-        const instMenu = document.getElementById('menu-instructor');
-        if (instMenu) instMenu.style.display = 'block';
-    }
-}
-
 // NAVIGATION TAB (TỐI ƯU CHO CẢ MOBILE VÀ DESKTOP)
 function toggleSidebar() { 
     document.getElementById('sidebar').classList.toggle('active'); 
@@ -134,11 +70,8 @@ function closeSidebar() {
 }
 
 function nav(tabId) {
-    // Trên Mobile: Chuyển đổi tab bằng class show
     if (window.innerWidth < 1024) {
-        document.querySelectorAll('.tab-view').forEach(t => {
-            if (t.id !== 'screen-login') t.classList.remove('show');
-        });
+        document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('show'));
         const targetTab = document.getElementById(tabId);
         if (targetTab) targetTab.classList.add('show');
         
@@ -148,7 +81,6 @@ function nav(tabId) {
         
         closeSidebar();
     } else {
-        // Trên Desktop: Bật lại hiển thị grid cho main-content nếu bị ẩn
         const mainContent = document.querySelector('.main-content');
         if (mainContent) mainContent.style.display = 'grid';
     }
