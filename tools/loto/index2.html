@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LOTO Mobile & Desktop v2.0 - Thế An Toàn</title>
+    <title>LOTO Console v0.10 - Thế An Toàn</title>
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -32,11 +32,18 @@
     <div id="toast" class="toast">Hệ thống sẵn sàng</div>
 
     <!-- SCREEN LOGIN CONTAINER -->
-    <div id="screen-login" class="tab-view show" style="justify-content: center; height: 100vh; position: fixed; top: 0; left: 0; z-index: 9000; background: #1e272e; width: 100%;">
-        <div class="card" style="max-width: 380px;">
-            <h2 style="color:var(--primary); margin-top:0;">THẾ AN TOÀN - LOTO</h2>
-            <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 20px;">Mô phỏng quy trình LOTO (Lockout/Tagout)</p>
-            <button class="btn btn-danger" onclick="doLogin()" style="width: 100%; padding: 14px; font-size: 1rem;">🔑 Đăng Nhập Google</button>
+    <div id="screen-login" class="tab-view show" style="justify-content: center; height: 100vh; position: fixed; top: 0; left: 0; z-index: 9999; background: #1e272e; width: 100%;">
+        <div class="card" style="max-width: 380px; padding: 25px;">
+            <h2 style="color:var(--primary); margin-top:0; margin-bottom: 5px;">THẾ AN TOÀN - LOTO</h2>
+            <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 15px;">Mô phỏng quy trình LOTO (Lockout/Tagout)</p>
+            
+            <!-- HIỂN THỊ PHIÊN BẢN -->
+            <div style="font-size: 0.8rem; color: var(--warning); background: rgba(241, 196, 15, 0.1); padding: 5px 10px; border-radius: 20px; display: inline-block; margin-bottom: 20px; font-weight: bold; border: 1px solid var(--warning);">
+                Phiên bản: <span id="login-version-display">v0.10</span>
+            </div>
+
+            <button class="btn btn-danger" onclick="doLogin()" style="width: 100%; padding: 14px; font-size: 1rem; margin-bottom: 10px;">🔑 Đăng Nhập Google</button>
+            <button class="btn" onclick="doQuickLogin()" style="width: 100%; padding: 10px; font-size: 0.85rem; background: #57606f; color: white;">⚡ Đăng Nhập Nhanh (Thử Nghiệm)</button>
         </div>
     </div>
 
@@ -46,7 +53,7 @@
             <button id="btn-menu" class="mobile-only" onclick="toggleSidebar()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
             </button>
-            <div class="app-title">LOTO Console v2.0 <span class="desktop-only" style="font-size: 0.75rem; color: #888; font-weight: normal;">| Phím tắt: [1-6] Chọn tool | [Space] Gạt CB-2</span></div>
+            <div class="app-title">LOTO Console <span id="header-version-display" style="color: var(--warning); font-size: 0.85rem;">v0.10</span> <span class="desktop-only" style="font-size: 0.75rem; color: #888; font-weight: normal;">| Phím tắt: [1-6] Chọn tool | [Space] Gạt CB-2</span></div>
         </div>
         <div class="user-info" id="user-display">Guest</div>
     </div>
