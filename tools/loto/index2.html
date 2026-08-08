@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOTO Mobile & Desktop v2.0</title>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="shock-flash"></div>
+
+    <!-- RESET OVERLAY -->
+    <div id="reset-overlay">
+        <h1 style="color: var(--danger); text-transform: uppercase; margin-bottom: 20px; text-shadow: 0 0 10px rgba(232, 65, 24, 0.8);">Đã xảy ra tai nạn điện</h1>
+        <button class="reset-btn" onclick="resetSimulation()">🔄 LÀM BÀI MỚI</button>
+    </div>
+
+    <!-- ACTIVE TOOL HUD -->
+    <div id="active-tool-hud">
+        <div style="font-size:1.5rem" id="hud-icon">🔧</div>
+        <div style="font-weight:bold; color:white; font-size:0.9rem" id="hud-text">...</div>
+        <div class="hud-close" onclick="clearTool()">✕</div>
+    </div>
+
+    <div class="backdrop" id="backdrop" onclick="closeSidebar()"></div>
+    <div id="toast" class="toast">Hệ thống sẵn sàng</div>
+
+    <!-- SCREEN LOGIN -->
+    <div id="screen-login" class="tab-view show" style="justify-content: center; height: 100vh; position: fixed; top: 0; left: 0; z-index: 9000; background: #1e272e; width: 100%;">
+        <div class="card" style="max-width: 380px;">
+            <h2 style="color:var(--primary); margin-top:0;">ĐĂNG NHẬP AN TOÀN</h2>
+            <p style="font-size: 0.85rem; color: #ccc;">Mô phỏng quy trình LOTO (Lockout/Tagout)</p>
+            <button class="btn btn-danger" onclick="doLogin()" style="margin-top: 15px; width: 100%;">Google Login</button>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            <button id="btn-menu" class="mobile-only" onclick="toggleSidebar()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+            <div class="app-title">LOTO Console v2.0 <span class="desktop-only" style="font-size: 0.75rem; color: #888; font-weight: normal;">| Phím tắt: [1-6] Chọn tool | [Space] Gạt CB-2</span></div>
+        </div>
+        <div class="user-info" id="user-display">Guest</div>
+    </div>
+
+    <!-- SIDEBAR (Mobile Drawer / Desktop Fixed Panel) -->
+    <div class="sidebar" id="sidebar">
+        <div class="menu-group">
+            <div class="menu-header">Khu Vực (Mobile)</div>
+            <div class="menu-item mobile-only active" id="nav-m-device" onclick="nav('tab-device')"><span class="tool-icon">🏭</span> Máy Móc</div>
+            <div class="menu-item mobile-only" id="nav-m-electrical" onclick="nav('tab-electrical')"><span class="tool-icon">⚡</span> Tủ Điện</div>
+            <div class="menu-item mobile-only" id="nav-m-store" onclick="nav('tab-store')"><span class="tool-icon">📦</span> Sơ Đồ Đơn Tuyến</div>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-header">Dụng Cụ LOTO</div>
+            <div class="menu-item" onclick="selectTool('hasp')"><span class="tool-icon">🔗</span> Khóa Kéo Dài [1]</div>
+            <div class="menu-item" onclick="selectTool('lock')"><span class="tool-icon">🔒</span> Ổ Khóa An Toàn [2]</div>
+            <div class="menu-item" onclick="selectTool('tag')"><span class="tool-icon">🏷️</span> Thẻ Cảnh Báo [3]</div>
+            <div class="menu-item" onclick="selectTool('keybox')"><span class="tool-icon">🗃️</span> Hộp Key Box [4]</div>
+            <div class="menu-item" onclick="selectTool('meter')"><span class="tool-icon">⚡</span> Đồng Hồ VOM [5]</div>
+            <div class="menu-item" onclick="selectTool('speaker')"><span class="tool-icon">📢</span> Loa Thông Báo [6]</div>
+        </div>
+
+        <div class="menu-group" id="menu-instructor" style="display:none; border-top: 2px solid var(--danger);">
+             <div class="menu-header" style="color:var(--danger)">Giảng Viên</div>
+             <div class="menu-item" onclick="nav('tab-instructor')"><span class="tool-icon">🎓</span> Log & Giám Sát</div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTENT CONTAINER -->
+    <div class="main-content">
+        
+        <!-- SECTION 1: MÁY MÓC / THIẾT BỊ -->
+        <div id="tab-device" class="tab-view show">
+            <div class="card" onclick="handleTapMachine()" style="position: relative; z-index: 1;">
+                <h3 style="margin:0; color:var(--primary)">QUẠT SỐ 02 (TẢI M2)</h3>
+                
+                <div id="worker-npc" class="worker-container">
+                    <svg class="worker-svg" viewBox="0 0 100 200">
+                        <circle cx="50" cy="30" r="20" fill="#f1c40f" stroke="#333" stroke-width="2"/>
+                        <rect class="worker-body" x="25" y="50" width="50" height="80" fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+                        <line x1="25" y1="60" x2="10" y2="100" stroke="#f39c12" stroke-width="8" stroke-linecap="round"/>
+                        <line x1="75" y1="60" x2="90" y2="100" stroke="#f39c12" stroke-width="8" stroke-linecap="round"/>
+                        <line x1="35" y1="130" x2="35" y2="190" stroke="#333" stroke-width="10" stroke-linecap="round"/>
+                        <line x1="65" y1="130" x2="65" y2="190" stroke="#333" stroke-width="10" stroke-linecap="round"/>
+                    </svg>
+                </div>
+
+                <div class="fan-frame">
+                    <div class="blade spin" id="blade1"></div>
+                    <div class="blade spin" id="blade2" style="transform: rotate(120deg);"></div>
+                    <div class="blade spin" id="blade3" style="transform: rotate(240deg);"></div>
+                </div>
+                <h3 id="machine-status" style="color:var(--success)">ĐANG CHẠY</h3>
+            </div>
+            
+            <div class="controls-container">
+                <div class="controls-row">
+                    <button class="btn btn-success" onclick="toggleMachine(true)">START</button>
+                    <button class="btn btn-danger" onclick="toggleMachine(false)">STOP</button>
+                </div>
+                <button class="btn btn-permit" onclick="handlePermit()">📝 CHO PHÉP LÀM VIỆC</button>
+            </div>
+        </div>
+
+        <!-- SECTION 2: TỦ ĐIỆN -->
+        <div id="tab-electrical" class="tab-view">
+            <div class="card">
+                <h3 style="margin:0; color:var(--primary)">TỦ ĐIỆN PHÂN PHỐI DB-01</h3>
+                <p style="font-size:0.8rem; color:#aaa; margin-bottom:15px;">Chạm/Click trực tiếp vào CB-2 để gạt điện hoặc áp dụng dụng cụ LOTO</p>
+                <div class="panel-grid">
+                    <div class="cb-unit">
+                        <span style="font-size:0.7rem; margin-top:5px;">LIGHT</span>
+                        <div class="cb-lever" id="cb1-lever">ON</div>
+                        <div class="cb-touch-area" onclick="handleTapCB(1)"></div>
+                    </div>
+
+                    <div class="cb-unit" style="border-color:var(--primary); box-shadow: 0 0 10px rgba(0,168,255,0.3);">
+                        <span style="font-size:0.7rem; margin-top:5px; color:var(--primary); font-weight:bold;">FAN (CB-2)</span>
+                        <div class="cb-lever" id="cb2-lever">ON</div>
+                        <div class="lock-container" id="cb2-locks"></div>
+                        <div id="cb2-tag-viz"></div>
+                        <div class="cb-touch-area" onclick="handleTapCB(2)"></div>
+                    </div>
+
+                    <div class="cb-unit">
+                        <span style="font-size:0.7rem; margin-top:5px;">SOCK</span>
+                        <div class="cb-lever" id="cb3-lever">ON</div>
+                        <div class="cb-touch-area" onclick="handleTapCB(3)"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: SƠ ĐỒ ĐƠN TUYẾN ĐỘNG & LOG -->
+        <div id="tab-store" class="tab-view">
+            <div class="card" style="background:#fff; color:#333; text-align: left;">
+                <h3 style="text-align: center; margin-top:5px; color:#2c3e50;">SƠ ĐỒ ĐƠN TUYẾN DB-01</h3>
+                
+                <!-- Dynamic SVG Diagram -->
+                <svg width="100%" height="220" viewBox="0 0 350 220">
+                    <defs>
+                        <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#333" />
+                        </marker>
+                    </defs>
+
+                    <!-- Main Busbar -->
+                    <text x="10" y="20" font-weight="bold" font-size="12" fill="#e74c3c">BUSBAR 380V</text>
+                    <line x1="20" y1="30" x2="20" y2="200" stroke="#e74c3c" stroke-width="6"/>
+
+                    <!-- Line segment BEFORE CB-2 (Always Live) -->
+                    <path d="M23 100 L80 100" stroke="#e74c3c" stroke-width="3" fill="none"/>
+
+                    <!-- CB-2 Box -->
+                    <rect id="svg-cb2-box" x="80" y="85" width="45" height="30" stroke="#e74c3c" stroke-width="2" fill="#fff" rx="3"/>
+                    <text id="svg-cb2-text" x="87" y="104" font-size="10" fill="#e74c3c" font-weight="bold">CB-2 (ON)</text>
+
+                    <!-- Line segment AFTER CB-2 (DYNAMIC COLOR) -->
+                    <path id="wire-after-cb2" d="M125 100 L160 100" stroke="#e74c3c" stroke-width="3" transition="stroke 0.3s"/>
+
+                    <!-- KM2 Contactor -->
+                    <rect x="160" y="90" width="30" height="20" stroke="#555" fill="#ddd"/>
+                    <text x="163" y="104" font-size="8">KM2</text> 
+
+                    <!-- Wire KM2 to OL -->
+                    <path id="wire-km2-ol" d="M190 100 L220 100" stroke="#e74c3c" stroke-width="3"/>
+
+                    <!-- Overload Relay (OL) -->
+                    <rect x="220" y="90" width="30" height="20" stroke="#555" fill="#ddd"/>
+                    <text x="227" y="104" font-size="8">OL</text>
+
+                    <!-- Output to Motor -->
+                    <line id="wire-to-motor" x1="250" y1="100" x2="280" y2="100" stroke="#e74c3c" stroke-width="3" marker-end="url(#arrow)"/>
+
+                    <!-- Motor M2 Symbol -->
+                    <circle id="svg-motor-symbol" cx="295" cy="100" r="16" fill="#e74c3c"/>
+                    <text x="290" y="105" font-size="12" fill="#fff" font-weight="bold">M</text>
+                    <text x="275" y="135" font-size="11" font-weight="bold" fill="#2c3e50">M2 (QUẠT SỐ 2)</text>
+                </svg>
+
+                <div style="font-size: 0.75rem; color: #666; display: flex; justify-content: space-around; background: #f8f9fa; padding: 6px; border-radius: 4px;">
+                    <span>🔴 Trạng thái: <strong id="diagram-status-text" style="color:#e74c3c">MẠCH MANG ĐIỆN</strong></span>
+                    <span>⚡ Điện áp: <strong id="diagram-voltage-text">380V</strong></span>
+                </div>
+            </div>
+
+            <!-- INSTRUCTOR / SYSTEM LOG (Integrated on desktop right panel) -->
+            <div class="card" style="text-align: left; margin-bottom: 0;">
+                 <h3 style="color:var(--warning); margin:0 0 10px 0;">GIÁM SÁT & LOG THAO TÁC</h3>
+                 <div id="log-container" class="log-panel"></div>
+                 <button class="btn btn-danger" onclick="resetSimulation()" style="margin-top:10px; width: 100%;">SOFT RESET</button>
+            </div>
+        </div>
+
+        <div id="tab-instructor" class="tab-view">
+            <!-- Dedicated Instructor Tab for Mobile view -->
+        </div>
+
+    </div>
+
+    <!-- BOTTOM NAVIGATION (MOBILE ONLY) -->
+    <div class="bottom-nav mobile-only">
+        <button class="bottom-nav-btn active" id="bnav-tab-device" onclick="nav('tab-device')">
+            <span class="icon">🏭</span>
+            <span>Máy Móc</span>
+        </button>
+        <button class="bottom-nav-btn" id="bnav-tab-electrical" onclick="nav('tab-electrical')">
+            <span class="icon">⚡</span>
+            <span>Tủ Điện</span>
+        </button>
+        <button class="bottom-nav-btn" id="bnav-tab-store" onclick="nav('tab-store')">
+            <span class="icon">📦</span>
+            <span>Sơ Đồ</span>
+        </button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
