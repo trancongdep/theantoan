@@ -79,7 +79,10 @@ function doLogin() {
 function onUser(u) {
     if (!u || !u.email) return;
     const loginScreen = document.getElementById('screen-login');
-    if (loginScreen) loginScreen.classList.remove('show');
+    if (loginScreen) {
+        loginScreen.classList.remove('show');
+        loginScreen.style.setProperty('display', 'none', 'important'); // Ẩn triệt để màn hình login
+    }
     
     userName = u.email.split('@')[0];
     document.getElementById('user-display').innerText = userName;
