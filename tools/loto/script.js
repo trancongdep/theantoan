@@ -1,3 +1,6 @@
+// QUẢN LÝ PHIÊN BẢN ỨNG DỤNG (Bắt đầu 0.1, tăng 0.1 mỗi lần -> 0.10)
+const APP_VERSION = "0.10";
+
 // CẤU HÌNH FIREBASE - PROJECT: THEANTOAN-FEA9E
 const firebaseConfig = {
     apiKey: "AIzaSyCkBRre5ajocg0EIuOchb6QknsdL6Qq9FA",
@@ -26,7 +29,15 @@ let sys = {
 let userName = "Guest";
 let workerPresent = true;
 
-// LẮNG NGHE TỰ ĐỘNG ĐĂNG NHẬP
+// CẬP NHẬT PHIÊN BẢN LÊN GIAO DIỆN KHI TẢI TRANG
+document.addEventListener("DOMContentLoaded", () => {
+    const vLogin = document.getElementById("login-version-display");
+    const vHeader = document.getElementById("header-version-display");
+    if (vLogin) vLogin.textContent = `v${APP_VERSION}`;
+    if (vHeader) vHeader.textContent = `v${APP_VERSION}`;
+});
+
+// LẮNG NGHE TỰ ĐỘNG ĐĂNG NHẬP DỰA TRÊN PHIÊN ĐÃ LƯU
 firebase.auth().onAuthStateChanged((user) => {
     if (user) {
         onUser(user);
@@ -35,7 +46,8 @@ firebase.auth().onAuthStateChanged((user) => {
 
 // PHÍM TẮT DESKTOP
 window.addEventListener('keydown', (e) => {
-    if (document.getElementById('screen-login').classList.contains('show')) return;
+    const loginScreen = document.getElementById('screen-login');
+    if (loginScreen && loginScreen.style.display !== 'none' && loginScreen.classList.contains('show')) return;
     
     switch(e.key) {
         case '1': selectTool('hasp'); break;
@@ -52,7 +64,7 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-// XỬ LÝ ĐĂNG NHẬP GOOGLE & FALLBACK
+// ĐĂNG NHẬP GOOGLE
 function doLogin() {
     showToast("Đang kết nối Google...");
     const provider = new firebase.auth.GoogleAuthProvider();
@@ -62,40 +74,55 @@ function doLogin() {
             onUser(result.user);
         })
         .catch((error) => {
-            console.warn("Firebase Auth Warning:", error);
-            const fallbackEmail = prompt(
-                `Xác thực Popup (${error.code || 'Môi trường Cục bộ'}).\nNhập email làm việc của bạn:`, 
-                "deptc.gvatvsld@gmail.com"
-            );
-            
-            if (fallbackEmail && fallbackEmail.trim() !== "") {
-                onUser({ email: fallbackEmail.trim() });
-            } else {
-                showToast("Đã hủy đăng nhập");
-            }
+            console.warn("Google Auth Popup Warning/Blocked:", error);
+            showToast("Không mở được Popup. Đang chuyển Đăng nhập Nhanh...");
+            doQuickLogin();
         });
 }
 
+// ĐĂNG NHẬP NHANH (DỰ PHÒNG KHI POPUP BỊ CHẶN HOẶC MÔI TRƯỜNG THỬ NGHIỆM)
+function doQuickLogin() {
+    const fallbackEmail = prompt(
+        "Nhập email làm việc của bạn để vào ứng dụng:", 
+        "deptc.gvatvsld@gmail.com"
+    );
+    
+    if (fallbackEmail && fallbackEmail.trim() !== "") {
+        onUser({ email: fallbackEmail.trim() });
+    } else {
+        onUser({ email: "guest@theantoan.vn" });
+    }
+}
+
+// XỬ LÝ CHUYỂN MÀN HÌNH SAU KHI ĐĂNG NHẬP THÀNH CÔNG
 function onUser(u) {
-    if (!u || !u.email) return;
+    if (!u) return;
+    const userEmail = u.email || "guest@theantoan.vn";
+    userName = userEmail.split('@')[0];
+    
+    // 1. ẨN TRIỆT ĐỂ MÀN HÌNH ĐĂNG NHẬP (ÉP STYLE)
     const loginScreen = document.getElementById('screen-login');
     if (loginScreen) {
         loginScreen.classList.remove('show');
-        loginScreen.style.setProperty('display', 'none', 'important'); // Ẩn triệt để màn hình login
+        loginScreen.setAttribute('style', 'display: none !important');
     }
     
-    userName = u.email.split('@')[0];
-    document.getElementById('user-display').innerText = userName;
-    nav('tab-device');
-    logAction("Đăng nhập hệ thống thành công");
+    // 2. CẬP NHẬT TÊN NGƯỜI DÙNG
+    const userDisp = document.getElementById('user-display');
+    if (userDisp) userDisp.innerText = userName;
     
-    if (u.email === 'deptc.gvatvsld@gmail.com') {
+    // 3. ÉP MỞ TẤT CẢ TÁC VỤ ỨNG DỤNG
+    nav('tab-device');
+    
+    logAction(`Đăng nhập thành công (${userEmail})`);
+    
+    if (userEmail === 'deptc.gvatvsld@gmail.com') {
         const instMenu = document.getElementById('menu-instructor');
         if (instMenu) instMenu.style.display = 'block';
     }
 }
 
-// NAVIGATION
+// NAVIGATION TAB (TỐI ƯU CHO CẢ MOBILE VÀ DESKTOP)
 function toggleSidebar() { 
     document.getElementById('sidebar').classList.toggle('active'); 
     document.getElementById('backdrop').classList.toggle('show'); 
@@ -107,16 +134,23 @@ function closeSidebar() {
 }
 
 function nav(tabId) {
+    // Trên Mobile: Chuyển đổi tab bằng class show
     if (window.innerWidth < 1024) {
-        document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('show'));
+        document.querySelectorAll('.tab-view').forEach(t => {
+            if (t.id !== 'screen-login') t.classList.remove('show');
+        });
         const targetTab = document.getElementById(tabId);
         if (targetTab) targetTab.classList.add('show');
         
         document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'));
         const activeNavBtn = document.getElementById(`bnav-${tabId}`);
-        if(activeNavBtn) activeNavBtn.classList.add('active');
+        if (activeNavBtn) activeNavBtn.classList.add('active');
         
         closeSidebar();
+    } else {
+        // Trên Desktop: Bật lại hiển thị grid cho main-content nếu bị ẩn
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) mainContent.style.display = 'grid';
     }
 }
 
