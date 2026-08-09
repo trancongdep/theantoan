@@ -1,5 +1,6 @@
 // QUẢN LÝ PHIÊN BẢN ỨNG DỤNG
-const APP_VERSION = "0.11";
+const APP_VERSION = "1.1";
+const DEFAULT_PASS = "0399496319";
 
 // CẤU HÌNH FIREBASE - PROJECT: THEANTOAN-FEA9E
 const firebaseConfig = {
@@ -19,30 +20,233 @@ if (!firebase.apps.length) {
 
 // STATE HỆ THỐNG
 let currentTool = null;
+let userName = "Chưa đăng nhập";
+let workerPresent = true;
+
 let sys = { 
+    cb1: true,
     cb2: true, 
     has_hasp: false, 
     lock_count: 0,   
     tagged: false 
 };
-let userName = "Giảng Viên An Toàn";
-let workerPresent = true;
 
-// KHỞI TẠO TỰ ĐỘNG KHI TẢI TRANG (KHÔNG CẦN ĐĂNG NHẬP)
+// CẤU TRÚC ĐỒ THỊ MẠCH ĐIỆN (GRAPH TOPOLOGY - BFS ENGINE)
+let circuitGraph = {
+    sources: ["BUSBAR_L1"],
+    devices: {
+        "CB1": { id: "CB1", type: "switch", inNode: "BUSBAR_L1", outNode: "NODE_CB1_OUT", state: true },
+        "CB2": { id: "CB2", type: "switch", inNode: "BUSBAR_L1", outNode: "NODE_CB2_OUT", state: true },
+        "MOTOR_M2": { id: "MOTOR_M2", type: "load", inNodes: ["NODE_CB1_OUT", "NODE_CB2_OUT"] }
+    },
+    wires: [
+        { id: "w_bus_cb1", from: "BUSBAR_L1", to: "CB1" },
+        { id: "w_cb1_m2", from: "CB1", to: "MOTOR_M2" },
+        { id: "w_bus_cb2", from: "BUSBAR_L1", to: "CB2" },
+        { id: "w_cb2_m2", from: "CB2", to: "MOTOR_M2" }
+    ]
+};
+
+// KHỞI TẠO TỰ ĐỘNG KHI TẢI TRANG
 document.addEventListener("DOMContentLoaded", () => {
+    const vLogin = document.getElementById("login-version-display");
     const vHeader = document.getElementById("header-version-display");
+    if (vLogin) vLogin.textContent = `v${APP_VERSION}`;
     if (vHeader) vHeader.textContent = `v${APP_VERSION}`;
-    
+});
+
+// XỬ LÝ ĐĂNG NHẬP VÀ GHI LƯỢT SỬ DỤNG VÀO FIREBASE
+function handleLoginSubmit(event) {
+    event.preventDefault();
+    const fullNameInput = document.getElementById('input-fullname');
+    const passwordInput = document.getElementById('input-password');
+
+    const fullName = fullNameInput ? fullNameInput.value.trim() : "";
+    const password = passwordInput ? passwordInput.value.trim() : "";
+
+    if (!fullName) {
+        showToast("⚠️ Vui lòng nhập Họ và Tên!");
+        return;
+    }
+
+    if (password !== DEFAULT_PASS) {
+        showToast("❌ Mật khẩu không đúng!");
+        return;
+    }
+
+    userName = fullName;
+
+    // GHI NHẬN LƯỢT SỬ DỤNG LÊN FIREBASE REALTIME DATABASE
+    try {
+        const loginData = {
+            fullName: fullName,
+            loginTime: new Date().toLocaleString('vi-VN'),
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            appVersion: APP_VERSION,
+            userAgent: navigator.userAgent
+        };
+
+        firebase.database().ref('user_logins').push(loginData)
+            .then(() => {
+                console.log("Đã ghi nhận lượt sử dụng thành công lên Firebase.");
+            })
+            .catch((err) => {
+                console.warn("Ghi log Firebase bị gián đoạn:", err);
+            });
+    } catch (e) {
+        console.warn("Firebase Database write error:", e);
+    }
+
+    // ẨN MÀN HÌNH ĐĂNG NHẬP VÀ VÀO ỨNG DỤNG
+    const loginScreen = document.getElementById('screen-login');
+    if (loginScreen) {
+        loginScreen.classList.remove('show');
+        loginScreen.style.setProperty('display', 'none', 'important');
+    }
+
     const userDisp = document.getElementById('user-display');
     if (userDisp) userDisp.innerText = userName;
 
-    // Mở mặc định tab Máy Móc
     nav('tab-device');
-    logAction("Hệ thống sẵn sàng (Chế độ Thử nghiệm Direct)");
-});
+    solveAndRenderCircuit();
+    logAction(`Đăng nhập hệ thống: ${userName}`);
+    showToast(`Xin chào ${userName}!`);
+}
+
+// THUẬT TOÁN BREADTH-FIRST SEARCH (BFS) TỰ ĐỘNG GIẢI MẠCH ĐIỆN
+function solveCircuitBFS(graph) {
+    const liveNodes = new Set(graph.sources);
+    const liveWires = new Set();
+    const liveDevices = new Set();
+    const queue = [...graph.sources];
+
+    while (queue.length > 0) {
+        const currentNode = queue.shift();
+
+        graph.wires.forEach(wire => {
+            if (wire.from === currentNode) {
+                const target = wire.to;
+
+                if (graph.devices[target]) {
+                    const dev = graph.devices[target];
+                    
+                    if (dev.type === 'switch') {
+                        if (dev.state === true) {
+                            liveWires.add(wire.id);
+                            liveDevices.add(target);
+                            if (!liveNodes.has(dev.outNode)) {
+                                liveNodes.add(dev.outNode);
+                                queue.push(dev.outNode);
+                            }
+                        }
+                    } else if (dev.type === 'load') {
+                        liveWires.add(wire.id);
+                        liveDevices.add(target);
+                    }
+                } else if (graph.devices[currentNode]) {
+                    liveWires.add(wire.id);
+                    if (!liveNodes.has(target)) {
+                        liveNodes.add(target);
+                        queue.push(target);
+                    }
+                }
+            }
+        });
+    }
+
+    return { liveNodes, liveWires, liveDevices };
+}
+
+// CẬP NHẬT GIAO DIỆN SƠ ĐỒ DỰA TRÊN KẾT QUẢ BFS
+function solveAndRenderCircuit() {
+    const { liveWires, liveDevices } = solveCircuitBFS(circuitGraph);
+    const liveColor = "#e74c3c";
+    const safeColor = "#2ecee0";
+
+    circuitGraph.wires.forEach(wire => {
+        const el = document.getElementById(wire.id);
+        if (el) el.setAttribute('stroke', liveWires.has(wire.id) ? liveColor : safeColor);
+    });
+
+    Object.keys(circuitGraph.devices).forEach(devId => {
+        const dev = circuitGraph.devices[devId];
+        const el = document.getElementById(devId);
+        const txt = document.getElementById(`txt-${devId}`);
+        const isLive = liveDevices.has(devId);
+
+        if (dev.type === 'switch') {
+            if (el) el.setAttribute('stroke', dev.state ? liveColor : safeColor);
+            if (txt) {
+                txt.setAttribute('fill', dev.state ? liveColor : safeColor);
+                txt.textContent = `${devId} (${dev.state ? 'ON' : 'OFF'})`;
+            }
+        } else if (dev.type === 'load') {
+            if (el) el.setAttribute('fill', isLive ? liveColor : safeColor);
+        }
+    });
+
+    const isMotorActive = liveDevices.has("MOTOR_M2");
+    toggleMachineVisuals(isMotorActive);
+
+    const stText = document.getElementById('diagram-status-text');
+    const voltText = document.getElementById('diagram-voltage-text');
+    if (stText && voltText) {
+        stText.textContent = isMotorActive ? "MẠCH MANG ĐIỆN (380V)" : "CÁCH LY AN TOÀN (0V)";
+        stText.style.color = isMotorActive ? liveColor : safeColor;
+        voltText.textContent = isMotorActive ? "380V" : "0V";
+    }
+}
+
+function toggleMachineVisuals(run) {
+    const blades = document.querySelectorAll('.blade');
+    const st = document.getElementById('machine-status');
+    if (run) {
+        blades.forEach(b => b.style.animation = "spin 0.2s linear infinite");
+        if(st) { st.innerText = "ĐANG CHẠY"; st.style.color = "var(--success)"; }
+    } else {
+        blades.forEach(b => b.style.animation = "none");
+        if(st) { st.innerText = "ĐÃ DỪNG"; st.style.color = "#bdc3c7"; }
+    }
+}
+
+function handleCircuitUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const fileName = file.name;
+    const fileExt = fileName.split('.').pop().toLowerCase();
+    document.getElementById('upload-filename').innerText = `📄 Đã nạp: ${fileName}`;
+
+    const reader = new FileReader();
+
+    if (fileExt === 'svg') {
+        reader.onload = function(e) {
+            document.getElementById('diagram-container').innerHTML = e.target.result;
+            logAction(`Đã nạp sơ đồ SVG mới: ${fileName}`);
+            showToast("✅ Đã nạp sơ đồ SVG thành công");
+            solveAndRenderCircuit();
+        };
+        reader.readAsText(file);
+    } else if (fileExt === 'json') {
+        reader.onload = function(e) {
+            try {
+                circuitGraph = JSON.parse(e.target.result);
+                solveAndRenderCircuit();
+                logAction(`Đã nạp cấu trúc JSON mới: ${fileName}`);
+                showToast("✅ Đã giải sơ đồ JSON thành công");
+            } catch (err) {
+                showToast("❌ Lỗi cấu trúc JSON!");
+            }
+        };
+        reader.readAsText(file);
+    }
+}
 
 // PHÍM TẮT DESKTOP
 window.addEventListener('keydown', (e) => {
+    const loginScreen = document.getElementById('screen-login');
+    if (loginScreen && loginScreen.style.display !== 'none' && loginScreen.classList.contains('show')) return;
+
     switch(e.key) {
         case '1': selectTool('hasp'); break;
         case '2': selectTool('lock'); break;
@@ -58,7 +262,7 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-// NAVIGATION TAB (TỐI ƯU CHO CẢ MOBILE VÀ DESKTOP)
+// NAVIGATION TAB
 function toggleSidebar() { 
     document.getElementById('sidebar').classList.toggle('active'); 
     document.getElementById('backdrop').classList.toggle('show'); 
@@ -71,7 +275,9 @@ function closeSidebar() {
 
 function nav(tabId) {
     if (window.innerWidth < 1024) {
-        document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('show'));
+        document.querySelectorAll('.tab-view').forEach(t => {
+            if (t.id !== 'screen-login') t.classList.remove('show');
+        });
         const targetTab = document.getElementById(tabId);
         if (targetTab) targetTab.classList.add('show');
         
@@ -86,7 +292,6 @@ function nav(tabId) {
     }
 }
 
-// TOOL SELECTION
 function selectTool(type) {
     currentTool = type;
     const map = { 
@@ -109,46 +314,37 @@ function clearTool() {
     document.getElementById('active-tool-hud').classList.remove('show');
 }
 
-// INTERACTIONS & CIRCUIT CONTROL
-function toggleMachine(run) {
-    const blades = document.querySelectorAll('.blade');
-    const st = document.getElementById('machine-status');
-    if(run && sys.cb2) {
-        blades.forEach(b => b.style.animation = "spin 0.2s linear infinite");
-        st.innerText = "ĐANG CHẠY"; st.style.color = "var(--success)";
-        logAction("Bấm START quạt số 2");
-    } else {
-        blades.forEach(b => b.style.animation = "none");
-        st.innerText = "ĐÃ DỪNG"; st.style.color = "#bdc3c7";
-        logAction("Bấm STOP quạt số 2");
-    }
-}
-
 function handleTapCB(id) {
-    if (id === 2) {
+    const cbKey = `CB${id}`;
+    
+    if (id === 1 || id === 2) {
         if (currentTool === 'hasp') {
-            if(sys.cb2) { showToast("⚡ Lỗi: Còn điện! Hãy gạt OFF CB trước."); logAction("Lỗi: Kẹp Hasp khi còn điện", true); return; }
+            if (circuitGraph.devices[cbKey].state) { 
+                showToast("⚡ Lỗi: Còn điện! Hãy gạt OFF CB trước."); 
+                logAction(`Lỗi: Kẹp Hasp vào ${cbKey} khi còn điện`, true); 
+                return; 
+            }
             if(sys.has_hasp) { showToast("Đã kẹp Hasp rồi!"); return; }
             
             sys.has_hasp = true;
             updateLockVisuals();
-            logAction("Đã kẹp khóa kéo dài (Hasp) vào CB-2");
+            logAction(`Đã kẹp khóa kéo dài (Hasp) vào ${cbKey}`);
             clearTool();
         } 
         else if (currentTool === 'lock') {
-            if(sys.cb2) { showToast("⚡ Lỗi: CB còn điện!"); return; }
+            if (circuitGraph.devices[cbKey].state) { showToast("⚡ Lỗi: CB còn điện!"); return; }
             
             if (sys.has_hasp) {
                  sys.lock_count++;
                  updateLockVisuals();
-                 logAction(`Đã mắc thêm ổ khóa số ${sys.lock_count} vào Hasp`);
+                 logAction(`Đã mắc thêm ổ khóa số ${sys.lock_count} vào Hasp trên ${cbKey}`);
                  showToast(`Đã móc khóa số ${sys.lock_count}`);
                  clearTool();
             } else {
                  if(sys.lock_count > 0) { showToast("Đã có khóa đơn rồi"); return; }
                  sys.lock_count = 1;
                  updateLockVisuals();
-                 logAction("Đã khóa an toàn (Khóa đơn)");
+                 logAction(`Đã khóa an toàn (Khóa đơn) trên ${cbKey}`);
                  clearTool();
             }
         } 
@@ -162,30 +358,31 @@ function handleTapCB(id) {
         else if (currentTool === 'meter') {
             showToast("⏳ Đang đo điện áp...");
             setTimeout(() => {
-                const res = sys.cb2 ? "380V (CÓ ĐIỆN)" : "0V (ĐÃ CẮT ĐIỆN)";
-                showToast(`Kết quả đo: ${res}`);
-                logAction(`Kiểm tra điện áp VOM tại CB-2: ${res}`);
+                const isLive = circuitGraph.devices[cbKey].state;
+                const res = isLive ? "380V (CÓ ĐIỆN)" : "0V (ĐÃ CẮT ĐIỆN)";
+                showToast(`Kết quả đo tại ${cbKey}: ${res}`);
+                logAction(`Kiểm tra điện áp VOM tại ${cbKey}: ${res}`);
             }, 800);
         } 
         else if (!currentTool) {
             if(sys.lock_count > 0 || sys.has_hasp) { 
-                showToast("⛔ Không thể gạt! CB đã bị khóa LOTO."); 
-                logAction("Cảnh báo: Cố tình gạt CB khi đang khóa LOTO", true);
+                showToast(`⛔ Không thể gạt! ${cbKey} đã bị khóa LOTO.`); 
+                logAction(`Cảnh báo: Cố tình gạt ${cbKey} khi đang khóa LOTO`, true);
                 return; 
             }
             
-            sys.cb2 = !sys.cb2;
-            toggleMachine(sys.cb2);
+            circuitGraph.devices[cbKey].state = !circuitGraph.devices[cbKey].state;
+            sys[`cb${id}`] = circuitGraph.devices[cbKey].state;
             
-            const el = document.getElementById('cb2-lever');
-            if (sys.cb2) {
+            const el = document.getElementById(`cb${id}-lever`);
+            if (circuitGraph.devices[cbKey].state) {
                 el.classList.remove('off'); el.innerText = "ON";
             } else {
                 el.classList.add('off'); el.innerText = "OFF";
             }
             
-            updateDynamicDiagram(sys.cb2);
-            logAction(`Gạt tay CB-2 sang vị trí: ${sys.cb2 ? 'ON' : 'OFF'}`);
+            solveAndRenderCircuit();
+            logAction(`Gạt tay ${cbKey} sang vị trí: ${circuitGraph.devices[cbKey].state ? 'ON' : 'OFF'}`);
         }
     } else {
         if(!currentTool) {
@@ -197,47 +394,22 @@ function handleTapCB(id) {
     }
 }
 
-// SƠ ĐỒ ĐƠN TUYẾN ĐỘNG
-function updateDynamicDiagram(isLive) {
-    const liveColor = "#e74c3c";
-    const safeColor = "#2ecee0";
-
-    const wires = ['wire-after-cb2', 'wire-km2-ol', 'wire-to-motor'];
-    wires.forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.setAttribute('stroke', isLive ? liveColor : safeColor);
-    });
-
-    const motor = document.getElementById('svg-motor-symbol');
-    if(motor) motor.setAttribute('fill', isLive ? liveColor : safeColor);
-
-    const cbBox = document.getElementById('svg-cb2-box');
-    const cbText = document.getElementById('svg-cb2-text');
-    
-    if(cbBox && cbText) {
-        cbBox.setAttribute('stroke', isLive ? liveColor : safeColor);
-        cbText.setAttribute('fill', isLive ? liveColor : safeColor);
-        cbText.textContent = isLive ? "CB-2 (ON)" : "CB-2 (OFF)";
-    }
-
-    const stText = document.getElementById('diagram-status-text');
-    const voltText = document.getElementById('diagram-voltage-text');
-    
-    if(stText && voltText) {
-        stText.textContent = isLive ? "MẠCH MANG ĐIỆN" : "CÁCH LY AN TOÀN";
-        stText.style.color = isLive ? liveColor : safeColor;
-        voltText.textContent = isLive ? "380V" : "0V";
+function toggleMachine(run) {
+    if (!run) {
+        toggleMachineVisuals(false);
+        logAction("Bấm STOP quạt số 2 tại chỗ");
+    } else {
+        const { liveDevices } = solveCircuitBFS(circuitGraph);
+        const isLive = liveDevices.has("MOTOR_M2");
+        toggleMachineVisuals(isLive);
+        logAction("Bấm START quạt số 2 tại chỗ");
     }
 }
 
 function updateLockVisuals() {
     const container = document.getElementById('cb2-locks');
     let html = '';
-    
-    if(sys.has_hasp) {
-        html += '<div class="vis-hasp">🔗</div>';
-    }
-    
+    if(sys.has_hasp) html += '<div class="vis-hasp">🔗</div>';
     if(sys.lock_count > 0) {
          if(sys.has_hasp) {
              if(sys.lock_count >= 1) html += '<div class="vis-lock lock-1">🔒</div>';
@@ -277,14 +449,17 @@ function handlePermit() {
     setTimeout(() => worker.classList.add('worker-walk-in'), 100);
 
     setTimeout(() => {
+        const { liveDevices } = solveCircuitBFS(circuitGraph);
+        const isMotorLive = liveDevices.has("MOTOR_M2");
+        
         let unsafe = false;
-        if(sys.cb2) unsafe = true;
-        if(sys.lock_count === 0) unsafe = true; 
+        if (isMotorLive) unsafe = true;
+        if (sys.lock_count === 0) unsafe = true;
 
         if(unsafe) {
             svg.classList.add('shocked');
             document.getElementById('shock-flash').style.display = 'block';
-            logAction("TAI NẠN: ĐIỆN GIẬT DO CHƯA CẮT ĐIỆN/KHÓA LOTO!", true);
+            logAction("TAI NẠN: BỎ SÓT CHƯA CẮT/KHÓA NGUỒN ĐIỆN DỰ PHÒNG!", true);
             showToast("⚡ TAI NẠN NGHIÊM TRỌNG!");
             
             setTimeout(() => {
@@ -299,14 +474,19 @@ function handlePermit() {
 }
 
 function resetSimulation() {
-    sys = { cb2: true, has_hasp: false, lock_count: 0, tagged: false };
+    sys = { cb1: true, cb2: true, has_hasp: false, lock_count: 0, tagged: false };
+    circuitGraph.devices["CB1"].state = true;
+    circuitGraph.devices["CB2"].state = true;
+
     updateLockVisuals();
     document.getElementById('cb2-tag-viz').innerHTML = '';
     
-    const el = document.getElementById('cb2-lever');
-    el.classList.remove('off'); el.innerText = "ON";
-    toggleMachine(true);
-    updateDynamicDiagram(true);
+    document.getElementById('cb1-lever').classList.remove('off');
+    document.getElementById('cb1-lever').innerText = "ON";
+    document.getElementById('cb2-lever').classList.remove('off');
+    document.getElementById('cb2-lever').innerText = "ON";
+    
+    solveAndRenderCircuit();
 
     workerPresent = true;
     const worker = document.getElementById('worker-npc');
