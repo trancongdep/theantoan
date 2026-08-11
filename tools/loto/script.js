@@ -1,5 +1,5 @@
 // QUẢN LÝ PHIÊN BẢN ỨNG DỤNG
-const APP_VERSION = "1.1";
+const APP_VERSION = "1.2";
 const DEFAULT_PASS = "0399496319";
 
 // CẤU HÌNH FIREBASE - PROJECT: THEANTOAN-FEA9E
@@ -22,13 +22,18 @@ if (!firebase.apps.length) {
 let currentTool = null;
 let userName = "Chưa đăng nhập";
 let workerPresent = true;
+let activeControlMode = "panel"; // 'panel' hoặc 'hmi'
 
 let sys = { 
     cb1: true,
     cb2: true, 
     has_hasp: false, 
     lock_count: 0,   
-    tagged: false 
+    tagged: false,
+    ground_earth_connected: false,
+    ground_phase_connected: false,
+    barrier_placed: false,
+    signs: { prohibit: false, danger: false, work: false }
 };
 
 // CẤU TRÚC ĐỒ THỊ MẠCH ĐIỆN (GRAPH TOPOLOGY - BFS ENGINE)
@@ -55,6 +60,30 @@ document.addEventListener("DOMContentLoaded", () => {
     if (vHeader) vHeader.textContent = `v${APP_VERSION}`;
 });
 
+// CHUYỂN ĐỔI CHẾ ĐỘ THAO TÁC (TỦ ĐIỆN THỰC TẾ / MÀN HÌNH HMI)
+function switchControlMode(mode) {
+    activeControlMode = mode;
+    const panelView = document.getElementById('view-panel-mode');
+    const hmiView = document.getElementById('view-hmi-mode');
+    const btnPanel = document.getElementById('btn-mode-panel');
+    const btnHMI = document.getElementById('btn-mode-hmi');
+
+    if (mode === 'panel') {
+        if (panelView) panelView.style.display = 'block';
+        if (hmiView) hmiView.style.display = 'none';
+        if (btnPanel) btnPanel.classList.add('active');
+        if (btnHMI) btnHMI.classList.remove('active');
+        logAction("Chuyển chế độ thao tác: Tủ Điện Thực Tế");
+    } else {
+        if (panelView) panelView.style.display = 'none';
+        if (hmiView) hmiView.style.display = 'block';
+        if (btnPanel) btnPanel.classList.remove('active');
+        if (btnHMI) btnHMI.classList.add('active');
+        logAction("Chuyển chế độ thao tác: Màn Hình HMI Số");
+    }
+    updateHMIDisplay();
+}
+
 // XỬ LÝ ĐĂNG NHẬP VÀ GHI LƯỢT SỬ DỤNG VÀO FIREBASE
 function handleLoginSubmit(event) {
     event.preventDefault();
@@ -76,7 +105,6 @@ function handleLoginSubmit(event) {
 
     userName = fullName;
 
-    // GHI NHẬN LƯỢT SỬ DỤNG LÊN FIREBASE REALTIME DATABASE
     try {
         const loginData = {
             fullName: fullName,
@@ -86,18 +114,11 @@ function handleLoginSubmit(event) {
             userAgent: navigator.userAgent
         };
 
-        firebase.database().ref('user_logins').push(loginData)
-            .then(() => {
-                console.log("Đã ghi nhận lượt sử dụng thành công lên Firebase.");
-            })
-            .catch((err) => {
-                console.warn("Ghi log Firebase bị gián đoạn:", err);
-            });
+        firebase.database().ref('user_logins').push(loginData);
     } catch (e) {
-        console.warn("Firebase Database write error:", e);
+        console.warn("Firebase Database error:", e);
     }
 
-    // ẨN MÀN HÌNH ĐĂNG NHẬP VÀ VÀO ỨNG DỤNG
     const loginScreen = document.getElementById('screen-login');
     if (loginScreen) {
         loginScreen.classList.remove('show');
@@ -157,7 +178,7 @@ function solveCircuitBFS(graph) {
     return { liveNodes, liveWires, liveDevices };
 }
 
-// CẬP NHẬT GIAO DIỆN SƠ ĐỒ DỰA TRÊN KẾT QUẢ BFS
+// CẬP NHẬT GIAO DIỆN SƠ ĐỒ VÀ MÀN HÌNH HMI DỰA TRÊN KẾT QUẢ BFS
 function solveAndRenderCircuit() {
     const { liveWires, liveDevices } = solveCircuitBFS(circuitGraph);
     const liveColor = "#e74c3c";
@@ -195,6 +216,80 @@ function solveAndRenderCircuit() {
         stText.style.color = isMotorActive ? liveColor : safeColor;
         voltText.textContent = isMotorActive ? "380V" : "0V";
     }
+
+    updateHMIDisplay();
+}
+
+// CẬP NHẬT TRẠNG THÁI HIỂN THỊ TRÊN MÀN HÌNH HMI
+function updateHMIDisplay() {
+    const { liveDevices } = solveCircuitBFS(circuitGraph);
+    const isMotorActive = liveDevices.has("MOTOR_M2");
+
+    // CB1 LED
+    const ledCB1 = document.getElementById('hmi-led-cb1');
+    if (ledCB1) {
+        const cb1State = circuitGraph.devices["CB1"].state;
+        ledCB1.className = `hmi-led ${cb1State ? 'led-on' : 'led-off'}`;
+        ledCB1.innerText = cb1State ? "ĐANG ĐÓNG (ON)" : "MỞ/TRIP (OFF)";
+    }
+
+    // CB2 LED
+    const ledCB2 = document.getElementById('hmi-led-cb2');
+    if (ledCB2) {
+        const cb2State = circuitGraph.devices["CB2"].state;
+        ledCB2.className = `hmi-led ${cb2State ? 'led-on' : 'led-off'}`;
+        ledCB2.innerText = cb2State ? "ĐANG ĐÓNG (ON)" : "MỞ/TRIP (OFF)";
+    }
+
+    // LOTO MSG ON HMI
+    const lotoMsg = document.getElementById('hmi-loto-msg-cb2');
+    if (lotoMsg) {
+        if (sys.lock_count > 0 || sys.has_hasp) {
+            lotoMsg.innerText = "🔒 LOTO LOCKED - LOCAL CONTROL";
+            lotoMsg.style.color = "#ff6b6b";
+        } else {
+            lotoMsg.innerText = "LOTO: BÌNH THƯỜNG";
+            lotoMsg.style.color = "var(--warning)";
+        }
+    }
+
+    // FOOTER
+    const hmiVolt = document.getElementById('hmi-volt-disp');
+    const hmiMotor = document.getElementById('hmi-motor-disp');
+    if (hmiVolt) hmiVolt.innerText = isMotorActive ? "380V" : "0V";
+    if (hmiMotor) {
+        hmiMotor.innerText = isMotorActive ? "RUNNING" : "STOPPED";
+        hmiMotor.style.color = isMotorActive ? "var(--success)" : "#aaa";
+    }
+}
+
+// THAO TÁC ĐÓNG CẮT TỪ MÀN HÌNH HMI
+function handleHMISwitch(id, targetState) {
+    const cbKey = `CB${id}`;
+
+    // Kiểm tra LOTO khóa cứng tại Tủ
+    if (sys.lock_count > 0 || sys.has_hasp) {
+        showToast(`⛔ HMI INTERLOCK: ${cbKey} đang bị Khóa LOTO tại Tủ!`);
+        logAction(`HMI BLOCKED: Cố thao tác ${cbKey} qua HMI khi đã khóa LOTO`, true);
+        return;
+    }
+
+    circuitGraph.devices[cbKey].state = targetState;
+    sys[`cb${id}`] = targetState;
+
+    // Đồng bộ cần gạt tủ điện thực tế
+    const el = document.getElementById(`cb${id}-lever`);
+    if (el) {
+        if (targetState) {
+            el.classList.remove('off'); el.innerText = "ON";
+        } else {
+            el.classList.add('off'); el.innerText = "OFF";
+        }
+    }
+
+    solveAndRenderCircuit();
+    logAction(`HMI CONTROL: ${targetState ? 'CLOSE (Đóng ON)' : 'TRIP (Ngắt OFF)'} ${cbKey}`);
+    showToast(`HMI: Đã ${targetState ? 'ĐÓNG' : 'NGẮT'} ${cbKey}`);
 }
 
 function toggleMachineVisuals(run) {
@@ -209,89 +304,6 @@ function toggleMachineVisuals(run) {
     }
 }
 
-function handleCircuitUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const fileName = file.name;
-    const fileExt = fileName.split('.').pop().toLowerCase();
-    document.getElementById('upload-filename').innerText = `📄 Đã nạp: ${fileName}`;
-
-    const reader = new FileReader();
-
-    if (fileExt === 'svg') {
-        reader.onload = function(e) {
-            document.getElementById('diagram-container').innerHTML = e.target.result;
-            logAction(`Đã nạp sơ đồ SVG mới: ${fileName}`);
-            showToast("✅ Đã nạp sơ đồ SVG thành công");
-            solveAndRenderCircuit();
-        };
-        reader.readAsText(file);
-    } else if (fileExt === 'json') {
-        reader.onload = function(e) {
-            try {
-                circuitGraph = JSON.parse(e.target.result);
-                solveAndRenderCircuit();
-                logAction(`Đã nạp cấu trúc JSON mới: ${fileName}`);
-                showToast("✅ Đã giải sơ đồ JSON thành công");
-            } catch (err) {
-                showToast("❌ Lỗi cấu trúc JSON!");
-            }
-        };
-        reader.readAsText(file);
-    }
-}
-
-// PHÍM TẮT DESKTOP
-window.addEventListener('keydown', (e) => {
-    const loginScreen = document.getElementById('screen-login');
-    if (loginScreen && loginScreen.style.display !== 'none' && loginScreen.classList.contains('show')) return;
-
-    switch(e.key) {
-        case '1': selectTool('hasp'); break;
-        case '2': selectTool('lock'); break;
-        case '3': selectTool('tag'); break;
-        case '4': selectTool('keybox'); break;
-        case '5': selectTool('meter'); break;
-        case '6': selectTool('speaker'); break;
-        case 'Escape': clearTool(); break;
-        case ' ': 
-            e.preventDefault();
-            handleTapCB(2); 
-            break;
-    }
-});
-
-// NAVIGATION TAB
-function toggleSidebar() { 
-    document.getElementById('sidebar').classList.toggle('active'); 
-    document.getElementById('backdrop').classList.toggle('show'); 
-}
-
-function closeSidebar() { 
-    document.getElementById('sidebar').classList.remove('active'); 
-    document.getElementById('backdrop').classList.remove('show'); 
-}
-
-function nav(tabId) {
-    if (window.innerWidth < 1024) {
-        document.querySelectorAll('.tab-view').forEach(t => {
-            if (t.id !== 'screen-login') t.classList.remove('show');
-        });
-        const targetTab = document.getElementById(tabId);
-        if (targetTab) targetTab.classList.add('show');
-        
-        document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'));
-        const activeNavBtn = document.getElementById(`bnav-${tabId}`);
-        if (activeNavBtn) activeNavBtn.classList.add('active');
-        
-        closeSidebar();
-    } else {
-        const mainContent = document.querySelector('.main-content');
-        if (mainContent) mainContent.style.display = 'grid';
-    }
-}
-
 function selectTool(type) {
     currentTool = type;
     const map = { 
@@ -300,7 +312,13 @@ function selectTool(type) {
         tag: "Thẻ Cảnh Báo", 
         keybox: "Hộp Key Box", 
         meter: "Đồng Hồ VOM", 
-        speaker: "Loa Thông Báo" 
+        speaker: "Loa Thông Báo",
+        earth_earth: "Tiếp Địa (Đầu Đất)",
+        earth_phase: "Tiếp Địa (Đầu Pha)",
+        barrier: "Rào Chắn An Toàn",
+        sign_prohibit: "Biển Cấm Đóng Điện",
+        sign_danger: "Biển Cảnh Báo Có Điện",
+        sign_work: "Biển Làm Việc Tại Đây"
     };
     document.getElementById('active-tool-hud').classList.add('show');
     document.getElementById('hud-icon').innerText = "🔧";
@@ -314,9 +332,85 @@ function clearTool() {
     document.getElementById('active-tool-hud').classList.remove('show');
 }
 
+// THAO TÁC CÁC APTOMAT VỚI DỤNG CỤ TẠI TỦ THỰC TẾ
 function handleTapCB(id) {
     const cbKey = `CB${id}`;
-    
+    const isLive = circuitGraph.devices[cbKey] ? circuitGraph.devices[cbKey].state : false;
+
+    if (currentTool === 'earth_earth') {
+        sys.ground_earth_connected = true;
+        showToast("✅ Đã kẹp đầu ĐẤT của bộ tiếp địa vào vỏ tủ/hệ thống nối đất.");
+        logAction("Đã kẹp tiếp địa: Đầu ĐẤT");
+        clearTool();
+        return;
+    }
+
+    if (currentTool === 'earth_phase') {
+        if (!sys.ground_earth_connected) {
+            showToast("❌ VI PHẠM: Phải kẹp đầu ĐẤT trước khi kẹp đầu PHA!");
+            logAction("VI PHẠM QUY TRÌNH: Kẹp đầu Pha tiếp địa khi chưa kẹp đầu Đất", true);
+            return;
+        }
+
+        if (isLive) {
+            document.getElementById('shock-flash').style.display = 'block';
+            logAction("TAI NẠN NGHÊM TRỌNG: Kẹp tiếp địa khi thiết bị ĐANG MANG ĐIỆN! Phóng điện hồ quang!", true);
+            showToast("💥 TAI NẠN: NỔ HỒ QUANG ĐIỆN DO KẸP TIẾP ĐỊA CÓ ĐIỆN!");
+            setTimeout(() => {
+                document.getElementById('shock-flash').style.display = 'none';
+                document.getElementById('reset-overlay').style.display = 'flex';
+            }, 3000);
+            return;
+        }
+
+        sys.ground_phase_connected = true;
+        updateGroundVisuals();
+        showToast("✅ Đã kẹp đầu PHA tiếp địa vào thanh cái sau CB.");
+        logAction(`Đã kẹp tiếp địa di động đầu PHA vào ${cbKey}`);
+        clearTool();
+        return;
+    }
+
+    if (currentTool === 'sign_prohibit') {
+        if (isLive) {
+            showToast("⚠️ Phải gạt OFF CB trước khi treo Biển Cấm!");
+            return;
+        }
+        sys.signs.prohibit = true;
+        updateSignsVisuals();
+        showToast("✅ Đã treo biển 'CẤM ĐÓNG ĐIỆN! CÓ NGUỜI ĐANG LÀM VIỆC'");
+        logAction(`Treo biển Cấm đóng điện tại ${cbKey}`);
+        clearTool();
+        return;
+    }
+
+    if (currentTool === 'barrier') {
+        sys.barrier_placed = true;
+        updateBarrierVisuals();
+        showToast("✅ Đã dựng rào chắn cách ly vùng mang điện lân cận.");
+        logAction("Đã dựng rào chắn an toàn hiện trường");
+        clearTool();
+        return;
+    }
+
+    if (currentTool === 'sign_danger') {
+        sys.signs.danger = true;
+        updateSignsVisuals();
+        showToast("✅ Đã treo biển 'DỪNG LẠI! CÓ ĐIỆN NGUY HIỂM CHẾT NGUỜI'");
+        logAction("Treo biển cảnh báo điện nguy hiểm tại rào chắn");
+        clearTool();
+        return;
+    }
+
+    if (currentTool === 'sign_work') {
+        sys.signs.work = true;
+        updateSignsVisuals();
+        showToast("✅ Đã treo biển 'LÀM VIỆC TẠI ĐÂY'");
+        logAction("Treo biển chỉ dẫn Làm việc tại đây tại vị trí công tác");
+        clearTool();
+        return;
+    }
+
     if (id === 1 || id === 2) {
         if (currentTool === 'hasp') {
             if (circuitGraph.devices[cbKey].state) { 
@@ -358,8 +452,8 @@ function handleTapCB(id) {
         else if (currentTool === 'meter') {
             showToast("⏳ Đang đo điện áp...");
             setTimeout(() => {
-                const isLive = circuitGraph.devices[cbKey].state;
-                const res = isLive ? "380V (CÓ ĐIỆN)" : "0V (ĐÃ CẮT ĐIỆN)";
+                const isLiveNow = circuitGraph.devices[cbKey].state;
+                const res = isLiveNow ? "380V (CÓ ĐIỆN)" : "0V (ĐÃ CẮT ĐIỆN)";
                 showToast(`Kết quả đo tại ${cbKey}: ${res}`);
                 logAction(`Kiểm tra điện áp VOM tại ${cbKey}: ${res}`);
             }, 800);
@@ -391,6 +485,47 @@ function handleTapCB(id) {
             el.innerText = el.classList.contains('off') ? "OFF" : "ON";
             logAction(`Gạt CB-${id}: ${el.innerText}`);
         }
+    }
+}
+
+function updateGroundVisuals() {
+    const container = document.getElementById('cb2-locks');
+    if (sys.ground_phase_connected && container) {
+        container.innerHTML += `
+            <svg class="vis-ground-set" viewBox="0 0 100 100">
+                <line x1="50" y1="10" x2="50" y2="80" class="ground-wire" />
+                <circle cx="50" cy="10" r="6" fill="#f1c40f" />
+                <path d="M35 80 L65 80 M40 86 L60 86 M45 92 L55 92" stroke="#f1c40f" stroke-width="3" />
+            </svg>`;
+    }
+}
+
+function updateBarrierVisuals() {
+    let el = document.getElementById('barrier-zone');
+    if (!el) {
+        const targetCard = document.querySelector('#tab-electrical .card');
+        if (targetCard) {
+            el = document.createElement('div');
+            el.id = 'barrier-zone';
+            el.className = 'barrier-overlay';
+            el.innerHTML = '🚧 KHU VỰC CÓ ĐIỆN LÂN CẬN - DỪNG LẠI 🚧';
+            targetCard.appendChild(el);
+        }
+    }
+}
+
+function updateSignsVisuals() {
+    const container = document.querySelector('#tab-electrical .card');
+    if (!container) return;
+
+    if (sys.signs.prohibit && !document.getElementById('sign-p')) {
+        container.innerHTML += `<div id="sign-p" class="vis-sign sign-prohibit">🚫 CẤM ĐÓNG ĐIỆN!</div>`;
+    }
+    if (sys.signs.danger && !document.getElementById('sign-d')) {
+        container.innerHTML += `<div id="sign-d" class="vis-sign sign-danger">⚠️ DỪNG LẠI! CÓ ĐIỆN</div>`;
+    }
+    if (sys.signs.work && !document.getElementById('sign-w')) {
+        container.innerHTML += `<div id="sign-w" class="vis-sign sign-work">✅ LÀM VIỆC TẠI ĐÂY</div>`;
     }
 }
 
@@ -442,45 +577,63 @@ function handleTapMachine() {
 function handlePermit() {
     logAction("Yêu cầu Cho phép làm việc (Work Permit)");
     const worker = document.getElementById('worker-npc');
-    const svg = worker.querySelector('.worker-svg');
+    const svg = worker ? worker.querySelector('.worker-svg') : null;
     
-    worker.className = 'worker-container'; 
-    svg.classList.remove('shocked');
-    setTimeout(() => worker.classList.add('worker-walk-in'), 100);
+    if (worker) worker.className = 'worker-container'; 
+    if (svg) svg.classList.remove('shocked');
+    setTimeout(() => { if (worker) worker.classList.add('worker-walk-in'); }, 100);
 
     setTimeout(() => {
         const { liveDevices } = solveCircuitBFS(circuitGraph);
         const isMotorLive = liveDevices.has("MOTOR_M2");
         
-        let unsafe = false;
-        if (isMotorLive) unsafe = true;
-        if (sys.lock_count === 0) unsafe = true;
+        let violationList = [];
 
-        if(unsafe) {
-            svg.classList.add('shocked');
+        if (isMotorLive) violationList.push("Thiết bị vẫn đang mang điện!");
+        if (sys.lock_count === 0) violationList.push("Chưa thực hiện khóa LOTO!");
+        if (!sys.ground_phase_connected) violationList.push("Chưa đặt tiếp địa di động tại vị trí công tác!");
+        if (!sys.barrier_placed) violationList.push("Chưa dựng rào chắn an toàn hiện trường!");
+        if (!sys.signs.prohibit) violationList.push("Chưa treo biển Cấm đóng điện tại CB!");
+        if (!sys.signs.work) violationList.push("Chưa treo biển Làm việc tại đây!");
+
+        if (violationList.length > 0) {
+            if (svg) svg.classList.add('shocked');
             document.getElementById('shock-flash').style.display = 'block';
-            logAction("TAI NẠN: BỎ SÓT CHƯA CẮT/KHÓA NGUỒN ĐIỆN DỰ PHÒNG!", true);
-            showToast("⚡ TAI NẠN NGHIÊM TRỌNG!");
+            
+            const errorMsg = "TAI NẠN / VI PHẠM AN TOÀN:\n- " + violationList.join("\n- ");
+            logAction(errorMsg, true);
+            showToast("⚡ VI PHẠM AN TOÀN NGHÊM TRỌNG!");
             
             setTimeout(() => {
                  document.getElementById('shock-flash').style.display = 'none';
                  document.getElementById('reset-overlay').style.display = 'flex';
             }, 4000);
         } else {
-            logAction("An toàn tuyệt đối. Công nhân tiến hành sửa chữa.", false);
-            showToast("✅ An toàn. Bắt đầu công việc.");
+            logAction("ĐẦY ĐỦ BẢO VỆ (Cắt điện, Khóa LOTO, Tiếp địa, Rào chắn & Biển báo). Cho phép thi công!", false);
+            showToast("✅ Đạt chuẩn an toàn QCVN 01:2020/BCT. Cho phép làm việc!");
         }
     }, 1200);
 }
 
 function resetSimulation() {
-    sys = { cb1: true, cb2: true, has_hasp: false, lock_count: 0, tagged: false };
+    sys = { 
+        cb1: true, cb2: true, has_hasp: false, lock_count: 0, tagged: false,
+        ground_earth_connected: false, ground_phase_connected: false, barrier_placed: false,
+        signs: { prohibit: false, danger: false, work: false }
+    };
     circuitGraph.devices["CB1"].state = true;
     circuitGraph.devices["CB2"].state = true;
 
     updateLockVisuals();
     document.getElementById('cb2-tag-viz').innerHTML = '';
     
+    const barrierEl = document.getElementById('barrier-zone');
+    if (barrierEl) barrierEl.remove();
+    ['sign-p', 'sign-d', 'sign-w'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    });
+
     document.getElementById('cb1-lever').classList.remove('off');
     document.getElementById('cb1-lever').innerText = "ON";
     document.getElementById('cb2-lever').classList.remove('off');
@@ -490,9 +643,9 @@ function resetSimulation() {
 
     workerPresent = true;
     const worker = document.getElementById('worker-npc');
-    const svg = worker.querySelector('.worker-svg');
-    worker.className = 'worker-container';
-    svg.classList.remove('shocked');
+    const svg = worker ? worker.querySelector('.worker-svg') : null;
+    if (worker) worker.className = 'worker-container';
+    if (svg) svg.classList.remove('shocked');
 
     document.getElementById('reset-overlay').style.display = 'none';
     document.getElementById('shock-flash').style.display = 'none';
@@ -500,6 +653,87 @@ function resetSimulation() {
     nav('tab-device');
     logAction("--- HỆ THỐNG RESET MÔ PHỎNG ---");
     showToast("Đã làm mới hệ thống");
+}
+
+function handleCircuitUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const fileName = file.name;
+    const fileExt = fileName.split('.').pop().toLowerCase();
+    document.getElementById('upload-filename').innerText = `📄 Đã nạp: ${fileName}`;
+
+    const reader = new FileReader();
+
+    if (fileExt === 'svg') {
+        reader.onload = function(e) {
+            document.getElementById('diagram-container').innerHTML = e.target.result;
+            logAction(`Đã nạp sơ đồ SVG mới: ${fileName}`);
+            showToast("✅ Đã nạp sơ đồ SVG thành công");
+            solveAndRenderCircuit();
+        };
+        reader.readAsText(file);
+    } else if (fileExt === 'json') {
+        reader.onload = function(e) {
+            try {
+                circuitGraph = JSON.parse(e.target.result);
+                solveAndRenderCircuit();
+                logAction(`Đã nạp cấu trúc JSON mới: ${fileName}`);
+                showToast("✅ Đã giải sơ đồ JSON thành công");
+            } catch (err) {
+                showToast("❌ Lỗi cấu trúc JSON!");
+            }
+        };
+        reader.readAsText(file);
+    }
+}
+
+window.addEventListener('keydown', (e) => {
+    const loginScreen = document.getElementById('screen-login');
+    if (loginScreen && loginScreen.style.display !== 'none' && loginScreen.classList.contains('show')) return;
+
+    switch(e.key) {
+        case '1': selectTool('hasp'); break;
+        case '2': selectTool('lock'); break;
+        case '3': selectTool('tag'); break;
+        case '4': selectTool('keybox'); break;
+        case '5': selectTool('meter'); break;
+        case '6': selectTool('speaker'); break;
+        case 'Escape': clearTool(); break;
+        case ' ': 
+            e.preventDefault();
+            handleTapCB(2); 
+            break;
+    }
+});
+
+function toggleSidebar() { 
+    document.getElementById('sidebar').classList.toggle('active'); 
+    document.getElementById('backdrop').classList.toggle('show'); 
+}
+
+function closeSidebar() { 
+    document.getElementById('sidebar').classList.remove('active'); 
+    document.getElementById('backdrop').classList.remove('show'); 
+}
+
+function nav(tabId) {
+    if (window.innerWidth < 1024) {
+        document.querySelectorAll('.tab-view').forEach(t => {
+            if (t.id !== 'screen-login') t.classList.remove('show');
+        });
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) targetTab.classList.add('show');
+        
+        document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'));
+        const activeNavBtn = document.getElementById(`bnav-${tabId}`);
+        if (activeNavBtn) activeNavBtn.classList.add('active');
+        
+        closeSidebar();
+    } else {
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) mainContent.style.display = 'grid';
+    }
 }
 
 function speak(text) {
