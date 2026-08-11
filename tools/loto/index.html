@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LOTO Console v1.1 - Thế An Toàn</title>
+    <title>LOTO Console v1.2 - Thế An Toàn</title>
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -32,14 +32,14 @@
     <div class="backdrop" id="backdrop" onclick="closeSidebar()"></div>
     <div id="toast" class="toast">Hệ thống sẵn sàng</div>
 
-    <!-- SCREEN LOGIN CONTAINER (MÀN HÌNH ĐĂNG NHẬP KHỞI TẠO) -->
+    <!-- SCREEN LOGIN CONTAINER -->
     <div id="screen-login" class="tab-view show" style="justify-content: center; height: 100vh; position: fixed; top: 0; left: 0; z-index: 9999; background: #1e272e; width: 100%;">
         <div class="card" style="max-width: 380px; padding: 25px; box-sizing: border-box;">
             <h2 style="color:var(--primary); margin-top:0; margin-bottom: 5px;">THẾ AN TOÀN - LOTO</h2>
             <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 15px;">Mô phỏng Quy trình Cắt điện - Khóa thẻ An toàn</p>
             
             <div style="font-size: 0.8rem; color: var(--warning); background: rgba(241, 196, 15, 0.1); padding: 5px 10px; border-radius: 20px; display: inline-block; margin-bottom: 20px; font-weight: bold; border: 1px solid var(--warning);">
-                Phiên bản: <span id="login-version-display">v1.1</span>
+                Phiên bản: <span id="login-version-display">v1.2</span>
             </div>
 
             <form onsubmit="handleLoginSubmit(event)" style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
@@ -62,7 +62,7 @@
             <button id="btn-menu" class="mobile-only" onclick="toggleSidebar()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
             </button>
-            <div class="app-title">LOTO Console <span id="header-version-display" style="color: var(--warning); font-size: 0.85rem;">v1.1</span> <span class="desktop-only" style="font-size: 0.75rem; color: #888; font-weight: normal;">| Phím tắt: [1-6] Chọn tool | [Space] Gạt CB-2</span></div>
+            <div class="app-title">LOTO Console <span id="header-version-display" style="color: var(--warning); font-size: 0.85rem;">v1.2</span> <span class="desktop-only" style="font-size: 0.75rem; color: #888; font-weight: normal;">| Phím tắt: [1-6] Chọn tool | [Space] Gạt CB-2</span></div>
         </div>
         <div class="user-info" id="user-display">Chưa đăng nhập</div>
     </div>
@@ -72,7 +72,7 @@
         <div class="menu-group">
             <div class="menu-header">Khu Vực (Mobile)</div>
             <div class="menu-item mobile-only active" id="nav-m-device" onclick="nav('tab-device')"><span class="tool-icon">🏭</span> Máy Móc</div>
-            <div class="menu-item mobile-only" id="nav-m-electrical" onclick="nav('tab-electrical')"><span class="tool-icon">⚡</span> Tủ Điện</div>
+            <div class="menu-item mobile-only" id="nav-m-electrical" onclick="nav('tab-electrical')"><span class="tool-icon">⚡</span> Đóng Cắt</div>
             <div class="menu-item mobile-only" id="nav-m-store" onclick="nav('tab-store')"><span class="tool-icon">📦</span> Sơ Đồ Mạch Điện</div>
         </div>
 
@@ -84,6 +84,16 @@
             <div class="menu-item" onclick="selectTool('keybox')"><span class="tool-icon">🗃️</span> Hộp Key Box [4]</div>
             <div class="menu-item" onclick="selectTool('meter')"><span class="tool-icon">⚡</span> Đồng Hồ VOM [5]</div>
             <div class="menu-item" onclick="selectTool('speaker')"><span class="tool-icon">📢</span> Loa Thông Báo [6]</div>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-header">Biện Pháp An Toàn Điện</div>
+            <div class="menu-item" onclick="selectTool('earth_earth')"><span class="tool-icon">⏚</span> 1. Kẹp Tiếp Địa (Đầu Đất)</div>
+            <div class="menu-item" onclick="selectTool('earth_phase')"><span class="tool-icon">⚡</span> 2. Kẹp Tiếp Địa (Đầu Pha)</div>
+            <div class="menu-item" onclick="selectTool('barrier')"><span class="tool-icon">🚧</span> Rào Chắn An Toàn</div>
+            <div class="menu-item" onclick="selectTool('sign_prohibit')"><span class="tool-icon">🚫</span> Biển Cấm Đóng Điện</div>
+            <div class="menu-item" onclick="selectTool('sign_danger')"><span class="tool-icon">⚠️</span> Biển Cảnh Báo Có Điện</div>
+            <div class="menu-item" onclick="selectTool('sign_work')"><span class="tool-icon">✅</span> Biển Làm Việc Tại Đây</div>
         </div>
 
         <div class="menu-group">
@@ -133,32 +143,81 @@
             </div>
         </div>
 
-        <!-- SECTION 2: TỦ ĐIỆN -->
+        <!-- SECTION 2: TỦ ĐIỆN VÀ MÀN HÌNH HMI -->
         <div id="tab-electrical" class="tab-view">
             <div class="card">
-                <h3 style="margin:0; color:var(--primary)">TỦ ĐIỆN PHÂN PHỐI DB-01</h3>
-                <p style="font-size:0.8rem; color:#aaa; margin-bottom:15px;">Chạm/Click trực tiếp vào CB để gạt điện hoặc áp dụng dụng cụ LOTO</p>
-                <div class="panel-grid">
-                    <div class="cb-unit">
-                        <span style="font-size:0.7rem; margin-top:5px;">CB-1 (NGUỒN 1)</span>
-                        <div class="cb-lever" id="cb1-lever">ON</div>
-                        <div class="cb-touch-area" onclick="handleTapCB(1)"></div>
-                    </div>
+                <!-- NÚT CHUYỂN ĐỔI CHẾ ĐỘ THAO TÁC ĐÓNG CẮT -->
+                <div class="mode-switcher-bar">
+                    <button id="btn-mode-panel" class="mode-btn active" onclick="switchControlMode('panel')">⚡ Tủ Điện Thực Tế</button>
+                    <button id="btn-mode-hmi" class="mode-btn" onclick="switchControlMode('hmi')">🖥️ Màn Hình HMI Số</button>
+                </div>
 
-                    <div class="cb-unit" style="border-color:var(--primary); box-shadow: 0 0 10px rgba(0,168,255,0.3);">
-                        <span style="font-size:0.7rem; margin-top:5px; color:var(--primary); font-weight:bold;">CB-2 (NGUỒN 2)</span>
-                        <div class="cb-lever" id="cb2-lever">ON</div>
-                        <div class="lock-container" id="cb2-locks"></div>
-                        <div id="cb2-tag-viz"></div>
-                        <div class="cb-touch-area" onclick="handleTapCB(2)"></div>
-                    </div>
+                <!-- VIEW 1: TỦ ĐIỆN THỰC TẾ (CƠ KHÍ & LOTO) -->
+                <div id="view-panel-mode">
+                    <h3 style="margin:10px 0 5px 0; color:var(--primary)">TỦ ĐIỆN PHÂN PHỐI DB-01</h3>
+                    <p style="font-size:0.75rem; color:#aaa; margin-bottom:12px;">Chạm vào CB để gạt cần hoặc áp dụng dụng cụ LOTO / Tiếp địa</p>
+                    <div class="panel-grid">
+                        <div class="cb-unit">
+                            <span style="font-size:0.7rem; margin-top:5px;">CB-1 (NGUỒN 1)</span>
+                            <div class="cb-lever" id="cb1-lever">ON</div>
+                            <div class="cb-touch-area" onclick="handleTapCB(1)"></div>
+                        </div>
 
-                    <div class="cb-unit">
-                        <span style="font-size:0.7rem; margin-top:5px;">CB-3 (SOCK)</span>
-                        <div class="cb-lever" id="cb3-lever">ON</div>
-                        <div class="cb-touch-area" onclick="handleTapCB(3)"></div>
+                        <div class="cb-unit" style="border-color:var(--primary); box-shadow: 0 0 10px rgba(0,168,255,0.3);">
+                            <span style="font-size:0.7rem; margin-top:5px; color:var(--primary); font-weight:bold;">CB-2 (NGUỒN 2)</span>
+                            <div class="cb-lever" id="cb2-lever">ON</div>
+                            <div class="lock-container" id="cb2-locks"></div>
+                            <div id="cb2-tag-viz"></div>
+                            <div class="cb-touch-area" onclick="handleTapCB(2)"></div>
+                        </div>
+
+                        <div class="cb-unit">
+                            <span style="font-size:0.7rem; margin-top:5px;">CB-3 (SOCK)</span>
+                            <div class="cb-lever" id="cb3-lever">ON</div>
+                            <div class="cb-touch-area" onclick="handleTapCB(3)"></div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- VIEW 2: MÀN HÌNH ĐIỀU KHIỂN CẢM ỨNG HMI -->
+                <div id="view-hmi-mode" style="display: none;">
+                    <div class="hmi-frame">
+                        <div class="hmi-header-title">🖥️ SCADA / HMI CONTROL SYSTEM - DB01</div>
+                        <div class="hmi-status-bar">
+                            <span>ONLINE</span>
+                            <span id="hmi-interlock-status" style="color: var(--success);">INTERLOCK: NORMAL</span>
+                        </div>
+                        
+                        <div class="hmi-grid">
+                            <!-- HMI CB1 -->
+                            <div class="hmi-card">
+                                <div class="hmi-card-title">CB-01 (NGUỒN 1)</div>
+                                <div class="hmi-led led-on" id="hmi-led-cb1">ĐANG ĐÓNG (ON)</div>
+                                <div style="display:flex; gap:6px; margin-top:8px;">
+                                    <button class="hmi-action-btn hmi-btn-on" onclick="handleHMISwitch(1, true)">CLOSE</button>
+                                    <button class="hmi-action-btn hmi-btn-off" onclick="handleHMISwitch(1, false)">TRIP</button>
+                                </div>
+                            </div>
+
+                            <!-- HMI CB2 -->
+                            <div class="hmi-card" style="border-color: var(--primary);">
+                                <div class="hmi-card-title" style="color: var(--primary);">CB-02 (NGUỒN 2)</div>
+                                <div class="hmi-led led-on" id="hmi-led-cb2">ĐANG ĐÓNG (ON)</div>
+                                <div class="hmi-loto-msg" id="hmi-loto-msg-cb2">LOTO: BÌNH THƯỜNG</div>
+                                <div style="display:flex; gap:6px; margin-top:8px;">
+                                    <button class="hmi-action-btn hmi-btn-on" onclick="handleHMISwitch(2, true)">CLOSE</button>
+                                    <button class="hmi-action-btn hmi-btn-off" onclick="handleHMISwitch(2, false)">TRIP</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="hmi-footer">
+                            <span>ĐIỆN ÁP LƯỚI: <strong id="hmi-volt-disp">380V</strong></span>
+                            <span>TẢI M2: <strong id="hmi-motor-disp" style="color:var(--success)">RUNNING</strong></span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -231,7 +290,7 @@
         </button>
         <button class="bottom-nav-btn" id="bnav-tab-electrical" onclick="nav('tab-electrical')">
             <span class="icon">⚡</span>
-            <span>Tủ Điện</span>
+            <span>Đóng Cắt</span>
         </button>
         <button class="bottom-nav-btn" id="bnav-tab-store" onclick="nav('tab-store')">
             <span class="icon">📦</span>
