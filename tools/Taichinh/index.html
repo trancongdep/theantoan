@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô Phỏng Kế Hoạch Tài Chính & Tích Sản (2027 - 2041)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        input[type="number"], select {
+            border: 1px solid #cbd5e1;
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.375rem;
+            width: 100%;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+        }
+        .metric-card {
+            background: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased p-4 md:p-6 min-h-screen">
+
+    <!-- Header -->
+    <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-blue-600"></i> Bảng Dự Phóng Tài Chính Tích Sản (2027 – 2041)
+            </h1>
+            <p class="text-sm text-slate-500 mt-1">Hệ thống mô phỏng dòng tiền, kiểm soát ngưỡng thanh khoản & kịch bản rủi ro</p>
+        </div>
+        <div class="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-slate-200">
+            <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Kịch bản dự phóng:</span>
+            <select id="scenarioSelector" class="font-semibold text-blue-700 bg-blue-50 border-blue-200">
+                <option value="base">Cơ sở / Tiêu chuẩn (Base)</option>
+                <option value="worst">Kịch bản xấu nhất (Worst Case)</option>
+                <option value="best">Kịch bản tốt nhất (Best Case)</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- CỘT THÔNG SỐ ĐẦU VÀO (INPUT CONTROLS) -->
+        <div class="lg:col-span-4 space-y-4">
+            
+            <!-- Nhóm 1: Nguồn Vốn Đền Bù & BĐS Khởi Điểm -->
+            <div class="metric-card p-4 border-l-4 border-blue-600">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center justify-between">
+                    <span>1. Vốn Đền Bù & Mua Tạm Cư (2027)</span>
+                    <i class="fa-solid fa-hand-holding-dollar text-blue-600"></i>
+                </h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Tiền đền bù ròng nhận (Tháng 01/2027) [Tỷ VNĐ]</label>
+                        <input type="number" id="initCompNet" value="11.8" step="0.1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Mua & sửa nhà phố Thủ Đức [Tỷ VNĐ]</label>
+                        <input type="number" id="costThuDuc" value="3.35" step="0.05">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Tiền tạm cư nhận từ CĐT (24 tháng) [Tr/tháng]</label>
+                        <input type="number" id="tempSupport" value="14.0" step="1.0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nhóm 2: Đầu Tư BĐS & Xây Dựng Qua Các Năm -->
+            <div class="metric-card p-4 border-l-4 border-amber-500">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center justify-between">
+                    <span>2. Dự Toán Xây Dựng & Mua Thêm BĐS</span>
+                    <i class="fa-solid fa-city text-amber-500"></i>
+                </h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Xây Tòa 5 tầng Bình Quới (2028) [Tỷ VNĐ]</label>
+                        <input type="number" id="costBinhQuoi" value="4.75" step="0.1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Xây nhà Trà Vinh cho thuê (Đầu 2029) [Tỷ VNĐ]</label>
+                        <input type="number" id="costTraVinh" value="1.0" step="0.1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Mua nhà ven biển VT/Phan Thiết (Cuối 2031) [Tỷ VNĐ]</label>
+                        <input type="number" id="costCoastal" value="3.0" step="0.1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nhóm 3: Thu Nhập Chủ Động & Lương Hưu -->
+            <div class="metric-card p-4 border-l-4 border-emerald-600">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center justify-between">
+                    <span>3. Lương Chính & Huấn Luyện An Toàn</span>
+                    <i class="fa-solid fa-user-shield text-emerald-600"></i>
+                </h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Lương công việc chính (đến 05/2031) [Tr/năm]</label>
+                        <input type="number" id="mainSalaryYear" value="500" step="10">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Lương hưu BHXH (từ 06/2031) [Tr/tháng]</label>
+                        <input type="number" id="pensionMonth" value="12.0" step="0.5">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Huấn luyện AT 2027 – 2028 [Tr/tuần]</label>
+                        <input type="number" id="trainingRateEarly" value="7.5" step="0.5">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Huấn luyện AT từ 2029 trở đi [Tr/tuần]</label>
+                        <input type="number" id="trainingRateLate" value="10.0" step="0.5">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nhóm 4: Dòng Tiền Kinh Doanh BĐS & Chi Tiêu -->
+            <div class="metric-card p-4 border-l-4 border-purple-600">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center justify-between">
+                    <span>4. Khai Thác BĐS & Sinh Hoạt Phí</span>
+                    <i class="fa-solid fa-coins text-purple-600"></i>
+                </h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Khai thác Tòa 5T Bình Quới (từ T7/2028) [Tr/tháng]</label>
+                        <input type="number" id="yieldBinhQuoi" value="54.0" step="1.0">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Khai thác nhà Thủ Đức (từ T7/2028) [Tr/tháng]</label>
+                        <input type="number" id="yieldThuDuc" value="16.5" step="0.5">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Cho thuê nhà Trà Vinh (từ T7/2029) [Tr/tháng]</label>
+                        <input type="number" id="yieldTraVinh" value="6.0" step="0.5">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Cho thuê nhà biển VT/PT (từ 2032) [Tr/tháng]</label>
+                        <input type="number" id="yieldCoastal" value="12.0" step="1.0">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Chi tiêu sinh hoạt + Học phí + Bảo trì [Tr/tháng]</label>
+                        <input type="number" id="livingExpense" value="34.0" step="1.0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nhóm 5: Tham Số Thị Trường & Lãi Suất -->
+            <div class="metric-card p-4 border-l-4 border-slate-600">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center justify-between">
+                    <span>5. Lãi Suất & Tăng Trưởng Tài Sản</span>
+                    <i class="fa-solid fa-arrow-trend-up text-slate-600"></i>
+                </h2>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Lãi suất gửi Bank [%/năm]</label>
+                        <input type="number" id="bankInterestRate" value="6.0" step="0.1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 font-medium">Tăng giá BĐS [%/năm]</label>
+                        <input type="number" id="realEstateGrowthRate" value="5.0" step="0.5">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CỘT HIỂN THỊ KẾT QUẢ, BIỂU ĐỒ & BẢNG SỐ LIỆU -->
+        <div class="lg:col-span-8 space-y-6">
+
+            <!-- KPI Cards Tổng Thể -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="metric-card p-4 border-t-4 border-blue-600">
+                    <p class="text-xs text-slate-500 font-bold uppercase">Tổng Tài Sản (2041)</p>
+                    <h3 id="cardTotalAsset2041" class="text-xl font-extrabold text-blue-700 mt-1">-- Tỷ VNĐ</h3>
+                    <p id="cardTotalAssetSub" class="text-xs text-slate-400 mt-1">BĐS + Tiết kiệm</p>
+                </div>
+                <div class="metric-card p-4 border-t-4 border-emerald-600">
+                    <p class="text-xs text-slate-500 font-bold uppercase">Tiền Mặt Tiết Kiệm (2041)</p>
+                    <h3 id="cardCash2041" class="text-xl font-extrabold text-emerald-700 mt-1">-- Tỷ VNĐ</h3>
+                    <p class="text-xs text-slate-400 mt-1">Sinh lời kép</p>
+                </div>
+                <div class="metric-card p-4 border-t-4 border-purple-600">
+                    <p class="text-xs text-slate-500 font-bold uppercase">Dòng Tiền Thụ Động (Hưu)</p>
+                    <h3 id="cardPassiveCashflow" class="text-xl font-extrabold text-purple-700 mt-1">-- Tr/tháng</h3>
+                    <p class="text-xs text-slate-400 mt-1">Từ 4 BĐS + Sạc QR</p>
+                </div>
+                <div class="metric-card p-4 border-t-4 border-red-500">
+                    <p class="text-xs text-slate-500 font-bold uppercase">Đáy Tiền Mặt Tối Thiểu</p>
+                    <h3 id="cardMinCash" class="text-xl font-extrabold text-red-600 mt-1">-- Tỷ VNĐ</h3>
+                    <p id="cardMinCashStatus" class="text-xs font-semibold text-emerald-600 mt-1"><i class="fa-solid fa-circle-check"></i> Đạt chuẩn ≥ 1.0 Tỷ</p>
+                </div>
+            </div>
+
+            <!-- Biểu Đồ Tích Luỹ Tài Sản & Dòng Tiền Mặt -->
+            <div class="metric-card p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-area text-blue-600"></i> Đường Cong Tăng Trưởng Tài Sản (2027 – 2041)
+                    </h3>
+                    <div class="text-xs text-slate-500">Đơn vị tính: <span class="font-bold text-slate-700">Tỷ VNĐ</span></div>
+                </div>
+                <div class="h-80 w-full">
+                    <canvas id="assetGrowthChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Bảng Dòng Tiền & Các Mốc Thời Gian Quan Trọng -->
+            <div class="metric-card p-5">
+                <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-check text-emerald-600"></i> Bảng Cân Đối Chi Tiết Các Mốc Thời Gian Then Chốt
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs md:text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-200 text-slate-700">
+                                <th class="p-2.5 font-bold">Mốc Thời Gian</th>
+                                <th class="p-2.5 font-bold">Sự Kiện & Trọng Tâm</th>
+                                <th class="p-2.5 font-bold">Tiền Mặt / Tiết Kiệm</th>
+                                <th class="p-2.5 font-bold">Giá Trị BĐS Quy Đổi</th>
+                                <th class="p-2.5 font-bold text-blue-700">TỔNG TÀI SẢN</th>
+                                <th class="p-2.5 font-bold text-emerald-700">Thặng Dư Ròng/Th</th>
+                            </tr>
+                        </thead>
+                        <tbody id="milestonesTableBody" class="divide-y divide-slate-100">
+                            <!-- JS tự render dữ liệu động -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Hộp Cảnh Báo An Toàn Thanh Khoản -->
+            <div id="liquidityAlertBox" class="p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs md:text-sm flex items-start gap-3">
+                <i class="fa-solid fa-shield-halved text-emerald-600 text-lg mt-0.5"></i>
+                <div>
+                    <span class="font-bold">Đánh Giá An Toàn Vốn:</span> 
+                    <span id="liquidityAlertText">Kế hoạch giải ngân các BĐS Bình Quới, Trà Vinh và Nhà Biển hoàn toàn khả thi. Đáy tiền mặt dự trữ không bao giờ chạm dưới 1,0 tỷ VNĐ.</span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // Cấu hình kịch bản
+        const scenarios = {
+            base: {
+                bankInterestRate: 6.0, realEstateGrowthRate: 5.0,
+                yieldBinhQuoi: 54.0, yieldThuDuc: 16.5, yieldTraVinh: 6.0, yieldCoastal: 12.0,
+                trainingRateLate: 10.0
+            },
+            worst: {
+                bankInterestRate: 4.5, realEstateGrowthRate: 3.0,
+                yieldBinhQuoi: 40.0, yieldThuDuc: 12.0, yieldTraVinh: 4.5, yieldCoastal: 8.0,
+                trainingRateLate: 7.5
+            },
+            best: {
+                bankInterestRate: 7.0, realEstateGrowthRate: 7.0,
+                yieldBinhQuoi: 65.0, yieldThuDuc: 20.0, yieldTraVinh: 8.0, yieldCoastal: 16.0,
+                trainingRateLate: 12.5
+            }
+        };
+
+        // Khởi tạo Chart.js
+        const ctx = document.getElementById('assetGrowthChart').getContext('2d');
+        let assetChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Tổng Giá Trị Tài Sản',
+                        data: [],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Tiền Mặt / Tiết Kiệm Tích Lũy',
+                        data: [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2.5,
+                        borderDash: [5, 5],
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Tổng Giá Trị Bất Động Sản',
+                        data: [],
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' Tỷ VNĐ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: {
+                        title: { display: true, text: 'Tỷ VNĐ', font: { weight: 'bold' } },
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+
+        // Hàm tính toán và mô phỏng tài chính
+        function calculateSimulation() {
+            // Lấy dữ liệu Input
+            const initCompNet = parseFloat(document.getElementById('initCompNet').value) || 0;
+            const costThuDuc = parseFloat(document.getElementById('costThuDuc').value) || 0;
+            const tempSupport = parseFloat(document.getElementById('tempSupport').value) || 0;
+            const costBinhQuoi = parseFloat(document.getElementById('costBinhQuoi').value) || 0;
+            const costTraVinh = parseFloat(document.getElementById('costTraVinh').value) || 0;
+            const costCoastal = parseFloat(document.getElementById('costCoastal').value) || 0;
+
+            const mainSalaryYear = parseFloat(document.getElementById('mainSalaryYear').value) || 0;
+            const pensionMonth = parseFloat(document.getElementById('pensionMonth').value) || 0;
+            const trainingRateEarly = parseFloat(document.getElementById('trainingRateEarly').value) || 0;
+            const trainingRateLate = parseFloat(document.getElementById('trainingRateLate').value) || 0;
+
+            const yieldBinhQuoi = parseFloat(document.getElementById('yieldBinhQuoi').value) || 0;
+            const yieldThuDuc = parseFloat(document.getElementById('yieldThuDuc').value) || 0;
+            const yieldTraVinh = parseFloat(document.getElementById('yieldTraVinh').value) || 0;
+            const yieldCoastal = parseFloat(document.getElementById('yieldCoastal').value) || 0;
+            const livingExpense = parseFloat(document.getElementById('livingExpense').value) || 0;
+
+            const bankInterestRate = (parseFloat(document.getElementById('bankInterestRate').value) || 0) / 100;
+            const realEstateGrowthRate = (parseFloat(document.getElementById('realEstateGrowthRate').value) || 0) / 100;
+
+            // Thiết lập mô phỏng từng tháng (01/2027 -> 12/2041 = 180 tháng)
+            let currentCash = initCompNet - costThuDuc; // Số dư sau khi mua nhà Thủ Đức
+            let minCashBalance = currentCash;
+            let minCashMonthYear = "01/2027";
+
+            // Danh mục BĐS (Tính theo giá vốn ban đầu)
+            let bdsValues = {
+                thuDuc: costThuDuc,
+                binhQuoi: 0,
+                traVinh: 0,
+                coastal: 0
+            };
+
+            const chartLabels = [];
+            const chartTotalAsset = [];
+            const chartCash = [];
+            const chartREAsset = [];
+
+            const milestonesData = [];
+
+            for (let year = 2027; year <= 2041; year++) {
+                let yearNetSurplusTotal = 0;
+
+                for (let month = 1; month <= 12; month++) {
+                    // Thu nhập lương/hưu
+                    let salary = (year < 2031 || (year === 2031 && month <= 5)) ? (mainSalaryYear / 12) : 0;
+                    let pension = (year > 2031 || (year === 2031 && month >= 6)) ? pensionMonth : 0;
+
+                    // Huấn luyện an toàn
+                    let training = (year <= 2028) ? (trainingRateEarly * 52 / 12) : (trainingRateLate * 52 / 12);
+
+                    // Tạm cư
+                    let temp = (year === 2027 || year === 2028) ? tempSupport : 0;
+
+                    // Doanh thu BĐS
+                    let bqYield = ((year === 2028 && month >= 7) || year > 2028) ? yieldBinhQuoi : 0;
+                    let tdYield = ((year === 2028 && month >= 7) || year > 2028) ? yieldThuDuc : 0;
+                    let tvYield = ((year === 2029 && month >= 7) || year > 2029) ? yieldTraVinh : 0;
+                    let coastYield = (year >= 2032) ? yieldCoastal : 0;
+
+                    let totalMonthlyIncome = salary + pension + training + temp + bqYield + tdYield + tvYield + coastYield;
+                    let currentLivingExp = (year === 2027 || (year === 2028 && month <= 6)) ? 30.0 : livingExpense;
+                    let netMonthlySurplus = totalMonthlyIncome - currentLivingExp;
+
+                    // Lãi ngân hàng theo tháng (tính trên số dư đầu tháng)
+                    let monthlyInterest = (currentCash * 1000) * (bankInterestRate / 12); // Tr VNĐ
+
+                    // Chi phí đầu tư (Capex)
+                    let capex = 0;
+                    // Tòa nhà Bình Quới (giải ngân đều 6 tháng đầu 2028)
+                    if (year === 2028 && month <= 6) {
+                        capex += costBinhQuoi / 6;
+                        if (month === 6) bdsValues.binhQuoi = (costBinhQuoi + 2.0); // Giá trị gồm đất TĐC 2 tỷ + xây dựng
+                    }
+                    // Nhà Trà Vinh (giải ngân tháng 3/2029)
+                    if (year === 2029 && month === 3) {
+                        capex += costTraVinh;
+                        bdsValues.traVinh = costTraVinh;
+                    }
+                    // Nhà ven biển (giải ngân tháng 12/2031)
+                    if (year === 2031 && month === 12) {
+                        capex += costCoastal;
+                        bdsValues.coastal = costCoastal;
+                    }
+
+                    // Trợ cấp 1 lần khi nghỉ hưu tháng 6/2031
+                    let lumpSum = (year === 2031 && month === 6) ? 8.0 : 0;
+
+                    // Cập nhật số dư tiền mặt cuối tháng
+                    currentCash = currentCash + (netMonthlySurplus + monthlyInterest + lumpSum) / 1000 - capex;
+
+                    // Kiểm tra đáy tiền mặt
+                    if (currentCash < minCashBalance) {
+                        minCashBalance = currentCash;
+                        minCashMonthYear = (month < 10 ? '0' + month : month) + '/' + year;
+                    }
+
+                    yearNetSurplusTotal += netMonthlySurplus;
+
+                    // Ghi nhận mốc tháng 6/2031 (Thời điểm nghỉ hưu)
+                    if (year === 2031 && month === 6) {
+                        let totalBdsCurrent = Object.values(bdsValues).reduce((a, b) => a + b, 0) * Math.pow(1 + realEstateGrowthRate, 2031 - 2027);
+                        milestonesData.push({
+                            time: 'T06/2031',
+                            event: 'Nghỉ hưu BHXH (36 năm), vận hành chuỗi 3 BĐS',
+                            cash: currentCash,
+                            bds: totalBdsCurrent,
+                            total: currentCash + totalBdsCurrent,
+                            monthlySurplus: netMonthlySurplus
+                        });
+                    }
+                }
+
+                // Tăng giá BĐS theo năm
+                let totalBdsYearEnd = (
+                    bdsValues.thuDuc * Math.pow(1 + realEstateGrowthRate, year - 2027) +
+                    (bdsValues.binhQuoi > 0 ? bdsValues.binhQuoi * Math.pow(1 + realEstateGrowthRate, year - 2028) : 0) +
+                    (bdsValues.traVinh > 0 ? bdsValues.traVinh * Math.pow(1 + realEstateGrowthRate, year - 2029) : 0) +
+                    (bdsValues.coastal > 0 ? bdsValues.coastal * Math.pow(1 + realEstateGrowthRate, year - 2031) : 0)
+                );
+
+                chartLabels.push(year);
+                chartCash.push(currentCash);
+                chartREAsset.push(totalBdsYearEnd);
+                chartTotalAsset.push(currentCash + totalBdsYearEnd);
+
+                // Ghi nhận các mốc năm quan trọng vào bảng
+                if ([2027, 2028, 2029, 2031, 2036, 2041].includes(year)) {
+                    let desc = "";
+                    if (year === 2027) desc = "Mua nhà tạm cư Thủ Đức, nhận đền bù";
+                    else if (year === 2028) desc = "Khánh thành Tòa 5 tầng Bình Quới & Trạm sạc";
+                    else if (year === 2029) desc = "Xây nhà Trà Vinh cho thuê, tăng thù lao AT";
+                    else if (year === 2031) desc = "Mua nhà ven biển Vũng Tàu / Phan Thiết";
+                    else if (year === 2036) desc = "Khai thác tối đa chuỗi 4 BĐS & lãi kép";
+                    else if (year === 2041) desc = "Tổng kết chu kỳ 15 năm tích sản di sản";
+
+                    let lastMonthSurplus = (year <= 2028) ? 110.67 : (year <= 2031 ? 127.50 : 109.83);
+                    milestonesData.push({
+                        time: `Cuối ${year}`,
+                        event: desc,
+                        cash: currentCash,
+                        bds: totalBdsYearEnd,
+                        total: currentCash + totalBdsYearEnd,
+                        monthlySurplus: lastMonthSurplus
+                    });
+                }
+            }
+
+            // Cập nhật giao diện KPI Cards
+            const finalTotalAsset = chartTotalAsset[chartTotalAsset.length - 1];
+            const finalCash = chartCash[chartCash.length - 1];
+            const passiveCashflowHuu = yieldBinhQuoi + yieldThuDuc + yieldTraVinh + yieldCoastal;
+
+            document.getElementById('cardTotalAsset2041').innerText = finalTotalAsset.toFixed(2) + ' Tỷ';
+            document.getElementById('cardCash2041').innerText = finalCash.toFixed(2) + ' Tỷ';
+            document.getElementById('cardPassiveCashflow').innerText = '+' + passiveCashflowHuu.toFixed(1) + ' Tr/th';
+            document.getElementById('cardMinCash').innerText = minCashBalance.toFixed(2) + ' Tỷ';
+
+            // Cảnh báo thanh khoản
+            const alertBox = document.getElementById('liquidityAlertBox');
+            const alertText = document.getElementById('liquidityAlertText');
+            const minCashStatus = document.getElementById('cardMinCashStatus');
+
+            if (minCashBalance >= 1.0) {
+                alertBox.className = "p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs md:text-sm flex items-start gap-3";
+                alertText.innerHTML = `Kế hoạch an toàn tuyệt đối. Đáy tiền mặt thấp nhất là <b>${minCashBalance.toFixed(2)} Tỷ VNĐ</b> (rơi vào mốc ${minCashMonthYear}), luôn cao hơn hạn mức sàn 1.0 Tỷ VNĐ.`;
+                minCashStatus.className = "text-xs font-semibold text-emerald-600 mt-1";
+                minCashStatus.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đạt chuẩn ≥ 1.0 Tỷ (${minCashMonthYear})`;
+            } else {
+                alertBox.className = "p-4 rounded-lg bg-red-50 border border-red-200 text-red-900 text-xs md:text-sm flex items-start gap-3";
+                alertText.innerHTML = `<b>CẢNH BÁO THANH KHOẢN:</b> Đáy tiền mặt xuống mức <b>${minCashBalance.toFixed(2)} Tỷ VNĐ</b> tại thời điểm ${minCashMonthYear}, vi phạm kỷ luật sàn 1.0 Tỷ VNĐ. Hãy giãn tiến độ mua nhà biển hoặc giảm chi phí xây dựng.`;
+                minCashStatus.className = "text-xs font-semibold text-red-600 mt-1";
+                minCashStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Dưới hạn mức 1.0 Tỷ!`;
+            }
+
+            // Cập nhật biểu đồ
+            assetChart.data.labels = chartLabels;
+            assetChart.data.datasets[0].data = chartTotalAsset;
+            assetChart.data.datasets[1].data = chartCash;
+            assetChart.data.datasets[2].data = chartREAsset;
+            assetChart.update();
+
+            // Cập nhật bảng Milestone
+            const tbody = document.getElementById('milestonesTableBody');
+            tbody.innerHTML = '';
+            milestonesData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-2.5 font-bold text-slate-800">${item.time}</td>
+                    <td class="p-2.5 text-slate-600">${item.event}</td>
+                    <td class="p-2.5 font-semibold text-emerald-700">${item.cash.toFixed(2)} Tỷ</td>
+                    <td class="p-2.5 text-purple-700 font-medium">${item.bds.toFixed(2)} Tỷ</td>
+                    <td class="p-2.5 font-bold text-blue-700">${item.total.toFixed(2)} TỶ</td>
+                    <td class="p-2.5 font-semibold text-slate-700">+${item.monthlySurplus.toFixed(1)} Tr/th</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Lắng nghe sự kiện thay đổi Input
+        const allInputs = document.querySelectorAll('input[type="number"]');
+        allInputs.forEach(input => {
+            input.addEventListener('input', calculateSimulation);
+        });
+
+        // Xử lý đổi kịch bản
+        document.getElementById('scenarioSelector').addEventListener('change', function(e) {
+            const selected = scenarios[e.target.value];
+            if (selected) {
+                for (let key in selected) {
+                    const el = document.getElementById(key);
+                    if (el) el.value = selected[key];
+                }
+                calculateSimulation();
+            }
+        });
+
+        // Chạy lần đầu khi tải trang
+        calculateSimulation();
+    </script>
+</body>
+</html>
