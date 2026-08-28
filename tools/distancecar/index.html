@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ADAS HUD Landscape</title>
+
+    <!-- CẤU HÌNH PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#090d16">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-512.png">
+
+    <!-- Nạp TensorFlow.js & COCO-SSD -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
+        }
+        body {
+            background: #000000;
+            color: #ffffff;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .split-layout {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* NỬA TRÁI: CAMERA */
+        .left-panel {
+            position: relative;
+            width: 50vw;
+            height: 100vh;
+            background: #0d1117;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-right: 2px solid #21262d;
+        }
+        video, canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        canvas {
+            z-index: 10;
+        }
+        .cam-overlay-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #58a6ff;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* NỬA PHẢI: HUD THÔNG SỐ */
+        .right-panel {
+            width: 50vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 16px;
+            background: #090d16;
+            transition: background-color 0.25s, border-color 0.25s;
+        }
+
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: #8b949e;
+            border-bottom: 1px solid #21262d;
+            padding-bottom: 8px;
+        }
+        .gps-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #f85149;
+        }
+        .dot.active {
+            background: #2ea043;
+            box-shadow: 0 0 8px #2ea043;
+        }
+
+        .btn-settings {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .distance-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: auto 0;
+        }
+        .hud-label {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #8b949e;
+            margin-bottom: 4px;
+        }
+        .distance-value {
+            font-size: clamp(64px, 12vw, 110px);
+            font-weight: 900;
+            line-height: 0.9;
+            font-variant-numeric: tabular-nums;
+            color: #ffffff;
+            transition: color 0.2s ease;
+        }
+        .distance-unit {
+            font-size: 28px;
+            font-weight: 600;
+            color: #8b949e;
+            margin-left: 4px;
+        }
+        .target-type {
+            margin-top: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #58a6ff;
+        }
+
+        .hud-footer {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            border-top: 1px solid #21262d;
+            padding-top: 10px;
+        }
+        .sub-metric {
+            background: #161b22;
+            padding: 8px 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .sub-label {
+            font-size: 11px;
+            color: #8b949e;
+            text-transform: uppercase;
+        }
+        .sub-val {
+            font-size: 24px;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        /* 3 Cấp độ màu cảnh báo */
+        .status-danger { background: #2b0b0e !important; border-left: 6px solid #f85149; }
+        .status-danger .distance-value { color: #f85149; }
+
+        .status-warning { background: #2b2106 !important; border-left: 6px solid #d29922; }
+        .status-warning .distance-value { color: #d29922; }
+
+        .status-safe { background: #090d16 !important; border-left: 6px solid #2ea043; }
+        .status-safe .distance-value { color: #2ea043; }
+
+        /* MODAL CÀI ĐẶT FOV */
+        #settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            text-align: left;
+        }
+        .modal-card h3 { margin-bottom: 12px; color: #58a6ff; font-size: 18px; }
+        .modal-card label { font-size: 13px; color: #8b949e; display: block; margin-top: 10px; }
+        .modal-card input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        .modal-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-save {
+            background: #238636;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            flex: 1;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-close {
+            background: #30363d;
+            color: #c9d1d9;
+            border: none;
+            padding: 10px;
+            flex: 1;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="split-layout">
+        <!-- NỬA TRÁI: CAMERA -->
+        <div class="left-panel">
+            <div class="cam-overlay-info">
+                <span id="cam-status">Đang nạp AI...</span>
+                <span id="tilt-status">Góc nghiêng: 0°</span>
+            </div>
+            <video id="webcam" playsinline autoplay muted></video>
+            <canvas id="overlay"></canvas>
+        </div>
+
+        <!-- NỬA PHẢI: HUD THÔNG SỐ -->
+        <div class="right-panel" id="hud-panel">
+            <div class="hud-header">
+                <div class="gps-badge">
+                    <span class="dot" id="gps-dot"></span>
+                    <span id="gps-status">GPS Đang tìm...</span>
+                </div>
+                <button class="btn-settings" onclick="openSettings()">⚙️ Cài đặt FOV (<span id="fov-display-btn">55°</span>)</button>
+            </div>
+
+            <div class="distance-section">
+                <div class="hud-label">KHOẢNG CÁCH XE TRƯỚC</div>
+                <div class="distance-value" id="dist-display">--<span class="distance-unit">m</span></div>
+                <div class="target-type" id="target-type">Đang quét phương tiện...</div>
+            </div>
+
+            <div class="hud-footer">
+                <div class="sub-metric">
+                    <div class="sub-label">VẬN TỐC XE (GPS)</div>
+                    <div class="sub-val" id="speed-display">0 <span style="font-size: 13px; color:#8b949e;">km/h</span></div>
+                </div>
+                <div class="sub-metric">
+                    <div class="sub-label">KC LUẬT ĐỊNH (TT31)</div>
+                    <div class="sub-val" id="legal-req-display">35 <span style="font-size: 13px; color:#8b949e;">m</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POP-UP CÀI ĐẶT FOV & LƯU LOCAL STORAGE -->
+    <div id="settings-modal">
+        <div class="modal-card">
+            <h3>Cấu hình Camera (FOV)</h3>
+            <p style="font-size: 12px; color: #8b949e;">Nhập góc nhìn dọc (Field of View) của camera điện thoại. Thông số này sẽ được lưu cố định trên máy.</p>
+            
+            <label>Góc FOV Dọc (độ):</label>
+            <input type="number" id="input-fov" min="30" max="100" step="0.5" value="55">
+
+            <div style="margin-top: 10px; font-size: 11px; color: #58a6ff;">
+                * Gợi ý: Hầu hết điện thoại (iPhone, Samsung) camera chính 1x có góc từ <b>52° đến 56°</b>.
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-close" onclick="closeSettings()">Hủy</button>
+                <button class="btn-save" onclick="saveSettings()">Lưu cấu hình</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. SERVICE WORKER ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(console.error);
+            });
+        }
+
+        // --- 2. QUẢN LÝ BIẾN CỤC BỘ (LOCAL STORAGE) ---
+        let fovDegrees = parseFloat(localStorage.getItem('adas_camera_fov')) || 55.0;
+        let phoneTiltPitch = 0; // Góc nghiêng từ cảm biến Gyro
+
+        document.getElementById('fov-display-btn').innerText = `${fovDegrees}°`;
+        document.getElementById('input-fov').value = fovDegrees;
+
+        function openSettings() {
+            document.getElementById('input-fov').value = fovDegrees;
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        function saveSettings() {
+            const val = parseFloat(document.getElementById('input-fov').value);
+            if (val >= 30 && val <= 100) {
+                fovDegrees = val;
+                localStorage.setItem('adas_camera_fov', fovDegrees); // Ghi đè vào bộ nhớ máy
+                document.getElementById('fov-display-btn').innerText = `${fovDegrees}°`;
+                closeSettings();
+            } else {
+                alert("Vui lòng nhập giá trị FOV hợp lệ (30° - 100°)");
+            }
+        }
+
+        // --- 3. ĐỌC CẢM BIẾN ĐỘ NGHIÊNG (GYROSCOPE / ACCELEROMETER) ---
+        function initSensors() {
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', (event) => {
+                    // Ở chế độ xoay ngang (Landscape), góc nghiêng pitch phản ánh qua gamma/beta
+                    if (event.gamma !== null) {
+                        phoneTiltPitch = Math.abs(event.gamma); // Lấy độ lệch so với phương thẳng đứng
+                        document.getElementById('tilt-status').innerText = `Nghiêng: ${Math.round(phoneTiltPitch)}°`;
+                    }
+                });
+            }
+        }
+
+        // --- 4. LOGIC NHẬN DIỆN VÀ TÍNH KHOẢNG CÁCH ---
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('overlay');
+        const ctx = canvas.getContext('2d');
+        const camStatus = document.getElementById('cam-status');
+        const hudPanel = document.getElementById('hud-panel');
+        const distDisplay = document.getElementById('dist-display');
+        const targetType = document.getElementById('target-type');
+        const speedDisplay = document.getElementById('speed-display');
+        const legalReqDisplay = document.getElementById('legal-req-display');
+        const gpsDot = document.getElementById('gps-dot');
+        const gpsStatus = document.getElementById('gps-status');
+
+        let model = null;
+        let currentSpeedKmh = 0;
+
+        const VEHICLE_SPECS = {
+            'car':        { height: 1.55, width: 1.78, label: 'Ô TÔ CON' },
+            'truck':      { height: 2.80, width: 2.30, label: 'XE TẢI' },
+            'bus':        { height: 3.20, width: 2.50, label: 'XE BUÝT / KHÁCH' },
+            'motorcycle': { height: 1.15, width: 0.75, label: 'XE MÁY' }
+        };
+
+        function getLegalDistance(speed) {
+            if (speed <= 60) return 35;
+            if (speed <= 80) return 55;
+            if (speed <= 100) return 70;
+            return 100;
+        }
+
+        function initGPS() {
+            if (!("geolocation" in navigator)) {
+                gpsStatus.innerText = "GPS không hỗ trợ";
+                return;
+            }
+
+            navigator.geolocation.watchPosition(
+                (pos) => {
+                    gpsDot.className = "dot active";
+                    gpsStatus.innerText = "GPS Chuẩn";
+
+                    if (pos.coords.speed !== null && pos.coords.speed >= 0) {
+                        currentSpeedKmh = Math.round(pos.coords.speed * 3.6);
+                    } else {
+                        currentSpeedKmh = 0;
+                    }
+
+                    speedDisplay.innerHTML = `${currentSpeedKmh} <span style="font-size: 13px; color:#8b949e;">km/h</span>`;
+                    legalReqDisplay.innerHTML = `${getLegalDistance(currentSpeedKmh)} <span style="font-size: 13px; color:#8b949e;">m</span>`;
+                },
+                (err) => {
+                    gpsDot.className = "dot";
+                    gpsStatus.innerText = "Mất tín hiệu GPS";
+                },
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            );
+        }
+
+        async function startSystem() {
+            initGPS();
+            initSensors();
+            try {
+                model = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+                camStatus.innerText = "AI Sẵn sàng";
+                
+                const constraints = {
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    },
+                    audio: false
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    video.play();
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    requestAnimationFrame(renderLoop);
+                };
+            } catch (err) {
+                camStatus.innerText = "Lỗi: " + err.message;
+            }
+        }
+
+        async function renderLoop() {
+            if (!model || video.readyState !== 4) {
+                requestAnimationFrame(renderLoop);
+                return;
+            }
+
+            const predictions = await model.detect(video);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Tiêu cự pixel dựa trên giá trị FOV người dùng cấu hình
+            const fovRad = fovDegrees * (Math.PI / 180);
+            const focalLengthPx = (canvas.height / 2) / Math.tan(fovRad / 2);
+
+            let nearestVehicle = null;
+            let minDistance = Infinity;
+
+            predictions.forEach(pred => {
+                const className = pred.class.toLowerCase();
+                const spec = VEHICLE_SPECS[className];
+
+                if (spec && pred.score > 0.40) {
+                    const [x, y, w, h] = pred.bbox;
+
+                    // Tính khoảng cách cơ bản
+                    const distH = (focalLengthPx * spec.height) / h;
+                    const distW = (focalLengthPx * spec.width) / w;
+                    let d = (distW * 0.6) + (distH * 0.4);
+
+                    // Bù sai số phối cảnh nếu camera bị nghiêng (Góc tilt)
+                    if (phoneTiltPitch > 5 && phoneTiltPitch < 45) {
+                        const tiltRad = phoneTiltPitch * (Math.PI / 180);
+                        d = d * Math.cos(tiltRad);
+                    }
+
+                    if (d < minDistance) {
+                        minDistance = d;
+                        nearestVehicle = {
+                            label: spec.label,
+                            score: pred.score,
+                            bbox: [x, y, w, h],
+                            distance: d
+                        };
+                    }
+
+                    // Khung mờ các xe phụ
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x, y, w, h);
+                }
+            });
+
+            // Đánh giá khoảng cách an toàn theo TT 31/2019
+            const legalDist = getLegalDistance(currentSpeedKmh);
+
+            if (nearestVehicle && minDistance < 120) {
+                const [nx, ny, nw, nh] = nearestVehicle.bbox;
+                const d = nearestVehicle.distance;
+
+                let stateClass = '';
+                let boxColor = '';
+
+                if (d < (legalDist - 5)) {
+                    stateClass = 'status-danger';
+                    boxColor = '#f85149';
+                } else if (d <= (legalDist + 5)) {
+                    stateClass = 'status-warning';
+                    boxColor = '#d29922';
+                } else {
+                    stateClass = 'status-safe';
+                    boxColor = '#2ea043';
+                }
+
+                ctx.strokeStyle = boxColor;
+                ctx.lineWidth = 4;
+                ctx.strokeRect(nx, ny, nw, nh);
+
+                hudPanel.className = `right-panel ${stateClass}`;
+                distDisplay.innerHTML = `${d.toFixed(1)}<span class="distance-unit">m</span>`;
+                targetType.innerText = `${nearestVehicle.label} (${Math.round(nearestVehicle.score * 100)}%)`;
+
+            } else {
+                hudPanel.className = 'right-panel';
+                distDisplay.innerHTML = `--<span class="distance-unit">m</span>`;
+                targetType.innerText = "Không có vật cản";
+            }
+
+            requestAnimationFrame(renderLoop);
+        }
+
+        window.onload = startSystem;
+    </script>
+</body>
+</html>
