@@ -2,8 +2,8 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ADAS HUD - Auto Orientation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ADAS HUD - Screen Control</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#090d16">
@@ -22,14 +22,15 @@
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             user-select: none;
+            -webkit-user-select: none;
         }
-        body {
+        html, body {
             background: #000000;
             color: #ffffff;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            display: flex;
+            position: fixed;
         }
 
         /* KHUNG CHỨA TOÀN BỘ BỐ CỤC */
@@ -37,50 +38,47 @@
             display: flex;
             width: 100vw;
             height: 100vh;
-            transition: all 0.3s ease;
+            height: 100dvh; /* Đơn vị dynamic viewport chống thanh địa chỉ che khuất */
+            transition: all 0.2s ease;
         }
 
         /* --- BỐ CỤC MÀN HÌNH NGANG (LANDSCAPE) --- */
-        @media (orientation: landscape) {
-            .app-container {
-                flex-direction: row;
-            }
-            .camera-panel {
-                width: 50vw;
-                height: 100vh;
-                border-right: 2px solid #21262d;
-                border-bottom: none;
-            }
-            .hud-panel {
-                width: 50vw;
-                height: 100vh;
-            }
-            .distance-value {
-                font-size: clamp(60px, 11vw, 110px);
-            }
+        .layout-landscape {
+            flex-direction: row !important;
+        }
+        .layout-landscape .camera-panel {
+            width: 50vw;
+            height: 100%;
+            border-right: 2px solid #21262d;
+            border-bottom: none;
+        }
+        .layout-landscape .hud-panel {
+            width: 50vw;
+            height: 100%;
+        }
+        .layout-landscape .distance-value {
+            font-size: clamp(60px, 12vw, 110px);
         }
 
         /* --- BỐ CỤC MÀN HÌNH ĐỨNG (PORTRAIT) --- */
-        @media (orientation: portrait) {
-            .app-container {
-                flex-direction: column;
-            }
-            .camera-panel {
-                width: 100vw;
-                height: 48vh;
-                border-bottom: 2px solid #21262d;
-                border-right: none;
-            }
-            .hud-panel {
-                width: 100vw;
-                height: 52vh;
-            }
-            .distance-value {
-                font-size: clamp(56px, 14vw, 84px);
-            }
+        .layout-portrait {
+            flex-direction: column !important;
+        }
+        .layout-portrait .camera-panel {
+            width: 100vw;
+            height: 48%;
+            border-bottom: 2px solid #21262d;
+            border-right: none;
+        }
+        .layout-portrait .hud-panel {
+            width: 100vw;
+            height: 52%;
+        }
+        .layout-portrait .distance-value {
+            font-size: clamp(56px, 15vw, 86px);
         }
 
-        /* KHUNG CAMERA (Ngang: Trái / Đứng: Trên) */
+        /* KHUNG CAMERA */
         .camera-panel {
             position: relative;
             background: #0d1117;
@@ -112,16 +110,17 @@
             gap: 8px;
         }
 
-        /* KHUNG HUD (Ngang: Phải / Đứng: Dưới) */
+        /* KHUNG HUD THÔNG SỐ */
         .hud-panel {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 14px;
+            padding: 12px 16px;
             background: #090d16;
             transition: background-color 0.25s, border-color 0.25s;
         }
 
+        /* HEADER HUD & KHU VỰC CÁC NÚT ĐIỀU KHIỂN */
         .hud-header {
             display: flex;
             justify-content: space-between;
@@ -130,12 +129,14 @@
             color: #8b949e;
             border-bottom: 1px solid #21262d;
             padding-bottom: 8px;
+            gap: 6px;
         }
         .gps-badge {
             display: flex;
             align-items: center;
             gap: 6px;
             font-weight: 600;
+            min-width: 90px;
         }
         .dot {
             width: 10px;
@@ -148,18 +149,28 @@
             box-shadow: 0 0 8px #2ea043;
         }
 
-        .btn-settings {
+        .header-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .btn-ctrl {
             background: #21262d;
             color: #c9d1d9;
             border: 1px solid #30363d;
-            padding: 4px 10px;
+            padding: 6px 9px;
             border-radius: 6px;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-ctrl:active {
+            background: #30363d;
         }
 
-        /* KHU VỰC HIỂN THỊ KHOẢNG CÁCH CHỮ TO */
+        /* KHU VỰC KHOẢNG CÁCH */
         .distance-section {
             display: flex;
             flex-direction: column;
@@ -169,7 +180,7 @@
             margin: auto 0;
         }
         .hud-label {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             letter-spacing: 1.5px;
             text-transform: uppercase;
@@ -196,7 +207,7 @@
             color: #58a6ff;
         }
 
-        /* KHU VỰC FOOTER THÔNG SỐ VẬN TỐC & QUY ĐỊNH */
+        /* FOOTER VẬN TỐC & TT 31/2019 */
         .hud-footer {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -221,23 +232,14 @@
             color: #ffffff;
         }
 
-        /* 3 CẤP ĐỘ CẢNH BÁO THEO THÔNG TƯ 31/2019 */
-        .status-danger {
-            background: #2b0b0e !important;
-            border: 4px solid #f85149 !important;
-        }
+        /* 3 CẤP ĐỘ CẢNH BÁO */
+        .status-danger { background: #2b0b0e !important; border: 4px solid #f85149 !important; }
         .status-danger .distance-value { color: #f85149; }
 
-        .status-warning {
-            background: #2b2106 !important;
-            border: 4px solid #d29922 !important;
-        }
+        .status-warning { background: #2b2106 !important; border: 4px solid #d29922 !important; }
         .status-warning .distance-value { color: #d29922; }
 
-        .status-safe {
-            background: #090d16 !important;
-            border: 4px solid #2ea043 !important;
-        }
+        .status-safe { background: #090d16 !important; border: 4px solid #2ea043 !important; }
         .status-safe .distance-value { color: #2ea043; }
 
         /* MODAL CÀI ĐẶT */
@@ -259,7 +261,7 @@
             padding: 20px;
             border-radius: 12px;
             width: 90%;
-            max-width: 400px;
+            max-width: 380px;
         }
         .modal-card h3 { margin-bottom: 10px; color: #58a6ff; font-size: 17px; }
         .modal-card label { font-size: 13px; color: #8b949e; display: block; margin-top: 8px; }
@@ -301,11 +303,11 @@
 </head>
 <body>
 
-    <div class="app-container">
+    <div class="app-container layout-landscape" id="main-container">
         <div class="camera-panel">
             <div class="cam-overlay-info">
                 <span id="cam-status">Đang nạp AI...</span>
-                <span id="tilt-status">Góc nghiêng: 0°</span>
+                <span id="tilt-status">Nghiêng: 0°</span>
             </div>
             <video id="webcam" playsinline autoplay muted></video>
             <canvas id="overlay"></canvas>
@@ -315,9 +317,18 @@
             <div class="hud-header">
                 <div class="gps-badge">
                     <span class="dot" id="gps-dot"></span>
-                    <span id="gps-status">GPS Đang tìm...</span>
+                    <span id="gps-status">GPS Tìm...</span>
                 </div>
-                <button class="btn-settings" onclick="openSettings()">⚙️ FOV (<span id="fov-display-btn">55°</span>)</button>
+                
+                <div class="header-actions">
+                    <button class="btn-ctrl" onclick="toggleOrientationMode()" id="btn-rotate" title="Đổi giao diện Ngang/Đứng">
+                        🔄 <span id="rotate-label">Ngang</span>
+                    </button>
+                    <button class="btn-ctrl" onclick="toggleFullScreen()" id="btn-fullscreen" title="Toàn màn hình">
+                        ⛶ <span id="fs-label">Full</span>
+                    </button>
+                    <button class="btn-ctrl" onclick="openSettings()">⚙️</button>
+                </div>
             </div>
 
             <div class="distance-section">
@@ -342,7 +353,7 @@
     <div id="settings-modal">
         <div class="modal-card">
             <h3>Cấu hình Camera FOV</h3>
-            <p style="font-size: 12px; color: #8b949e;">Góc nhìn dọc camera. Tự động lưu trên máy.</p>
+            <p style="font-size: 12px; color: #8b949e;">Góc nhìn dọc camera. Tự động lưu vào máy.</p>
             
             <label>Góc FOV Dọc (độ):</label>
             <input type="number" id="input-fov" min="30" max="100" step="0.5" value="55">
@@ -355,18 +366,75 @@
     </div>
 
     <script>
-        // 1. Service Worker PWA
+        // --- 1. XỬ LÝ TOÀN MÀN HÌNH (FULLSCREEN) ---
+        function toggleFullScreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+
+            const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+            if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+                if (requestFullScreen) {
+                    requestFullScreen.call(docEl);
+                    document.getElementById('fs-label').innerText = "Thoát";
+                }
+            } else {
+                if (cancelFullScreen) {
+                    cancelFullScreen.call(doc);
+                    document.getElementById('fs-label').innerText = "Full";
+                }
+            }
+        }
+
+        // --- 2. XỬ LÝ NÚT CHUYỂN ĐỔI XOAY MÀN HÌNH (NGANG / ĐỨNG) ---
+        let currentMode = 'landscape'; // 'landscape' hoặc 'portrait'
+        const mainContainer = document.getElementById('main-container');
+        const rotateLabel = document.getElementById('rotate-label');
+
+        function setOrientationMode(mode) {
+            currentMode = mode;
+            if (mode === 'landscape') {
+                mainContainer.className = 'app-container layout-landscape';
+                rotateLabel.innerText = "Ngang";
+                // Thử khóa hướng nếu trình duyệt hỗ trợ
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+            } else {
+                mainContainer.className = 'app-container layout-portrait';
+                rotateLabel.innerText = "Đứng";
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('portrait').catch(() => {});
+                }
+            }
+            resizeCanvas();
+        }
+
+        function toggleOrientationMode() {
+            if (currentMode === 'landscape') {
+                setOrientationMode('portrait');
+            } else {
+                setOrientationMode('landscape');
+            }
+        }
+
+        // Tự động nhận diện hướng khi người dùng xoay điện thoại thực tế
+        window.addEventListener("orientationchange", () => {
+            const isLandscape = window.innerWidth > window.innerHeight;
+            setOrientationMode(isLandscape ? 'landscape' : 'portrait');
+        });
+
+        // --- 3. SERVICE WORKER PWA ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').catch(console.error);
             });
         }
 
-        // 2. Cài đặt biến cục bộ FOV
+        // --- 4. CÀI ĐẶT FOV (LOCALSTORAGE) ---
         let fovDegrees = parseFloat(localStorage.getItem('adas_camera_fov')) || 55.0;
         let phoneTiltPitch = 0;
-
-        document.getElementById('fov-display-btn').innerText = `${fovDegrees}°`;
         document.getElementById('input-fov').value = fovDegrees;
 
         function openSettings() {
@@ -383,23 +451,20 @@
             if (val >= 30 && val <= 100) {
                 fovDegrees = val;
                 localStorage.setItem('adas_camera_fov', fovDegrees);
-                document.getElementById('fov-display-btn').innerText = `${fovDegrees}°`;
                 closeSettings();
             } else {
                 alert("Giá trị FOV không hợp lệ (30° - 100°)");
             }
         }
 
-        // 3. Tự động đọc cảm biến góc nghiêng phù hợp theo hướng màn hình
+        // --- 5. CẢM BIẾN CON QUAY HỒI CHUYỂN (TILT SENSOR) ---
         function initSensors() {
             if (window.DeviceOrientationEvent) {
                 window.addEventListener('deviceorientation', (event) => {
-                    const isLandscape = window.matchMedia("(orientation: landscape)").matches;
-                    // Khi để ngang, trục pitch được lấy từ gamma; khi để đứng, lấy từ beta
+                    const isLandscape = (currentMode === 'landscape');
                     let rawPitch = isLandscape ? event.gamma : event.beta;
                     
                     if (rawPitch !== null) {
-                        // Tính góc lệch khỏi phương thẳng đứng 90 độ
                         phoneTiltPitch = Math.abs(Math.abs(rawPitch) - (isLandscape ? 0 : 90));
                         document.getElementById('tilt-status').innerText = `Nghiêng: ${Math.round(phoneTiltPitch)}°`;
                     }
@@ -407,15 +472,7 @@
             }
         }
 
-        // Cập nhật lại kích thước Canvas khi người dùng xoay màn hình
-        window.addEventListener('resize', () => {
-            if (video.videoWidth && video.videoHeight) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-            }
-        });
-
-        // 4. Khởi động AI & Camera & GPS
+        // --- 6. AI & CAMERA & GPS ---
         const video = document.getElementById('webcam');
         const canvas = document.getElementById('overlay');
         const ctx = canvas.getContext('2d');
@@ -445,9 +502,17 @@
             return 100;
         }
 
+        function resizeCanvas() {
+            if (video.videoWidth && video.videoHeight) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+
         function initGPS() {
             if (!("geolocation" in navigator)) {
-                gpsStatus.innerText = "GPS không hỗ trợ";
+                gpsStatus.innerText = "K hỗ trợ GPS";
                 return;
             }
 
@@ -476,6 +541,14 @@
         async function startSystem() {
             initGPS();
             initSensors();
+            
+            // Khởi tạo hướng ban đầu theo kích thước màn hình
+            if (window.innerWidth < window.innerHeight) {
+                setOrientationMode('portrait');
+            } else {
+                setOrientationMode('landscape');
+            }
+
             try {
                 model = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
                 camStatus.innerText = "AI Sẵn sàng";
@@ -493,8 +566,7 @@
                 video.srcObject = stream;
                 video.onloadedmetadata = () => {
                     video.play();
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
+                    resizeCanvas();
                     requestAnimationFrame(renderLoop);
                 };
             } catch (err) {
@@ -528,7 +600,6 @@
                     const distW = (focalLengthPx * spec.width) / w;
                     let d = (distW * 0.6) + (distH * 0.4);
 
-                    // Bù sai số phối cảnh từ cảm biến con quay hồi chuyển
                     if (phoneTiltPitch > 5 && phoneTiltPitch < 45) {
                         const tiltRad = phoneTiltPitch * (Math.PI / 180);
                         d = d * Math.cos(tiltRad);
@@ -544,14 +615,12 @@
                         };
                     }
 
-                    // Khung mờ các xe ở xa
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
                     ctx.lineWidth = 1.5;
                     ctx.strokeRect(x, y, w, h);
                 }
             });
 
-            // Đánh giá cấp độ an toàn theo Thông tư 31/2019/TT-BGTVT
             const legalDist = getLegalDistance(currentSpeedKmh);
 
             if (nearestVehicle && minDistance < 120) {
@@ -561,18 +630,13 @@
                 let stateClass = '';
                 let boxColor = '';
 
-                // Cấp độ 1: Đỏ (Gần hơn quy định - 5m)
                 if (d < (legalDist - 5)) {
                     stateClass = 'status-danger';
                     boxColor = '#f85149';
-                } 
-                // Cấp độ 2: Vàng (Trong khoảng quy định +- 5m)
-                else if (d <= (legalDist + 5)) {
+                } else if (d <= (legalDist + 5)) {
                     stateClass = 'status-warning';
                     boxColor = '#d29922';
-                } 
-                // Cấp độ 3: Xanh (> Quy định + 5m)
-                else {
+                } else {
                     stateClass = 'status-safe';
                     boxColor = '#2ea043';
                 }
