@@ -2,355 +2,554 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hệ Thống Quản Trị & Luân Chuyển Dòng Tiền Cổ Tức</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1e3a8a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Sổ Tay Cổ Tức Thông Minh</title>
   <style>
     :root {
       --primary: #1e3a8a;
-      --bg: #f1f5f9;
-      --card-bg: #ffffff;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-sub: #64748b;
       --buy: #16a34a;
+      --buy-bg: #dcfce7;
       --hold: #d97706;
+      --hold-bg: #fef3c7;
       --sell: #dc2626;
-      --text: #0f172a;
+      --sell-bg: #fee2e2;
     }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg);
-      color: var(--text);
+      color: var(--text-main);
       margin: 0;
-      padding: 20px;
+      padding: 12px;
     }
+
     .container {
-      max-width: 1400px;
+      max-width: 1200px;
       margin: 0 auto;
     }
-    h1 {
+
+    /* HEADER */
+    header {
       text-align: center;
+      margin-bottom: 16px;
+      padding: 10px 0;
+    }
+    header h1 {
+      font-size: 20px;
       color: var(--primary);
+      margin: 0 0 6px 0;
+    }
+    .summary-card {
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+      color: white;
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+    .summary-val {
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    /* FORM NHẬP LIỆU */
+    .form-box {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
       margin-bottom: 20px;
     }
-    .grid-form {
-      background: var(--card-bg);
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-      margin-bottom: 25px;
+    .form-box h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      color: var(--primary);
+    }
+    .grid-inputs {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      align-items: end;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 768px) {
+      .grid-inputs {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      }
     }
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
     }
     label {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
-      color: #475569;
+      color: var(--text-sub);
     }
-    input, select, button {
-      padding: 8px 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
+    input, select {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
       font-size: 14px;
+      background: #fff;
     }
     input:focus, select:focus {
-      outline: 2px solid var(--primary);
+      outline: none;
+      border-color: var(--primary);
     }
-    button.btn-primary {
-      background-color: var(--primary);
+    button.btn-submit {
+      background: var(--primary);
       color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 15px;
       font-weight: bold;
       cursor: pointer;
-      border: none;
-      transition: background 0.2s;
-    }
-    button.btn-primary:hover {
-      background-color: #1d4ed8;
-    }
-    .table-container {
-      background: var(--card-bg);
-      border-radius: 8px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-      padding: 20px;
-      margin-bottom: 30px;
-      overflow-x: auto;
-    }
-    .table-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-      border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 10px;
-    }
-    .table-header h2 {
-      margin: 0;
-      font-size: 18px;
-      color: var(--primary);
-    }
-    table {
       width: 100%;
-      border-collapse: collapse;
-      text-align: right;
-      font-size: 14px;
+      margin-top: 6px;
     }
-    th, td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #e2e8f0;
+    button.btn-submit:active {
+      background: var(--primary-hover);
     }
-    th {
-      background-color: #f8fafc;
-      color: #334155;
-      font-weight: 600;
+
+    /* TIÊU ĐỀ BẢNG */
+    .section-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--primary);
+      margin: 20px 0 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    th:first-child, td:first-child,
-    th:nth-child(2), td:nth-child(2) {
-      text-align: left;
-    }
+
+    /* BADGE HÀNH ĐỘNG */
     .badge {
       display: inline-block;
       padding: 4px 8px;
-      border-radius: 4px;
+      border-radius: 6px;
       font-weight: bold;
       font-size: 12px;
       text-align: center;
     }
-    .badge-buy { background: #dcfce7; color: var(--buy); border: 1px solid #bbf7d0; }
-    .badge-hold { background: #fef3c7; color: var(--hold); border: 1px solid #fde68a; }
-    .badge-sell { background: #fee2e2; color: var(--sell); border: 1px solid #fecaca; }
-    
-    .btn-action {
-      padding: 4px 8px;
-      font-size: 12px;
-      cursor: pointer;
-      border-radius: 4px;
-      border: none;
-      margin-left: 4px;
+    .badge-buy { background: var(--buy-bg); color: var(--buy); }
+    .badge-hold { background: var(--hold-bg); color: var(--hold); }
+    .badge-sell { background: var(--sell-bg); color: var(--sell); }
+
+    /* GIAO DIỆN DESKTOP / LAPTOP (TABLE) */
+    .desktop-table {
+      display: none;
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+      border: 1px solid var(--border);
+      font-size: 13px;
     }
-    .btn-del { background: #ef4444; color: white; }
-    .btn-edit { background: #3b82f6; color: white; }
-    .link-search {
+    .desktop-table th, .desktop-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+    }
+    .desktop-table th {
+      background: #f1f5f9;
+      color: var(--text-sub);
+      font-weight: 600;
+    }
+    .desktop-table th:first-child, .desktop-table td:first-child,
+    .desktop-table th:nth-child(2), .desktop-table td:nth-child(2) {
+      text-align: left;
+    }
+
+    /* GIAO DIỆN MOBILE / ANDROID (CARD LAYOUT) */
+    .mobile-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .stock-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      position: relative;
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 8px;
+    }
+    .card-symbol {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .card-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .card-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .card-item span:first-child {
+      color: var(--text-sub);
+      font-size: 11px;
+    }
+    .card-item span:last-child {
+      font-weight: 600;
+    }
+    .card-footer {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn-action-group {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-edit { background: #e0e7ff; color: #3730a3; }
+    .btn-del { background: #fee2e2; color: #991b1b; }
+    .link-ext {
       font-size: 11px;
       color: #2563eb;
       text-decoration: none;
-      margin-left: 4px;
+      margin-right: 6px;
     }
-    .link-search:hover { text-decoration: underline; }
+
+    /* RESPONSIVE SWITCHER */
+    @media (min-width: 900px) {
+      body { padding: 20px; }
+      header h1 { font-size: 24px; }
+      .desktop-table { display: table; }
+      .mobile-cards { display: none; }
+      .summary-card {
+        flex-direction: row;
+        justify-content: space-around;
+        padding: 16px;
+      }
+      .summary-row { flex-direction: column; align-items: center; gap: 4px; }
+      .summary-val { font-size: 18px; }
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>HỆ THỐNG QUẢN TRỊ & ĐIỀU PHỐI DANH MỤC CỔ TỨC</h1>
+  <header>
+    <h1>HỆ THỐNG QUẢN TRỊ CỔ TỨC</h1>
+    <div style="font-size: 12px; color: var(--text-sub);">Luân chuyển dòng tiền & Khóa lợi nhuận tự động</div>
+  </header>
 
-  <!-- FORM THÊM MỚI / CẬP NHẬT -->
-  <div class="grid-form">
-    <div class="form-group">
-      <label>Mã CP</label>
-      <input type="text" id="symbol" placeholder="VD: VEA" style="text-transform:uppercase;">
+  <!-- KHUNG TỔNG KẾT NHANH -->
+  <div class="summary-card">
+    <div class="summary-row">
+      <span>Tổng giá trị danh mục:</span>
+      <span class="summary-val" id="totalAsset">0 đ</span>
     </div>
-    <div class="form-group">
-      <label>Phân loại</label>
-      <select id="type">
-        <option value="holding">Đang nắm giữ</option>
-        <option value="watchlist">Danh mục mục tiêu</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Số lượng CP</label>
-      <input type="number" id="volume" placeholder="VD: 11600" value="0">
-    </div>
-    <div class="form-group">
-      <label>Giá vốn (VNĐ)</label>
-      <input type="number" id="costPrice" placeholder="VD: 35200">
-    </div>
-    <div class="form-group">
-      <label>Thị giá hiện tại (VNĐ)</label>
-      <input type="number" id="marketPrice" placeholder="VD: 35500">
-    </div>
-    <div class="form-group">
-      <label>Cổ tức tiền mặt (VNĐ)</label>
-      <input type="number" id="cashDividend" placeholder="VD: 5240">
-    </div>
-    <div class="form-group">
-      <label>Ngày GDKHQ dự kiến</label>
-      <input type="text" id="exDate" placeholder="VD: 12/2026">
-    </div>
-    <div class="form-group">
-      <button class="btn-primary" onclick="saveStock()">Lưu Cổ Phiếu</button>
+    <div class="summary-row">
+      <span>Cổ tức Net dự thu (đã trừ thuế 5%):</span>
+      <span class="summary-val" id="totalDiv" style="color: #fef08a;">0 đ</span>
     </div>
   </div>
 
-  <!-- BẢNG 1: DANH MỤC ĐANG NẮM GIỮ -->
-  <div class="table-container">
-    <div class="table-header">
-      <h2>1. DANH MỤC CỔ PHIẾU ĐANG NẮM GIỮ</h2>
-      <span id="holdingSummary" style="font-weight: 600; color: var(--primary);"></span>
+  <!-- KHUNG NHẬP LIỆU THÔNG MINH -->
+  <div class="form-box">
+    <h3 id="formTitle">Thêm / Cập nhật Cổ phiếu</h3>
+    <div class="grid-inputs">
+      <div class="form-group">
+        <label>Mã Cổ Phiếu</label>
+        <input type="text" id="symbol" placeholder="VD: VEA" style="text-transform:uppercase;">
+      </div>
+      <div class="form-group">
+        <label>Phân loại</label>
+        <select id="type">
+          <option value="holding">Đang nắm giữ</option>
+          <option value="watchlist">Danh mục mục tiêu</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Khối lượng (CP)</label>
+        <input type="number" inputmode="numeric" id="volume" placeholder="VD: 11600" value="0">
+      </div>
+      <div class="form-group">
+        <label>Giá vốn (VNĐ)</label>
+        <input type="number" inputmode="numeric" id="costPrice" placeholder="VD: 35200">
+      </div>
+      <div class="form-group">
+        <label>Thị giá sàn (VNĐ)</label>
+        <input type="number" inputmode="numeric" id="marketPrice" placeholder="VD: 35200">
+      </div>
+      <div class="form-group">
+        <label>Cổ tức tiền mặt (VNĐ)</label>
+        <input type="number" inputmode="numeric" id="cashDividend" placeholder="VD: 5240">
+      </div>
+      <div class="form-group">
+        <label>Dự kiến GDKHQ</label>
+        <input type="text" id="exDate" placeholder="VD: 12/2026">
+      </div>
     </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Mã CP</th>
-          <th>Tra cứu</th>
-          <th>Khối lượng</th>
-          <th>Giá vốn</th>
-          <th>Thị giá</th>
-          <th>Cổ tức Net (95%)</th>
-          <th>Tỷ suất Net</th>
-          <th>Ngày GDKHQ</th>
-          <th>Lãi giá / Lãi CT</th>
-          <th>HÀNH ĐỘNG</th>
-          <th>Thao tác</th>
-        </tr>
-      </thead>
-      <tbody id="holdingTableBody"></tbody>
-    </table>
+    <button class="btn-submit" onclick="saveStock()">Lưu Dữ Liệu</button>
   </div>
 
-  <!-- BẢNG 2: DANH MỤC MỤC TIÊU THEO DÕI -->
-  <div class="table-container">
-    <div class="table-header">
-      <h2>2. DANH MỤC MỤC TIÊU SẴN SÀNG GIẢI NGÂN / ĐẢO HÀNG</h2>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Mã CP</th>
-          <th>Tra cứu</th>
-          <th>Thị giá</th>
-          <th>Giá gom tối đa (G1)</th>
-          <th>Cổ tức Net (95%)</th>
-          <th>Tỷ suất Net</th>
-          <th>Ngày GDKHQ</th>
-          <th>HÀNH ĐỘNG</th>
-          <th>Thao tác</th>
-        </tr>
-      </thead>
-      <tbody id="watchlistTableBody"></tbody>
-    </table>
+  <!-- SECTION 1: ĐANG NẮM GIỮ -->
+  <div class="section-title">
+    <span>1. CỔ PHIẾU ĐANG NẮM GIỮ</span>
   </div>
+  
+  <!-- Bảng Desktop -->
+  <table class="desktop-table">
+    <thead>
+      <tr>
+        <th>Mã CP</th>
+        <th>Tra cứu</th>
+        <th>Khối lượng</th>
+        <th>Giá vốn</th>
+        <th>Thị giá</th>
+        <th>Cổ tức Net</th>
+        <th>Tỷ suất Net</th>
+        <th>GDKHQ</th>
+        <th>Khuyến nghị</th>
+        <th>Thao tác</th>
+      </tr>
+    </thead>
+    <tbody id="holdingDesktopBody"></tbody>
+  </table>
+
+  <!-- Thẻ Mobile Android -->
+  <div class="mobile-cards" id="holdingMobileBody"></div>
+
+  <!-- SECTION 2: MỤC TIÊU THEO DÕI -->
+  <div class="section-title">
+    <span>2. DANH MỤC MỤC TIÊU SẴN SÀNG GIẢI NGÂN</span>
+  </div>
+
+  <!-- Bảng Desktop -->
+  <table class="desktop-table">
+    <thead>
+      <tr>
+        <th>Mã CP</th>
+        <th>Tra cứu</th>
+        <th>Thị giá</th>
+        <th>Trần giá gom (G1)</th>
+        <th>Cổ tức Net</th>
+        <th>Tỷ suất Net</th>
+        <th>GDKHQ</th>
+        <th>Khuyến nghị</th>
+        <th>Thao tác</th>
+      </tr>
+    </thead>
+    <tbody id="watchlistDesktopBody"></tbody>
+  </table>
+
+  <!-- Thẻ Mobile Android -->
+  <div class="mobile-cards" id="watchlistMobileBody"></div>
+
 </div>
 
 <script>
-  // Dữ liệu khởi tạo mẫu mặc định chuẩn theo kế hoạch của bạn
-  const defaultData = [
+  // Dữ liệu ban đầu chuẩn xác theo kế hoạch
+  const initialData = [
     { symbol: "VEA", type: "holding", volume: 11600, costPrice: 35200, marketPrice: 35200, cashDividend: 5240, exDate: "11-12/2026" },
     { symbol: "QTP", type: "holding", volume: 400, costPrice: 11100, marketPrice: 11100, cashDividend: 1400, exDate: "02/2027" },
     { symbol: "HND", type: "watchlist", volume: 0, costPrice: 0, marketPrice: 13500, cashDividend: 1400, exDate: "06/2027" },
     { symbol: "SJD", type: "watchlist", volume: 0, costPrice: 0, marketPrice: 14000, cashDividend: 1600, exDate: "05/2027" }
   ];
 
-  let stocks = JSON.parse(localStorage.getItem('dividend_portfolio')) || defaultData;
-  let editingIndex = -1;
+  let stocks = JSON.parse(localStorage.getItem('dividend_db_v2')) || initialData;
+  let editingIdx = -1;
 
-  function formatMoney(num) {
-    return (Number(num) || 0).toLocaleString('vi-VN');
+  function fmt(n) {
+    return (Number(n) || 0).toLocaleString('vi-VN');
   }
 
-  function calculateAction(stock) {
-    const netDiv = stock.cashDividend * 0.95; // Cổ tức sau thuế 5%
-    const currentYield = (netDiv / stock.marketPrice) * 100;
+  function analyze(stock) {
+    const netDiv = stock.cashDividend * 0.95;
+    const yieldVal = (netDiv / stock.marketPrice) * 100;
     
-    // Ngưỡng G1: Giá mua tối đa để đảm bảo tỷ suất ròng >= 10% (đối với VEA >= 13%)
-    const minYieldRequired = stock.symbol === 'VEA' ? 0.13 : 0.10;
-    const G1 = netDiv / minYieldRequired;
+    // Ngưỡng G1: Giá mua tối đa (VEA >= 13%, các mã khác >= 10%)
+    const targetRate = stock.symbol === 'VEA' ? 0.13 : 0.10;
+    const G1 = netDiv / targetRate;
 
-    // Ngưỡng G2: Giá bán chốt lãi sớm khi Lãi giá sau thuế phí bán (0.15%) > Cổ tức Net
-    // Lãi giá = (G2 - Giá vốn) * 0.9985 > netDiv  ==> G2 = Giá vốn + (netDiv / 0.9985)
+    // Ngưỡng G2: Bán chốt lời khi Lãi giá sau thuế phí > Cổ tức Net
     const cost = stock.costPrice > 0 ? stock.costPrice : stock.marketPrice;
     const G2 = cost + (netDiv / 0.9985);
 
-    let action = "";
-    let badgeClass = "";
-    let analysisNote = "";
+    let action = "GIỮ / CHỜ CT";
+    let badgeClass = "badge-hold";
+    let reason = "Vùng trung lập";
 
-    if (stock.marketPrice >= G2 && stock.costPrice > 0) {
+    if (stock.costPrice > 0 && stock.marketPrice >= G2) {
       action = "BÁN CHỐT LÃI";
       badgeClass = "badge-sell";
-      analysisNote = `Lãi giá (${formatMoney((stock.marketPrice - cost)*0.9985)}) > Cổ tức (${formatMoney(netDiv)})`;
+      reason = `Lãi giá (${fmt((stock.marketPrice-cost)*0.9985)}đ) > CT Net (${fmt(netDiv)}đ)`;
     } else if (stock.marketPrice <= G1) {
       action = "MUA GOM";
       badgeClass = "badge-buy";
-      analysisNote = `Giá <= G1 (${formatMoney(G1)})`;
-    } else {
-      action = "GIỮ / CHỜ CT";
-      badgeClass = "badge-hold";
-      analysisNote = `Vùng chờ G1-G2`;
+      reason = `Thị giá <= G1 (${fmt(G1)}đ)`;
     }
 
-    return { netDiv, currentYield, G1, G2, action, badgeClass, analysisNote };
+    return { netDiv, yieldVal, G1, G2, action, badgeClass, reason };
   }
 
-  function renderTables() {
-    localStorage.setItem('dividend_portfolio', JSON.stringify(stocks));
-    
-    const holdingBody = document.getElementById('holdingTableBody');
-    const watchlistBody = document.getElementById('watchlistTableBody');
-    holdingBody.innerHTML = '';
-    watchlistBody.innerHTML = '';
+  function render() {
+    localStorage.setItem('dividend_db_v2', JSON.stringify(stocks));
 
-    let totalHoldingValue = 0;
-    let totalEstDividend = 0;
+    const holdDesk = document.getElementById('holdingDesktopBody');
+    const holdMob = document.getElementById('holdingMobileBody');
+    const watchDesk = document.getElementById('watchlistDesktopBody');
+    const watchMob = document.getElementById('watchlistMobileBody');
 
-    stocks.forEach((stock, index) => {
-      const calc = calculateAction(stock);
-      
-      // Đường link tra cứu uy tín (Vietstock, CafeF)
+    holdDesk.innerHTML = ''; holdMob.innerHTML = '';
+    watchDesk.innerHTML = ''; watchMob.innerHTML = '';
+
+    let totalVal = 0;
+    let totalDiv = 0;
+
+    stocks.forEach((stock, idx) => {
+      const a = analyze(stock);
       const searchLinks = `
-        <a class="link-search" href="https://finance.vietstock.vn/${stock.symbol}/lich-su-co-tuc.htm" target="_blank" title="Lịch cổ tức">Vietstock</a> | 
-        <a class="link-search" href="https://s.cafef.vn/hose/${stock.symbol}-cong-ty.chn" target="_blank" title="Báo cáo CafeF">CafeF</a>
+        <a class="link-ext" href="https://finance.vietstock.vn/${stock.symbol}/lich-su-co-tuc.htm" target="_blank">Vietstock</a>
+        <a class="link-ext" href="https://s.cafef.vn/hose/${stock.symbol}-cong-ty.chn" target="_blank">CafeF</a>
       `;
 
       if (stock.type === 'holding') {
-        const value = stock.volume * stock.marketPrice;
-        const totalNetDiv = stock.volume * calc.netDiv;
-        totalHoldingValue += value;
-        totalEstDividend += totalNetDiv;
+        const val = stock.volume * stock.marketPrice;
+        const div = stock.volume * a.netDiv;
+        totalVal += val;
+        totalDiv += div;
 
-        holdingBody.innerHTML += `
+        // Desktop Row
+        holdDesk.innerHTML += `
           <tr>
-            <td style="font-weight: bold; color: var(--primary);">${stock.symbol}</td>
+            <td style="font-weight:bold; color:var(--primary);">${stock.symbol}</td>
             <td>${searchLinks}</td>
-            <td>${formatMoney(stock.volume)}</td>
-            <td>${formatMoney(stock.costPrice)} đ</td>
-            <td style="font-weight:600;">${formatMoney(stock.marketPrice)} đ</td>
-            <td style="color: #16a34a; font-weight:600;">${formatMoney(calc.netDiv)} đ</td>
-            <td><strong>${calc.currentYield.toFixed(2)}%</strong></td>
+            <td>${fmt(stock.volume)}</td>
+            <td>${fmt(stock.costPrice)} đ</td>
+            <td style="font-weight:bold;">${fmt(stock.marketPrice)} đ</td>
+            <td style="color:var(--buy); font-weight:bold;">${fmt(a.netDiv)} đ</td>
+            <td><strong>${a.yieldVal.toFixed(2)}%</strong></td>
             <td>${stock.exDate}</td>
-            <td style="font-size: 12px; color:#64748b;">${calc.analysisNote}</td>
-            <td><span class="badge ${calc.badgeClass}">${calc.action}</span></td>
+            <td><span class="badge ${a.badgeClass}">${a.action}</span></td>
             <td>
-              <button class="btn-action btn-edit" onclick="editStock(${index})">Sửa</button>
-              <button class="btn-action btn-del" onclick="deleteStock(${index})">Xóa</button>
+              <button class="btn-sm btn-edit" onclick="editStock(${idx})">Sửa</button>
+              <button class="btn-sm btn-del" onclick="delStock(${idx})">Xóa</button>
             </td>
           </tr>
         `;
+
+        // Mobile Card
+        holdMob.innerHTML += `
+          <div class="stock-card">
+            <div class="card-head">
+              <div>
+                <span class="card-symbol">${stock.symbol}</span>
+                <span style="font-size:12px; color:var(--text-sub);">(${fmt(stock.volume)} CP)</span>
+              </div>
+              <span class="badge ${a.badgeClass}">${a.action}</span>
+            </div>
+            <div class="card-body">
+              <div class="card-item"><span>Thị giá / Giá vốn:</span><span>${fmt(stock.marketPrice)} / ${fmt(stock.costPrice)} đ</span></div>
+              <div class="card-item"><span>Tỷ suất Net:</span><span style="color:var(--primary); font-size:14px;">${a.yieldVal.toFixed(2)}%</span></div>
+              <div class="card-item"><span>Cổ tức Net / CP:</span><span style="color:var(--buy);">${fmt(a.netDiv)} đ</span></div>
+              <div class="card-item"><span>Dự kiến GDKHQ:</span><span>${stock.exDate}</span></div>
+            </div>
+            <div class="card-footer">
+              <div>${searchLinks}</div>
+              <div class="btn-action-group">
+                <button class="btn-sm btn-edit" onclick="editStock(${idx})">Sửa</button>
+                <button class="btn-sm btn-del" onclick="delStock(${idx})">Xóa</button>
+              </div>
+            </div>
+          </div>
+        `;
       } else {
-        watchlistBody.innerHTML += `
+        // Desktop Watchlist
+        watchDesk.innerHTML += `
           <tr>
-            <td style="font-weight: bold; color: var(--primary);">${stock.symbol}</td>
+            <td style="font-weight:bold; color:var(--primary);">${stock.symbol}</td>
             <td>${searchLinks}</td>
-            <td style="font-weight:600;">${formatMoney(stock.marketPrice)} đ</td>
-            <td style="color: #2563eb;"><strong><= ${formatMoney(calc.G1)} đ</strong></td>
-            <td style="color: #16a34a;">${formatMoney(calc.netDiv)} đ</td>
-            <td><strong>${calc.currentYield.toFixed(2)}%</strong></td>
+            <td style="font-weight:bold;">${fmt(stock.marketPrice)} đ</td>
+            <td style="color:#2563eb; font-weight:bold;">${fmt(a.G1)} đ</td>
+            <td style="color:var(--buy); font-weight:bold;">${fmt(a.netDiv)} đ</td>
+            <td><strong>${a.yieldVal.toFixed(2)}%</strong></td>
             <td>${stock.exDate}</td>
-            <td><span class="badge ${calc.badgeClass}">${calc.action}</span></td>
+            <td><span class="badge ${a.badgeClass}">${a.action}</span></td>
             <td>
-              <button class="btn-action btn-edit" onclick="editStock(${index})">Sửa</button>
-              <button class="btn-action btn-del" onclick="deleteStock(${index})">Xóa</button>
+              <button class="btn-sm btn-edit" onclick="editStock(${idx})">Sửa</button>
+              <button class="btn-sm btn-del" onclick="delStock(${idx})">Xóa</button>
             </td>
           </tr>
+        `;
+
+        // Mobile Watchlist Card
+        watchMob.innerHTML += `
+          <div class="stock-card">
+            <div class="card-head">
+              <span class="card-symbol">${stock.symbol}</span>
+              <span class="badge ${a.badgeClass}">${a.action}</span>
+            </div>
+            <div class="card-body">
+              <div class="card-item"><span>Thị giá hiện tại:</span><span style="font-size:14px;">${fmt(stock.marketPrice)} đ</span></div>
+              <div class="card-item"><span>Trần giá gom (G1):</span><span style="color:#2563eb;">&le; ${fmt(a.G1)} đ</span></div>
+              <div class="card-item"><span>Cổ tức Net:</span><span style="color:var(--buy);">${fmt(a.netDiv)} đ (${a.yieldVal.toFixed(2)}%)</span></div>
+              <div class="card-item"><span>Dự kiến GDKHQ:</span><span>${stock.exDate}</span></div>
+            </div>
+            <div class="card-footer">
+              <div>${searchLinks}</div>
+              <div class="btn-action-group">
+                <button class="btn-sm btn-edit" onclick="editStock(${idx})">Sửa</button>
+                <button class="btn-sm btn-del" onclick="delStock(${idx})">Xóa</button>
+              </div>
+            </div>
+          </div>
         `;
       }
     });
 
-    document.getElementById('holdingSummary').innerText = 
-      `Tổng giá trị: ${formatMoney(totalHoldingValue)} đ | Dự thu cổ tức Net: ${formatMoney(totalEstDividend)} đ`;
+    document.getElementById('totalAsset').innerText = fmt(totalVal) + ' đ';
+    document.getElementById('totalDiv').innerText = fmt(totalDiv) + ' đ';
   }
 
   function saveStock() {
@@ -363,20 +562,21 @@
     const exDate = document.getElementById('exDate').value.trim();
 
     if (!symbol || marketPrice <= 0 || cashDividend <= 0) {
-      alert("Vui lòng nhập đầy đủ Mã CP, Thị giá và Cổ tức tiền mặt!");
+      alert("Vui lòng điền đủ Mã CP, Thị giá và Cổ tức!");
       return;
     }
 
-    const stockData = { symbol, type, volume, costPrice, marketPrice, cashDividend, exDate };
+    const payload = { symbol, type, volume, costPrice, marketPrice, cashDividend, exDate };
 
-    if (editingIndex >= 0) {
-      stocks[editingIndex] = stockData;
-      editingIndex = -1;
+    if (editingIdx >= 0) {
+      stocks[editingIdx] = payload;
+      editingIdx = -1;
+      document.getElementById('formTitle').innerText = "Thêm / Cập nhật Cổ phiếu";
     } else {
-      stocks.push(stockData);
+      stocks.push(payload);
     }
 
-    // Reset Form
+    // Reset
     document.getElementById('symbol').value = '';
     document.getElementById('volume').value = '0';
     document.getElementById('costPrice').value = '';
@@ -384,11 +584,11 @@
     document.getElementById('cashDividend').value = '';
     document.getElementById('exDate').value = '';
 
-    renderTables();
+    render();
   }
 
-  function editStock(index) {
-    const s = stocks[index];
+  function editStock(idx) {
+    const s = stocks[idx];
     document.getElementById('symbol').value = s.symbol;
     document.getElementById('type').value = s.type;
     document.getElementById('volume').value = s.volume;
@@ -396,19 +596,21 @@
     document.getElementById('marketPrice').value = s.marketPrice;
     document.getElementById('cashDividend').value = s.cashDividend;
     document.getElementById('exDate').value = s.exDate;
-    editingIndex = index;
+    
+    editingIdx = idx;
+    document.getElementById('formTitle').innerText = "Đang sửa mã: " + s.symbol;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function deleteStock(index) {
-    if (confirm(`Bạn có chắc muốn xóa mã ${stocks[index].symbol}?`)) {
-      stocks.splice(index, 1);
-      renderTables();
+  function delStock(idx) {
+    if (confirm("Xóa mã " + stocks[idx].symbol + "?")) {
+      stocks.splice(idx, 1);
+      render();
     }
   }
 
-  // Khởi chạy khi load trang
-  renderTables();
+  // Chạy ngay khi mở
+  render();
 </script>
 
 </body>
