@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ADAS HUD - Screen Control</title>
+    <title>ADAS HUD - Lane & Target Filter</title>
 
+    <!-- CẤU HÌNH PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#090d16">
     <meta name="mobile-web-app-capable" content="yes">
@@ -12,6 +13,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon-512.png">
 
+    <!-- Nạp TensorFlow.js & COCO-SSD -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
     
@@ -33,52 +35,27 @@
             position: fixed;
         }
 
-        /* KHUNG CHỨA TOÀN BỘ BỐ CỤC */
         .app-container {
             display: flex;
             width: 100vw;
             height: 100vh;
-            height: 100dvh; /* Đơn vị dynamic viewport chống thanh địa chỉ che khuất */
+            height: 100dvh;
             transition: all 0.2s ease;
         }
 
-        /* --- BỐ CỤC MÀN HÌNH NGANG (LANDSCAPE) --- */
-        .layout-landscape {
-            flex-direction: row !important;
-        }
-        .layout-landscape .camera-panel {
-            width: 50vw;
-            height: 100%;
-            border-right: 2px solid #21262d;
-            border-bottom: none;
-        }
-        .layout-landscape .hud-panel {
-            width: 50vw;
-            height: 100%;
-        }
-        .layout-landscape .distance-value {
-            font-size: clamp(60px, 12vw, 110px);
-        }
+        /* BỐ CỤC NGANG */
+        .layout-landscape { flex-direction: row !important; }
+        .layout-landscape .camera-panel { width: 50vw; height: 100%; border-right: 2px solid #21262d; border-bottom: none; }
+        .layout-landscape .hud-panel { width: 50vw; height: 100%; }
+        .layout-landscape .distance-value { font-size: clamp(58px, 11vw, 105px); }
 
-        /* --- BỐ CỤC MÀN HÌNH ĐỨNG (PORTRAIT) --- */
-        .layout-portrait {
-            flex-direction: column !important;
-        }
-        .layout-portrait .camera-panel {
-            width: 100vw;
-            height: 48%;
-            border-bottom: 2px solid #21262d;
-            border-right: none;
-        }
-        .layout-portrait .hud-panel {
-            width: 100vw;
-            height: 52%;
-        }
-        .layout-portrait .distance-value {
-            font-size: clamp(56px, 15vw, 86px);
-        }
+        /* BỐ CỤC ĐỨNG */
+        .layout-portrait { flex-direction: column !important; }
+        .layout-portrait .camera-panel { width: 100vw; height: 48%; border-bottom: 2px solid #21262d; border-right: none; }
+        .layout-portrait .hud-panel { width: 100vw; height: 52%; }
+        .layout-portrait .distance-value { font-size: clamp(54px, 14vw, 82px); }
 
-        /* KHUNG CAMERA */
+        /* CAMERA */
         .camera-panel {
             position: relative;
             background: #0d1117;
@@ -93,15 +70,13 @@
             height: 100%;
             object-fit: cover;
         }
-        canvas {
-            z-index: 10;
-        }
+        canvas { z-index: 10; }
         .cam-overlay-info {
             position: absolute;
             top: 10px;
             left: 10px;
             z-index: 20;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.75);
             padding: 4px 8px;
             border-radius: 6px;
             font-size: 11px;
@@ -110,7 +85,7 @@
             gap: 8px;
         }
 
-        /* KHUNG HUD THÔNG SỐ */
+        /* HUD PANEL */
         .hud-panel {
             display: flex;
             flex-direction: column;
@@ -120,7 +95,6 @@
             transition: background-color 0.25s, border-color 0.25s;
         }
 
-        /* HEADER HUD & KHU VỰC CÁC NÚT ĐIỀU KHIỂN */
         .hud-header {
             display: flex;
             justify-content: space-between;
@@ -136,23 +110,12 @@
             align-items: center;
             gap: 6px;
             font-weight: 600;
-            min-width: 90px;
+            min-width: 85px;
         }
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #f85149;
-        }
-        .dot.active {
-            background: #2ea043;
-            box-shadow: 0 0 8px #2ea043;
-        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #f85149; }
+        .dot.active { background: #2ea043; box-shadow: 0 0 8px #2ea043; }
 
-        .header-actions {
-            display: flex;
-            gap: 6px;
-        }
+        .header-actions { display: flex; gap: 6px; }
         .btn-ctrl {
             background: #21262d;
             color: #c9d1d9;
@@ -166,11 +129,9 @@
             align-items: center;
             gap: 4px;
         }
-        .btn-ctrl:active {
-            background: #30363d;
-        }
+        .btn-ctrl:active { background: #30363d; }
 
-        /* KHU VỰC KHOẢNG CÁCH */
+        /* KHOẢNG CÁCH */
         .distance-section {
             display: flex;
             flex-direction: column;
@@ -194,20 +155,28 @@
             color: #ffffff;
             transition: color 0.2s ease;
         }
-        .distance-unit {
-            font-size: 26px;
-            font-weight: 600;
-            color: #8b949e;
-            margin-left: 4px;
-        }
-        .target-type {
+        .distance-unit { font-size: 26px; font-weight: 600; color: #8b949e; margin-left: 4px; }
+        
+        .target-meta {
             margin-top: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #58a6ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
         }
+        .target-type { font-size: 14px; font-weight: 600; color: #58a6ff; }
+        .lane-status-badge {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-in-lane { background: #238636; color: #fff; }
+        .badge-out-lane { background: #30363d; color: #8b949e; }
 
-        /* FOOTER VẬN TỐC & TT 31/2019 */
+        /* FOOTER */
         .hud-footer {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -215,30 +184,15 @@
             border-top: 1px solid #21262d;
             padding-top: 8px;
         }
-        .sub-metric {
-            background: #161b22;
-            padding: 8px 10px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .sub-label {
-            font-size: 10px;
-            color: #8b949e;
-            text-transform: uppercase;
-        }
-        .sub-val {
-            font-size: 22px;
-            font-weight: 800;
-            color: #ffffff;
-        }
+        .sub-metric { background: #161b22; padding: 8px 10px; border-radius: 8px; text-align: center; }
+        .sub-label { font-size: 10px; color: #8b949e; text-transform: uppercase; }
+        .sub-val { font-size: 22px; font-weight: 800; color: #ffffff; }
 
-        /* 3 CẤP ĐỘ CẢNH BÁO */
+        /* CẢNH BÁO MÀU */
         .status-danger { background: #2b0b0e !important; border: 4px solid #f85149 !important; }
         .status-danger .distance-value { color: #f85149; }
-
         .status-warning { background: #2b2106 !important; border: 4px solid #d29922 !important; }
         .status-warning .distance-value { color: #d29922; }
-
         .status-safe { background: #090d16 !important; border: 4px solid #2ea043 !important; }
         .status-safe .distance-value { color: #2ea043; }
 
@@ -260,50 +214,39 @@
             border: 1px solid #30363d;
             padding: 20px;
             border-radius: 12px;
-            width: 90%;
-            max-width: 380px;
+            width: 92%;
+            max-width: 400px;
         }
-        .modal-card h3 { margin-bottom: 10px; color: #58a6ff; font-size: 17px; }
-        .modal-card label { font-size: 13px; color: #8b949e; display: block; margin-top: 8px; }
-        .modal-card input {
+        .modal-card h3 { margin-bottom: 12px; color: #58a6ff; font-size: 17px; }
+        .setting-group { margin-bottom: 14px; }
+        .setting-group label { font-size: 13px; color: #8b949e; display: block; margin-bottom: 6px; }
+        .modal-card input[type="number"] {
             width: 100%;
-            padding: 10px;
-            margin-top: 6px;
+            padding: 8px 10px;
             background: #0d1117;
             border: 1px solid #30363d;
             color: #fff;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 15px;
         }
-        .modal-actions {
-            margin-top: 18px;
+        .checkbox-row {
             display: flex;
+            align-items: center;
             gap: 10px;
-        }
-        .btn-save {
-            background: #238636;
-            color: #fff;
-            border: none;
-            padding: 10px;
-            flex: 1;
-            border-radius: 6px;
-            font-weight: bold;
             cursor: pointer;
+            padding: 6px 0;
         }
-        .btn-close {
-            background: #30363d;
-            color: #c9d1d9;
-            border: none;
-            padding: 10px;
-            flex: 1;
-            border-radius: 6px;
-            cursor: pointer;
-        }
+        .checkbox-row input { width: 18px; height: 18px; cursor: pointer; }
+        .checkbox-row span { font-size: 14px; font-weight: 500; color: #c9d1d9; }
+        .modal-actions { margin-top: 18px; display: flex; gap: 10px; }
+        .btn-save { background: #238636; color: #fff; border: none; padding: 10px; flex: 1; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-close { background: #30363d; color: #c9d1d9; border: none; padding: 10px; flex: 1; border-radius: 6px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="app-container layout-landscape" id="main-container">
+        <!-- CỘT TRÁI: CAMERA -->
         <div class="camera-panel">
             <div class="cam-overlay-info">
                 <span id="cam-status">Đang nạp AI...</span>
@@ -313,6 +256,7 @@
             <canvas id="overlay"></canvas>
         </div>
 
+        <!-- CỘT PHẢI: HUD THÔNG SỐ -->
         <div class="hud-panel" id="hud-panel">
             <div class="hud-header">
                 <div class="gps-badge">
@@ -321,10 +265,10 @@
                 </div>
                 
                 <div class="header-actions">
-                    <button class="btn-ctrl" onclick="toggleOrientationMode()" id="btn-rotate" title="Đổi giao diện Ngang/Đứng">
+                    <button class="btn-ctrl" onclick="toggleOrientationMode()" id="btn-rotate">
                         🔄 <span id="rotate-label">Ngang</span>
                     </button>
-                    <button class="btn-ctrl" onclick="toggleFullScreen()" id="btn-fullscreen" title="Toàn màn hình">
+                    <button class="btn-ctrl" onclick="toggleFullScreen()">
                         ⛶ <span id="fs-label">Full</span>
                     </button>
                     <button class="btn-ctrl" onclick="openSettings()">⚙️</button>
@@ -334,29 +278,48 @@
             <div class="distance-section">
                 <div class="hud-label">KHOẢNG CÁCH XE TRƯỚC</div>
                 <div class="distance-value" id="dist-display">--<span class="distance-unit">m</span></div>
-                <div class="target-type" id="target-type">Đang quét phương tiện...</div>
+                <div class="target-meta">
+                    <div class="target-type" id="target-type">Đang quét phương tiện...</div>
+                    <div id="lane-badge" style="display: none;"></div>
+                </div>
             </div>
 
             <div class="hud-footer">
                 <div class="sub-metric">
-                    <div class="sub-label">VẬN TỐC XE (GPS)</div>
-                    <div class="sub-val" id="speed-display">0 <span style="font-size: 12px; color:#8b949e;">km/h</span></div>
+                    <div class="sub-label">VẬN TỐC (GPS)</div>
+                    <div class="sub-val" id="speed-display">0 <span style="font-size: 11px; color:#8b949e;">km/h</span></div>
                 </div>
                 <div class="sub-metric">
-                    <div class="sub-label">KC LUẬT ĐỊNH (TT31)</div>
-                    <div class="sub-val" id="legal-req-display">35 <span style="font-size: 12px; color:#8b949e;">m</span></div>
+                    <div class="sub-label">KC QUY ĐỊNH (TT31)</div>
+                    <div class="sub-val" id="legal-req-display">35 <span style="font-size: 11px; color:#8b949e;">m</span></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- MODAL CÀI ĐẶT -->
     <div id="settings-modal">
         <div class="modal-card">
-            <h3>Cấu hình Camera FOV</h3>
-            <p style="font-size: 12px; color: #8b949e;">Góc nhìn dọc camera. Tự động lưu vào máy.</p>
+            <h3>Cài đặt Hệ thống ADAS</h3>
             
-            <label>Góc FOV Dọc (độ):</label>
-            <input type="number" id="input-fov" min="30" max="100" step="0.5" value="55">
+            <div class="setting-group">
+                <label>Góc FOV Dọc camera (độ):</label>
+                <input type="number" id="input-fov" min="30" max="100" step="0.5" value="55">
+            </div>
+
+            <div class="setting-group">
+                <label class="checkbox-row">
+                    <input type="checkbox" id="check-ignore-motorcycle">
+                    <span>Bỏ qua xe máy (Chỉ bắt Ô tô/Xe tải/Buýt)</span>
+                </label>
+            </div>
+
+            <div class="setting-group">
+                <label class="checkbox-row">
+                    <input type="checkbox" id="check-only-in-lane">
+                    <span>Chỉ cảnh báo xe CÙNG LÀN ĐƯỜNG</span>
+                </label>
+            </div>
 
             <div class="modal-actions">
                 <button class="btn-close" onclick="closeSettings()">Hủy</button>
@@ -366,79 +329,16 @@
     </div>
 
     <script>
-        // --- 1. XỬ LÝ TOÀN MÀN HÌNH (FULLSCREEN) ---
-        function toggleFullScreen() {
-            const doc = window.document;
-            const docEl = doc.documentElement;
-
-            const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
-            const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
-
-            if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
-                if (requestFullScreen) {
-                    requestFullScreen.call(docEl);
-                    document.getElementById('fs-label').innerText = "Thoát";
-                }
-            } else {
-                if (cancelFullScreen) {
-                    cancelFullScreen.call(doc);
-                    document.getElementById('fs-label').innerText = "Full";
-                }
-            }
-        }
-
-        // --- 2. XỬ LÝ NÚT CHUYỂN ĐỔI XOAY MÀN HÌNH (NGANG / ĐỨNG) ---
-        let currentMode = 'landscape'; // 'landscape' hoặc 'portrait'
-        const mainContainer = document.getElementById('main-container');
-        const rotateLabel = document.getElementById('rotate-label');
-
-        function setOrientationMode(mode) {
-            currentMode = mode;
-            if (mode === 'landscape') {
-                mainContainer.className = 'app-container layout-landscape';
-                rotateLabel.innerText = "Ngang";
-                // Thử khóa hướng nếu trình duyệt hỗ trợ
-                if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock('landscape').catch(() => {});
-                }
-            } else {
-                mainContainer.className = 'app-container layout-portrait';
-                rotateLabel.innerText = "Đứng";
-                if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock('portrait').catch(() => {});
-                }
-            }
-            resizeCanvas();
-        }
-
-        function toggleOrientationMode() {
-            if (currentMode === 'landscape') {
-                setOrientationMode('portrait');
-            } else {
-                setOrientationMode('landscape');
-            }
-        }
-
-        // Tự động nhận diện hướng khi người dùng xoay điện thoại thực tế
-        window.addEventListener("orientationchange", () => {
-            const isLandscape = window.innerWidth > window.innerHeight;
-            setOrientationMode(isLandscape ? 'landscape' : 'portrait');
-        });
-
-        // --- 3. SERVICE WORKER PWA ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(console.error);
-            });
-        }
-
-        // --- 4. CÀI ĐẶT FOV (LOCALSTORAGE) ---
+        // --- 1. QUẢN LÝ CẤU HÌNH (LOCAL STORAGE) ---
         let fovDegrees = parseFloat(localStorage.getItem('adas_camera_fov')) || 55.0;
+        let ignoreMotorcycle = localStorage.getItem('adas_ignore_motorcycle') === 'true';
+        let onlyInLane = localStorage.getItem('adas_only_in_lane') === 'true';
         let phoneTiltPitch = 0;
-        document.getElementById('input-fov').value = fovDegrees;
 
         function openSettings() {
             document.getElementById('input-fov').value = fovDegrees;
+            document.getElementById('check-ignore-motorcycle').checked = ignoreMotorcycle;
+            document.getElementById('check-only-in-lane').checked = onlyInLane;
             document.getElementById('settings-modal').style.display = 'flex';
         }
 
@@ -450,20 +350,61 @@
             const val = parseFloat(document.getElementById('input-fov').value);
             if (val >= 30 && val <= 100) {
                 fovDegrees = val;
+                ignoreMotorcycle = document.getElementById('check-ignore-motorcycle').checked;
+                onlyInLane = document.getElementById('check-only-in-lane').checked;
+
                 localStorage.setItem('adas_camera_fov', fovDegrees);
+                localStorage.setItem('adas_ignore_motorcycle', ignoreMotorcycle);
+                localStorage.setItem('adas_only_in_lane', onlyInLane);
+
                 closeSettings();
             } else {
                 alert("Giá trị FOV không hợp lệ (30° - 100°)");
             }
         }
 
-        // --- 5. CẢM BIẾN CON QUAY HỒI CHUYỂN (TILT SENSOR) ---
+        // --- 2. XOAY MÀN HÌNH & FULLSCREEN ---
+        let currentMode = 'landscape';
+        const mainContainer = document.getElementById('main-container');
+        const rotateLabel = document.getElementById('rotate-label');
+
+        function setOrientationMode(mode) {
+            currentMode = mode;
+            if (mode === 'landscape') {
+                mainContainer.className = 'app-container layout-landscape';
+                rotateLabel.innerText = "Ngang";
+            } else {
+                mainContainer.className = 'app-container layout-portrait';
+                rotateLabel.innerText = "Đứng";
+            }
+            resizeCanvas();
+        }
+
+        function toggleOrientationMode() {
+            setOrientationMode(currentMode === 'landscape' ? 'portrait' : 'landscape');
+        }
+
+        function toggleFullScreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            const req = docEl.requestFullscreen || docEl.webkitRequestFullScreen;
+            const exit = doc.exitFullscreen || doc.webkitExitFullscreen;
+
+            if (!doc.fullscreenElement && !doc.webkitFullscreenElement) {
+                if (req) req.call(docEl);
+                document.getElementById('fs-label').innerText = "Thoát";
+            } else {
+                if (exit) exit.call(doc);
+                document.getElementById('fs-label').innerText = "Full";
+            }
+        }
+
+        // --- 3. CẢM BIẾN & GPS ---
         function initSensors() {
             if (window.DeviceOrientationEvent) {
                 window.addEventListener('deviceorientation', (event) => {
                     const isLandscape = (currentMode === 'landscape');
                     let rawPitch = isLandscape ? event.gamma : event.beta;
-                    
                     if (rawPitch !== null) {
                         phoneTiltPitch = Math.abs(Math.abs(rawPitch) - (isLandscape ? 0 : 90));
                         document.getElementById('tilt-status').innerText = `Nghiêng: ${Math.round(phoneTiltPitch)}°`;
@@ -472,28 +413,11 @@
             }
         }
 
-        // --- 6. AI & CAMERA & GPS ---
-        const video = document.getElementById('webcam');
-        const canvas = document.getElementById('overlay');
-        const ctx = canvas.getContext('2d');
-        const camStatus = document.getElementById('cam-status');
-        const hudPanel = document.getElementById('hud-panel');
-        const distDisplay = document.getElementById('dist-display');
-        const targetType = document.getElementById('target-type');
-        const speedDisplay = document.getElementById('speed-display');
-        const legalReqDisplay = document.getElementById('legal-req-display');
         const gpsDot = document.getElementById('gps-dot');
         const gpsStatus = document.getElementById('gps-status');
-
-        let model = null;
+        const speedDisplay = document.getElementById('speed-display');
+        const legalReqDisplay = document.getElementById('legal-req-display');
         let currentSpeedKmh = 0;
-
-        const VEHICLE_SPECS = {
-            'car':        { height: 1.55, width: 1.78, label: 'Ô TÔ CON' },
-            'truck':      { height: 2.80, width: 2.30, label: 'XE TẢI' },
-            'bus':        { height: 3.20, width: 2.50, label: 'XE BUÝT' },
-            'motorcycle': { height: 1.15, width: 0.75, label: 'XE MÁY' }
-        };
 
         function getLegalDistance(speed) {
             if (speed <= 60) return 35;
@@ -501,6 +425,63 @@
             if (speed <= 100) return 70;
             return 100;
         }
+
+        function initGPS() {
+            if (!("geolocation" in navigator)) {
+                gpsStatus.innerText = "K hỗ trợ GPS";
+                return;
+            }
+            navigator.geolocation.watchPosition(
+                (pos) => {
+                    gpsDot.className = "dot active";
+                    gpsStatus.innerText = "GPS Chuẩn";
+                    currentSpeedKmh = (pos.coords.speed !== null && pos.coords.speed >= 0) ? Math.round(pos.coords.speed * 3.6) : 0;
+                    speedDisplay.innerHTML = `${currentSpeedKmh} <span style="font-size: 11px; color:#8b949e;">km/h</span>`;
+                    legalReqDisplay.innerHTML = `${getLegalDistance(currentSpeedKmh)} <span style="font-size: 11px; color:#8b949e;">m</span>`;
+                },
+                () => {
+                    gpsDot.className = "dot";
+                    gpsStatus.innerText = "Mất GPS";
+                },
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            );
+        }
+
+        // --- 4. THUẬT TOÁN TÍNH TOÁN CÙNG LÀN ĐƯỜNG (IN-LANE DETECTION) ---
+        function checkIfInLane(bbox, frameWidth, frameHeight) {
+            const [x, y, w, h] = bbox;
+            const centerX = x + (w / 2);
+            const bottomY = y + h;
+
+            // Tâm trục làn đường ở giữa khung hình
+            const imageCenterX = frameWidth / 2;
+            const offsetFromCenter = Math.abs(centerX - imageCenterX);
+
+            // Bán kính làn đường mở rộng dần từ chân trời xuống đáy màn hình (Hình thang hành lang di chuyển)
+            const depthRatio = Math.min(1.0, Math.max(0.1, bottomY / frameHeight));
+            const laneHalfWidthAtDepth = frameWidth * (0.10 + 0.28 * depthRatio);
+
+            return offsetFromCenter <= laneHalfWidthAtDepth;
+        }
+
+        // --- 5. CAMERA VÀ VÒNG LẶP AI ---
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('overlay');
+        const ctx = canvas.getContext('2d');
+        const camStatus = document.getElementById('cam-status');
+        const hudPanel = document.getElementById('hud-panel');
+        const distDisplay = document.getElementById('dist-display');
+        const targetType = document.getElementById('target-type');
+        const laneBadge = document.getElementById('lane-badge');
+
+        let model = null;
+
+        const VEHICLE_SPECS = {
+            'car':        { height: 1.55, width: 1.78, label: 'Ô TÔ CON' },
+            'truck':      { height: 2.80, width: 2.30, label: 'XE TẢI' },
+            'bus':        { height: 3.20, width: 2.50, label: 'XE BUÝT' },
+            'motorcycle': { height: 1.15, width: 0.75, label: 'XE MÁY' }
+        };
 
         function resizeCanvas() {
             if (video.videoWidth && video.videoHeight) {
@@ -510,59 +491,20 @@
         }
         window.addEventListener('resize', resizeCanvas);
 
-        function initGPS() {
-            if (!("geolocation" in navigator)) {
-                gpsStatus.innerText = "K hỗ trợ GPS";
-                return;
-            }
-
-            navigator.geolocation.watchPosition(
-                (pos) => {
-                    gpsDot.className = "dot active";
-                    gpsStatus.innerText = "GPS Chuẩn";
-
-                    if (pos.coords.speed !== null && pos.coords.speed >= 0) {
-                        currentSpeedKmh = Math.round(pos.coords.speed * 3.6);
-                    } else {
-                        currentSpeedKmh = 0;
-                    }
-
-                    speedDisplay.innerHTML = `${currentSpeedKmh} <span style="font-size: 12px; color:#8b949e;">km/h</span>`;
-                    legalReqDisplay.innerHTML = `${getLegalDistance(currentSpeedKmh)} <span style="font-size: 12px; color:#8b949e;">m</span>`;
-                },
-                (err) => {
-                    gpsDot.className = "dot";
-                    gpsStatus.innerText = "Mất GPS";
-                },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-            );
-        }
-
         async function startSystem() {
             initGPS();
             initSensors();
-            
-            // Khởi tạo hướng ban đầu theo kích thước màn hình
-            if (window.innerWidth < window.innerHeight) {
-                setOrientationMode('portrait');
-            } else {
-                setOrientationMode('landscape');
-            }
+            setOrientationMode(window.innerWidth < window.innerHeight ? 'portrait' : 'landscape');
 
             try {
                 model = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
                 camStatus.innerText = "AI Sẵn sàng";
-                
-                const constraints = {
-                    video: {
-                        facingMode: 'environment',
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
-                    },
-                    audio: false
-                };
 
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
+                    audio: false
+                });
+
                 video.srcObject = stream;
                 video.onloadedmetadata = () => {
                     video.play();
@@ -586,23 +528,41 @@
             const fovRad = fovDegrees * (Math.PI / 180);
             const focalLengthPx = (canvas.height / 2) / Math.tan(fovRad / 2);
 
+            // Vẽ đồ họa trực quan vạch làn đường quy chiếu (Driving Corridor)
+            drawLaneCorridor(canvas.width, canvas.height);
+
             let nearestVehicle = null;
             let minDistance = Infinity;
 
             predictions.forEach(pred => {
                 const className = pred.class.toLowerCase();
-                const spec = VEHICLE_SPECS[className];
 
+                // 1. Tùy chọn bỏ xe máy
+                if (ignoreMotorcycle && className === 'motorcycle') return;
+
+                const spec = VEHICLE_SPECS[className];
                 if (spec && pred.score > 0.40) {
                     const [x, y, w, h] = pred.bbox;
 
+                    // 2. Tính toán xe có cùng làn đường không
+                    const isInLane = checkIfInLane(pred.bbox, canvas.width, canvas.height);
+
+                    // 3. Tùy chọn chỉ bắt xe cùng làn
+                    if (onlyInLane && !isInLane) {
+                        // Vẽ khung xám mờ cho xe khác làn
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(x, y, w, h);
+                        return;
+                    }
+
+                    // Tính khoảng cách
                     const distH = (focalLengthPx * spec.height) / h;
                     const distW = (focalLengthPx * spec.width) / w;
                     let d = (distW * 0.6) + (distH * 0.4);
 
                     if (phoneTiltPitch > 5 && phoneTiltPitch < 45) {
-                        const tiltRad = phoneTiltPitch * (Math.PI / 180);
-                        d = d * Math.cos(tiltRad);
+                        d = d * Math.cos(phoneTiltPitch * (Math.PI / 180));
                     }
 
                     if (d < minDistance) {
@@ -611,16 +571,19 @@
                             label: spec.label,
                             score: pred.score,
                             bbox: [x, y, w, h],
-                            distance: d
+                            distance: d,
+                            isInLane: isInLane
                         };
                     }
 
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+                    // Khung mờ xe phụ
+                    ctx.strokeStyle = isInLane ? 'rgba(0, 230, 118, 0.4)' : 'rgba(255, 255, 255, 0.25)';
                     ctx.lineWidth = 1.5;
                     ctx.strokeRect(x, y, w, h);
                 }
             });
 
+            // 4. Hiển thị kết quả & Màu sắc theo TT 31/2019
             const legalDist = getLegalDistance(currentSpeedKmh);
 
             if (nearestVehicle && minDistance < 120) {
@@ -641,6 +604,7 @@
                     boxColor = '#2ea043';
                 }
 
+                // Vẽ Bounding Box xe mục tiêu
                 ctx.strokeStyle = boxColor;
                 ctx.lineWidth = 4;
                 ctx.strokeRect(nx, ny, nw, nh);
@@ -649,13 +613,44 @@
                 distDisplay.innerHTML = `${d.toFixed(1)}<span class="distance-unit">m</span>`;
                 targetType.innerText = `${nearestVehicle.label} (${Math.round(nearestVehicle.score * 100)}%)`;
 
+                // Cập nhật nhãn trạng thái Làn đường
+                laneBadge.style.display = 'block';
+                if (nearestVehicle.isInLane) {
+                    laneBadge.className = 'lane-status-badge badge-in-lane';
+                    laneBadge.innerText = '● CÙNG LÀN XE';
+                } else {
+                    laneBadge.className = 'lane-status-badge badge-out-lane';
+                    laneBadge.innerText = '○ KHÁC LÀN (BÊN CẠNH)';
+                }
+
             } else {
                 hudPanel.className = 'hud-panel';
                 distDisplay.innerHTML = `--<span class="distance-unit">m</span>`;
                 targetType.innerText = "Không có vật cản";
+                laneBadge.style.display = 'none';
             }
 
             requestAnimationFrame(renderLoop);
+        }
+
+        // Vẽ hành lang làn đường ảo lên canvas
+        function drawLaneCorridor(w, h) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(88, 166, 255, 0.2)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([6, 6]);
+
+            ctx.beginPath();
+            // Đường giới hạn trái
+            ctx.moveTo(w * 0.40, h * 0.45);
+            ctx.lineTo(w * 0.12, h);
+
+            // Đường giới hạn phải
+            ctx.moveTo(w * 0.60, h * 0.45);
+            ctx.lineTo(w * 0.88, h);
+            ctx.stroke();
+
+            ctx.restore();
         }
 
         window.onload = startSystem;
