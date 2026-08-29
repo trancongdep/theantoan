@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#1e3a8a">
-  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Sổ Tay Cổ Tức Thông Minh</title>
   <style>
     :root {
@@ -41,17 +40,82 @@
       margin: 0 auto;
     }
 
-    /* HEADER */
-    header {
-      text-align: center;
-      margin-bottom: 16px;
-      padding: 10px 0;
+    /* TOP NAVBAR VỚI MENU 3 GẠCH */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card);
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 15px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      position: relative;
     }
-    header h1 {
-      font-size: 20px;
+
+    .nav-title {
+      font-size: 17px;
+      font-weight: bold;
       color: var(--primary);
-      margin: 0 0 6px 0;
     }
+
+    .menu-btn {
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: var(--primary);
+      padding: 4px 8px;
+      border-radius: 6px;
+      line-height: 1;
+    }
+
+    .menu-btn:hover {
+      background: #f1f5f9;
+    }
+
+    /* DROPDOWN MENU */
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 16px;
+      top: 52px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      z-index: 100;
+      min-width: 180px;
+      overflow: hidden;
+    }
+
+    .dropdown-menu.show {
+      display: block;
+    }
+
+    .dropdown-item {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-item:hover, .dropdown-item:active {
+      background: #f8fafc;
+      color: var(--primary);
+    }
+
+    /* SUMMARY CARD */
     .summary-card {
       background: linear-gradient(135deg, #1e3a8a, #3b82f6);
       color: white;
@@ -63,50 +127,88 @@
       flex-direction: column;
       gap: 6px;
     }
+
     .summary-row {
       display: flex;
       justify-content: space-between;
       font-size: 14px;
     }
+
     .summary-val {
       font-weight: bold;
       font-size: 15px;
     }
 
-    /* FORM NHẬP LIỆU */
-    .form-box {
+    /* POPUP / MODAL FORM ẨN */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
       background: var(--card);
       border-radius: 12px;
-      padding: 16px;
-      border: 1px solid var(--border);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-      margin-bottom: 20px;
+      padding: 20px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+      position: relative;
     }
-    .form-box h3 {
-      margin: 0 0 12px 0;
-      font-size: 16px;
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 17px;
       color: var(--primary);
     }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--text-sub);
+    }
+
     .grid-inputs {
       display: grid;
       grid-template-columns: 1fr;
       gap: 10px;
     }
-    @media (min-width: 768px) {
-      .grid-inputs {
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      }
-    }
+
     .form-group {
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
+
     label {
       font-size: 12px;
       font-weight: 600;
       color: var(--text-sub);
     }
+
     input, select {
       padding: 10px;
       border: 1px solid var(--border);
@@ -114,38 +216,51 @@
       font-size: 14px;
       background: #fff;
     }
+
     input:focus, select:focus {
       outline: none;
       border-color: var(--primary);
     }
+
+    .modal-footer-btns {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
     button.btn-submit {
+      flex: 1;
       background: var(--primary);
       color: white;
       border: none;
       border-radius: 8px;
       padding: 12px;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: bold;
       cursor: pointer;
-      width: 100%;
-      margin-top: 6px;
-    }
-    button.btn-submit:active {
-      background: var(--primary-hover);
     }
 
-    /* TIÊU ĐỀ BẢNG */
+    button.btn-cancel {
+      flex: 1;
+      background: #e2e8f0;
+      color: var(--text-main);
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* SECTION TITLE */
     .section-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
       color: var(--primary);
       margin: 20px 0 10px 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
     }
 
-    /* BADGE HÀNH ĐỘNG */
+    /* BADGES */
     .badge {
       display: inline-block;
       padding: 4px 8px;
@@ -158,7 +273,7 @@
     .badge-hold { background: var(--hold-bg); color: var(--hold); }
     .badge-sell { background: var(--sell-bg); color: var(--sell); }
 
-    /* GIAO DIỆN DESKTOP / LAPTOP (TABLE) */
+    /* DESKTOP TABLE */
     .desktop-table {
       display: none;
       width: 100%;
@@ -185,7 +300,7 @@
       text-align: left;
     }
 
-    /* GIAO DIỆN MOBILE / ANDROID (CARD LAYOUT) */
+    /* MOBILE CARDS */
     .mobile-cards {
       display: flex;
       flex-direction: column;
@@ -197,7 +312,6 @@
       padding: 14px;
       border: 1px solid var(--border);
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      position: relative;
     }
     .card-head {
       display: flex;
@@ -208,7 +322,7 @@
       padding-bottom: 8px;
     }
     .card-symbol {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: bold;
       color: var(--primary);
     }
@@ -242,7 +356,7 @@
       gap: 6px;
     }
     .btn-sm {
-      padding: 5px 10px;
+      padding: 6px 12px;
       font-size: 12px;
       border-radius: 6px;
       border: none;
@@ -258,10 +372,9 @@
       margin-right: 6px;
     }
 
-    /* RESPONSIVE SWITCHER */
+    /* RESPONSIVE */
     @media (min-width: 900px) {
       body { padding: 20px; }
-      header h1 { font-size: 24px; }
       .desktop-table { display: table; }
       .mobile-cards { display: none; }
       .summary-card {
@@ -277,12 +390,18 @@
 <body>
 
 <div class="container">
-  <header>
-    <h1>HỆ THỐNG QUẢN TRỊ CỔ TỨC</h1>
-    <div style="font-size: 12px; color: var(--text-sub);">Luân chuyển dòng tiền & Khóa lợi nhuận tự động</div>
-  </header>
+  <!-- THANH TIÊU ĐỀ KÈM MENU 3 GẠCH -->
+  <div class="navbar">
+    <div class="nav-title">SỔ TAY CỔ TỨC</div>
+    <button class="menu-btn" onclick="toggleMenu()" title="Tùy chọn">☰</button>
+    <div class="dropdown-menu" id="dropdownMenu">
+      <div class="dropdown-item" onclick="openAddModal()">
+        <span>➕</span> Thêm mới Cổ phiếu
+      </div>
+    </div>
+  </div>
 
-  <!-- KHUNG TỔNG KẾT NHANH -->
+  <!-- BẢNG TỔNG KẾT TÀI SẢN -->
   <div class="summary-card">
     <div class="summary-row">
       <span>Tổng giá trị danh mục:</span>
@@ -294,16 +413,62 @@
     </div>
   </div>
 
-  <!-- KHUNG NHẬP LIỆU THÔNG MINH -->
-  <div class="form-box">
-    <h3 id="formTitle">Thêm / Cập nhật Cổ phiếu</h3>
+  <!-- SECTION 1: ĐANG NẮM GIỮ -->
+  <div class="section-title">1. CỔ PHIẾU ĐANG NẮM GIỮ</div>
+  <table class="desktop-table">
+    <thead>
+      <tr>
+        <th>Mã CP</th>
+        <th>Tra cứu</th>
+        <th>Khối lượng</th>
+        <th>Giá vốn</th>
+        <th>Thị giá</th>
+        <th>Cổ tức Net</th>
+        <th>Tỷ suất Net</th>
+        <th>GDKHQ</th>
+        <th>Khuyến nghị</th>
+        <th>Thao tác</th>
+      </tr>
+    </thead>
+    <tbody id="holdingDesktopBody"></tbody>
+  </table>
+  <div class="mobile-cards" id="holdingMobileBody"></div>
+
+  <!-- SECTION 2: MỤC TIÊU THEO DÕI -->
+  <div class="section-title">2. DANH MỤC MỤC TIÊU SẴN SÀNG GIẢI NGÂN</div>
+  <table class="desktop-table">
+    <thead>
+      <tr>
+        <th>Mã CP</th>
+        <th>Tra cứu</th>
+        <th>Thị giá</th>
+        <th>Trần giá gom (G1)</th>
+        <th>Cổ tức Net</th>
+        <th>Tỷ suất Net</th>
+        <th>GDKHQ</th>
+        <th>Khuyến nghị</th>
+        <th>Thao tác</th>
+      </tr>
+    </thead>
+    <tbody id="watchlistDesktopBody"></tbody>
+  </table>
+  <div class="mobile-cards" id="watchlistMobileBody"></div>
+</div>
+
+<!-- POPUP MODAL NHẬP LIỆU (ẨN MẶC ĐỊNH) -->
+<div class="modal-overlay" id="stockModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modalTitle">Thêm mới Cổ phiếu</h3>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
     <div class="grid-inputs">
       <div class="form-group">
         <label>Mã Cổ Phiếu</label>
         <input type="text" id="symbol" placeholder="VD: VEA" style="text-transform:uppercase;">
       </div>
       <div class="form-group">
-        <label>Phân loại</label>
+        <label>Phân loại danh mục</label>
         <select id="type">
           <option value="holding">Đang nắm giữ</option>
           <option value="watchlist">Danh mục mục tiêu</option>
@@ -330,66 +495,14 @@
         <input type="text" id="exDate" placeholder="VD: 12/2026">
       </div>
     </div>
-    <button class="btn-submit" onclick="saveStock()">Lưu Dữ Liệu</button>
+    <div class="modal-footer-btns">
+      <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+      <button class="btn-submit" onclick="saveStock()">Lưu Dữ Liệu</button>
+    </div>
   </div>
-
-  <!-- SECTION 1: ĐANG NẮM GIỮ -->
-  <div class="section-title">
-    <span>1. CỔ PHIẾU ĐANG NẮM GIỮ</span>
-  </div>
-  
-  <!-- Bảng Desktop -->
-  <table class="desktop-table">
-    <thead>
-      <tr>
-        <th>Mã CP</th>
-        <th>Tra cứu</th>
-        <th>Khối lượng</th>
-        <th>Giá vốn</th>
-        <th>Thị giá</th>
-        <th>Cổ tức Net</th>
-        <th>Tỷ suất Net</th>
-        <th>GDKHQ</th>
-        <th>Khuyến nghị</th>
-        <th>Thao tác</th>
-      </tr>
-    </thead>
-    <tbody id="holdingDesktopBody"></tbody>
-  </table>
-
-  <!-- Thẻ Mobile Android -->
-  <div class="mobile-cards" id="holdingMobileBody"></div>
-
-  <!-- SECTION 2: MỤC TIÊU THEO DÕI -->
-  <div class="section-title">
-    <span>2. DANH MỤC MỤC TIÊU SẴN SÀNG GIẢI NGÂN</span>
-  </div>
-
-  <!-- Bảng Desktop -->
-  <table class="desktop-table">
-    <thead>
-      <tr>
-        <th>Mã CP</th>
-        <th>Tra cứu</th>
-        <th>Thị giá</th>
-        <th>Trần giá gom (G1)</th>
-        <th>Cổ tức Net</th>
-        <th>Tỷ suất Net</th>
-        <th>GDKHQ</th>
-        <th>Khuyến nghị</th>
-        <th>Thao tác</th>
-      </tr>
-    </thead>
-    <tbody id="watchlistDesktopBody"></tbody>
-  </table>
-
-  <!-- Thẻ Mobile Android -->
-  <div class="mobile-cards" id="watchlistMobileBody"></div>
-
 </div>
 
 <script>
-  // Dữ liệu ban đầu chuẩn xác theo kế hoạch
   const initialData = [
     { symbol: "VEA", type: "holding", volume: 11600, costPrice: 35200, marketPrice: 35200, cashDividend: 5240, exDate: "11-12/2026" },
     { symbol: "QTP", type: "holding", volume: 400, costPrice: 11100, marketPrice: 11100, cashDividend: 1400, exDate: "02/2027" },
@@ -397,44 +510,71 @@
     { symbol: "SJD", type: "watchlist", volume: 0, costPrice: 0, marketPrice: 14000, cashDividend: 1600, exDate: "05/2027" }
   ];
 
-  let stocks = JSON.parse(localStorage.getItem('dividend_db_v2')) || initialData;
+  let stocks = JSON.parse(localStorage.getItem('dividend_db_v3')) || initialData;
   let editingIdx = -1;
 
   function fmt(n) {
     return (Number(n) || 0).toLocaleString('vi-VN');
   }
 
+  function toggleMenu() {
+    document.getElementById('dropdownMenu').classList.toggle('show');
+  }
+
+  // Đóng dropdown khi click ngoài
+  window.addEventListener('click', function(e) {
+    if (!e.target.matches('.menu-btn')) {
+      const dropdown = document.getElementById('dropdownMenu');
+      if (dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
+      }
+    }
+  });
+
+  function openAddModal() {
+    editingIdx = -1;
+    document.getElementById('modalTitle').innerText = "Thêm mới Cổ phiếu";
+    document.getElementById('symbol').value = '';
+    document.getElementById('volume').value = '0';
+    document.getElementById('costPrice').value = '';
+    document.getElementById('marketPrice').value = '';
+    document.getElementById('cashDividend').value = '';
+    document.getElementById('exDate').value = '';
+    document.getElementById('stockModal').classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('stockModal').classList.remove('active');
+  }
+
   function analyze(stock) {
     const netDiv = stock.cashDividend * 0.95;
     const yieldVal = (netDiv / stock.marketPrice) * 100;
     
-    // Ngưỡng G1: Giá mua tối đa (VEA >= 13%, các mã khác >= 10%)
+    // Ngưỡng G1: Giá mua tối đa
     const targetRate = stock.symbol === 'VEA' ? 0.13 : 0.10;
     const G1 = netDiv / targetRate;
 
-    // Ngưỡng G2: Bán chốt lời khi Lãi giá sau thuế phí > Cổ tức Net
+    // Ngưỡng G2: Bán chốt lời khi Lãi giá > Cổ tức Net
     const cost = stock.costPrice > 0 ? stock.costPrice : stock.marketPrice;
     const G2 = cost + (netDiv / 0.9985);
 
     let action = "GIỮ / CHỜ CT";
     let badgeClass = "badge-hold";
-    let reason = "Vùng trung lập";
 
     if (stock.costPrice > 0 && stock.marketPrice >= G2) {
       action = "BÁN CHỐT LÃI";
       badgeClass = "badge-sell";
-      reason = `Lãi giá (${fmt((stock.marketPrice-cost)*0.9985)}đ) > CT Net (${fmt(netDiv)}đ)`;
     } else if (stock.marketPrice <= G1) {
       action = "MUA GOM";
       badgeClass = "badge-buy";
-      reason = `Thị giá <= G1 (${fmt(G1)}đ)`;
     }
 
-    return { netDiv, yieldVal, G1, G2, action, badgeClass, reason };
+    return { netDiv, yieldVal, G1, G2, action, badgeClass };
   }
 
   function render() {
-    localStorage.setItem('dividend_db_v2', JSON.stringify(stocks));
+    localStorage.setItem('dividend_db_v3', JSON.stringify(stocks));
 
     const holdDesk = document.getElementById('holdingDesktopBody');
     const holdMob = document.getElementById('holdingMobileBody');
@@ -511,7 +651,7 @@
             <td style="font-weight:bold; color:var(--primary);">${stock.symbol}</td>
             <td>${searchLinks}</td>
             <td style="font-weight:bold;">${fmt(stock.marketPrice)} đ</td>
-            <td style="color:#2563eb; font-weight:bold;">${fmt(a.G1)} đ</td>
+            <td style="color:#2563eb; font-weight:bold;">&le; ${fmt(a.G1)} đ</td>
             <td style="color:var(--buy); font-weight:bold;">${fmt(a.netDiv)} đ</td>
             <td><strong>${a.yieldVal.toFixed(2)}%</strong></td>
             <td>${stock.exDate}</td>
@@ -571,19 +711,11 @@
     if (editingIdx >= 0) {
       stocks[editingIdx] = payload;
       editingIdx = -1;
-      document.getElementById('formTitle').innerText = "Thêm / Cập nhật Cổ phiếu";
     } else {
       stocks.push(payload);
     }
 
-    // Reset
-    document.getElementById('symbol').value = '';
-    document.getElementById('volume').value = '0';
-    document.getElementById('costPrice').value = '';
-    document.getElementById('marketPrice').value = '';
-    document.getElementById('cashDividend').value = '';
-    document.getElementById('exDate').value = '';
-
+    closeModal();
     render();
   }
 
@@ -598,18 +730,18 @@
     document.getElementById('exDate').value = s.exDate;
     
     editingIdx = idx;
-    document.getElementById('formTitle').innerText = "Đang sửa mã: " + s.symbol;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('modalTitle').innerText = "Cập nhật mã: " + s.symbol;
+    document.getElementById('stockModal').classList.add('active');
   }
 
   function delStock(idx) {
-    if (confirm("Xóa mã " + stocks[idx].symbol + "?")) {
+    if (confirm("Bạn có chắc muốn xóa mã " + stocks[idx].symbol + "?")) {
       stocks.splice(idx, 1);
       render();
     }
   }
 
-  // Chạy ngay khi mở
+  // Khởi chạy
   render();
 </script>
 
