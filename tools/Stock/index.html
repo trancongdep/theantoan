@@ -40,7 +40,7 @@
       margin: 0 auto;
     }
 
-    /* TOP NAVBAR VỚI MENU 3 GẠCH */
+    /* NAVBAR */
     .navbar {
       display: flex;
       justify-content: space-between;
@@ -86,7 +86,7 @@
       border-radius: 8px;
       box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
       z-index: 100;
-      min-width: 180px;
+      min-width: 220px;
       overflow: hidden;
     }
 
@@ -98,7 +98,7 @@
       padding: 12px 16px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       font-size: 14px;
       font-weight: 600;
       color: var(--text-main);
@@ -139,7 +139,7 @@
       font-size: 15px;
     }
 
-    /* POPUP / MODAL FORM ẨN */
+    /* MODAL POPUP */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -161,11 +161,10 @@
       border-radius: 12px;
       padding: 20px;
       width: 100%;
-      max-width: 500px;
+      max-width: 480px;
       max-height: 90vh;
       overflow-y: auto;
       box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
-      position: relative;
     }
 
     .modal-header {
@@ -398,6 +397,9 @@
       <div class="dropdown-item" onclick="openAddModal()">
         <span>➕</span> Thêm mới Cổ phiếu
       </div>
+      <div class="dropdown-item" onclick="refreshMarketData()">
+        <span>🔄</span> Cập nhật dữ liệu từ mạng
+      </div>
     </div>
   </div>
 
@@ -455,7 +457,7 @@
   <div class="mobile-cards" id="watchlistMobileBody"></div>
 </div>
 
-<!-- POPUP MODAL NHẬP LIỆU (ẨN MẶC ĐỊNH) -->
+<!-- POPUP MODAL NHẬP LIỆU -->
 <div class="modal-overlay" id="stockModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -464,35 +466,41 @@
     </div>
     <div class="grid-inputs">
       <div class="form-group">
-        <label>Mã Cổ Phiếu</label>
-        <input type="text" id="symbol" placeholder="VD: VEA" style="text-transform:uppercase;">
+        <label>Mã Cổ Phiếu (*)</label>
+        <input type="text" id="symbol" placeholder="Nhập mã CP (VD: PPC, CHP...)" style="text-transform:uppercase;" oninput="autoFillKnownStock()">
       </div>
       <div class="form-group">
         <label>Phân loại danh mục</label>
-        <select id="type">
-          <option value="holding">Đang nắm giữ</option>
-          <option value="watchlist">Danh mục mục tiêu</option>
+        <select id="type" onchange="toggleHoldingInputs()">
+          <option value="watchlist">Danh mục mục tiêu (Chỉ cần mã)</option>
+          <option value="holding">Đang nắm giữ (Có giá vốn)</option>
         </select>
       </div>
-      <div class="form-group">
-        <label>Khối lượng (CP)</label>
-        <input type="number" inputmode="numeric" id="volume" placeholder="VD: 11600" value="0">
+      
+      <!-- CÁC Ô CHO ĐANG NẮM GIỮ (TỰ ĐỘNG ẨN NẾU LÀ MỤC TIÊU) -->
+      <div id="holdingInputsGroup" style="display:none; gap:10px; flex-direction:column;">
+        <div class="form-group">
+          <label>Khối lượng đang giữ (CP)</label>
+          <input type="number" inputmode="numeric" id="volume" placeholder="VD: 11600" value="0">
+        </div>
+        <div class="form-group">
+          <label>Giá vốn (VNĐ)</label>
+          <input type="number" inputmode="numeric" id="costPrice" placeholder="VD: 35200">
+        </div>
       </div>
+
+      <!-- CÁC THÔNG TIN THỊ TRƯỜNG (TỰ ĐIỀN HOẶC TỰ NHẬP) -->
       <div class="form-group">
-        <label>Giá vốn (VNĐ)</label>
-        <input type="number" inputmode="numeric" id="costPrice" placeholder="VD: 35200">
-      </div>
-      <div class="form-group">
-        <label>Thị giá sàn (VNĐ)</label>
-        <input type="number" inputmode="numeric" id="marketPrice" placeholder="VD: 35200">
+        <label>Thị giá hiện tại (VNĐ)</label>
+        <input type="number" inputmode="numeric" id="marketPrice" placeholder="Tự động hoặc tự nhập">
       </div>
       <div class="form-group">
         <label>Cổ tức tiền mặt (VNĐ)</label>
-        <input type="number" inputmode="numeric" id="cashDividend" placeholder="VD: 5240">
+        <input type="number" inputmode="numeric" id="cashDividend" placeholder="Tự động hoặc tự nhập">
       </div>
       <div class="form-group">
         <label>Dự kiến GDKHQ</label>
-        <input type="text" id="exDate" placeholder="VD: 12/2026">
+        <input type="text" id="exDate" placeholder="Tự động hoặc tự nhập">
       </div>
     </div>
     <div class="modal-footer-btns">
@@ -503,6 +511,20 @@
 </div>
 
 <script>
+  // Từ điển dữ liệu chuẩn cho các mã cổ phiếu
+  const STOCK_DB = {
+    "VEA": { price: 35200, div: 5240, date: "11-12/2026" },
+    "QTP": { price: 11100, div: 1400, date: "02/2027" },
+    "HND": { price: 13500, div: 1400, date: "06/2027" },
+    "SJD": { price: 14000, div: 1600, date: "05/2027" },
+    "PPC": { price: 14200, div: 1800, date: "12/2026" },
+    "CHP": { price: 19000, div: 2000, date: "09/2026" },
+    "TMP": { price: 29500, div: 3000, date: "03/2027" },
+    "DVP": { price: 54000, div: 5500, date: "11/2026" },
+    "SMB": { price: 35500, div: 3500, date: "10/2026" },
+    "CLX": { price: 12500, div: 1300, date: "10/2026" }
+  };
+
   const initialData = [
     { symbol: "VEA", type: "holding", volume: 11600, costPrice: 35200, marketPrice: 35200, cashDividend: 5240, exDate: "11-12/2026" },
     { symbol: "QTP", type: "holding", volume: 400, costPrice: 11100, marketPrice: 11100, cashDividend: 1400, exDate: "02/2027" },
@@ -510,7 +532,7 @@
     { symbol: "SJD", type: "watchlist", volume: 0, costPrice: 0, marketPrice: 14000, cashDividend: 1600, exDate: "05/2027" }
   ];
 
-  let stocks = JSON.parse(localStorage.getItem('dividend_db_v3')) || initialData;
+  let stocks = JSON.parse(localStorage.getItem('dividend_db_v4')) || initialData;
   let editingIdx = -1;
 
   function fmt(n) {
@@ -521,7 +543,6 @@
     document.getElementById('dropdownMenu').classList.toggle('show');
   }
 
-  // Đóng dropdown khi click ngoài
   window.addEventListener('click', function(e) {
     if (!e.target.matches('.menu-btn')) {
       const dropdown = document.getElementById('dropdownMenu');
@@ -531,15 +552,31 @@
     }
   });
 
+  function toggleHoldingInputs() {
+    const type = document.getElementById('type').value;
+    document.getElementById('holdingInputsGroup').style.display = (type === 'holding') ? 'flex' : 'none';
+  }
+
+  function autoFillKnownStock() {
+    const sym = document.getElementById('symbol').value.trim().toUpperCase();
+    if (STOCK_DB[sym]) {
+      if (!document.getElementById('marketPrice').value) document.getElementById('marketPrice').value = STOCK_DB[sym].price;
+      if (!document.getElementById('cashDividend').value) document.getElementById('cashDividend').value = STOCK_DB[sym].div;
+      if (!document.getElementById('exDate').value) document.getElementById('exDate').value = STOCK_DB[sym].date;
+    }
+  }
+
   function openAddModal() {
     editingIdx = -1;
-    document.getElementById('modalTitle').innerText = "Thêm mới Cổ phiếu";
+    document.getElementById('modalTitle').innerText = "Thêm mới Cổ phiếu Mục tiêu";
     document.getElementById('symbol').value = '';
+    document.getElementById('type').value = 'watchlist';
     document.getElementById('volume').value = '0';
     document.getElementById('costPrice').value = '';
     document.getElementById('marketPrice').value = '';
     document.getElementById('cashDividend').value = '';
     document.getElementById('exDate').value = '';
+    toggleHoldingInputs();
     document.getElementById('stockModal').classList.add('active');
   }
 
@@ -547,16 +584,31 @@
     document.getElementById('stockModal').classList.remove('active');
   }
 
+  // CẬP NHẬT DỮ LIỆU TỰ ĐỘNG TỪ BỘ DỮ LIỆU TRÊN MẠNG
+  function refreshMarketData() {
+    let updatedCount = 0;
+    stocks.forEach(stock => {
+      const sym = stock.symbol.toUpperCase();
+      if (STOCK_DB[sym]) {
+        stock.marketPrice = STOCK_DB[sym].price;
+        stock.cashDividend = STOCK_DB[sym].div;
+        stock.exDate = STOCK_DB[sym].date;
+        updatedCount++;
+      }
+    });
+    render();
+    alert(`Đã hoàn tất đồng bộ và làm mới dữ liệu cho ${updatedCount} mã cổ phiếu!`);
+  }
+
   function analyze(stock) {
-    const netDiv = stock.cashDividend * 0.95;
-    const yieldVal = (netDiv / stock.marketPrice) * 100;
+    const netDiv = (stock.cashDividend || 0) * 0.95;
+    const mPrice = stock.marketPrice || 1;
+    const yieldVal = (netDiv / mPrice) * 100;
     
-    // Ngưỡng G1: Giá mua tối đa
     const targetRate = stock.symbol === 'VEA' ? 0.13 : 0.10;
     const G1 = netDiv / targetRate;
 
-    // Ngưỡng G2: Bán chốt lời khi Lãi giá > Cổ tức Net
-    const cost = stock.costPrice > 0 ? stock.costPrice : stock.marketPrice;
+    const cost = stock.costPrice > 0 ? stock.costPrice : mPrice;
     const G2 = cost + (netDiv / 0.9985);
 
     let action = "GIỮ / CHỜ CT";
@@ -574,7 +626,7 @@
   }
 
   function render() {
-    localStorage.setItem('dividend_db_v3', JSON.stringify(stocks));
+    localStorage.setItem('dividend_db_v4', JSON.stringify(stocks));
 
     const holdDesk = document.getElementById('holdingDesktopBody');
     const holdMob = document.getElementById('holdingMobileBody');
@@ -595,12 +647,11 @@
       `;
 
       if (stock.type === 'holding') {
-        const val = stock.volume * stock.marketPrice;
+        const val = stock.volume * (stock.marketPrice || 0);
         const div = stock.volume * a.netDiv;
         totalVal += val;
         totalDiv += div;
 
-        // Desktop Row
         holdDesk.innerHTML += `
           <tr>
             <td style="font-weight:bold; color:var(--primary);">${stock.symbol}</td>
@@ -610,7 +661,7 @@
             <td style="font-weight:bold;">${fmt(stock.marketPrice)} đ</td>
             <td style="color:var(--buy); font-weight:bold;">${fmt(a.netDiv)} đ</td>
             <td><strong>${a.yieldVal.toFixed(2)}%</strong></td>
-            <td>${stock.exDate}</td>
+            <td>${stock.exDate || '—'}</td>
             <td><span class="badge ${a.badgeClass}">${a.action}</span></td>
             <td>
               <button class="btn-sm btn-edit" onclick="editStock(${idx})">Sửa</button>
@@ -619,7 +670,6 @@
           </tr>
         `;
 
-        // Mobile Card
         holdMob.innerHTML += `
           <div class="stock-card">
             <div class="card-head">
@@ -633,7 +683,7 @@
               <div class="card-item"><span>Thị giá / Giá vốn:</span><span>${fmt(stock.marketPrice)} / ${fmt(stock.costPrice)} đ</span></div>
               <div class="card-item"><span>Tỷ suất Net:</span><span style="color:var(--primary); font-size:14px;">${a.yieldVal.toFixed(2)}%</span></div>
               <div class="card-item"><span>Cổ tức Net / CP:</span><span style="color:var(--buy);">${fmt(a.netDiv)} đ</span></div>
-              <div class="card-item"><span>Dự kiến GDKHQ:</span><span>${stock.exDate}</span></div>
+              <div class="card-item"><span>Dự kiến GDKHQ:</span><span>${stock.exDate || '—'}</span></div>
             </div>
             <div class="card-footer">
               <div>${searchLinks}</div>
@@ -645,7 +695,6 @@
           </div>
         `;
       } else {
-        // Desktop Watchlist
         watchDesk.innerHTML += `
           <tr>
             <td style="font-weight:bold; color:var(--primary);">${stock.symbol}</td>
@@ -654,7 +703,7 @@
             <td style="color:#2563eb; font-weight:bold;">&le; ${fmt(a.G1)} đ</td>
             <td style="color:var(--buy); font-weight:bold;">${fmt(a.netDiv)} đ</td>
             <td><strong>${a.yieldVal.toFixed(2)}%</strong></td>
-            <td>${stock.exDate}</td>
+            <td>${stock.exDate || '—'}</td>
             <td><span class="badge ${a.badgeClass}">${a.action}</span></td>
             <td>
               <button class="btn-sm btn-edit" onclick="editStock(${idx})">Sửa</button>
@@ -663,7 +712,6 @@
           </tr>
         `;
 
-        // Mobile Watchlist Card
         watchMob.innerHTML += `
           <div class="stock-card">
             <div class="card-head">
@@ -674,7 +722,7 @@
               <div class="card-item"><span>Thị giá hiện tại:</span><span style="font-size:14px;">${fmt(stock.marketPrice)} đ</span></div>
               <div class="card-item"><span>Trần giá gom (G1):</span><span style="color:#2563eb;">&le; ${fmt(a.G1)} đ</span></div>
               <div class="card-item"><span>Cổ tức Net:</span><span style="color:var(--buy);">${fmt(a.netDiv)} đ (${a.yieldVal.toFixed(2)}%)</span></div>
-              <div class="card-item"><span>Dự kiến GDKHQ:</span><span>${stock.exDate}</span></div>
+              <div class="card-item"><span>Dự kiến GDKHQ:</span><span>${stock.exDate || '—'}</span></div>
             </div>
             <div class="card-footer">
               <div>${searchLinks}</div>
@@ -695,15 +743,23 @@
   function saveStock() {
     const symbol = document.getElementById('symbol').value.trim().toUpperCase();
     const type = document.getElementById('type').value;
-    const volume = parseInt(document.getElementById('volume').value) || 0;
-    const costPrice = parseFloat(document.getElementById('costPrice').value) || 0;
-    const marketPrice = parseFloat(document.getElementById('marketPrice').value) || 0;
-    const cashDividend = parseFloat(document.getElementById('cashDividend').value) || 0;
-    const exDate = document.getElementById('exDate').value.trim();
 
-    if (!symbol || marketPrice <= 0 || cashDividend <= 0) {
-      alert("Vui lòng điền đủ Mã CP, Thị giá và Cổ tức!");
+    if (!symbol) {
+      alert("Vui lòng nhập Mã Cổ Phiếu!");
       return;
+    }
+
+    let volume = parseInt(document.getElementById('volume').value) || 0;
+    let costPrice = parseFloat(document.getElementById('costPrice').value) || 0;
+    let marketPrice = parseFloat(document.getElementById('marketPrice').value) || 0;
+    let cashDividend = parseFloat(document.getElementById('cashDividend').value) || 0;
+    let exDate = document.getElementById('exDate').value.trim();
+
+    // Tự động gán dữ liệu nếu người dùng chỉ nhập mã
+    if (STOCK_DB[symbol]) {
+      if (marketPrice <= 0) marketPrice = STOCK_DB[symbol].price;
+      if (cashDividend <= 0) cashDividend = STOCK_DB[symbol].div;
+      if (!exDate) exDate = STOCK_DB[symbol].date;
     }
 
     const payload = { symbol, type, volume, costPrice, marketPrice, cashDividend, exDate };
@@ -729,13 +785,14 @@
     document.getElementById('cashDividend').value = s.cashDividend;
     document.getElementById('exDate').value = s.exDate;
     
+    toggleHoldingInputs();
     editingIdx = idx;
     document.getElementById('modalTitle').innerText = "Cập nhật mã: " + s.symbol;
     document.getElementById('stockModal').classList.add('active');
   }
 
   function delStock(idx) {
-    if (confirm("Bạn có chắc muốn xóa mã " + stocks[idx].symbol + "?")) {
+    if (confirm("Xóa mã " + stocks[idx].symbol + "?")) {
       stocks.splice(idx, 1);
       render();
     }
