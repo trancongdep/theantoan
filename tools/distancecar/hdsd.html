@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng Dẫn Sử Dụng - AutoDo ADAS Web App</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-body: #090d16;
+            --bg-card: #131b2e;
+            --border-color: #24324f;
+            --primary: #00e676;
+            --danger: #f85149;
+            --warning: #d29922;
+            --accent: #58a6ff;
+            --text-main: #f0f6fc;
+            --text-sub: #8fa0c2;
+            --tag-bg: #1c263d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 24px 16px 60px;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        header {
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 24px;
+            margin-bottom: 32px;
+        }
+
+        .badge-app {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--tag-bg);
+            color: var(--primary);
+            border: 1px solid var(--border-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: clamp(24px, 4vw, 32px);
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: var(--text-sub);
+        }
+
+        /* SECTION STYLES */
+        section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 16px 0 8px;
+        }
+
+        p, li {
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        ul, ol {
+            padding-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        /* BẢNG CẢNH BÁO MÀU SẮC */
+        .status-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .status-table th, .status-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        .status-table th {
+            background: #1c263d;
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        .tag-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .tag-danger { background: rgba(248, 81, 73, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .tag-warning { background: rgba(210, 153, 34, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+        .tag-safe { background: rgba(46, 160, 67, 0.2); color: var(--primary); border: 1px solid var(--primary); }
+
+        /* KHỐI LƯU Ý */
+        .note-box {
+            background: #162035;
+            border-left: 4px solid var(--accent);
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 16px 0;
+            font-size: 13px;
+        }
+
+        .note-box i {
+            color: var(--accent);
+            margin-right: 6px;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--tag-bg);
+            color: var(--text-main);
+            text-decoration: none;
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="./index.html" class="btn-back">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại ứng dụng
+        </a>
+
+        <header>
+            <div class="badge-app">
+                <i class="fa-solid fa-shield-halved"></i> AUTODO ADAS MANUAL
+            </div>
+            <h1>HƯỚNG DẪN SỬ DỤNG ỨNG DỤNG</h1>
+            <p class="subtitle">Hệ thống nhận diện khoảng cách xe và cảnh báo an toàn giao thông theo Thông tư 31/2019/TT-BGTVT</p>
+        </header>
+
+        <section>
+            <h2><i class="fa-solid fa-download"></i> 1. Cài Đặt Ứng Dụng (PWA Không Cần Cài Từ App Store)</h2>
+            <p>Ứng dụng hoạt động theo chuẩn PWA (Progressive Web App), cho phép chạy toàn màn hình và lưu dữ liệu offline:</p>
+            
+            <h3>Đối với điện thoại Android (Trình duyệt Google Chrome):</h3>
+            <ol>
+                <li>Mở liên kết ứng dụng trên trình duyệt Chrome.</li>
+                <li>Bấm vào biểu tượng <b>Menu (3 dấu chấm)</b> ở góc trên bên phải.</li>
+                <li>Chọn <b>"Cài đặt ứng dụng"</b> hoặc <b>"Thêm vào màn hình chính"</b>.</li>
+                <li>Biểu tượng <b>AutoDo ADAS</b> sẽ xuất hiện trên màn hình chính của điện thoại.</li>
+            </ol>
+
+            <h3>Đối với iPhone / iPad (Trình duyệt Safari):</h3>
+            <ol>
+                <li>Mở liên kết ứng dụng trên trình duyệt Safari.</li>
+                <li>Bấm vào nút <b>Chia sẻ (Share)</b> (biểu tượng hình vuông có mũi tên chỉ lên ở thanh dưới).</li>
+                <li>Cuộn xuống và chọn <b>"Thêm vào MH chính" (Add to Home Screen)</b> $\rightarrow$ Bấm <b>Thêm</b>.</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2><i class="fa-solid fa-mobile-screen"></i> 2. Chuẩn Bị & Gá Đặt Trên Xe</h2>
+            <ol>
+                <li><b>Cấp quyền Camera & Vị trí:</b> Khi mở ứng dụng lần đầu, chọn <b>"Cho phép" (Allow)</b> khi trình duyệt hỏi quyền truy cập Camera và Vị trí chính xác (GPS).</li>
+                <li><b>Vị trí gắn điện thoại:</b> Gắn điện thoại lên giá đỡ (kẹp hít kính lái hoặc taplo) ở <b>chính giữa xe</b>, hướng camera thẳng về phía trước theo hướng di chuyển.</li>
+                <li><b>Điều chỉnh góc nghiêng:</b> Đặt điện thoại thẳng đứng hoặc hơi ngửa nhẹ ($< 20^\circ$). Cảm biến con quay hồi chuyển trong ứng dụng sẽ tự động bù trừ sai số góc nghiêng.</li>
+                <li><b>Bật chế độ Toàn màn hình:</b> Bấm vào nút <b>⛶ (Full)</b> trên thanh điều khiển để mở rộng khung nhìn tối đa.</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2><i class="fa-solid fa-sliders"></i> 3. Ý Nghĩa Các Nút Thao Tác</h2>
+            <ul>
+                <li><b>🔄 Ngang / Đứng:</b> Chuyển đổi linh hoạt giữa giao diện chia đôi màn hình ngang (Camera bên trái, HUD bên phải) và giao diện màn hình đứng (Camera bên trên, HUD bên dưới).</li>
+                <li><b>🔊 Bật / 🔇 Tắt (Âm thanh):</b> Bật hoặc tắt âm thanh cảnh báo bíp và giọng nói cảnh báo khẩn cấp bằng tiếng Việt.</li>
+                <li><b>⛶ Full:</b> Kích hoạt chế độ tràn viền toàn màn hình.</li>
+                <li><b>⚙️ Cài đặt:</b> Mở bảng thiết lập nâng cao (FOV Camera, Lọc xe máy, Bắt xe cùng làn).</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2><i class="fa-solid fa-triangle-exclamation"></i> 4. Các Cấp Độ Cảnh Báo (Thông Tư 31/2019/TT-BGTVT)</h2>
+            <p>Hệ thống tự động đồng bộ vận tốc GPS thực tế của xe để đưa ra cự ly an toàn bắt buộc và hiển thị theo 3 mức màu:</p>
+
+            <table class="status-table">
+                <thead>
+                    <tr>
+                        <th>Vận tốc xe (GPS)</th>
+                        <th>Khoảng cách an toàn tối thiểu</th>
+                        <th>Trạng thái hiển thị</th>
+                        <th>Âm thanh</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>$\le 60\text{ km/h}$</td>
+                        <td>$35\text{ m}$</td>
+                        <td><span class="tag-status tag-safe">XANH LÁ (> 40m)</span></td>
+                        <td>Không phát âm</td>
+                    </tr>
+                    <tr>
+                        <td>$60 < v \le 80\text{ km/h}$</td>
+                        <td>$55\text{ m}$</td>
+                        <td><span class="tag-status tag-warning">VÀNG (Cảnh báo sớm: 55m - 60m)</span></td>
+                        <td>Không phát âm</td>
+                    </tr>
+                    <tr>
+                        <td>$80 < v \le 100\text{ km/h}$</td>
+                        <td>$70\text{ m}$</td>
+                        <td><span class="tag-status tag-danger">ĐỎ (Nguy hiểm: < Cự ly luật định)</span></td>
+                        <td>Tiếng bíp + Giọng nói: <i>"Cảnh báo! Khoảng cách quá gần"</i></td>
+                    </tr>
+                    <tr>
+                        <td>$100 < v \le 120\text{ km/h}$</td>
+                        <td>$100\text{ m}$</td>
+                        <td><span class="tag-status tag-danger">ĐỎ (Nguy hiểm: < 100m)</span></td>
+                        <td>Tiếng bíp + Giọng nói: <i>"Cảnh báo! Khoảng cách quá gần"</i></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="note-box">
+                <i class="fa-solid fa-circle-info"></i> <b>Lưu ý về giọng nói:</b> Giọng nói cảnh báo chỉ tự động kích hoạt khi xe đang di chuyển thực tế (vận tốc $\ge 15\text{ km/h}$) và vật cản nằm trong <b>CÙNG LÀN XE</b> nhằm tránh làm phiền khi dừng đỗ đèn đỏ hoặc tắc đường.
+            </div>
+        </section>
+
+        <section>
+            <h2><i class="fa-solid fa-gear"></i> 5. Tinh Chỉnh Nâng Cao Trong Cài Đặt (⚙️)</h2>
+            <ul>
+                <li><b>Góc nhìn dọc camera (FOV):</b> Giá trị mặc định là $55^\circ$. Nếu khoảng cách đo hiển thị xa hơn thực tế, hãy giảm nhẹ xuống ($50^\circ - 52^\circ$). Nếu khoảng cách hiển thị gần hơn thực tế, hãy tăng lên ($58^\circ - 60^\circ$). Thông số này được lưu cố định vào bộ nhớ máy.</li>
+                <li><b>Bỏ qua xe máy:</b> Khi tích chọn, hệ thống chỉ tập trung bắt các loại Ô tô con, Xe SUV, Xe bán tải, Xe tải và Xe buýt/khách.</li>
+                <li><b>Chỉ bắt xe CÙNG LÀN ĐƯỜNG:</b> Tự động bỏ qua các xe đang chạy ở các làn đường bên cạnh, chỉ đưa ra cảnh báo cự ly đối với phương tiện di chuyển trực diện trong hành lang lái xe.</li>
+            </ul>
+        </section>
+    </div>
+
+</body>
+</html>
