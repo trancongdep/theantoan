@@ -17,7 +17,7 @@
     :root {
       --primary-color: #1e3a8a;
       --accent-color: #0d6efd;
-      --bg-body: #f1f5f9;
+      --bg-body: #f8fafc;
       --card-bg: #ffffff;
       --text-dark: #0f172a;
       --border-color: #e2e8f0;
@@ -27,6 +27,7 @@
       background-color: var(--bg-body);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: var(--text-dark);
+      padding-bottom: 30px;
     }
 
     /* Top Navbar */
@@ -40,7 +41,6 @@
       color: #f8fafc;
       padding: 6px 12px;
       border-radius: 8px;
-      transition: all 0.2s;
     }
     .btn-menu-toggle:hover {
       background-color: #1e293b;
@@ -73,48 +73,22 @@
       color: #38bdf8;
     }
 
-    /* Cards */
+    /* Dashboard Summary Cards */
     .card-stat {
       border: 1px solid var(--border-color);
       border-radius: 12px;
       background: var(--card-bg);
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      transition: transform 0.2s;
-    }
-    .card-stat:hover {
-      transform: translateY(-2px);
     }
 
-    /* Table & Badges */
-    .table-container {
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      background: var(--card-bg);
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .table thead th {
-      background-color: #f8fafc;
-      color: #475569;
-      font-size: 0.82rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid var(--border-color);
-      padding: 12px 16px;
-    }
-    .table tbody td {
-      padding: 14px 16px;
-      font-size: 0.92rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-
+    /* Badges */
     .badge-type-dividend {
       background-color: #e0f2fe;
       color: #0369a1;
       font-weight: 600;
       padding: 4px 8px;
       border-radius: 6px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
     }
     .badge-type-growth {
       background-color: #f3e8ff;
@@ -122,18 +96,18 @@
       font-weight: 600;
       padding: 4px 8px;
       border-radius: 6px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
     }
 
     .status-badge {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 700;
-      padding: 6px 12px;
-      border-radius: 20px;
+      padding: 5px 10px;
+      border-radius: 16px;
       display: inline-block;
     }
     .status-buy { background-color: #dcfce7; color: #15803d; }
-    .status-hold { background-color: #e2e8f0; color: #475569; }
+    .status-hold { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
     .status-sell { background-color: #fee2e2; color: #b91c1c; }
 
     .num-mono {
@@ -146,33 +120,76 @@
       padding: 3px 8px;
       border-radius: 12px;
     }
+
+    /* Mobile Stock Card View */
+    .stock-card {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--card-bg);
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .stock-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    .stock-card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.88rem;
+    }
+    .stock-card-row .label {
+      color: #64748b;
+    }
+
+    /* Responsive View Switches */
+    @media (max-width: 768px) {
+      .desktop-table-view {
+        display: none !important;
+      }
+      .mobile-card-view {
+        display: block !important;
+      }
+    }
+    @media (min-width: 769px) {
+      .desktop-table-view {
+        display: block !important;
+      }
+      .mobile-card-view {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Top Navbar Header -->
+  <!-- Top Navbar -->
   <nav class="navbar navbar-dark navbar-custom sticky-top py-2 px-3 px-md-4">
     <div class="container-fluid p-0 d-flex justify-content-between align-items-center">
       
-      <div class="d-flex align-items-center gap-3">
-        <!-- Nút Menu 3 Gạch (Hamburger Menu) -->
-        <button class="btn btn-menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu">
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
           <i class="fa-solid fa-bars fa-lg"></i>
         </button>
-
-        <a class="navbar-brand m-0 d-flex align-items-center gap-2 fw-bold text-white fs-5" href="#">
+        <a class="navbar-brand m-0 d-flex align-items-center gap-2 fw-bold text-white fs-6 fs-md-5" href="#">
           <i class="fa-solid fa-shield-halved text-warning"></i>
-          <span>QUẢN TRỊ TÍCH SẢN & TĂNG TRƯỞNG</span>
+          <span>QUẢN TRỊ TÀI SẢN 2030</span>
         </a>
       </div>
 
-      <!-- Trạng thái kết nối Firebase & Nút thêm nhanh -->
       <div class="d-flex align-items-center gap-2">
         <span id="firebaseStatus" class="sync-status bg-secondary text-white d-none d-sm-inline-block">
-          <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Đang kết nối...
+          <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Đang tải...
         </span>
-        <button class="btn btn-primary btn-sm fw-bold px-3" onclick="openAddModal()">
-          <i class="fa-solid fa-plus me-1"></i> Thêm Mã Mới
+        <button class="btn btn-primary btn-sm fw-bold px-2 px-md-3" onclick="openAddModal()">
+          <i class="fa-solid fa-plus me-1"></i> <span class="d-none d-sm-inline">Thêm</span> Mã
         </button>
       </div>
 
@@ -180,17 +197,17 @@
   </nav>
 
   <!-- Sidebar Menu (Offcanvas Menu 3 Gạch) -->
-  <div class="offcanvas offcanvas-start offcanvas-custom" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel">
+  <div class="offcanvas offcanvas-start offcanvas-custom" tabindex="-1" id="sidebarMenu">
     <div class="offcanvas-header border-bottom border-secondary">
-      <h5 class="offcanvas-title fw-bold text-white d-flex align-items-center gap-2" id="sidebarMenuLabel">
+      <h5 class="offcanvas-title fw-bold text-white d-flex align-items-center gap-2">
         <i class="fa-solid fa-sliders text-warning"></i> Menu Tiện Ích
       </h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body d-flex flex-column justify-content-between p-3">
       <div>
         <a href="#" class="sidebar-link active" data-bs-dismiss="offcanvas">
-          <i class="fa-solid fa-chart-line"></i> Bảng Theo Dõi Định Giá
+          <i class="fa-solid fa-chart-pie"></i> Bảng Danh Mục Đầu Tư
         </a>
         <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="openAddModal()">
           <i class="fa-solid fa-circle-plus"></i> Thêm Mã Cổ Phiếu
@@ -199,14 +216,13 @@
           <i class="fa-solid fa-fire text-danger"></i> Cấu Hình Firebase
         </a>
         <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="seedDefaultDatabase()">
-          <i class="fa-solid fa-arrows-rotate"></i> Nạp Dữ Liệu 6 Mã Mẫu Lên Firebase
+          <i class="fa-solid fa-arrows-rotate"></i> Nạp Dữ Liệu 6 Mã Mẫu
         </a>
         <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="showFormulaModal()">
-          <i class="fa-solid fa-square-root-variable"></i> Hướng Dẫn Công Thức G1/G2
+          <i class="fa-solid fa-square-root-variable"></i> Hướng Dẫn Định Giá G1/G2
         </a>
       </div>
 
-      <!-- Footer Sidebar -->
       <div class="border-top border-secondary pt-3 text-muted small">
         <div><i class="fa-solid fa-database text-warning me-1"></i> Firebase Realtime Sync</div>
         <div class="mt-1">Mục tiêu hưu trí: <b>Tháng 06/2030</b></div>
@@ -214,109 +230,81 @@
     </div>
   </div>
 
-  <!-- Khung Nội Dung Chính -->
-  <div class="container-fluid px-3 px-md-4 py-4">
+  <!-- Main Container -->
+  <div class="container-fluid px-2 px-md-4 py-3">
     
-    <!-- Dashboard Stats -->
-    <div class="row g-3 mb-4">
+    <!-- Tổng Hợp Tài Sản & Cổ Tức (Header Overview) -->
+    <div class="row g-2 mb-3">
       <div class="col-6 col-lg-3">
-        <div class="card card-stat p-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <div class="text-muted small fw-bold">TỔNG SỐ MÃ</div>
-              <h3 class="fw-bold mb-0 text-dark" id="statTotalStocks">0</h3>
-            </div>
-            <div class="bg-light p-3 rounded-circle text-primary">
-              <i class="fa-solid fa-layer-group fa-lg"></i>
-            </div>
-          </div>
+        <div class="card card-stat p-2 p-md-3">
+          <div class="text-muted small fw-bold">TỔNG GIÁ TRỊ TÀI SẢN</div>
+          <h4 class="fw-bold mb-0 text-primary fs-5 fs-md-4" id="statTotalNav">0 đ</h4>
+          <div class="small text-muted mt-1" id="statTotalShares">0 cổ phiếu</div>
         </div>
       </div>
       <div class="col-6 col-lg-3">
-        <div class="card card-stat p-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <div class="text-muted small fw-bold">TÍCH SẢN CỔ TỨC</div>
-              <h3 class="fw-bold mb-0 text-primary" id="statDividendStocks">0</h3>
-            </div>
-            <div class="bg-light p-3 rounded-circle text-info">
-              <i class="fa-solid fa-money-bill-trend-up fa-lg"></i>
-            </div>
-          </div>
+        <div class="card card-stat p-2 p-md-3">
+          <div class="text-muted small fw-bold">CỔ TỨC TIỀN MẶT/NĂM</div>
+          <h4 class="fw-bold mb-0 text-success fs-5 fs-md-4" id="statAnnualDividend">0 đ</h4>
+          <div class="small text-success mt-1" id="statMonthlyDividend">~0 đ/tháng</div>
         </div>
       </div>
       <div class="col-6 col-lg-3">
-        <div class="card card-stat p-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <div class="text-muted small fw-bold">TĂNG TRƯỞNG NH</div>
-              <h3 class="fw-bold mb-0" style="color: #7e22ce;" id="statGrowthStocks">0</h3>
-            </div>
-            <div class="bg-light p-3 rounded-circle text-purple">
-              <i class="fa-solid fa-building-columns fa-lg"></i>
-            </div>
-          </div>
+        <div class="card card-stat p-2 p-md-3">
+          <div class="text-muted small fw-bold">DANH MỤC THEO DÕI</div>
+          <h4 class="fw-bold mb-0 text-dark fs-5 fs-md-4" id="statTotalStocks">0 mã</h4>
+          <div class="small text-muted mt-1" id="statTypeBreakdown">0 Tích sản | 0 Tăng trưởng</div>
         </div>
       </div>
       <div class="col-6 col-lg-3">
-        <div class="card card-stat p-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <div class="text-muted small fw-bold">VÙNG GOM MUA (G1)</div>
-              <h3 class="fw-bold mb-0 text-success" id="statBuyAlerts">0</h3>
-            </div>
-            <div class="bg-light p-3 rounded-circle text-success">
-              <i class="fa-solid fa-cart-shopping fa-lg"></i>
-            </div>
-          </div>
+        <div class="card card-stat p-2 p-md-3">
+          <div class="text-muted small fw-bold">ĐẠT VÙNG GOM MUA (G1)</div>
+          <h4 class="fw-bold mb-0 text-success fs-5 fs-md-4" id="statBuyAlerts">0 mã</h4>
+          <div class="small text-success mt-1">Đủ điều kiện giải ngân</div>
         </div>
       </div>
     </div>
 
-    <!-- Stock Valuation Table -->
-    <div class="table-container">
-      
-      <!-- Table Header & Filter -->
-      <div class="p-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div class="d-flex align-items-center gap-2">
-          <h5 class="fw-bold mb-0 text-dark">Bảng Theo Dõi & Định Giá Khuyến Nghị (Firebase)</h5>
-        </div>
-        <div class="d-flex gap-2 align-items-center">
-          <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Tìm kiếm mã CP..." onkeyup="renderTable()">
-          <select id="filterType" class="form-select form-select-sm" onchange="renderTable()">
-            <option value="ALL">Tất cả danh mục</option>
-            <option value="DIVIDEND">💵 Tích sản Dòng tiền</option>
-            <option value="GROWTH">📈 Tăng trưởng Ngân hàng</option>
-          </select>
-        </div>
+    <!-- Thanh Lọc / Tìm Kiếm -->
+    <div class="card border-0 shadow-sm p-2 mb-3">
+      <div class="d-flex gap-2">
+        <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Tìm kiếm mã CP..." onkeyup="renderUI()">
+        <select id="filterType" class="form-select form-select-sm" style="max-width: 170px;" onchange="renderUI()">
+          <option value="ALL">Tất cả mã</option>
+          <option value="DIVIDEND">💵 Tích sản</option>
+          <option value="GROWTH">📈 Tăng trưởng</option>
+        </select>
       </div>
+    </div>
 
-      <!-- Responsive Table -->
+    <!-- 1. GIAO DIỆN DESKTOP (TABLE VIEW) -->
+    <div class="card desktop-table-view border-0 shadow-sm">
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 text-center">
-          <thead>
+          <thead class="bg-light">
             <tr>
               <th>Mã CP</th>
               <th>Loại Hình</th>
-              <th>Thị Giá (VNĐ)</th>
-              <th>Chỉ Số Đầu Vào</th>
-              <th>Định Giá Hiện Tại</th>
-              <th>Vùng Mua Gom (G1)</th>
-              <th>Vùng Mục Tiêu (G2)</th>
+              <th>Thị Giá</th>
+              <th>Đang Nắm Giữ</th>
+              <th>Giá Trị Vốn</th>
+              <th>Cổ Tức / Năm</th>
+              <th>Vùng Mua (G1)</th>
+              <th>Mục Tiêu (G2)</th>
               <th>Trạng Thái</th>
               <th>Thao Tác</th>
             </tr>
           </thead>
           <tbody id="stockTableBody">
-            <tr>
-              <td colspan="9" class="py-4 text-muted">
-                <i class="fa-solid fa-circle-notch fa-spin me-2"></i> Đang tải dữ liệu từ Firebase...
-              </td>
-            </tr>
+            <!-- Render Desktop Rows -->
           </tbody>
         </table>
       </div>
+    </div>
 
+    <!-- 2. GIAO DIỆN MOBILE (CARD VIEW) -->
+    <div class="mobile-card-view" id="stockCardContainer">
+      <!-- Render Mobile Cards -->
     </div>
 
   </div>
@@ -327,10 +315,10 @@
       <div class="modal-content border-0 shadow">
         <div class="modal-header bg-dark text-white">
           <h5 class="modal-title fw-bold" id="modalTitle">Thêm Mã Cổ Phiếu</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <form id="stockForm" onsubmit="handleFormSubmit(event)">
-          <div class="modal-body p-4">
+          <div class="modal-body p-3 p-md-4">
             <input type="hidden" id="editKey" value="">
 
             <!-- Ticker -->
@@ -342,46 +330,52 @@
             <!-- Loại Hình Chiến Lược -->
             <div class="mb-3">
               <label class="form-label fw-bold small text-muted">TRƯỜNG PHÁI ĐẦU TƯ:</label>
-              <div class="d-flex gap-3 p-2 bg-light rounded border">
+              <div class="d-flex gap-2 p-2 bg-light rounded border">
                 <div class="form-check">
                   <input class="form-check-input" type="radio" name="stockTypeRadio" id="radioDividend" value="DIVIDEND" checked onchange="toggleFormInputs()">
-                  <label class="form-check-label fw-semibold" for="radioDividend">
+                  <label class="form-check-label fw-semibold small" for="radioDividend">
                     💵 Tích Sản Cổ Tức
                   </label>
                 </div>
                 <div class="form-check">
                   <input class="form-check-input" type="radio" name="stockTypeRadio" id="radioGrowth" value="GROWTH" onchange="toggleFormInputs()">
-                  <label class="form-check-label fw-semibold" for="radioGrowth">
+                  <label class="form-check-label fw-semibold small" for="radioGrowth">
                     📈 Tăng Trưởng (BVPS)
                   </label>
                 </div>
               </div>
             </div>
 
-            <!-- Thị Giá -->
-            <div class="mb-3">
-              <label class="form-label fw-bold small text-muted">THỊ GIÁ HIỆN TẠI (VNĐ):</label>
-              <input type="number" id="inputCurrentPrice" class="form-control num-mono" placeholder="VD: 36500" required>
+            <!-- Số lượng CP nắm giữ & Thị giá -->
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-bold small text-muted">SỐ LƯỢNG NẮM GIỮ (CP):</label>
+                <input type="number" id="inputShares" class="form-control num-mono" placeholder="VD: 5000" min="0" step="1">
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-bold small text-muted">THỊ GIÁ HIỆN TẠI (VNĐ):</label>
+                <input type="number" id="inputCurrentPrice" class="form-control num-mono" placeholder="VD: 36500" required>
+              </div>
             </div>
 
             <!-- Nhóm Tích Sản Cổ Tức -->
             <div id="dividendInputGroup" class="mb-3">
               <label class="form-label fw-bold small text-muted">CỔ TỨC TIỀN MẶT DỰ KIẾN (VNĐ/CP/NĂM):</label>
               <input type="number" id="inputCashDividend" class="form-control num-mono" placeholder="VD: 4800 (VEA), 1500 (QTP)...">
-              <small class="text-muted">*Tự động trừ 5% thuế TNCN khi tính G1 & G2.</small>
+              <small class="text-muted">*Tự động trừ 5% thuế TNCN khi tính G1, G2 và dòng tiền.</small>
             </div>
 
             <!-- Nhóm Tăng Trưởng BVPS -->
             <div id="growthInputGroup" class="mb-3 d-none">
               <label class="form-label fw-bold small text-muted">GIÁ TRỊ SỔ SÁCH MỖI CP (BVPS - VNĐ):</label>
               <input type="number" id="inputBvps" class="form-control num-mono" placeholder="VD: 20500 (MBB), 21000 (ACB)...">
-              <small class="text-muted">*Công thức: G1 (P/B = 1.1x), G2 (P/B = 1.5x).</small>
+              <small class="text-muted">*Công thức định giá: G1 (P/B = 1.1x), G2 (P/B = 1.5x).</small>
             </div>
 
           </div>
           <div class="modal-footer bg-light p-3">
             <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Hủy</button>
-            <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold">Lưu Lên Firebase</button>
+            <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold">Lưu Dữ Liệu</button>
           </div>
         </form>
       </div>
@@ -394,7 +388,7 @@
       <div class="modal-content border-0 shadow">
         <div class="modal-header bg-dark text-white">
           <h5 class="modal-title fw-bold"><i class="fa-solid fa-fire text-danger me-2"></i>Cấu Hình Firebase Realtime DB</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-4">
           <div class="mb-3">
@@ -416,22 +410,22 @@
       <div class="modal-content border-0 shadow">
         <div class="modal-header bg-dark text-white">
           <h5 class="modal-title fw-bold"><i class="fa-solid fa-square-root-variable me-2"></i>Công Thức Định Giá G1 & G2</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-4">
           <div class="card mb-3 p-3 bg-light border">
             <h6 class="fw-bold text-primary"><i class="fa-solid fa-money-bill-wave me-2"></i>1. Cổ Phiếu Tích Sản Cổ Tức (VEA, QTP, SJD, QNS...)</h6>
-            <p class="mb-1">Định giá dựa trên dòng tiền cổ tức tiền mặt thực nhận sau thuế (khấu trừ 5% thuế TNCN):</p>
+            <p class="mb-1">Định giá theo dòng tiền cổ tức thực nhận sau thuế (khấu trừ 5% thuế TNCN):</p>
             <ul>
-              <li><b>Vùng Gom Mua (G1):</b> <code>G1 = (Cổ tức sau thuế) / 12%</code> (Đạt tỷ suất cổ tức ròng ≥ 12%/năm).</li>
-              <li><b>Vùng Chốt Lời (G2):</b> <code>G2 = (Cổ tức sau thuế) / 7.5%</code> (Tỷ suất giảm về ≤ 7.5%/năm).</li>
+              <li><b>Vùng Mua Gom (G1):</b> <code>G1 = (Cổ tức sau thuế) / 12%</code> (Tỷ suất cổ tức ròng ≥ 12%/năm).</li>
+              <li><b>Vùng Mục Tiêu (G2):</b> <code>G2 = (Cổ tức sau thuế) / 7.5%</code> (Tỷ suất giảm về ≤ 7.5%/năm).</li>
             </ul>
           </div>
           <div class="card p-3 bg-light border">
             <h6 class="fw-bold" style="color: #7e22ce;"><i class="fa-solid fa-building-columns me-2"></i>2. Cổ Phiếu Tăng Trưởng Ngân Hàng (MBB, ACB, TCB...)</h6>
             <p class="mb-1">Định giá dựa trên Giá trị sổ sách (BVPS) và định giá lại theo P/B:</p>
             <ul>
-              <li><b>Vùng Gom Mua (G1):</b> <code>G1 = BVPS × 1.10</code> (Định giá an toàn P/B ≤ 1.1x).</li>
+              <li><b>Vùng Mua Gom (G1):</b> <code>G1 = BVPS × 1.10</code> (Định giá an toàn P/B ≤ 1.1x).</li>
               <li><b>Vùng Mục Tiêu 2030 (G2):</b> <code>G2 = BVPS × 1.50</code> (Chốt lời khi P/B đạt 1.5x sau các kỳ nở cổ phiếu).</li>
             </ul>
           </div>
@@ -443,9 +437,8 @@
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Firebase & App Logic JS -->
+  <!-- Javascript & Firebase Logic -->
   <script>
-    // Cấu hình Firebase mặc định (Tự động lưu vào LocalStorage để tái sử dụng)
     const DEFAULT_FIREBASE_CONFIG = {
       apiKey: "AIzaSyDummyKey_ReplaceWithYourActualKey",
       authDomain: "portfolio-management.firebaseapp.com",
@@ -456,13 +449,14 @@
       appId: "1:123456789:web:abcdef"
     };
 
+    // Dữ liệu mẫu chuẩn bị sẵn (kèm số lượng CP mẫu)
     const SEED_DATA = {
-      "VEA": { ticker: "VEA", stockType: "DIVIDEND", currentPrice: 36500, cashDividend: 4800, bvps: 0 },
-      "QTP": { ticker: "QTP", stockType: "DIVIDEND", currentPrice: 11500, cashDividend: 1500, bvps: 0 },
-      "SJD": { ticker: "SJD", stockType: "DIVIDEND", currentPrice: 14200, cashDividend: 1600, bvps: 0 },
-      "MBB": { ticker: "MBB", stockType: "GROWTH", currentPrice: 22500, cashDividend: 0, bvps: 20500 },
-      "ACB": { ticker: "ACB", stockType: "GROWTH", currentPrice: 24800, cashDividend: 0, bvps: 21000 },
-      "TCB": { ticker: "TCB", stockType: "GROWTH", currentPrice: 24000, cashDividend: 0, bvps: 21500 }
+      "VEA": { ticker: "VEA", stockType: "DIVIDEND", sharesCount: 3500, currentPrice: 36500, cashDividend: 4800, bvps: 0 },
+      "QTP": { ticker: "QTP", stockType: "DIVIDEND", sharesCount: 8000, currentPrice: 11500, cashDividend: 1500, bvps: 0 },
+      "SJD": { ticker: "SJD", stockType: "DIVIDEND", sharesCount: 2000, currentPrice: 14200, cashDividend: 1600, bvps: 0 },
+      "MBB": { ticker: "MBB", stockType: "GROWTH", sharesCount: 2380, currentPrice: 22500, cashDividend: 0, bvps: 20500 },
+      "ACB": { ticker: "ACB", stockType: "GROWTH", sharesCount: 1600, currentPrice: 24800, cashDividend: 0, bvps: 21000 },
+      "TCB": { ticker: "TCB", stockType: "GROWTH", sharesCount: 1670, currentPrice: 24000, cashDividend: 0, bvps: 21500 }
     };
 
     let db = null;
@@ -471,7 +465,6 @@
     const configModal = new bootstrap.Modal(document.getElementById('configModal'));
     const formulaModal = new bootstrap.Modal(document.getElementById('formulaModal'));
 
-    // Khởi tạo ứng dụng
     window.addEventListener('DOMContentLoaded', () => {
       initFirebase();
     });
@@ -500,7 +493,6 @@
       el.innerHTML = `<i class="fa-solid ${isConnected ? 'fa-bolt' : 'fa-triangle-exclamation'} me-1"></i> ${text}`;
     }
 
-    // Lắng nghe dữ liệu realtime từ Firebase
     function listenToFirebase() {
       if (!db) return;
       const stocksRef = db.ref('stocks');
@@ -510,70 +502,62 @@
           stocksData = data;
         } else {
           stocksData = {};
-          // Nếu database trống, nạp mặc định
           seedDefaultDatabase(false);
         }
-        renderTable();
+        renderUI();
       }, (error) => {
         console.error("Lỗi đọc Firebase:", error);
         updateFirebaseStatus(false, "Lỗi Quyền DB");
       });
     }
 
-    // Nạp dữ liệu mẫu 6 mã lên Firebase
     function seedDefaultDatabase(confirmFirst = true) {
-      if (!db) {
-        alert("Vui lòng cấu hình Firebase trước!");
-        return;
-      }
-      if (confirmFirst && !confirm("Đồng bộ 6 mã cổ phiếu mẫu (VEA, QTP, SJD, MBB, ACB, TCB) lên Firebase?")) {
-        return;
-      }
+      if (!db) return alert("Vui lòng cấu hình Firebase trước!");
+      if (confirmFirst && !confirm("Đồng bộ dữ liệu 6 mã mẫu kèm số lượng cổ phiếu lên Firebase?")) return;
+
       db.ref('stocks').set(SEED_DATA).then(() => {
         updateFirebaseStatus(true, "Đã Nạp Mẫu Thành Công");
-      }).catch(err => {
-        alert("Lỗi nạp dữ liệu: " + err.message);
-      });
+      }).catch(err => alert("Lỗi nạp dữ liệu: " + err.message));
     }
 
-    function openConfigModal() {
-      configModal.show();
-    }
+    function openConfigModal() { configModal.show(); }
+    function showFormulaModal() { formulaModal.show(); }
 
     function saveFirebaseConfig() {
       try {
         const configText = document.getElementById('firebaseConfigInput').value;
         const parsed = JSON.parse(configText);
         localStorage.setItem('MY_FIREBASE_CONFIG', JSON.stringify(parsed));
-        alert("Đã lưu cấu hình Firebase! Trang sẽ tải lại.");
+        alert("Đã lưu cấu hình! Trang sẽ tải lại.");
         location.reload();
       } catch (e) {
         alert("Định dạng JSON cấu hình không hợp lệ: " + e.message);
       }
     }
 
-    function showFormulaModal() {
-      formulaModal.show();
-    }
-
-    // Tính toán số liệu G1, G2
+    // Engine tính toán
     function calculateMetrics(stock) {
       const p = Number(stock.currentPrice) || 0;
+      const shares = Number(stock.sharesCount) || 0;
+      const totalHoldingValue = p * shares;
+
       let g1 = 0;
       let g2 = 0;
       let inputDisplay = "";
+      let annualDivReceived = 0;
       let valDisplay = "";
 
       if (stock.stockType === "DIVIDEND") {
         const rawDiv = Number(stock.cashDividend) || 0;
         const netDiv = rawDiv * 0.95;
         inputDisplay = `Cổ tức: <span class="num-mono">${rawDiv.toLocaleString('vi-VN')} đ</span>`;
+        annualDivReceived = netDiv * shares;
 
         if (netDiv > 0) {
           g1 = Math.round(netDiv / 0.12);
           g2 = Math.round(netDiv / 0.075);
           const y = p > 0 ? ((netDiv / p) * 100).toFixed(1) : 0;
-          valDisplay = `<span class="badge bg-success bg-opacity-10 text-success p-2">Yield ròng: <b>${y}%</b></span>`;
+          valDisplay = `<span class="badge bg-success bg-opacity-10 text-success">Yield: <b>${y}%</b></span>`;
         }
       } else {
         const bvps = Number(stock.bvps) || 0;
@@ -583,7 +567,7 @@
           g1 = Math.round(bvps * 1.10);
           g2 = Math.round(bvps * 1.50);
           const pb = p > 0 ? (p / bvps).toFixed(2) : 0;
-          valDisplay = `<span class="badge bg-purple bg-opacity-10 text-primary p-2">P/B: <b>${pb}x</b></span>`;
+          valDisplay = `<span class="badge bg-purple bg-opacity-10 text-primary">P/B: <b>${pb}x</b></span>`;
         }
       }
 
@@ -597,6 +581,9 @@
       return {
         g1,
         g2,
+        shares,
+        totalHoldingValue,
+        annualDivReceived,
         inputDisplay,
         valDisplay,
         statusHtml,
@@ -604,48 +591,60 @@
       };
     }
 
-    // Render bảng từ dữ liệu Firebase
-    function renderTable() {
+    // Render cả Desktop & Mobile UI
+    function renderUI() {
       const tbody = document.getElementById('stockTableBody');
+      const mobileContainer = document.getElementById('stockCardContainer');
       tbody.innerHTML = '';
+      mobileContainer.innerHTML = '';
 
       const keys = Object.keys(stocksData);
       if (keys.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="py-4 text-muted">Chưa có mã cổ phiếu nào trong Firebase Database.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" class="py-4 text-muted">Chưa có mã cổ phiếu trong Firebase Database.</td></tr>';
+        mobileContainer.innerHTML = '<div class="text-center py-4 text-muted">Chưa có mã cổ phiếu trong Firebase Database.</div>';
         return;
       }
 
-      let total = 0;
+      let totalStocks = 0;
       let divCount = 0;
       let growthCount = 0;
       let buyCount = 0;
+      let totalNav = 0;
+      let totalSharesAll = 0;
+      let totalAnnualDividend = 0;
 
       const filter = document.getElementById('filterType').value;
       const search = document.getElementById('searchInput').value.trim().toUpperCase();
 
       keys.forEach((key) => {
         const stk = stocksData[key];
-        total++;
+        totalStocks++;
         if (stk.stockType === "DIVIDEND") divCount++;
         else growthCount++;
 
         const m = calculateMetrics(stk);
         if (m.isBuy) buyCount++;
 
+        totalNav += m.totalHoldingValue;
+        totalSharesAll += m.shares;
+        totalAnnualDividend += m.annualDivReceived;
+
         if (filter !== 'ALL' && stk.stockType !== filter) return;
         if (search && !stk.ticker.toUpperCase().includes(search)) return;
 
+        // 1. Render Desktop Table Row
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="fw-bold text-dark fs-6">${stk.ticker}</td>
           <td>
             <span class="${stk.stockType === 'DIVIDEND' ? 'badge-type-dividend' : 'badge-type-growth'}">
-              ${stk.stockType === 'DIVIDEND' ? '💵 Tích Sản Cổ Tức' : '📈 Tăng Trưởng (BVPS)'}
+              ${stk.stockType === 'DIVIDEND' ? '💵 Tích Sản' : '📈 Tăng Trưởng'}
             </span>
           </td>
           <td class="num-mono text-primary">${Number(stk.currentPrice).toLocaleString('vi-VN')} đ</td>
-          <td>${m.inputDisplay}</td>
-          <td>${m.valDisplay}</td>
+          <td class="num-mono fw-bold text-dark">${m.shares.toLocaleString('vi-VN')} CP</td>
+          <td class="num-mono text-dark">${m.totalHoldingValue.toLocaleString('vi-VN')} đ</td>
+          <td class="num-mono text-success fw-bold">${m.annualDivReceived > 0 ? m.annualDivReceived.toLocaleString('vi-VN') + ' đ' : '—'}</td>
           <td class="num-mono text-success fw-bold">≤ ${m.g1.toLocaleString('vi-VN')} đ</td>
           <td class="num-mono text-danger fw-bold">≥ ${m.g2.toLocaleString('vi-VN')} đ</td>
           <td>${m.statusHtml}</td>
@@ -661,12 +660,73 @@
           </td>
         `;
         tbody.appendChild(tr);
+
+        // 2. Render Mobile Card
+        const card = document.createElement('div');
+        card.className = 'stock-card';
+        card.innerHTML = `
+          <div class="stock-card-header">
+            <div class="d-flex align-items-center gap-2">
+              <span class="fs-5 fw-bold text-dark">${stk.ticker}</span>
+              <span class="${stk.stockType === 'DIVIDEND' ? 'badge-type-dividend' : 'badge-type-growth'}">
+                ${stk.stockType === 'DIVIDEND' ? '💵 Tích Sản' : '📈 Tăng Trưởng'}
+              </span>
+            </div>
+            <div>
+              ${m.statusHtml}
+            </div>
+          </div>
+
+          <div class="stock-card-row">
+            <span class="label">Thị giá hiện tại:</span>
+            <span class="num-mono text-primary fw-bold fs-6">${Number(stk.currentPrice).toLocaleString('vi-VN')} đ</span>
+          </div>
+
+          <div class="stock-card-row">
+            <span class="label">Nắm giữ / Giá trị vốn:</span>
+            <span class="num-mono text-dark fw-bold">${m.shares.toLocaleString('vi-VN')} CP (${(m.totalHoldingValue / 1000000).toFixed(1)} tr)</span>
+          </div>
+
+          ${stk.stockType === 'DIVIDEND' ? `
+          <div class="stock-card-row">
+            <span class="label">Cổ tức mặt nhận / năm:</span>
+            <span class="num-mono text-success fw-bold">${m.annualDivReceived.toLocaleString('vi-VN')} đ</span>
+          </div>` : `
+          <div class="stock-card-row">
+            <span class="label">Định giá P/B hiện tại:</span>
+            <span>${m.valDisplay}</span>
+          </div>`}
+
+          <div class="stock-card-row pt-2 border-top">
+            <span class="label">Vùng mua Gom (G1):</span>
+            <span class="num-mono text-success fw-bold">≤ ${m.g1.toLocaleString('vi-VN')} đ</span>
+          </div>
+
+          <div class="stock-card-row">
+            <span class="label">Mục tiêu Chốt (G2):</span>
+            <span class="num-mono text-danger fw-bold">≥ ${m.g2.toLocaleString('vi-VN')} đ</span>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
+            <button class="btn btn-sm btn-outline-secondary px-3" onclick="openEditModal('${key}')">
+              <i class="fa-solid fa-pen me-1"></i> Sửa
+            </button>
+            <button class="btn btn-sm btn-outline-danger px-3" onclick="deleteStock('${key}')">
+              <i class="fa-solid fa-trash me-1"></i> Xóa
+            </button>
+          </div>
+        `;
+        mobileContainer.appendChild(card);
       });
 
-      document.getElementById('statTotalStocks').innerText = total;
-      document.getElementById('statDividendStocks').innerText = divCount;
-      document.getElementById('statGrowthStocks').innerText = growthCount;
-      document.getElementById('statBuyAlerts').innerText = buyCount;
+      // Update Summary Header
+      document.getElementById('statTotalNav').innerText = totalNav.toLocaleString('vi-VN') + ' đ';
+      document.getElementById('statTotalShares').innerText = totalSharesAll.toLocaleString('vi-VN') + ' CP trong danh mục';
+      document.getElementById('statAnnualDividend').innerText = totalAnnualDividend.toLocaleString('vi-VN') + ' đ';
+      document.getElementById('statMonthlyDividend').innerText = `~${Math.round(totalAnnualDividend / 12).toLocaleString('vi-VN')} đ/tháng`;
+      document.getElementById('statTotalStocks').innerText = totalStocks + ' mã';
+      document.getElementById('statTypeBreakdown').innerText = `${divCount} Tích sản | ${growthCount} Tăng trưởng`;
+      document.getElementById('statBuyAlerts').innerText = buyCount + ' mã';
     }
 
     function toggleFormInputs() {
@@ -693,6 +753,7 @@
       document.getElementById('editKey').value = key;
       document.getElementById('inputTicker').value = stk.ticker;
       document.getElementById('inputTicker').readOnly = true;
+      document.getElementById('inputShares').value = stk.sharesCount || 0;
       document.getElementById('inputCurrentPrice').value = stk.currentPrice;
 
       if (stk.stockType === 'DIVIDEND') {
@@ -709,34 +770,28 @@
 
     function handleFormSubmit(e) {
       e.preventDefault();
-      if (!db) {
-        alert("Firebase chưa được khởi tạo!");
-        return;
-      }
+      if (!db) return alert("Firebase chưa được khởi tạo!");
 
       const key = document.getElementById('editKey').value;
       const ticker = document.getElementById('inputTicker').value.trim().toUpperCase();
       const stockType = document.getElementById('radioDividend').checked ? 'DIVIDEND' : 'GROWTH';
+      const sharesCount = Number(document.getElementById('inputShares').value) || 0;
       const currentPrice = Number(document.getElementById('inputCurrentPrice').value) || 0;
       const cashDividend = stockType === 'DIVIDEND' ? (Number(document.getElementById('inputCashDividend').value) || 0) : 0;
       const bvps = stockType === 'GROWTH' ? (Number(document.getElementById('inputBvps').value) || 0) : 0;
 
-      const data = { ticker, stockType, currentPrice, cashDividend, bvps };
+      const data = { ticker, stockType, sharesCount, currentPrice, cashDividend, bvps };
       const saveKey = key ? key : ticker;
 
       db.ref('stocks/' + saveKey).set(data).then(() => {
         stockModal.hide();
-      }).catch(err => {
-        alert("Lỗi lưu dữ liệu lên Firebase: " + err.message);
-      });
+      }).catch(err => alert("Lỗi lưu Firebase: " + err.message));
     }
 
     function deleteStock(key) {
       if (!db) return;
       if (confirm(`Xác nhận xóa mã ${key} khỏi Firebase?`)) {
-        db.ref('stocks/' + key).remove().catch(err => {
-          alert("Lỗi xóa: " + err.message);
-        });
+        db.ref('stocks/' + key).remove().catch(err => alert("Lỗi xóa: " + err.message));
       }
     }
   </script>
