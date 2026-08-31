@@ -175,7 +175,6 @@
     <div class="container-fluid p-0 d-flex justify-content-between align-items-center">
       
       <div class="d-flex align-items-center gap-2">
-        <!-- Nút Menu 3 Gạch -->
         <button class="btn btn-menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
           <i class="fa-solid fa-bars fa-lg"></i>
         </button>
@@ -188,7 +187,7 @@
       <!-- Trạng thái kết nối Firebase bên phải -->
       <div class="d-flex align-items-center">
         <span id="firebaseStatus" class="sync-status bg-secondary text-white">
-          <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Đang kết nối...
+          <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Đang tải...
         </span>
       </div>
 
@@ -214,8 +213,8 @@
         <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="openConfigModal()">
           <i class="fa-solid fa-fire text-danger"></i> Cấu Hình Firebase
         </a>
-        <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="seedDefaultDatabase()">
-          <i class="fa-solid fa-arrows-rotate text-info"></i> Nạp Dữ Liệu 6 Mã Mẫu
+        <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="seedDefaultDatabase(true)">
+          <i class="fa-solid fa-arrows-rotate text-info"></i> Khôi Phục Dữ Liệu 6 Mã Mẫu
         </a>
         <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="showFormulaModal()">
           <i class="fa-solid fa-square-root-variable text-warning"></i> Hướng Dẫn Định Giá G1/G2
@@ -394,6 +393,9 @@
             <label class="form-label fw-bold small text-muted">FIREBASE CONFIG (JSON):</label>
             <textarea id="firebaseConfigInput" class="form-control num-mono" rows="8" placeholder='{ "apiKey": "...", "databaseURL": "...", "projectId": "..." }'></textarea>
           </div>
+          <div class="alert alert-info py-2 small mb-0">
+            <i class="fa-solid fa-shield-halved me-1"></i> Lưu ý: Đảm bảo Rules trên Firebase Console đã được đặt thành <code>".read": true, ".write": true</code>.
+          </div>
         </div>
         <div class="modal-footer bg-light p-3">
           <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
@@ -464,6 +466,20 @@
     const formulaModal = new bootstrap.Modal(document.getElementById('formulaModal'));
 
     window.addEventListener('DOMContentLoaded', () => {
+      // 1. Tải trước dữ liệu từ bộ nhớ đệm (Local Cache) để không bao giờ bị trắng màn hình
+      const cached = localStorage.getItem('CACHED_STOCKS_DATA');
+      if (cached) {
+        try {
+          stocksData = JSON.parse(cached);
+          renderUI();
+        } catch (e) {}
+      } else {
+        stocksData = JSON.parse(JSON.stringify(SEED_DATA));
+        localStorage.setItem('CACHED_STOCKS_DATA', JSON.stringify(stocksData));
+        renderUI();
+      }
+
+      // 2. Khởi tạo và lắng nghe Firebase Realtime
       initFirebase();
     });
 
@@ -481,7 +497,7 @@
         updateFirebaseStatus(true, "Đã Kết Nối");
       } catch (err) {
         console.error("Lỗi khởi tạo Firebase:", err);
-        updateFirebaseStatus(false, "Chưa Cấu Hình");
+        updateFirebaseStatus(false, "Lưu Cục Bộ");
       }
     }
 
@@ -498,24 +514,33 @@
         const data = snapshot.val();
         if (data) {
           stocksData = data;
+          // Cập nhật bộ nhớ đệm an toàn
+          localStorage.setItem('CACHED_STOCKS_DATA', JSON.stringify(stocksData));
+          renderUI();
         } else {
-          stocksData = {};
-          seedDefaultDatabase(false);
+          // Nếu Database trên server thực sự trống thì đẩy dữ liệu hiện có lên thay vì ghi đè bằng 0
+          db.ref('stocks').set(stocksData);
         }
-        renderUI();
       }, (error) => {
-        console.error("Lỗi đọc Firebase:", error);
-        updateFirebaseStatus(false, "Lỗi Quyền DB");
+        console.warn("Cảnh báo Firebase:", error);
+        updateFirebaseStatus(false, "Lưu Cục Bộ");
       });
     }
 
     function seedDefaultDatabase(confirmFirst = true) {
-      if (!db) return alert("Vui lòng cấu hình Firebase trước!");
-      if (confirmFirst && !confirm("Đồng bộ dữ liệu 6 mã mẫu kèm số lượng cổ phiếu lên Firebase?")) return;
+      if (confirmFirst && !confirm("Bạn có chắc muốn khôi phục 6 mã về giá trị mặc định ban đầu?")) return;
 
-      db.ref('stocks').set(SEED_DATA).then(() => {
-        updateFirebaseStatus(true, "Đã Đồng Bộ");
-      }).catch(err => alert("Lỗi nạp dữ liệu: " + err.message));
+      stocksData = JSON.parse(JSON.stringify(SEED_DATA));
+      localStorage.setItem('CACHED_STOCKS_DATA', JSON.stringify(stocksData));
+      renderUI();
+
+      if (db) {
+        db.ref('stocks').set(SEED_DATA).then(() => {
+          updateFirebaseStatus(true, "Đã Khôi Phục");
+        }).catch(err => {
+          console.error("Lỗi sync:", err);
+        });
+      }
     }
 
     function openConfigModal() { configModal.show(); }
@@ -526,14 +551,14 @@
         const configText = document.getElementById('firebaseConfigInput').value;
         const parsed = JSON.parse(configText);
         localStorage.setItem('MY_FIREBASE_CONFIG', JSON.stringify(parsed));
-        alert("Đã lưu cấu hình! Trang sẽ tải lại.");
+        alert("Đã lưu cấu hình Firebase! Trang sẽ tải lại.");
         location.reload();
       } catch (e) {
         alert("Định dạng JSON cấu hình không hợp lệ: " + e.message);
       }
     }
 
-    // Engine tính toán
+    // Engine tính toán định lượng
     function calculateMetrics(stock) {
       const p = Number(stock.currentPrice) || 0;
       const shares = Number(stock.sharesCount) || 0;
@@ -589,7 +614,7 @@
       };
     }
 
-    // Render giao diện Hybrid Desktop + Mobile
+    // Render toàn bộ giao diện Desktop & Mobile
     function renderUI() {
       const tbody = document.getElementById('stockTableBody');
       const mobileContainer = document.getElementById('stockCardContainer');
@@ -598,8 +623,8 @@
 
       const keys = Object.keys(stocksData);
       if (keys.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" class="py-4 text-muted">Chưa có mã cổ phiếu trong cơ sở dữ liệu.</td></tr>';
-        mobileContainer.innerHTML = '<div class="text-center py-4 text-muted">Chưa có mã cổ phiếu trong cơ sở dữ liệu.</div>';
+        tbody.innerHTML = '<tr><td colspan="10" class="py-4 text-muted">Chưa có mã cổ phiếu.</td></tr>';
+        mobileContainer.innerHTML = '<div class="text-center py-4 text-muted">Chưa có mã cổ phiếu.</div>';
         return;
       }
 
@@ -717,7 +742,7 @@
         mobileContainer.appendChild(card);
       });
 
-      // Update Summary Cards
+      // Cập nhật Header
       document.getElementById('statTotalNav').innerText = totalNav.toLocaleString('vi-VN') + ' đ';
       document.getElementById('statTotalShares').innerText = totalSharesAll.toLocaleString('vi-VN') + ' CP trong danh mục';
       document.getElementById('statAnnualDividend').innerText = totalAnnualDividend.toLocaleString('vi-VN') + ' đ';
@@ -768,7 +793,6 @@
 
     function handleFormSubmit(e) {
       e.preventDefault();
-      if (!db) return alert("Firebase chưa được kết nối!");
 
       const key = document.getElementById('editKey').value;
       const ticker = document.getElementById('inputTicker').value.trim().toUpperCase();
@@ -781,15 +805,29 @@
       const data = { ticker, stockType, sharesCount, currentPrice, cashDividend, bvps };
       const saveKey = key ? key : ticker;
 
-      db.ref('stocks/' + saveKey).set(data).then(() => {
-        stockModal.hide();
-      }).catch(err => alert("Lỗi lưu dữ liệu: " + err.message));
+      // 1. Lưu ngay vào bộ nhớ máy (Local Cache) trước để bảo vệ dữ liệu tức thì
+      stocksData[saveKey] = data;
+      localStorage.setItem('CACHED_STOCKS_DATA', JSON.stringify(stocksData));
+      renderUI();
+      stockModal.hide();
+
+      // 2. Đồng bộ lên Firebase Realtime Database
+      if (db) {
+        db.ref('stocks/' + saveKey).set(data).catch(err => {
+          console.warn("Lỗi lưu Firebase (đang dùng cache máy):", err);
+        });
+      }
     }
 
     function deleteStock(key) {
-      if (!db) return;
-      if (confirm(`Xác nhận xóa mã ${key} khỏi Firebase?`)) {
-        db.ref('stocks/' + key).remove().catch(err => alert("Lỗi xóa: " + err.message));
+      if (confirm(`Xác nhận xóa mã ${key}?`)) {
+        delete stocksData[key];
+        localStorage.setItem('CACHED_STOCKS_DATA', JSON.stringify(stocksData));
+        renderUI();
+
+        if (db) {
+          db.ref('stocks/' + key).remove().catch(err => console.warn(err));
+        }
       }
     }
   </script>
