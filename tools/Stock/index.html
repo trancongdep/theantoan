@@ -117,7 +117,7 @@
 
     .sync-status {
       font-size: 0.78rem;
-      padding: 3px 8px;
+      padding: 4px 10px;
       border-radius: 12px;
     }
 
@@ -175,6 +175,7 @@
     <div class="container-fluid p-0 d-flex justify-content-between align-items-center">
       
       <div class="d-flex align-items-center gap-2">
+        <!-- Nút Menu 3 Gạch -->
         <button class="btn btn-menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
           <i class="fa-solid fa-bars fa-lg"></i>
         </button>
@@ -184,13 +185,11 @@
         </a>
       </div>
 
-      <div class="d-flex align-items-center gap-2">
-        <span id="firebaseStatus" class="sync-status bg-secondary text-white d-none d-sm-inline-block">
-          <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Đang tải...
+      <!-- Trạng thái kết nối Firebase bên phải -->
+      <div class="d-flex align-items-center">
+        <span id="firebaseStatus" class="sync-status bg-secondary text-white">
+          <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Đang kết nối...
         </span>
-        <button class="btn btn-primary btn-sm fw-bold px-2 px-md-3" onclick="openAddModal()">
-          <i class="fa-solid fa-plus me-1"></i> <span class="d-none d-sm-inline">Thêm</span> Mã
-        </button>
       </div>
 
     </div>
@@ -200,7 +199,7 @@
   <div class="offcanvas offcanvas-start offcanvas-custom" tabindex="-1" id="sidebarMenu">
     <div class="offcanvas-header border-bottom border-secondary">
       <h5 class="offcanvas-title fw-bold text-white d-flex align-items-center gap-2">
-        <i class="fa-solid fa-sliders text-warning"></i> Menu Tiện Ích
+        <i class="fa-solid fa-sliders text-warning"></i> Menu Quản Trị
       </h5>
       <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>
@@ -210,21 +209,21 @@
           <i class="fa-solid fa-chart-pie"></i> Bảng Danh Mục Đầu Tư
         </a>
         <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="openAddModal()">
-          <i class="fa-solid fa-circle-plus"></i> Thêm Mã Cổ Phiếu
+          <i class="fa-solid fa-circle-plus text-success"></i> Thêm Mã Cổ Phiếu Mới
         </a>
         <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="openConfigModal()">
           <i class="fa-solid fa-fire text-danger"></i> Cấu Hình Firebase
         </a>
         <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="seedDefaultDatabase()">
-          <i class="fa-solid fa-arrows-rotate"></i> Nạp Dữ Liệu 6 Mã Mẫu
+          <i class="fa-solid fa-arrows-rotate text-info"></i> Nạp Dữ Liệu 6 Mã Mẫu
         </a>
         <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="showFormulaModal()">
-          <i class="fa-solid fa-square-root-variable"></i> Hướng Dẫn Định Giá G1/G2
+          <i class="fa-solid fa-square-root-variable text-warning"></i> Hướng Dẫn Định Giá G1/G2
         </a>
       </div>
 
       <div class="border-top border-secondary pt-3 text-muted small">
-        <div><i class="fa-solid fa-database text-warning me-1"></i> Firebase Realtime Sync</div>
+        <div><i class="fa-solid fa-database text-warning me-1"></i> Firebase Realtime Database</div>
         <div class="mt-1">Mục tiêu hưu trí: <b>Tháng 06/2030</b></div>
       </div>
     </div>
@@ -233,13 +232,13 @@
   <!-- Main Container -->
   <div class="container-fluid px-2 px-md-4 py-3">
     
-    <!-- Tổng Hợp Tài Sản & Cổ Tức (Header Overview) -->
+    <!-- Tổng Hợp Tài Sản & Cổ Tức (Overview Cards) -->
     <div class="row g-2 mb-3">
       <div class="col-6 col-lg-3">
         <div class="card card-stat p-2 p-md-3">
           <div class="text-muted small fw-bold">TỔNG GIÁ TRỊ TÀI SẢN</div>
           <h4 class="fw-bold mb-0 text-primary fs-5 fs-md-4" id="statTotalNav">0 đ</h4>
-          <div class="small text-muted mt-1" id="statTotalShares">0 cổ phiếu</div>
+          <div class="small text-muted mt-1" id="statTotalShares">0 CP trong danh mục</div>
         </div>
       </div>
       <div class="col-6 col-lg-3">
@@ -265,7 +264,7 @@
       </div>
     </div>
 
-    <!-- Thanh Lọc / Tìm Kiếm -->
+    <!-- Thanh Lọc & Tìm Kiếm -->
     <div class="card border-0 shadow-sm p-2 mb-3">
       <div class="d-flex gap-2">
         <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Tìm kiếm mã CP..." onkeyup="renderUI()">
@@ -277,7 +276,7 @@
       </div>
     </div>
 
-    <!-- 1. GIAO DIỆN DESKTOP (TABLE VIEW) -->
+    <!-- 1. Desktop View (Table) -->
     <div class="card desktop-table-view border-0 shadow-sm">
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 text-center">
@@ -296,15 +295,15 @@
             </tr>
           </thead>
           <tbody id="stockTableBody">
-            <!-- Render Desktop Rows -->
+            <!-- Render JS Desktop -->
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- 2. GIAO DIỆN MOBILE (CARD VIEW) -->
+    <!-- 2. Mobile View (Card) -->
     <div class="mobile-card-view" id="stockCardContainer">
-      <!-- Render Mobile Cards -->
+      <!-- Render JS Mobile -->
     </div>
 
   </div>
@@ -449,7 +448,6 @@
       appId: "1:123456789:web:abcdef"
     };
 
-    // Dữ liệu mẫu chuẩn bị sẵn (kèm số lượng CP mẫu)
     const SEED_DATA = {
       "VEA": { ticker: "VEA", stockType: "DIVIDEND", sharesCount: 3500, currentPrice: 36500, cashDividend: 4800, bvps: 0 },
       "QTP": { ticker: "QTP", stockType: "DIVIDEND", sharesCount: 8000, currentPrice: 11500, cashDividend: 1500, bvps: 0 },
@@ -480,17 +478,17 @@
         }
         db = firebase.database();
         listenToFirebase();
-        updateFirebaseStatus(true, "Firebase Đã Kết Nối");
+        updateFirebaseStatus(true, "Đã Kết Nối");
       } catch (err) {
         console.error("Lỗi khởi tạo Firebase:", err);
-        updateFirebaseStatus(false, "Chưa Cấu Hình DB");
+        updateFirebaseStatus(false, "Chưa Cấu Hình");
       }
     }
 
     function updateFirebaseStatus(isConnected, text) {
       const el = document.getElementById('firebaseStatus');
-      el.className = `sync-status ${isConnected ? 'bg-success' : 'bg-warning text-dark'} d-none d-sm-inline-block`;
-      el.innerHTML = `<i class="fa-solid ${isConnected ? 'fa-bolt' : 'fa-triangle-exclamation'} me-1"></i> ${text}`;
+      el.className = `sync-status ${isConnected ? 'bg-success' : 'bg-warning text-dark'}`;
+      el.innerHTML = `<i class="fa-solid ${isConnected ? 'fa-circle-check' : 'fa-triangle-exclamation'} me-1"></i> ${text}`;
     }
 
     function listenToFirebase() {
@@ -516,7 +514,7 @@
       if (confirmFirst && !confirm("Đồng bộ dữ liệu 6 mã mẫu kèm số lượng cổ phiếu lên Firebase?")) return;
 
       db.ref('stocks').set(SEED_DATA).then(() => {
-        updateFirebaseStatus(true, "Đã Nạp Mẫu Thành Công");
+        updateFirebaseStatus(true, "Đã Đồng Bộ");
       }).catch(err => alert("Lỗi nạp dữ liệu: " + err.message));
     }
 
@@ -591,7 +589,7 @@
       };
     }
 
-    // Render cả Desktop & Mobile UI
+    // Render giao diện Hybrid Desktop + Mobile
     function renderUI() {
       const tbody = document.getElementById('stockTableBody');
       const mobileContainer = document.getElementById('stockCardContainer');
@@ -600,8 +598,8 @@
 
       const keys = Object.keys(stocksData);
       if (keys.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" class="py-4 text-muted">Chưa có mã cổ phiếu trong Firebase Database.</td></tr>';
-        mobileContainer.innerHTML = '<div class="text-center py-4 text-muted">Chưa có mã cổ phiếu trong Firebase Database.</div>';
+        tbody.innerHTML = '<tr><td colspan="10" class="py-4 text-muted">Chưa có mã cổ phiếu trong cơ sở dữ liệu.</td></tr>';
+        mobileContainer.innerHTML = '<div class="text-center py-4 text-muted">Chưa có mã cổ phiếu trong cơ sở dữ liệu.</div>';
         return;
       }
 
@@ -661,7 +659,7 @@
         `;
         tbody.appendChild(tr);
 
-        // 2. Render Mobile Card
+        // 2. Render Mobile Card View
         const card = document.createElement('div');
         card.className = 'stock-card';
         card.innerHTML = `
@@ -719,7 +717,7 @@
         mobileContainer.appendChild(card);
       });
 
-      // Update Summary Header
+      // Update Summary Cards
       document.getElementById('statTotalNav').innerText = totalNav.toLocaleString('vi-VN') + ' đ';
       document.getElementById('statTotalShares').innerText = totalSharesAll.toLocaleString('vi-VN') + ' CP trong danh mục';
       document.getElementById('statAnnualDividend').innerText = totalAnnualDividend.toLocaleString('vi-VN') + ' đ';
@@ -770,7 +768,7 @@
 
     function handleFormSubmit(e) {
       e.preventDefault();
-      if (!db) return alert("Firebase chưa được khởi tạo!");
+      if (!db) return alert("Firebase chưa được kết nối!");
 
       const key = document.getElementById('editKey').value;
       const ticker = document.getElementById('inputTicker').value.trim().toUpperCase();
@@ -785,7 +783,7 @@
 
       db.ref('stocks/' + saveKey).set(data).then(() => {
         stockModal.hide();
-      }).catch(err => alert("Lỗi lưu Firebase: " + err.message));
+      }).catch(err => alert("Lỗi lưu dữ liệu: " + err.message));
     }
 
     function deleteStock(key) {
