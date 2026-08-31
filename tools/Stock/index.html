@@ -9,6 +9,10 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   
+  <!-- Firebase SDK (Compat v9) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <style>
     :root {
       --primary-color: #1e3a8a;
@@ -136,6 +140,12 @@
       font-family: 'Consolas', 'SF Mono', monospace;
       font-weight: 600;
     }
+
+    .sync-status {
+      font-size: 0.78rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+    }
   </style>
 </head>
 <body>
@@ -156,8 +166,11 @@
         </a>
       </div>
 
-      <!-- Quick Action Buttons -->
-      <div class="d-flex gap-2">
+      <!-- Trạng thái kết nối Firebase & Nút thêm nhanh -->
+      <div class="d-flex align-items-center gap-2">
+        <span id="firebaseStatus" class="sync-status bg-secondary text-white d-none d-sm-inline-block">
+          <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Đang kết nối...
+        </span>
         <button class="btn btn-primary btn-sm fw-bold px-3" onclick="openAddModal()">
           <i class="fa-solid fa-plus me-1"></i> Thêm Mã Mới
         </button>
@@ -176,29 +189,32 @@
     </div>
     <div class="offcanvas-body d-flex flex-column justify-content-between p-3">
       <div>
-        <a href="#" class="sidebar-link active" data-bs-dismiss="offcanvas" onclick="renderTable()">
+        <a href="#" class="sidebar-link active" data-bs-dismiss="offcanvas">
           <i class="fa-solid fa-chart-line"></i> Bảng Theo Dõi Định Giá
         </a>
         <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="openAddModal()">
           <i class="fa-solid fa-circle-plus"></i> Thêm Mã Cổ Phiếu
         </a>
-        <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="resetDefaultDatabase()">
-          <i class="fa-solid fa-arrows-rotate"></i> Nạp Dữ Liệu 6 Mã Mẫu
+        <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="openConfigModal()">
+          <i class="fa-solid fa-fire text-danger"></i> Cấu Hình Firebase
+        </a>
+        <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="seedDefaultDatabase()">
+          <i class="fa-solid fa-arrows-rotate"></i> Nạp Dữ Liệu 6 Mã Mẫu Lên Firebase
         </a>
         <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="showFormulaModal()">
           <i class="fa-solid fa-square-root-variable"></i> Hướng Dẫn Công Thức G1/G2
         </a>
       </div>
 
-      <!-- Footer trong Sidebar -->
+      <!-- Footer Sidebar -->
       <div class="border-top border-secondary pt-3 text-muted small">
-        <div><i class="fa-solid fa-code me-1 text-info"></i> Hệ thống Quản trị Danh mục</div>
-        <div class="mt-1">Mục tiêu Tài chính: <b>Tháng 06/2030</b></div>
+        <div><i class="fa-solid fa-database text-warning me-1"></i> Firebase Realtime Sync</div>
+        <div class="mt-1">Mục tiêu hưu trí: <b>Tháng 06/2030</b></div>
       </div>
     </div>
   </div>
 
-  <!-- Main Container -->
+  <!-- Khung Nội Dung Chính -->
   <div class="container-fluid px-3 px-md-4 py-4">
     
     <!-- Dashboard Stats -->
@@ -234,7 +250,7 @@
           <div class="d-flex justify-content-between align-items-center">
             <div>
               <div class="text-muted small fw-bold">TĂNG TRƯỞNG NH</div>
-              <h3 class="fw-bold mb-0 text-purple" style="color: #7e22ce;" id="statGrowthStocks">0</h3>
+              <h3 class="fw-bold mb-0" style="color: #7e22ce;" id="statGrowthStocks">0</h3>
             </div>
             <div class="bg-light p-3 rounded-circle text-purple">
               <i class="fa-solid fa-building-columns fa-lg"></i>
@@ -260,14 +276,14 @@
     <!-- Stock Valuation Table -->
     <div class="table-container">
       
-      <!-- Table Header & Controls -->
+      <!-- Table Header & Filter -->
       <div class="p-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div class="d-flex align-items-center gap-2">
-          <h5 class="fw-bold mb-0 text-dark">Bảng Theo Dõi & Định Giá Khuyến Nghị</h5>
+          <h5 class="fw-bold mb-0 text-dark">Bảng Theo Dõi & Định Giá Khuyến Nghị (Firebase)</h5>
         </div>
         <div class="d-flex gap-2 align-items-center">
-          <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Tìm kiếm mã CP..." onkeyup="filterStocks()">
-          <select id="filterType" class="form-select form-select-sm" onchange="filterStocks()">
+          <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Tìm kiếm mã CP..." onkeyup="renderTable()">
+          <select id="filterType" class="form-select form-select-sm" onchange="renderTable()">
             <option value="ALL">Tất cả danh mục</option>
             <option value="DIVIDEND">💵 Tích sản Dòng tiền</option>
             <option value="GROWTH">📈 Tăng trưởng Ngân hàng</option>
@@ -292,7 +308,11 @@
             </tr>
           </thead>
           <tbody id="stockTableBody">
-            <!-- Render JS -->
+            <tr>
+              <td colspan="9" class="py-4 text-muted">
+                <i class="fa-solid fa-circle-notch fa-spin me-2"></i> Đang tải dữ liệu từ Firebase...
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -311,12 +331,12 @@
         </div>
         <form id="stockForm" onsubmit="handleFormSubmit(event)">
           <div class="modal-body p-4">
-            <input type="hidden" id="editIndex" value="-1">
+            <input type="hidden" id="editKey" value="">
 
             <!-- Ticker -->
             <div class="mb-3">
               <label class="form-label fw-bold small text-muted">MÃ CỔ PHIẾU (TICKER):</label>
-              <input type="text" id="inputTicker" class="form-control fw-bold text-uppercase" placeholder="VD: VEA, MBB..." required>
+              <input type="text" id="inputTicker" class="form-control fw-bold text-uppercase" placeholder="VD: VEA, MBB, ACB..." required>
             </div>
 
             <!-- Loại Hình Chiến Lược -->
@@ -361,9 +381,31 @@
           </div>
           <div class="modal-footer bg-light p-3">
             <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Hủy</button>
-            <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold">Lưu Thông Tin</button>
+            <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold">Lưu Lên Firebase</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Cấu Hình Firebase -->
+  <div class="modal fade" id="configModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-fire text-danger me-2"></i>Cấu Hình Firebase Realtime DB</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-muted">FIREBASE CONFIG (JSON):</label>
+            <textarea id="firebaseConfigInput" class="form-control num-mono" rows="8" placeholder='{ "apiKey": "...", "databaseURL": "...", "projectId": "..." }'></textarea>
+          </div>
+        </div>
+        <div class="modal-footer bg-light p-3">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+          <button type="button" class="btn btn-success btn-sm fw-bold px-3" onclick="saveFirebaseConfig()">Lưu Cấu Hình</button>
+        </div>
       </div>
     </div>
   </div>
@@ -386,7 +428,7 @@
             </ul>
           </div>
           <div class="card p-3 bg-light border">
-            <h6 class="fw-bold text-purple" style="color: #7e22ce;"><i class="fa-solid fa-building-columns me-2"></i>2. Cổ Phiếu Tăng Trưởng Ngân Hàng (MBB, ACB, TCB...)</h6>
+            <h6 class="fw-bold" style="color: #7e22ce;"><i class="fa-solid fa-building-columns me-2"></i>2. Cổ Phiếu Tăng Trưởng Ngân Hàng (MBB, ACB, TCB...)</h6>
             <p class="mb-1">Định giá dựa trên Giá trị sổ sách (BVPS) và định giá lại theo P/B:</p>
             <ul>
               <li><b>Vùng Gom Mua (G1):</b> <code>G1 = BVPS × 1.10</code> (Định giá an toàn P/B ≤ 1.1x).</li>
@@ -401,49 +443,112 @@
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Application Logic JS -->
+  <!-- Firebase & App Logic JS -->
   <script>
-    const DEFAULT_STOCKS = [
-      { ticker: "VEA", stockType: "DIVIDEND", currentPrice: 36500, cashDividend: 4800, bvps: 0 },
-      { ticker: "QTP", stockType: "DIVIDEND", currentPrice: 11500, cashDividend: 1500, bvps: 0 },
-      { ticker: "SJD", stockType: "DIVIDEND", currentPrice: 14200, cashDividend: 1600, bvps: 0 },
-      { ticker: "MBB", stockType: "GROWTH", currentPrice: 22500, cashDividend: 0, bvps: 20500 },
-      { ticker: "ACB", stockType: "GROWTH", currentPrice: 24800, cashDividend: 0, bvps: 21000 },
-      { ticker: "TCB", stockType: "GROWTH", currentPrice: 24000, cashDividend: 0, bvps: 21500 }
-    ];
+    // Cấu hình Firebase mặc định (Tự động lưu vào LocalStorage để tái sử dụng)
+    const DEFAULT_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyDummyKey_ReplaceWithYourActualKey",
+      authDomain: "portfolio-management.firebaseapp.com",
+      databaseURL: "https://portfolio-management-default-rtdb.firebaseio.com",
+      projectId: "portfolio-management",
+      storageBucket: "portfolio-management.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
+    };
 
-    let stocks = [];
+    const SEED_DATA = {
+      "VEA": { ticker: "VEA", stockType: "DIVIDEND", currentPrice: 36500, cashDividend: 4800, bvps: 0 },
+      "QTP": { ticker: "QTP", stockType: "DIVIDEND", currentPrice: 11500, cashDividend: 1500, bvps: 0 },
+      "SJD": { ticker: "SJD", stockType: "DIVIDEND", currentPrice: 14200, cashDividend: 1600, bvps: 0 },
+      "MBB": { ticker: "MBB", stockType: "GROWTH", currentPrice: 22500, cashDividend: 0, bvps: 20500 },
+      "ACB": { ticker: "ACB", stockType: "GROWTH", currentPrice: 24800, cashDividend: 0, bvps: 21000 },
+      "TCB": { ticker: "TCB", stockType: "GROWTH", currentPrice: 24000, cashDividend: 0, bvps: 21500 }
+    };
+
+    let db = null;
+    let stocksData = {};
     const stockModal = new bootstrap.Modal(document.getElementById('stockModal'));
+    const configModal = new bootstrap.Modal(document.getElementById('configModal'));
     const formulaModal = new bootstrap.Modal(document.getElementById('formulaModal'));
 
+    // Khởi tạo ứng dụng
     window.addEventListener('DOMContentLoaded', () => {
-      loadStocks();
+      initFirebase();
     });
 
-    function loadStocks() {
-      const saved = localStorage.getItem('INVEST_APP_DATA');
-      if (saved) {
-        try {
-          stocks = JSON.parse(saved);
-        } catch (e) {
-          stocks = [...DEFAULT_STOCKS];
+    function initFirebase() {
+      const savedConfig = localStorage.getItem('MY_FIREBASE_CONFIG');
+      const config = savedConfig ? JSON.parse(savedConfig) : DEFAULT_FIREBASE_CONFIG;
+      document.getElementById('firebaseConfigInput').value = JSON.stringify(config, null, 2);
+
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(config);
         }
-      } else {
-        stocks = [...DEFAULT_STOCKS];
-        saveStocks();
+        db = firebase.database();
+        listenToFirebase();
+        updateFirebaseStatus(true, "Firebase Đã Kết Nối");
+      } catch (err) {
+        console.error("Lỗi khởi tạo Firebase:", err);
+        updateFirebaseStatus(false, "Chưa Cấu Hình DB");
       }
-      renderTable();
     }
 
-    function saveStocks() {
-      localStorage.setItem('INVEST_APP_DATA', JSON.stringify(stocks));
+    function updateFirebaseStatus(isConnected, text) {
+      const el = document.getElementById('firebaseStatus');
+      el.className = `sync-status ${isConnected ? 'bg-success' : 'bg-warning text-dark'} d-none d-sm-inline-block`;
+      el.innerHTML = `<i class="fa-solid ${isConnected ? 'fa-bolt' : 'fa-triangle-exclamation'} me-1"></i> ${text}`;
     }
 
-    function resetDefaultDatabase() {
-      if (confirm("Khôi phục danh mục mẫu mặc định (VEA, QTP, SJD, MBB, ACB, TCB)?")) {
-        stocks = JSON.parse(JSON.stringify(DEFAULT_STOCKS));
-        saveStocks();
+    // Lắng nghe dữ liệu realtime từ Firebase
+    function listenToFirebase() {
+      if (!db) return;
+      const stocksRef = db.ref('stocks');
+      stocksRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          stocksData = data;
+        } else {
+          stocksData = {};
+          // Nếu database trống, nạp mặc định
+          seedDefaultDatabase(false);
+        }
         renderTable();
+      }, (error) => {
+        console.error("Lỗi đọc Firebase:", error);
+        updateFirebaseStatus(false, "Lỗi Quyền DB");
+      });
+    }
+
+    // Nạp dữ liệu mẫu 6 mã lên Firebase
+    function seedDefaultDatabase(confirmFirst = true) {
+      if (!db) {
+        alert("Vui lòng cấu hình Firebase trước!");
+        return;
+      }
+      if (confirmFirst && !confirm("Đồng bộ 6 mã cổ phiếu mẫu (VEA, QTP, SJD, MBB, ACB, TCB) lên Firebase?")) {
+        return;
+      }
+      db.ref('stocks').set(SEED_DATA).then(() => {
+        updateFirebaseStatus(true, "Đã Nạp Mẫu Thành Công");
+      }).catch(err => {
+        alert("Lỗi nạp dữ liệu: " + err.message);
+      });
+    }
+
+    function openConfigModal() {
+      configModal.show();
+    }
+
+    function saveFirebaseConfig() {
+      try {
+        const configText = document.getElementById('firebaseConfigInput').value;
+        const parsed = JSON.parse(configText);
+        localStorage.setItem('MY_FIREBASE_CONFIG', JSON.stringify(parsed));
+        alert("Đã lưu cấu hình Firebase! Trang sẽ tải lại.");
+        location.reload();
+      } catch (e) {
+        alert("Định dạng JSON cấu hình không hợp lệ: " + e.message);
       }
     }
 
@@ -451,6 +556,7 @@
       formulaModal.show();
     }
 
+    // Tính toán số liệu G1, G2
     function calculateMetrics(stock) {
       const p = Number(stock.currentPrice) || 0;
       let g1 = 0;
@@ -498,11 +604,18 @@
       };
     }
 
+    // Render bảng từ dữ liệu Firebase
     function renderTable() {
       const tbody = document.getElementById('stockTableBody');
       tbody.innerHTML = '';
 
-      let total = stocks.length;
+      const keys = Object.keys(stocksData);
+      if (keys.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="py-4 text-muted">Chưa có mã cổ phiếu nào trong Firebase Database.</td></tr>';
+        return;
+      }
+
+      let total = 0;
       let divCount = 0;
       let growthCount = 0;
       let buyCount = 0;
@@ -510,7 +623,9 @@
       const filter = document.getElementById('filterType').value;
       const search = document.getElementById('searchInput').value.trim().toUpperCase();
 
-      stocks.forEach((stk, idx) => {
+      keys.forEach((key) => {
+        const stk = stocksData[key];
+        total++;
         if (stk.stockType === "DIVIDEND") divCount++;
         else growthCount++;
 
@@ -536,10 +651,10 @@
           <td>${m.statusHtml}</td>
           <td>
             <div class="btn-group">
-              <button class="btn btn-sm btn-outline-secondary py-1 px-2" onclick="openEditModal(${idx})" title="Sửa">
+              <button class="btn btn-sm btn-outline-secondary py-1 px-2" onclick="openEditModal('${key}')" title="Sửa">
                 <i class="fa-solid fa-pen"></i>
               </button>
-              <button class="btn btn-sm btn-outline-danger py-1 px-2" onclick="deleteStock(${idx})" title="Xóa">
+              <button class="btn btn-sm btn-outline-danger py-1 px-2" onclick="deleteStock('${key}')" title="Xóa">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
@@ -564,18 +679,20 @@
 
     function openAddModal() {
       document.getElementById('modalTitle').innerText = 'Thêm Mã Cổ Phiếu Mới';
-      document.getElementById('editIndex').value = '-1';
+      document.getElementById('editKey').value = '';
       document.getElementById('stockForm').reset();
       document.getElementById('radioDividend').checked = true;
+      document.getElementById('inputTicker').readOnly = false;
       toggleFormInputs();
       stockModal.show();
     }
 
-    function openEditModal(idx) {
-      const stk = stocks[idx];
+    function openEditModal(key) {
+      const stk = stocksData[key];
       document.getElementById('modalTitle').innerText = 'Cập Nhật Mã ' + stk.ticker;
-      document.getElementById('editIndex').value = idx;
+      document.getElementById('editKey').value = key;
       document.getElementById('inputTicker').value = stk.ticker;
+      document.getElementById('inputTicker').readOnly = true;
       document.getElementById('inputCurrentPrice').value = stk.currentPrice;
 
       if (stk.stockType === 'DIVIDEND') {
@@ -592,7 +709,12 @@
 
     function handleFormSubmit(e) {
       e.preventDefault();
-      const idx = parseInt(document.getElementById('editIndex').value);
+      if (!db) {
+        alert("Firebase chưa được khởi tạo!");
+        return;
+      }
+
+      const key = document.getElementById('editKey').value;
       const ticker = document.getElementById('inputTicker').value.trim().toUpperCase();
       const stockType = document.getElementById('radioDividend').checked ? 'DIVIDEND' : 'GROWTH';
       const currentPrice = Number(document.getElementById('inputCurrentPrice').value) || 0;
@@ -600,25 +722,22 @@
       const bvps = stockType === 'GROWTH' ? (Number(document.getElementById('inputBvps').value) || 0) : 0;
 
       const data = { ticker, stockType, currentPrice, cashDividend, bvps };
+      const saveKey = key ? key : ticker;
 
-      if (idx >= 0) stocks[idx] = data;
-      else stocks.push(data);
-
-      saveStocks();
-      renderTable();
-      stockModal.hide();
+      db.ref('stocks/' + saveKey).set(data).then(() => {
+        stockModal.hide();
+      }).catch(err => {
+        alert("Lỗi lưu dữ liệu lên Firebase: " + err.message);
+      });
     }
 
-    function deleteStock(idx) {
-      if (confirm(`Xóa mã ${stocks[idx].ticker} khỏi bảng theo dõi?`)) {
-        stocks.splice(idx, 1);
-        saveStocks();
-        renderTable();
+    function deleteStock(key) {
+      if (!db) return;
+      if (confirm(`Xác nhận xóa mã ${key} khỏi Firebase?`)) {
+        db.ref('stocks/' + key).remove().catch(err => {
+          alert("Lỗi xóa: " + err.message);
+        });
       }
-    }
-
-    function filterStocks() {
-      renderTable();
     }
   </script>
 </body>
