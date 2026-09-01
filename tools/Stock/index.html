@@ -223,6 +223,15 @@
             color: #58a6ff;
         }
 
+        .tag-exdate {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(210, 153, 34, 0.15);
+            color: #e3b341;
+            font-weight: 600;
+        }
+
         .stock-price-display {
             text-align: right;
         }
@@ -464,7 +473,7 @@
             background-color: #388bfd;
         }
 
-        /* BẢNG LỊCH SỬ NHẬT KÝ MUA TRONG DRAWER */
+        /* BẢNG LỊCH SỬ NHẬT KÝ MUA */
         .tx-table-container {
             max-height: 220px;
             overflow-y: auto;
@@ -657,7 +666,7 @@
             <i class="fa-solid fa-vault"></i>
             <div>
                 <h1>Sổ tay tích sản ver 1.0</h1>
-                <span>Quản Trị Định Lượng & Lịch Sử Tích Sản 2030</span>
+                <span>Quản Trị Định Lượng & Lịch Trình Chốt Quyền 2030</span>
             </div>
         </div>
         <button class="btn-menu-toggle" onclick="toggleDrawer(true)" title="Mở menu sổ lệnh & tái cân bằng">
@@ -694,8 +703,8 @@
         <!-- SECTION HEADER -->
         <div class="section-header">
             <div class="section-title">
-                <i class="fa-solid fa-layer-group" style="color: #58a6ff;"></i>
-                Danh Mục 7 Mã Chiến Lược (Tổng Hợp)
+                <i class="fa-solid fa-calendar-days" style="color: #58a6ff;"></i>
+                Danh Mục Sắp Xếp Theo Thứ Tự Ngày Chốt Quyền
             </div>
             <div class="section-hint">
                 <i class="fa-solid fa-arrow-pointer"></i> Bấm vào thẻ để xem nhật ký mua & kỹ thuật
@@ -704,7 +713,7 @@
 
         <!-- STOCKS GRID -->
         <div class="stocks-grid" id="stocks-container">
-            <!-- Render qua JS -->
+            <!-- Render danh sách cổ phiếu qua JS (Đã sort theo ngày chốt quyền) -->
         </div>
     </main>
 
@@ -740,13 +749,13 @@
                         <div class="drawer-input-group">
                             <label>Mã CP:</label>
                             <select id="tx-ticker">
-                                <option value="VEA">VEA</option>
-                                <option value="TCB">TCB</option>
-                                <option value="HND">HND</option>
-                                <option value="QTP">QTP</option>
-                                <option value="MBB">MBB</option>
-                                <option value="SJD">SJD</option>
-                                <option value="ACB">ACB</option>
+                                <option value="TCB">TCB (Chốt 18/09/2026)</option>
+                                <option value="HND">HND (Chốt 25/09/2026)</option>
+                                <option value="MBB">MBB (Chốt 08/10/2026)</option>
+                                <option value="VEA">VEA (Chốt 22/10/2026)</option>
+                                <option value="QTP">QTP (Chốt 05/11/2026)</option>
+                                <option value="SJD">SJD (Chốt 19/11/2026)</option>
+                                <option value="ACB">ACB (Đã hoàn tất)</option>
                             </select>
                         </div>
                         <div class="drawer-input-group">
@@ -806,7 +815,7 @@
         </div>
     </div>
 
-    <!-- MODAL POPUP XEM CHI TIẾT CỔ PHIẾU & LỊCH SỬ RIÊNG TỪNG MÃ -->
+    <!-- MODAL POPUP XEM CHI TIẾT CỔ PHIẾU -->
     <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnOutside(event)">
         <div class="modal-content" id="modal-content-box">
             <!-- Render chi tiết qua JS khi click vào thẻ -->
@@ -814,18 +823,21 @@
     </div>
 
     <script>
-        // DỮ LIỆU ĐỊNH LƯỢNG 7 MÃ CHIẾN LƯỢC
-        const portfolioData = [
-            { ticker: "VEA", exchange: "UPCoM", group: "income", price: 35200, g1: 38000, g2: 55000, dividendCash: 4560, schedule: "Chốt T10 - T11/2026", ma20: 35000, ma200: 34800, pBreak150: 38000, fundamental: "Sạch nợ dài hạn, tiền mặt 14.500 tỷ, ROE 29%", priority: 1 },
-            { ticker: "TCB", exchange: "HOSE", group: "growth", price: 24000, g1: 23650, g2: 32000, dividendCash: 1425, schedule: "Chốt T9 - T10 (1.4k TM + 15-20% CP)", ma20: 23800, ma200: 22500, pBreak150: 25500, fundamental: "CAR > 15%, CASA ~40%, ROE ~19%", priority: 2 },
-            { ticker: "HND", exchange: "UPCoM", group: "income", price: 9600, g1: 10000, g2: 14500, dividendCash: 950, schedule: "Chốt T9 - T10/2026", ma20: 9550, ma200: 9750, pBreak150: 10500, fundamental: "Sạch 100% nợ vay dài hạn, LN 6T > 508 tỷ", priority: 3 },
-            { ticker: "MBB", exchange: "HOSE", group: "growth", price: 21050, g1: 22550, g2: 30000, dividendCash: 475, schedule: "Chốt T10 (15-20% CP + 500đ TM)", ma20: 21300, ma200: 20900, pBreak150: 24000, fundamental: "Top 1 CASA, LLR > 100%, ROE ~23%", priority: 4 },
-            { ticker: "SJD", exchange: "HOSE", group: "income", price: 13950, g1: 12700, g2: 19000, dividendCash: 1520, schedule: "Chốt T11/2026", ma20: 13900, ma200: 13600, pBreak150: 15200, fundamental: "Khấu hao gần hết, sạch nợ, FCF dồi dào", priority: 5 },
-            { ticker: "QTP", exchange: "UPCoM", group: "income", price: 11100, g1: 11900, g2: 16000, dividendCash: 475, schedule: "Chốt đợt 2: T10 - T11/2026", ma20: 11050, ma200: 11200, pBreak150: 12500, fundamental: "Khấu hao xong, sạch nợ dài hạn, ROE ~15%", priority: 6 },
-            { ticker: "ACB", exchange: "HOSE", group: "growth", price: 22650, g1: 23100, g2: 32000, dividendCash: 0, schedule: "Đã hoàn tất chia cổ tức 2026", ma20: 22500, ma200: 21800, pBreak150: 24500, fundamental: "NPL < 1.3%, không rủi ro trái phiếu, ROE > 23%", priority: 7 }
+        // DỮ LIỆU ĐỊNH LƯỢNG 7 MÃ CHIẾN LƯỢC (KÈM NGÀY CHỐT QUYỀN VÀ SẮP XẾP THEO THỨ TỰ THỜI GIAN)
+        const rawPortfolioData = [
+            { ticker: "TCB", exchange: "HOSE", group: "growth", price: 24000, g1: 23650, g2: 32000, dividendCash: 1425, exDate: "2026-09-18", exDateDisplay: "18/09/2026", schedule: "Chốt 18/09/2026 (1.425đ TM + 15% CP)", ma20: 23800, ma200: 22500, pBreak150: 25500, fundamental: "CAR > 15%, CASA ~40%, ROE ~19%" },
+            { ticker: "HND", exchange: "UPCoM", group: "income", price: 9600, g1: 10000, g2: 14500, dividendCash: 950, exDate: "2026-09-25", exDateDisplay: "25/09/2026", schedule: "Chốt 25/09/2026 (950đ TM)", ma20: 9550, ma200: 9750, pBreak150: 10500, fundamental: "Sạch 100% nợ vay dài hạn, LN 6T > 508 tỷ" },
+            { ticker: "MBB", exchange: "HOSE", group: "growth", price: 21050, g1: 22550, g2: 30000, dividendCash: 475, exDate: "2026-10-08", exDateDisplay: "08/10/2026", schedule: "Chốt 08/10/2026 (15% CP + 475đ TM)", ma20: 21300, ma200: 20900, pBreak150: 24000, fundamental: "Top 1 CASA, LLR > 100%, ROE ~23%" },
+            { ticker: "VEA", exchange: "UPCoM", group: "income", price: 35200, g1: 38000, g2: 55000, dividendCash: 4560, exDate: "2026-10-22", exDateDisplay: "22/10/2026", schedule: "Chốt 22/10/2026 (4.560đ TM ròng)", ma20: 35000, ma200: 34800, pBreak150: 38000, fundamental: "Sạch nợ dài hạn, tiền mặt 14.500 tỷ, ROE 29%" },
+            { ticker: "QTP", exchange: "UPCoM", group: "income", price: 11100, g1: 11900, g2: 16000, dividendCash: 475, exDate: "2026-11-05", exDateDisplay: "05/11/2026", schedule: "Chốt đợt 2: 05/11/2026 (475đ TM)", ma20: 11050, ma200: 11200, pBreak150: 12500, fundamental: "Khấu hao xong, sạch nợ dài hạn, ROE ~15%" },
+            { ticker: "SJD", exchange: "HOSE", group: "income", price: 13950, g1: 12700, g2: 19000, dividendCash: 1520, exDate: "2026-11-19", exDateDisplay: "19/11/2026", schedule: "Chốt 19/11/2026 (1.520đ TM)", ma20: 13900, ma200: 13600, pBreak150: 15200, fundamental: "Khấu hao gần hết, sạch nợ, FCF dồi dào" },
+            { ticker: "ACB", exchange: "HOSE", group: "growth", price: 22650, g1: 23100, g2: 32000, dividendCash: 0, exDate: "2099-12-31", exDateDisplay: "Đã hoàn tất", schedule: "Đã hoàn tất chia cổ tức năm 2026", ma20: 22500, ma200: 21800, pBreak150: 24500, fundamental: "NPL < 1.3%, không rủi ro trái phiếu, ROE > 23%" }
         ];
 
-        // SỔ LỆNH GIAO DỊCH LƯU TRỮ (MỖI MÃ CÓ ÍT NHẤT 3 MỤC: SỐ LƯỢNG, GIÁ MUA, NGÀY MUA)
+        // SẮP XẾP DANH MỤC THEO THỨ TỰ NGÀY CHỐT QUYỀN TĂNG DẦN (GẦN NHẤT LÊN ĐẦU)
+        const portfolioData = rawPortfolioData.sort((a, b) => new Date(a.exDate) - new Date(b.exDate));
+
+        // SỔ LỆNH GIAO DỊCH LƯU TRỮ
         let transactions = [
             { id: 1, ticker: "VEA", qty: 6800, buyPrice: 35000, date: "2026-08-15" },
             { id: 2, ticker: "QTP", qty: 400, buyPrice: 11000, date: "2026-08-20" }
@@ -884,7 +896,7 @@
             });
         }
 
-        // THUẬT TOÁN TÍNH TỔNG HỢP THEO TỪNG MÃ (SỐ LƯỢNG, GIÁ VỐN BÌNH QUÂN, TỔNG TIỀN VỐN)
+        // THUẬT TOÁN TÍNH TỔNG HỢP THEO TỪNG MÃ
         function getAggregatedHoldings() {
             const aggregated = {};
             portfolioData.forEach(p => {
@@ -1045,10 +1057,11 @@
             let actionPlanHtml = "";
             if (newCash > 0) {
                 actionPlanHtml = `
-                    <div style="color: #3fb950; font-weight: 600; margin-bottom: 4px;">Kế hoạch giải ngân dòng tiền mới:</div>
+                    <div style="color: #3fb950; font-weight: 600; margin-bottom: 4px;">Kế hoạch giải ngân dòng tiền mới (Theo lịch chốt):</div>
                     <ul style="padding-left: 16px; margin: 0; font-size: 11.5px; color: #c9d1d9;">
-                        <li><strong>Dồn Bank:</strong> Mua <strong>+1.600 TCB</strong> (~38,4 tr) đưa Bank tăng dần.</li>
-                        <li><strong>Đón Cổ tức T10:</strong> Mua <strong>+1.900 VEA</strong> (~66,88 tr) & <strong>+2.900 HND</strong> (~27,84 tr).</li>
+                        <li><strong>18/09 (TCB):</strong> Mua <strong>+1.600 TCB</strong> (~38,4 tr) đón chốt quyền sớm nhất.</li>
+                        <li><strong>25/09 (HND):</strong> Mua <strong>+2.900 HND</strong> (~27,84 tr) nhận cổ tức 950đ.</li>
+                        <li><strong>22/10 (VEA):</strong> Mua <strong>+1.900 VEA</strong> (~66,88 tr) nhận cổ tức 4.560đ.</li>
                         <li><strong>Dư tiền mặt:</strong> ~880.000 đ gửi két MM linh hoạt qua đêm.</li>
                     </ul>
                 `;
@@ -1073,7 +1086,7 @@
                 ${actionPlanHtml}
             `;
 
-            // RENDER THẺ CỔ PHIẾU TỔNG HỢP TRÊN TRANG CHÍNH
+            // RENDER THẺ CỔ PHIẾU TỔNG HỢP (ĐÃ SẮP XẾP THEO LỊCH CHỐT QUYỀN)
             const container = document.getElementById("stocks-container");
             container.innerHTML = "";
             
@@ -1097,6 +1110,9 @@
                             <span class="tag-exchange">${stock.exchange}</span>
                             <span class="tag-group ${isIncome ? 'tag-income' : 'tag-growth'}">
                                 ${isIncome ? 'Dòng Tiền' : 'Tăng Trưởng'}
+                            </span>
+                            <span class="tag-exdate">
+                                <i class="fa-solid fa-calendar-check"></i> ${stock.exDateDisplay}
                             </span>
                         </div>
                         <div class="stock-price-display">
@@ -1139,7 +1155,7 @@
             });
         }
 
-        // HÀM MỞ POPUP XEM CHI TIẾT KỸ THUẬT & LIỆT KÊ LỊCH SỬ MUA
+        // HÀM MỞ POPUP XEM CHI TIẾT
         function openStockDetailModal(stockIndex) {
             const stock = portfolioData[stockIndex];
             const holdings = getAggregatedHoldings();
@@ -1172,8 +1188,8 @@
                         <div class="modal-ticker">
                             ${stock.ticker} <span style="font-size: 13px; color: var(--text-secondary); font-weight: normal;">(${stock.exchange} - ${stock.group === 'income' ? 'Nhóm Dòng Tiền' : 'Nhóm Tăng Trưởng'})</span>
                         </div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
-                            Ưu tiên giải ngân: <strong>#Thứ tự ${stock.priority}</strong>
+                        <div style="font-size: 12px; color: #e3b341; margin-top: 2px; font-weight: 600;">
+                            <i class="fa-solid fa-calendar-check"></i> Ngày chốt quyền (GDKHQ): ${stock.exDateDisplay}
                         </div>
                     </div>
                     <button class="btn-close-modal" onclick="closeModal()">
@@ -1245,7 +1261,7 @@
 
                 <!-- LỊCH CHỐT QUYỀN & NỘI TẠI -->
                 <div class="modal-block">
-                    <div class="modal-block-title"><i class="fa-solid fa-calendar-days"></i> Lịch Chốt Quyền & Sức Khỏe Doanh Nghiệp</div>
+                    <div class="modal-block-title"><i class="fa-solid fa-calendar-days"></i> Chi Tiết Quyền Lợi & Sức Khỏe Doanh Nghiệp</div>
                     <div class="modal-block-detail">
                         <div style="margin-bottom: 3px;"><strong>Lịch chi trả:</strong> ${stock.schedule}</div>
                         <div style="font-size: 11.5px; color: var(--text-secondary);"><strong>Nội tại:</strong> ${stock.fundamental}</div>
