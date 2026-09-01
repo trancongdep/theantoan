@@ -2,8 +2,8 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sổ Tay Cổ Tức - Chiến Lược Tích Sản & Phân Bổ Định Lượng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sổ Tay Cổ Tức - Quản Trị Định Lượng 2030</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -26,6 +26,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -35,16 +36,16 @@
             min-height: 100vh;
         }
 
-        /* SIDEBAR NGUYÊN BẢN */
+        /* SIDEBAR (LAPTOP & TABLET) */
         aside {
-            width: 260px;
+            width: 250px;
             background-color: var(--bg-card);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             position: fixed;
             height: 100vh;
-            z-index: 10;
+            z-index: 100;
         }
 
         .brand {
@@ -61,8 +62,9 @@
         }
 
         .brand h2 {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
+            line-height: 1.2;
         }
 
         .nav-menu {
@@ -75,7 +77,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 16px;
+            padding: 12px 14px;
             color: var(--text-secondary);
             text-decoration: none;
             border-radius: 6px;
@@ -95,23 +97,21 @@
             color: var(--accent-blue);
         }
 
-        /* MAIN CONTENT NGUYÊN BẢN */
+        /* MAIN CONTAINER */
         main {
-            margin-left: 260px;
+            margin-left: 250px;
             flex-grow: 1;
-            padding: 28px 36px;
+            padding: 24px 30px;
             max-width: 1400px;
+            width: calc(100% - 250px);
         }
 
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .header-title h1 {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
         }
 
@@ -126,14 +126,14 @@
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 24px;
+            padding: 18px;
+            margin-bottom: 20px;
         }
 
         .panel-header {
-            font-size: 15px;
+            font-size: 14.5px;
             font-weight: 700;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -143,8 +143,8 @@
         .inputs-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 14px;
         }
 
         .input-group {
@@ -154,7 +154,7 @@
         }
 
         .input-group label {
-            font-size: 12px;
+            font-size: 11.5px;
             color: var(--text-secondary);
             display: flex;
             justify-content: space-between;
@@ -165,10 +165,11 @@
             border: 1px solid var(--border-color);
             border-radius: 6px;
             color: var(--text-primary);
-            padding: 8px 12px;
+            padding: 8px 10px;
             font-size: 13px;
             font-weight: 600;
             outline: none;
+            width: 100%;
         }
 
         .input-group input:focus {
@@ -180,14 +181,17 @@
             color: white;
             border: none;
             border-radius: 6px;
-            padding: 10px 20px;
+            padding: 10px 18px;
             font-size: 13.5px;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             transition: 0.2s;
+            width: 100%;
+            max-width: 280px;
         }
 
         .btn-calc:hover {
@@ -196,60 +200,60 @@
 
         /* AUDIT SUMMARY DISPLAY */
         .audit-results {
-            margin-top: 16px;
-            padding: 14px;
+            margin-top: 14px;
+            padding: 12px;
             background: rgba(255, 255, 255, 0.02);
             border: 1px dashed var(--border-color);
             border-radius: 6px;
             display: grid;
             grid-template-columns: 1fr 1fr 1.5fr;
-            gap: 16px;
+            gap: 14px;
         }
 
         .audit-col h4 {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-secondary);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             text-transform: uppercase;
         }
 
         .audit-val {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
         }
 
         .audit-sub {
-            font-size: 12px;
+            font-size: 11.5px;
             margin-top: 4px;
             line-height: 1.4;
         }
 
-        /* METRICS CARDS NGUYÊN BẢN */
+        /* TOP METRIC CARDS */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .metric-box {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 16px;
+            padding: 14px;
         }
 
         .metric-box .label {
-            font-size: 12px;
+            font-size: 11.5px;
             color: var(--text-secondary);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
         .metric-box .value {
-            font-size: 19px;
+            font-size: 17px;
             font-weight: 700;
         }
 
@@ -258,11 +262,11 @@
             margin-top: 4px;
         }
 
-        /* STOCK CARDS GRID NGUYÊN BẢN */
+        /* STOCK CARDS GRID */
         .section-header {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
-            margin: 20px 0 12px 0;
+            margin: 16px 0 10px 0;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -270,8 +274,8 @@
 
         .stocks-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 14px;
             margin-bottom: 30px;
         }
 
@@ -279,10 +283,10 @@
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 18px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             transition: 0.2s;
         }
 
@@ -300,25 +304,25 @@
         .ticker-info {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .ticker-symbol {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 800;
             color: #58a6ff;
         }
 
         .exchange-tag {
-            font-size: 11px;
-            padding: 2px 6px;
+            font-size: 10px;
+            padding: 2px 5px;
             border-radius: 4px;
             background-color: var(--border-color);
             color: var(--text-secondary);
         }
 
         .price-num {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
             text-align: right;
         }
@@ -326,15 +330,15 @@
         .card-body-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 6px;
             background: rgba(255, 255, 255, 0.02);
-            padding: 10px;
+            padding: 8px;
             border-radius: 6px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .data-item {
-            font-size: 12px;
+            font-size: 11.5px;
         }
 
         .data-item span {
@@ -349,27 +353,27 @@
 
         .tech-block {
             border-top: 1px solid var(--border-color);
-            padding-top: 10px;
+            padding-top: 8px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .tech-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
+            font-size: 11.5px;
         }
 
         .badge {
-            font-size: 11px;
-            padding: 3px 8px;
+            font-size: 10.5px;
+            padding: 3px 6px;
             border-radius: 4px;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
         }
 
         .badge-buy-strong {
@@ -405,31 +409,150 @@
         .ma150-container {
             background: rgba(255, 255, 255, 0.03);
             border-radius: 6px;
-            padding: 8px 10px;
+            padding: 6px 8px;
             border: 1px dashed var(--border-color);
         }
 
         .ma150-detail {
-            font-size: 11px;
+            font-size: 10.5px;
             color: var(--text-secondary);
-            margin-top: 4px;
+            margin-top: 3px;
             line-height: 1.3;
         }
 
         .action-advice {
-            font-size: 12px;
-            padding: 8px 10px;
+            font-size: 11.5px;
+            padding: 6px 8px;
             background-color: rgba(56, 139, 253, 0.1);
             border-left: 3px solid var(--accent-blue);
             border-radius: 0 4px 4px 0;
             color: #c9d1d9;
-            line-height: 1.4;
+            line-height: 1.35;
+        }
+
+        /* ========================================================
+           RESPONSIVE CSS: TỐI ƯU HOÀN TOÀN CHO MOBILE & TABLET 
+           ======================================================== */
+        @media (max-width: 1024px) {
+            aside {
+                width: 200px;
+            }
+            main {
+                margin-left: 200px;
+                width: calc(100% - 200px);
+                padding: 16px;
+            }
+            .inputs-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .audit-results {
+                grid-template-columns: 1fr 1fr;
+            }
+            .audit-col:last-child {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            /* CHUYỂN SIDEBAR THÀNH BOTTOM NAV BAR TRÊN MOBILE */
+            aside {
+                position: fixed;
+                bottom: 0;
+                top: auto;
+                left: 0;
+                right: 0;
+                width: 100%;
+                height: 60px;
+                flex-direction: row;
+                border-right: none;
+                border-top: 1px solid var(--border-color);
+                background-color: #161b22f2;
+                backdrop-filter: blur(8px);
+                z-index: 9999;
+            }
+
+            .brand {
+                display: none; /* Ẩn brand header trên mobile để tiết kiệm không gian */
+            }
+
+            .nav-menu {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                width: 100%;
+                padding: 0;
+            }
+
+            .nav-item {
+                flex-direction: column;
+                gap: 4px;
+                padding: 8px 4px;
+                font-size: 10px;
+                margin-bottom: 0;
+                border-radius: 4px;
+                text-align: center;
+            }
+
+            .nav-item i {
+                font-size: 16px;
+            }
+
+            /* NỘI DUNG CHÍNH TRÊN MOBILE */
+            main {
+                margin-left: 0;
+                width: 100%;
+                padding: 14px 12px 75px 12px; /* Chừa 75px đáy để không bị Bottom Bar che khuất */
+            }
+
+            .header-title h1 {
+                font-size: 18px;
+            }
+
+            .inputs-grid {
+                grid-template-columns: 1fr; /* 1 cột duy nhất trên mobile */
+                gap: 8px;
+            }
+
+            .btn-calc {
+                max-width: 100%; /* Nút full chiều rộng màn hình mobile */
+            }
+
+            .audit-results {
+                grid-template-columns: 1fr; /* Xếp chồng 1 cột */
+                gap: 10px;
+            }
+
+            .audit-col:last-child {
+                grid-column: span 1;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr; /* 1 cột dọc */
+                gap: 8px;
+            }
+
+            .stocks-grid {
+                grid-template-columns: 1fr; /* 1 cột hiển thị thẻ cổ phiếu */
+                gap: 12px;
+            }
+
+            .stock-card {
+                padding: 14px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR GỐC NGUYÊN VẸN -->
+    <!-- SIDEBAR (Laptop cố định bên trái / Mobile chuyển thành Bottom Bar) -->
     <aside>
         <div class="brand">
             <i class="fa-solid fa-vault"></i>
@@ -439,15 +562,15 @@
             </div>
         </div>
         <ul class="nav-menu">
-            <li class="nav-item active"><i class="fa-solid fa-sliders"></i> Tái Cân Bằng Danh Mục</li>
-            <li class="nav-item"><i class="fa-solid fa-chart-pie"></i> Tổng Quan 7 Mã Chiến Lược</li>
-            <li class="nav-item"><i class="fa-solid fa-calendar-check"></i> Lịch Chốt Quyền T9-T10</li>
-            <li class="nav-item"><i class="fa-solid fa-arrow-trend-down"></i> Bắt Đáy MA150 (-30%)</li>
-            <li class="nav-item"><i class="fa-solid fa-wallet"></i> Quản Trị Tiền Mặt MM</li>
+            <li class="nav-item active"><i class="fa-solid fa-sliders"></i> Tái Cân Bằng</li>
+            <li class="nav-item"><i class="fa-solid fa-chart-pie"></i> 7 Mã Chiến Lược</li>
+            <li class="nav-item"><i class="fa-solid fa-calendar-check"></i> Lịch Chốt T9-T10</li>
+            <li class="nav-item"><i class="fa-solid fa-arrow-trend-down"></i> Bắt Đáy MA150</li>
+            <li class="nav-item"><i class="fa-solid fa-wallet"></i> Két Tiền MM</li>
         </ul>
     </aside>
 
-    <!-- MAIN CONTENT GỐC NGUYÊN VẸN -->
+    <!-- MAIN CONTENT -->
     <main>
         <header>
             <div class="header-title">
@@ -506,7 +629,7 @@
             </div>
         </div>
 
-        <!-- TOP METRICS GỐC -->
+        <!-- TOP METRICS -->
         <div class="metrics-grid">
             <div class="metric-box">
                 <div class="label">Tổng NAV Tài Sản <i class="fa-solid fa-coins" style="color: #e3b341;"></i></div>
@@ -530,7 +653,7 @@
             </div>
         </div>
 
-        <!-- STOCK LIST GỐC -->
+        <!-- STOCK LIST -->
         <div class="section-header">
             <i class="fa-solid fa-list-check" style="color: #58a6ff;"></i>
             Bảng Kỹ Thuật Chi Tiết 7 Mã Chiến Lược
@@ -620,7 +743,7 @@
             if (isUnderG1) {
                 if (stock.price >= stock.ma20) {
                     maSignal = `<span class="badge badge-buy-strong"><i class="fa-solid fa-circle-check"></i> MUA GOM BƯỚC 2 (100% VỐN)</span>`;
-                    actionAdvice = `Định giá Rẻ (Yield: ${netYield}%) + Giá vượt lên trên MA20. Xác nhận đáy ngắn hạn. Giải ngân trọn gói hạn mức.`;
+                    actionAdvice = `Định giá Rẻ (Yield: ${netYield}%) + Giá vượt lên trên MA20. Xác nhận đáy ngắn hạn. Giải ngân theo kế hoạch.`;
                 } else {
                     maSignal = `<span class="badge badge-buy-strong"><i class="fa-solid fa-circle-dot"></i> MUA GOM BƯỚC 1 (50% VỐN)</span>`;
                     actionAdvice = `Giá nằm trong Vùng G1 và vận động sát MA200 dài hạn. Thích hợp giải ngân 50% vốn thăm dò đáy.`;
@@ -689,7 +812,7 @@
             if (newCash > 0) {
                 actionPlanHtml = `
                     <div style="color: #3fb950; font-weight: 600;">Lệnh điều phối dòng tiền mới (${newCash.toLocaleString()} đ):</div>
-                    <ul style="padding-left: 16px; margin-top: 4px; font-size: 12px; color: #c9d1d9;">
+                    <ul style="padding-left: 16px; margin-top: 4px; font-size: 11.5px; color: #c9d1d9;">
                         <li><strong>Dồn Bank:</strong> Mua <strong>+1.600 TCB</strong> (~38,40 tr) đưa tỷ trọng Bank tăng dần.</li>
                         <li><strong>Đón Cổ tức T10:</strong> Mua <strong>+1.900 VEA</strong> (~66,88 tr) & <strong>+2.900 HND</strong> (~27,84 tr).</li>
                         <li><strong>Số dư tiền mặt:</strong> ~880.000 đ gửi két MM linh hoạt qua đêm.</li>
@@ -698,12 +821,12 @@
             } else if (isOutOfBalance) {
                 actionPlanHtml = `
                     <div style="color: #e3b341; font-weight: 600;">Danh mục lệch >= 5%:</div>
-                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                    <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 4px;">
                         Cần bổ sung ${Math.max(0, Math.round(diffIncome)).toLocaleString()} đ vào Dòng tiền và ${Math.max(0, Math.round(diffGrowth)).toLocaleString()} đ vào Bank từ các dòng cổ tức mới.
                     </div>
                 `;
             } else {
-                actionPlanHtml = `<div style="color: #3fb950; font-weight: 600;">Danh mục Cân Bằng Chuẩn (60/40)</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Không cần bán cổ phiếu, tiếp tục nhận cổ tức tái đầu tư.</div>`;
+                actionPlanHtml = `<div style="color: #3fb950; font-weight: 600;">Danh mục Cân Bằng Chuẩn (60/40)</div><div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 4px;">Không cần bán cổ phiếu, tiếp tục nhận cổ tức tái đầu tư.</div>`;
             }
 
             auditBox.innerHTML = `
@@ -711,14 +834,14 @@
                     <h4>Đo Lường Tỷ Trọng</h4>
                     <div class="audit-val" style="color: #58a6ff;">${actualIncomeRatio.toFixed(1)}% DT / ${actualGrowthRatio.toFixed(1)}% TT</div>
                     <div class="audit-sub" style="color: ${isOutOfBalance ? '#e3b341' : '#3fb950'};">
-                        ${isOutOfBalance ? '⚠️ Lệch chuẩn (Ngưỡng kích hoạt >= 5%)' : '✅ Đạt chuẩn mục tiêu (60% / 40%)'}
+                        ${isOutOfBalance ? '⚠️ Lệch chuẩn (Kích hoạt >= 5%)' : '✅ Đạt chuẩn mục tiêu (60% / 40%)'}
                     </div>
                 </div>
                 <div class="audit-col">
                     <h4>Nhu Cầu Phân Bổ Mục Tiêu</h4>
                     <div class="audit-val">${(totalNAV * 0.6).toLocaleString()} đ / ${(totalNAV * 0.4).toLocaleString()} đ</div>
                     <div class="audit-sub" style="color: var(--text-secondary);">
-                        Mục tiêu: Dòng tiền (${(TARGET_INCOME*100)}%) - Tăng trưởng (${(TARGET_GROWTH*100)}%)
+                        Mục tiêu: Dòng tiền (60%) - Tăng trưởng (40%)
                     </div>
                 </div>
                 <div class="audit-col">
@@ -727,7 +850,7 @@
                 </div>
             `;
 
-            // RENDER THẺ CỔ PHIẾU
+            // RENDER DANH SÁCH THẺ CỔ PHIẾU
             const container = document.getElementById("stocks-container");
             container.innerHTML = "";
             
@@ -743,11 +866,11 @@
                         <div class="ticker-info">
                             <span class="ticker-symbol">${stock.ticker}</span>
                             <span class="exchange-tag">${stock.exchange}</span>
-                            <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(56, 139, 253, 0.15); color: #58a6ff;">#Ưu tiên ${stock.priority}</span>
+                            <span style="font-size: 10px; padding: 2px 5px; border-radius: 4px; background: rgba(56, 139, 253, 0.15); color: #58a6ff;">#Ưu tiên ${stock.priority}</span>
                         </div>
                         <div>
                             <div class="price-num">${stock.price.toLocaleString()} đ</div>
-                            <div style="font-size: 11px; color: var(--text-secondary); text-align: right;">Thị giá</div>
+                            <div style="font-size: 10.5px; color: var(--text-secondary); text-align: right;">Thị giá</div>
                         </div>
                     </div>
 
@@ -763,7 +886,7 @@
                         <div class="data-item" style="grid-column: span 2;">
                             <span>Lịch chốt quyền & Nội tại:</span>
                             <strong>${stock.schedule}</strong>
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">${stock.fundamental}</div>
+                            <div style="font-size: 10.5px; color: var(--text-secondary); margin-top: 2px;">${stock.fundamental}</div>
                         </div>
                     </div>
 
@@ -772,14 +895,14 @@
                             <span style="color: var(--text-secondary);">Tín hiệu MA20 / MA200:</span>
                             ${strategyResult.maSignal}
                         </div>
-                        <div style="font-size: 11px; color: var(--text-secondary);">
+                        <div style="font-size: 10.5px; color: var(--text-secondary);">
                             MA20: ${stock.ma20.toLocaleString()} đ | MA200: ${stock.ma200.toLocaleString()} đ
                         </div>
 
                         <!-- BẮT ĐỈNH G2 -->
                         <div class="ma150-container" style="border-color: rgba(210, 153, 34, 0.3);">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-size: 11.5px; color: #e3b341;"><i class="fa-solid fa-arrow-trend-up"></i> Bắt Đỉnh G2:</span>
+                                <span style="font-size: 10.5px; color: #e3b341;"><i class="fa-solid fa-arrow-trend-up"></i> Bắt Đỉnh G2:</span>
                                 ${peakResult.badge}
                             </div>
                             <div class="ma150-detail">
@@ -790,7 +913,7 @@
                         <!-- BẮT ĐÁY MA150 -->
                         <div class="ma150-container">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-size: 11.5px; color: #8b949e;">Bắt đáy MA150 (-30%):</span>
+                                <span style="font-size: 10.5px; color: #8b949e;"><i class="fa-solid fa-arrow-trend-down"></i> Bắt đáy MA150 (-30%):</span>
                                 ${ma150Result.badge}
                             </div>
                             <div class="ma150-detail">
