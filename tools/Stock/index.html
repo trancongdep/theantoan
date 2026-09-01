@@ -1,835 +1,654 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bảng Quản Trị Tích Sản & Tăng Trưởng Cổ Phiếu</title>
-  
-  <!-- Bootstrap 5 CSS & FontAwesome Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  
-  <!-- Firebase SDK (Compat v9) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sổ Tay Quản Lý Cổ Tức & Tích Sản Định Lượng</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0e1117;
+            --bg-card: #161b22;
+            --bg-card-hover: #1f242c;
+            --border-color: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --accent-green: #238636;
+            --accent-green-light: #2ea043;
+            --accent-blue: #1f6feb;
+            --accent-purple: #8957e5;
+            --accent-orange: #d29922;
+            --accent-red: #da3633;
+            --tag-bg: rgba(56, 139, 253, 0.15);
+        }
 
-  <style>
-    :root {
-      --primary-color: #1e3a8a;
-      --accent-color: #0d6efd;
-      --bg-body: #f8fafc;
-      --card-bg: #ffffff;
-      --text-dark: #0f172a;
-      --border-color: #e2e8f0;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
 
-    body {
-      background-color: var(--bg-body);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: var(--text-dark);
-      padding-bottom: 30px;
-    }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+        }
 
-    /* Top Navbar */
-    .navbar-custom {
-      background-color: #0f172a;
-      border-bottom: 1px solid #1e293b;
-    }
+        /* SIDEBAR NAVIGATION */
+        aside {
+            width: 260px;
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 10;
+        }
 
-    .btn-menu-toggle {
-      border: 1px solid #334155;
-      color: #f8fafc;
-      padding: 6px 12px;
-      border-radius: 8px;
-    }
-    .btn-menu-toggle:hover {
-      background-color: #1e293b;
-      color: #38bdf8;
-    }
+        .brand {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-    /* Offcanvas Sidebar */
-    .offcanvas-custom {
-      background-color: #0f172a;
-      color: #f8fafc;
-      width: 300px;
-    }
-    .offcanvas-custom .btn-close {
-      filter: invert(1) grayscale(100%) brightness(200%);
-    }
-    .sidebar-link {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      color: #94a3b8;
-      text-decoration: none;
-      border-radius: 8px;
-      margin-bottom: 6px;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-    .sidebar-link:hover, .sidebar-link.active {
-      background-color: #1e293b;
-      color: #38bdf8;
-    }
+        .brand i {
+            font-size: 24px;
+            color: var(--accent-green-light);
+        }
 
-    /* Dashboard Summary Cards */
-    .card-stat {
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      background: var(--card-bg);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
+        .brand h2 {
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
 
-    /* Badges */
-    .badge-type-dividend {
-      background-color: #e0f2fe;
-      color: #0369a1;
-      font-weight: 600;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-    }
-    .badge-type-growth {
-      background-color: #f3e8ff;
-      color: #7e22ce;
-      font-weight: 600;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-    }
+        .nav-menu {
+            list-style: none;
+            padding: 16px 8px;
+            flex-grow: 1;
+        }
 
-    .status-badge {
-      font-size: 0.78rem;
-      font-weight: 700;
-      padding: 5px 10px;
-      border-radius: 16px;
-      display: inline-block;
-    }
-    .status-buy { background-color: #dcfce7; color: #15803d; }
-    .status-hold { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-    .status-sell { background-color: #fee2e2; color: #b91c1c; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
 
-    .num-mono {
-      font-family: 'Consolas', 'SF Mono', monospace;
-      font-weight: 600;
-    }
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--border-color);
+            color: var(--text-primary);
+        }
 
-    .sync-status {
-      font-size: 0.78rem;
-      padding: 4px 10px;
-      border-radius: 12px;
-    }
+        .nav-item.active i {
+            color: var(--accent-blue);
+        }
 
-    /* Mobile Stock Card View */
-    .stock-card {
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      background: var(--card-bg);
-      padding: 14px;
-      margin-bottom: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-    .stock-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px dashed var(--border-color);
-      padding-bottom: 10px;
-      margin-bottom: 10px;
-    }
-    .stock-card-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-      font-size: 0.88rem;
-    }
-    .stock-card-row .label {
-      color: #64748b;
-    }
+        /* MAIN CONTENT AREA */
+        main {
+            margin-left: 260px;
+            flex-grow: 1;
+            padding: 28px 36px;
+            max-width: 1400px;
+        }
 
-    /* Responsive View Switches */
-    @media (max-width: 768px) {
-      .desktop-table-view {
-        display: none !important;
-      }
-      .mobile-card-view {
-        display: block !important;
-      }
-    }
-    @media (min-width: 769px) {
-      .desktop-table-view {
-        display: block !important;
-      }
-      .mobile-card-view {
-        display: none !important;
-      }
-    }
-  </style>
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header-title h1 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .header-title p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .capital-card {
+            background: linear-gradient(135deg, #1f6feb 0%, #114289 100%);
+            padding: 14px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .capital-card div p {
+            font-size: 12px;
+            opacity: 0.85;
+        }
+
+        .capital-card div h3 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* METRIC CARDS */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .metric-box .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .metric-box .value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .metric-box .sub {
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        /* STOCK LIST GRID */
+        .section-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 20px 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stocks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .stock-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: 0.2s;
+        }
+
+        .stock-card:hover {
+            border-color: #58a6ff;
+            background-color: var(--bg-card-hover);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .ticker-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ticker-symbol {
+            font-size: 18px;
+            font-weight: 800;
+            color: #58a6ff;
+        }
+
+        .exchange-tag {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .current-price {
+            text-align: right;
+        }
+
+        .price-num {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .card-body-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .data-item {
+            font-size: 12px;
+        }
+
+        .data-item span {
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .data-item strong {
+            font-weight: 600;
+        }
+
+        /* TECHNICAL ANALYSIS BLOCKS */
+        .tech-block {
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tech-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12.5px;
+        }
+
+        .tech-values {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* BADGES */
+        .badge {
+            font-size: 11.5px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge-buy-strong {
+            background-color: rgba(46, 160, 67, 0.2);
+            color: #3fb950;
+            border: 1px solid rgba(46, 160, 67, 0.4);
+        }
+
+        .badge-hold {
+            background-color: rgba(210, 153, 34, 0.2);
+            color: #e3b341;
+            border: 1px solid rgba(210, 153, 34, 0.4);
+        }
+
+        .badge-sale-150 {
+            background-color: rgba(218, 54, 51, 0.2);
+            color: #f85149;
+            border: 1px solid rgba(218, 54, 51, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        .badge-neutral {
+            background-color: rgba(139, 148, 158, 0.15);
+            color: #8b949e;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        .ma150-container {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            padding: 8px 10px;
+            border: 1px dashed var(--border-color);
+        }
+
+        .ma150-detail {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            line-height: 1.3;
+        }
+
+        .action-advice {
+            font-size: 12px;
+            padding: 8px 10px;
+            background-color: rgba(56, 139, 253, 0.1);
+            border-left: 3px solid var(--accent-blue);
+            border-radius: 0 4px 4px 0;
+            color: #c9d1d9;
+            line-height: 1.4;
+        }
+    </style>
 </head>
 <body>
 
-  <!-- Top Navbar -->
-  <nav class="navbar navbar-dark navbar-custom sticky-top py-2 px-3 px-md-4">
-    <div class="container-fluid p-0 d-flex justify-content-between align-items-center">
-      
-      <div class="d-flex align-items-center gap-2">
-        <button class="btn btn-menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
-          <i class="fa-solid fa-bars fa-lg"></i>
-        </button>
-        <a class="navbar-brand m-0 d-flex align-items-center gap-2 fw-bold text-white fs-6 fs-md-5" href="#">
-          <i class="fa-solid fa-shield-halved text-warning"></i>
-          <span>QUẢN TRỊ TÀI SẢN 2030</span>
-        </a>
-      </div>
-
-      <!-- Trạng thái kết nối Firebase bên phải -->
-      <div class="d-flex align-items-center">
-        <span id="firebaseStatus" class="sync-status bg-secondary text-white">
-          <i class="fa-solid fa-circle-notch fa-spin me-1"></i> Đang tải...
-        </span>
-      </div>
-
-    </div>
-  </nav>
-
-  <!-- Sidebar Menu (Offcanvas Menu 3 Gạch) -->
-  <div class="offcanvas offcanvas-start offcanvas-custom" tabindex="-1" id="sidebarMenu">
-    <div class="offcanvas-header border-bottom border-secondary">
-      <h5 class="offcanvas-title fw-bold text-white d-flex align-items-center gap-2">
-        <i class="fa-solid fa-sliders text-warning"></i> Menu Quản Trị
-      </h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
-    </div>
-    <div class="offcanvas-body d-flex flex-column justify-content-between p-3">
-      <div>
-        <a href="#" class="sidebar-link active" data-bs-dismiss="offcanvas">
-          <i class="fa-solid fa-chart-pie"></i> Bảng Danh Mục Đầu Tư
-        </a>
-        <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="openAddModal()">
-          <i class="fa-solid fa-circle-plus text-success"></i> Thêm Mã Cổ Phiếu Mới
-        </a>
-        <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="openConfigModal()">
-          <i class="fa-solid fa-fire text-danger"></i> Cấu Hình Firebase
-        </a>
-        <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="seedDefaultDatabase(true)">
-          <i class="fa-solid fa-arrows-rotate text-info"></i> Khôi Phục Dữ Liệu 6 Mã Mẫu
-        </a>
-        <a href="#" class="sidebar-link" data-bs-dismiss="offcanvas" onclick="showFormulaModal()">
-          <i class="fa-solid fa-square-root-variable text-warning"></i> Hướng Dẫn Định Giá G1/G2
-        </a>
-      </div>
-
-      <div class="border-top border-secondary pt-3 text-muted small">
-        <div><i class="fa-solid fa-database text-warning me-1"></i> Firebase Realtime Database</div>
-        <div class="mt-1">Mục tiêu hưu trí: <b>Tháng 06/2030</b></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Container -->
-  <div class="container-fluid px-2 px-md-4 py-3">
-    
-    <!-- Tổng Hợp Tài Sản & Cổ Tức (Overview Cards) -->
-    <div class="row g-2 mb-3">
-      <div class="col-6 col-lg-3">
-        <div class="card card-stat p-2 p-md-3">
-          <div class="text-muted small fw-bold">TỔNG GIÁ TRỊ TÀI SẢN</div>
-          <h4 class="fw-bold mb-0 text-primary fs-5 fs-md-4" id="statTotalNav">0 đ</h4>
-          <div class="small text-muted mt-1" id="statTotalShares">0 CP trong danh mục</div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card card-stat p-2 p-md-3">
-          <div class="text-muted small fw-bold">CỔ TỨC TIỀN MẶT/NĂM</div>
-          <h4 class="fw-bold mb-0 text-success fs-5 fs-md-4" id="statAnnualDividend">0 đ</h4>
-          <div class="small text-success mt-1" id="statMonthlyDividend">~0 đ/tháng</div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card card-stat p-2 p-md-3">
-          <div class="text-muted small fw-bold">DANH MỤC THEO DÕI</div>
-          <h4 class="fw-bold mb-0 text-dark fs-5 fs-md-4" id="statTotalStocks">0 mã</h4>
-          <div class="small text-muted mt-1" id="statTypeBreakdown">0 Tích sản | 0 Tăng trưởng</div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card card-stat p-2 p-md-3">
-          <div class="text-muted small fw-bold">ĐẠT VÙNG GOM MUA (G1)</div>
-          <h4 class="fw-bold mb-0 text-success fs-5 fs-md-4" id="statBuyAlerts">0 mã</h4>
-          <div class="small text-success mt-1">Đủ điều kiện giải ngân</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Thanh Lọc & Tìm Kiếm -->
-    <div class="card border-0 shadow-sm p-2 mb-3">
-      <div class="d-flex gap-2">
-        <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Tìm kiếm mã CP..." onkeyup="renderUI()">
-        <select id="filterType" class="form-select form-select-sm" style="max-width: 170px;" onchange="renderUI()">
-          <option value="ALL">Tất cả mã</option>
-          <option value="DIVIDEND">💵 Tích sản</option>
-          <option value="GROWTH">📈 Tăng trưởng</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- 1. Desktop View (Table) -->
-    <div class="card desktop-table-view border-0 shadow-sm">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 text-center">
-          <thead class="bg-light">
-            <tr>
-              <th>Mã CP</th>
-              <th>Loại Hình</th>
-              <th>Thị Giá</th>
-              <th>Đang Nắm Giữ</th>
-              <th>Giá Trị Vốn</th>
-              <th>Cổ Tức / Năm</th>
-              <th>Vùng Mua (G1)</th>
-              <th>Mục Tiêu (G2)</th>
-              <th>Trạng Thái</th>
-              <th>Thao Tác</th>
-            </tr>
-          </thead>
-          <tbody id="stockTableBody">
-            <!-- Render JS Desktop -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- 2. Mobile View (Card) -->
-    <div class="mobile-card-view" id="stockCardContainer">
-      <!-- Render JS Mobile -->
-    </div>
-
-  </div>
-
-  <!-- Modal Thêm / Chỉnh Sửa Mã Cổ Phiếu -->
-  <div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title fw-bold" id="modalTitle">Thêm Mã Cổ Phiếu</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <form id="stockForm" onsubmit="handleFormSubmit(event)">
-          <div class="modal-body p-3 p-md-4">
-            <input type="hidden" id="editKey" value="">
-
-            <!-- Ticker -->
-            <div class="mb-3">
-              <label class="form-label fw-bold small text-muted">MÃ CỔ PHIẾU (TICKER):</label>
-              <input type="text" id="inputTicker" class="form-control fw-bold text-uppercase" placeholder="VD: VEA, MBB, ACB..." required>
-            </div>
-
-            <!-- Loại Hình Chiến Lược -->
-            <div class="mb-3">
-              <label class="form-label fw-bold small text-muted">TRƯỜNG PHÁI ĐẦU TƯ:</label>
-              <div class="d-flex gap-2 p-2 bg-light rounded border">
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="stockTypeRadio" id="radioDividend" value="DIVIDEND" checked onchange="toggleFormInputs()">
-                  <label class="form-check-label fw-semibold small" for="radioDividend">
-                    💵 Tích Sản Cổ Tức
-                  </label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="stockTypeRadio" id="radioGrowth" value="GROWTH" onchange="toggleFormInputs()">
-                  <label class="form-check-label fw-semibold small" for="radioGrowth">
-                    📈 Tăng Trưởng (BVPS)
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Số lượng CP nắm giữ & Thị giá -->
-            <div class="row g-2 mb-3">
-              <div class="col-6">
-                <label class="form-label fw-bold small text-muted">SỐ LƯỢNG NẮM GIỮ (CP):</label>
-                <input type="number" id="inputShares" class="form-control num-mono" placeholder="VD: 5000" min="0" step="1">
-              </div>
-              <div class="col-6">
-                <label class="form-label fw-bold small text-muted">THỊ GIÁ HIỆN TẠI (VNĐ):</label>
-                <input type="number" id="inputCurrentPrice" class="form-control num-mono" placeholder="VD: 36500" required>
-              </div>
-            </div>
-
-            <!-- Nhóm Tích Sản Cổ Tức -->
-            <div id="dividendInputGroup" class="mb-3">
-              <label class="form-label fw-bold small text-muted">CỔ TỨC TIỀN MẶT DỰ KIẾN (VNĐ/CP/NĂM):</label>
-              <input type="number" id="inputCashDividend" class="form-control num-mono" placeholder="VD: 4800 (VEA), 1500 (QTP)...">
-              <small class="text-muted">*Tự động trừ 5% thuế TNCN khi tính G1, G2 và dòng tiền.</small>
-            </div>
-
-            <!-- Nhóm Tăng Trưởng BVPS -->
-            <div id="growthInputGroup" class="mb-3 d-none">
-              <label class="form-label fw-bold small text-muted">GIÁ TRỊ SỔ SÁCH MỖI CP (BVPS - VNĐ):</label>
-              <input type="number" id="inputBvps" class="form-control num-mono" placeholder="VD: 20500 (MBB), 21000 (ACB)...">
-              <small class="text-muted">*Công thức định giá: G1 (P/B = 1.1x), G2 (P/B = 1.5x).</small>
-            </div>
-
-          </div>
-          <div class="modal-footer bg-light p-3">
-            <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Hủy</button>
-            <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold">Lưu Dữ Liệu</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Cấu Hình Firebase -->
-  <div class="modal fade" id="configModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title fw-bold"><i class="fa-solid fa-fire text-danger me-2"></i>Cấu Hình Firebase Realtime DB</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body p-4">
-          <div class="mb-3">
-            <label class="form-label fw-bold small text-muted">FIREBASE CONFIG (JSON):</label>
-            <textarea id="firebaseConfigInput" class="form-control num-mono" rows="8" placeholder='{ "apiKey": "...", "databaseURL": "...", "projectId": "..." }'></textarea>
-          </div>
-          <div class="alert alert-info py-2 small mb-0">
-            <i class="fa-solid fa-shield-halved me-1"></i> Lưu ý: Đảm bảo Rules trên Firebase Console đã được đặt thành <code>".read": true, ".write": true</code>.
-          </div>
-        </div>
-        <div class="modal-footer bg-light p-3">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
-          <button type="button" class="btn btn-success btn-sm fw-bold px-3" onclick="saveFirebaseConfig()">Lưu Cấu Hình</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Hướng Dẫn Công Thức G1 & G2 -->
-  <div class="modal fade" id="formulaModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title fw-bold"><i class="fa-solid fa-square-root-variable me-2"></i>Công Thức Định Giá G1 & G2</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body p-4">
-          <div class="card mb-3 p-3 bg-light border">
-            <h6 class="fw-bold text-primary"><i class="fa-solid fa-money-bill-wave me-2"></i>1. Cổ Phiếu Tích Sản Cổ Tức (VEA, QTP, SJD, QNS...)</h6>
-            <p class="mb-1">Định giá theo dòng tiền cổ tức thực nhận sau thuế (khấu trừ 5% thuế TNCN):</p>
-            <ul>
-              <li><b>Vùng Mua Gom (G1):</b> <code>G1 = (Cổ tức sau thuế) / 12%</code> (Tỷ suất cổ tức ròng ≥ 12%/năm).</li>
-              <li><b>Vùng Mục Tiêu (G2):</b> <code>G2 = (Cổ tức sau thuế) / 7.5%</code> (Tỷ suất giảm về ≤ 7.5%/năm).</li>
-            </ul>
-          </div>
-          <div class="card p-3 bg-light border">
-            <h6 class="fw-bold" style="color: #7e22ce;"><i class="fa-solid fa-building-columns me-2"></i>2. Cổ Phiếu Tăng Trưởng Ngân Hàng (MBB, ACB, TCB...)</h6>
-            <p class="mb-1">Định giá dựa trên Giá trị sổ sách (BVPS) và định giá lại theo P/B:</p>
-            <ul>
-              <li><b>Vùng Mua Gom (G1):</b> <code>G1 = BVPS × 1.10</code> (Định giá an toàn P/B ≤ 1.1x).</li>
-              <li><b>Vùng Mục Tiêu 2030 (G2):</b> <code>G2 = BVPS × 1.50</code> (Chốt lời khi P/B đạt 1.5x sau các kỳ nở cổ phiếu).</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bootstrap JS Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Javascript & Firebase Logic -->
-  <script>
-    const DEFAULT_FIREBASE_CONFIG = {
-      apiKey: "AIzaSyDummyKey_ReplaceWithYourActualKey",
-      authDomain: "portfolio-management.firebaseapp.com",
-      databaseURL: "https://portfolio-management-default-rtdb.firebaseio.com",
-      projectId: "portfolio-management",
-      storageBucket: "portfolio-management.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abcdef"
-    };
-
-    const SEED_DATA = {
-      "VEA": { ticker: "VEA", stockType: "DIVIDEND", sharesCount: 3500, currentPrice: 36500, cashDividend: 4800, bvps: 0 },
-      "QTP": { ticker: "QTP", stockType: "DIVIDEND", sharesCount: 8000, currentPrice: 11500, cashDividend: 1500, bvps: 0 },
-      "SJD": { ticker: "SJD", stockType: "DIVIDEND", sharesCount: 2000, currentPrice: 14200, cashDividend: 1600, bvps: 0 },
-      "MBB": { ticker: "MBB", stockType: "GROWTH", sharesCount: 2380, currentPrice: 22500, cashDividend: 0, bvps: 20500 },
-      "ACB": { ticker: "ACB", stockType: "GROWTH", sharesCount: 1600, currentPrice: 24800, cashDividend: 0, bvps: 21000 },
-      "TCB": { ticker: "TCB", stockType: "GROWTH", sharesCount: 1670, currentPrice: 24000, cashDividend: 0, bvps: 21500 }
-    };
-
-    let db = null;
-    let stocksData = {};
-    const stockModal = new bootstrap.Modal(document.getElementById('stockModal'));
-    const configModal = new bootstrap.Modal(document.getElementById('configModal'));
-    const formulaModal = new bootstrap.Modal(document.getElementById('formulaModal'));
-
-    window.addEventListener('DOMContentLoaded', () => {
-      // 1. Tải trước dữ liệu từ bộ nhớ đệm (Local Cache) để không bao giờ bị trắng màn hình
-      const cached = localStorage.getItem('CACHED_STOCKS_DATA');
-      if (cached) {
-        try {
-          stocksData = JSON.parse(cached);
-          renderUI();
-        } catch (e) {}
-      } else {
-        stocksData = JSON.parse(JSON.stringify(SEED_DATA));
-        localStorage.setItem('CACHED_STOCKS_DATA', JSON.stringify(stocksData));
-        renderUI();
-      }
-
-      // 2. Khởi tạo và lắng nghe Firebase Realtime
-      initFirebase();
-    });
-
-    function initFirebase() {
-      const savedConfig = localStorage.getItem('MY_FIREBASE_CONFIG');
-      const config = savedConfig ? JSON.parse(savedConfig) : DEFAULT_FIREBASE_CONFIG;
-      document.getElementById('firebaseConfigInput').value = JSON.stringify(config, null, 2);
-
-      try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(config);
-        }
-        db = firebase.database();
-        listenToFirebase();
-        updateFirebaseStatus(true, "Đã Kết Nối");
-      } catch (err) {
-        console.error("Lỗi khởi tạo Firebase:", err);
-        updateFirebaseStatus(false, "Lưu Cục Bộ");
-      }
-    }
-
-    function updateFirebaseStatus(isConnected, text) {
-      const el = document.getElementById('firebaseStatus');
-      el.className = `sync-status ${isConnected ? 'bg-success' : 'bg-warning text-dark'}`;
-      el.innerHTML = `<i class="fa-solid ${isConnected ? 'fa-circle-check' : 'fa-triangle-exclamation'} me-1"></i> ${text}`;
-    }
-
-    function listenToFirebase() {
-      if (!db) return;
-      const stocksRef = db.ref('stocks');
-      stocksRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          stocksData = data;
-          // Cập nhật bộ nhớ đệm an toàn
-          localStorage.setItem('CACHED_STOCKS_DATA', JSON.stringify(stocksData));
-          renderUI();
-        } else {
-          // Nếu Database trên server thực sự trống thì đẩy dữ liệu hiện có lên thay vì ghi đè bằng 0
-          db.ref('stocks').set(stocksData);
-        }
-      }, (error) => {
-        console.warn("Cảnh báo Firebase:", error);
-        updateFirebaseStatus(false, "Lưu Cục Bộ");
-      });
-    }
-
-    function seedDefaultDatabase(confirmFirst = true) {
-      if (confirmFirst && !confirm("Bạn có chắc muốn khôi phục 6 mã về giá trị mặc định ban đầu?")) return;
-
-      stocksData = JSON.parse(JSON.stringify(SEED_DATA));
-      localStorage.setItem('CACHED_STOCKS_DATA', JSON.stringify(stocksData));
-      renderUI();
-
-      if (db) {
-        db.ref('stocks').set(SEED_DATA).then(() => {
-          updateFirebaseStatus(true, "Đã Khôi Phục");
-        }).catch(err => {
-          console.error("Lỗi sync:", err);
-        });
-      }
-    }
-
-    function openConfigModal() { configModal.show(); }
-    function showFormulaModal() { formulaModal.show(); }
-
-    function saveFirebaseConfig() {
-      try {
-        const configText = document.getElementById('firebaseConfigInput').value;
-        const parsed = JSON.parse(configText);
-        localStorage.setItem('MY_FIREBASE_CONFIG', JSON.stringify(parsed));
-        alert("Đã lưu cấu hình Firebase! Trang sẽ tải lại.");
-        location.reload();
-      } catch (e) {
-        alert("Định dạng JSON cấu hình không hợp lệ: " + e.message);
-      }
-    }
-
-    // Engine tính toán định lượng
-    function calculateMetrics(stock) {
-      const p = Number(stock.currentPrice) || 0;
-      const shares = Number(stock.sharesCount) || 0;
-      const totalHoldingValue = p * shares;
-
-      let g1 = 0;
-      let g2 = 0;
-      let inputDisplay = "";
-      let annualDivReceived = 0;
-      let valDisplay = "";
-
-      if (stock.stockType === "DIVIDEND") {
-        const rawDiv = Number(stock.cashDividend) || 0;
-        const netDiv = rawDiv * 0.95;
-        inputDisplay = `Cổ tức: <span class="num-mono">${rawDiv.toLocaleString('vi-VN')} đ</span>`;
-        annualDivReceived = netDiv * shares;
-
-        if (netDiv > 0) {
-          g1 = Math.round(netDiv / 0.12);
-          g2 = Math.round(netDiv / 0.075);
-          const y = p > 0 ? ((netDiv / p) * 100).toFixed(1) : 0;
-          valDisplay = `<span class="badge bg-success bg-opacity-10 text-success">Yield: <b>${y}%</b></span>`;
-        }
-      } else {
-        const bvps = Number(stock.bvps) || 0;
-        inputDisplay = `BVPS: <span class="num-mono">${bvps.toLocaleString('vi-VN')} đ</span>`;
-
-        if (bvps > 0) {
-          g1 = Math.round(bvps * 1.10);
-          g2 = Math.round(bvps * 1.50);
-          const pb = p > 0 ? (p / bvps).toFixed(2) : 0;
-          valDisplay = `<span class="badge bg-purple bg-opacity-10 text-primary">P/B: <b>${pb}x</b></span>`;
-        }
-      }
-
-      let statusHtml = '<span class="status-badge status-hold">THEO DÕI</span>';
-      if (p > 0 && g1 > 0 && g2 > 0) {
-        if (p <= g1) statusHtml = '<span class="status-badge status-buy"><i class="fa-solid fa-cart-shopping me-1"></i> GOM MUA (G1)</span>';
-        else if (p >= g2) statusHtml = '<span class="status-badge status-sell"><i class="fa-solid fa-arrow-trend-up me-1"></i> CHỐT LỜI (G2)</span>';
-        else statusHtml = '<span class="status-badge status-hold">NẮM GIỮ</span>';
-      }
-
-      return {
-        g1,
-        g2,
-        shares,
-        totalHoldingValue,
-        annualDivReceived,
-        inputDisplay,
-        valDisplay,
-        statusHtml,
-        isBuy: p > 0 && g1 > 0 && p <= g1
-      };
-    }
-
-    // Render toàn bộ giao diện Desktop & Mobile
-    function renderUI() {
-      const tbody = document.getElementById('stockTableBody');
-      const mobileContainer = document.getElementById('stockCardContainer');
-      tbody.innerHTML = '';
-      mobileContainer.innerHTML = '';
-
-      const keys = Object.keys(stocksData);
-      if (keys.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" class="py-4 text-muted">Chưa có mã cổ phiếu.</td></tr>';
-        mobileContainer.innerHTML = '<div class="text-center py-4 text-muted">Chưa có mã cổ phiếu.</div>';
-        return;
-      }
-
-      let totalStocks = 0;
-      let divCount = 0;
-      let growthCount = 0;
-      let buyCount = 0;
-      let totalNav = 0;
-      let totalSharesAll = 0;
-      let totalAnnualDividend = 0;
-
-      const filter = document.getElementById('filterType').value;
-      const search = document.getElementById('searchInput').value.trim().toUpperCase();
-
-      keys.forEach((key) => {
-        const stk = stocksData[key];
-        totalStocks++;
-        if (stk.stockType === "DIVIDEND") divCount++;
-        else growthCount++;
-
-        const m = calculateMetrics(stk);
-        if (m.isBuy) buyCount++;
-
-        totalNav += m.totalHoldingValue;
-        totalSharesAll += m.shares;
-        totalAnnualDividend += m.annualDivReceived;
-
-        if (filter !== 'ALL' && stk.stockType !== filter) return;
-        if (search && !stk.ticker.toUpperCase().includes(search)) return;
-
-        // 1. Render Desktop Table Row
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="fw-bold text-dark fs-6">${stk.ticker}</td>
-          <td>
-            <span class="${stk.stockType === 'DIVIDEND' ? 'badge-type-dividend' : 'badge-type-growth'}">
-              ${stk.stockType === 'DIVIDEND' ? '💵 Tích Sản' : '📈 Tăng Trưởng'}
-            </span>
-          </td>
-          <td class="num-mono text-primary">${Number(stk.currentPrice).toLocaleString('vi-VN')} đ</td>
-          <td class="num-mono fw-bold text-dark">${m.shares.toLocaleString('vi-VN')} CP</td>
-          <td class="num-mono text-dark">${m.totalHoldingValue.toLocaleString('vi-VN')} đ</td>
-          <td class="num-mono text-success fw-bold">${m.annualDivReceived > 0 ? m.annualDivReceived.toLocaleString('vi-VN') + ' đ' : '—'}</td>
-          <td class="num-mono text-success fw-bold">≤ ${m.g1.toLocaleString('vi-VN')} đ</td>
-          <td class="num-mono text-danger fw-bold">≥ ${m.g2.toLocaleString('vi-VN')} đ</td>
-          <td>${m.statusHtml}</td>
-          <td>
-            <div class="btn-group">
-              <button class="btn btn-sm btn-outline-secondary py-1 px-2" onclick="openEditModal('${key}')" title="Sửa">
-                <i class="fa-solid fa-pen"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-danger py-1 px-2" onclick="deleteStock('${key}')" title="Xóa">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-
-        // 2. Render Mobile Card View
-        const card = document.createElement('div');
-        card.className = 'stock-card';
-        card.innerHTML = `
-          <div class="stock-card-header">
-            <div class="d-flex align-items-center gap-2">
-              <span class="fs-5 fw-bold text-dark">${stk.ticker}</span>
-              <span class="${stk.stockType === 'DIVIDEND' ? 'badge-type-dividend' : 'badge-type-growth'}">
-                ${stk.stockType === 'DIVIDEND' ? '💵 Tích Sản' : '📈 Tăng Trưởng'}
-              </span>
-            </div>
+    <!-- SIDEBAR MENU (GIỮ NGUYÊN BỐ CỤC) -->
+    <aside>
+        <div class="brand">
+            <i class="fa-solid fa-vault"></i>
             <div>
-              ${m.statusHtml}
+                <h2>SỔ TAY CỔ TỨC</h2>
+                <span style="font-size: 11px; color: var(--text-secondary);">Quản trị Định lượng 2030</span>
             </div>
-          </div>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item active"><i class="fa-solid fa-chart-pie"></i> Tổng quan Danh mục</li>
+            <li class="nav-item"><i class="fa-solid fa-calendar-check"></i> Lịch Chốt Quyền</li>
+            <li class="nav-item"><i class="fa-solid fa-calculator"></i> Tính Toán Định Giá G1/G2</li>
+            <li class="nav-item"><i class="fa-solid fa-arrow-trend-down"></i> Tín Hiệu Bắt Đáy MA150</li>
+            <li class="nav-item"><i class="fa-solid fa-wallet"></i> Kế Hoạch Giải Ngân</li>
+            <li class="nav-item"><i class="fa-solid fa-gear"></i> Cấu Hình Thuật Toán</li>
+        </ul>
+    </aside>
 
-          <div class="stock-card-row">
-            <span class="label">Thị giá hiện tại:</span>
-            <span class="num-mono text-primary fw-bold fs-6">${Number(stk.currentPrice).toLocaleString('vi-VN')} đ</span>
-          </div>
+    <!-- MAIN DASHBOARD -->
+    <main>
+        <header>
+            <div class="header-title">
+                <h1>Hệ Thống Phân Tích Định Lượng & Tích Sản Tối Ưu</h1>
+                <p>Cập nhật dữ liệu thị trường & Tín hiệu kỹ thuật tự động</p>
+            </div>
+            <div class="capital-card">
+                <i class="fa-solid fa-money-bill-transfer" style="font-size: 24px;"></i>
+                <div>
+                    <p>Vốn giải ngân đợt 03/09/2026</p>
+                    <h3>134.000.000 VNĐ</h3>
+                </div>
+            </div>
+        </header>
 
-          <div class="stock-card-row">
-            <span class="label">Nắm giữ / Giá trị vốn:</span>
-            <span class="num-mono text-dark fw-bold">${m.shares.toLocaleString('vi-VN')} CP (${(m.totalHoldingValue / 1000000).toFixed(1)} tr)</span>
-          </div>
+        <!-- TOP METRICS -->
+        <div class="metrics-grid">
+            <div class="metric-box">
+                <div class="label">Mã đạt điểm rơi vàng (T9-T10) <i class="fa-solid fa-star" style="color: #e3b341;"></i></div>
+                <div class="value" style="color: #3fb950;">3 Mã</div>
+                <div class="sub" style="color: var(--text-secondary);">VEA (T10), TCB (T9-10), HND (T9)</div>
+            </div>
+            <div class="metric-box">
+                <div class="label">Tiền mặt dự kiến thu về (1 năm) <i class="fa-solid fa-hand-holding-dollar"></i></div>
+                <div class="value">13.699.000 đ</div>
+                <div class="sub" style="color: #3fb950;">Hiệu suất tiền mặt ròng: 10.29%</div>
+            </div>
+            <div class="metric-box">
+                <div class="label">Trạng thái Tín hiệu MA20/MA200 <i class="fa-solid fa-wave-square"></i></div>
+                <div class="value" style="color: #58a6ff;">4 Mã Uptrend</div>
+                <div class="sub" style="color: var(--text-secondary);">Xác nhận điểm gom an toàn</div>
+            </div>
+            <div class="metric-box">
+                <div class="label">Cảnh báo MA150 (-30%) <i class="fa-solid fa-bullhorn"></i></div>
+                <div class="value" style="color: #8b949e;">0 Kích hoạt</div>
+                <div class="sub" style="color: var(--text-secondary);">Thị trường đang ổn định</div>
+            </div>
+        </div>
 
-          ${stk.stockType === 'DIVIDEND' ? `
-          <div class="stock-card-row">
-            <span class="label">Cổ tức mặt nhận / năm:</span>
-            <span class="num-mono text-success fw-bold">${m.annualDivReceived.toLocaleString('vi-VN')} đ</span>
-          </div>` : `
-          <div class="stock-card-row">
-            <span class="label">Định giá P/B hiện tại:</span>
-            <span>${m.valDisplay}</span>
-          </div>`}
+        <!-- STOCKS LIST -->
+        <div class="section-header">
+            <i class="fa-solid fa-list-check" style="color: #58a6ff;"></i>
+            Danh Mục 7 Mã Chiến Lược (Phân Tích Chi Tiết)
+        </div>
 
-          <div class="stock-card-row pt-2 border-top">
-            <span class="label">Vùng mua Gom (G1):</span>
-            <span class="num-mono text-success fw-bold">≤ ${m.g1.toLocaleString('vi-VN')} đ</span>
-          </div>
+        <div class="stocks-grid" id="stocks-container">
+            <!-- Dynamic Render qua JavaScript bên dưới -->
+        </div>
+    </main>
 
-          <div class="stock-card-row">
-            <span class="label">Mục tiêu Chốt (G2):</span>
-            <span class="num-mono text-danger fw-bold">≥ ${m.g2.toLocaleString('vi-VN')} đ</span>
-          </div>
+    <!-- JAVASCRIPT XỬ LÝ LOGIC ĐỊNH LƯỢNG & BẮT ĐÁY MA150 -->
+    <script>
+        // DỮ LIỆU ĐỊNH LƯỢNG VÀ KỸ THUẬT 7 MÃ CHIẾN LƯỢC
+        const portfolioData = [
+            {
+                ticker: "VEA",
+                exchange: "UPCoM",
+                group: "Dòng tiền",
+                price: 35200,
+                g1: 38000,
+                g2: 55000,
+                dividendCash: 4560, // Cổ tức ròng sau thuế
+                dividendSchedule: "Chốt Tháng 10 - 11/2026",
+                ma20: 35000,
+                ma200: 34800,
+                pBreak150: 38000, // Điểm gãy MA150 giả định
+                fundamental: "Sạch nợ dài hạn, tiền mặt 14.500 tỷ, ROE 29%",
+                priorityRank: 1
+            },
+            {
+                ticker: "TCB",
+                exchange: "HOSE",
+                group: "Tăng trưởng",
+                price: 24000,
+                g1: 23650, // P/B <= 1.1
+                g2: 32000,
+                dividendCash: 1425,
+                dividendSchedule: "Chốt T9 - T10 (1.4k TM + 15-20% CP)",
+                ma20: 23800,
+                ma200: 22500,
+                pBreak150: 25500,
+                fundamental: "CAR > 15%, CASA ~40%, ROE ~19%",
+                priorityRank: 2
+            },
+            {
+                ticker: "HND",
+                exchange: "UPCoM",
+                group: "Dòng tiền",
+                price: 9600,
+                g1: 10000,
+                g2: 14500,
+                dividendCash: 950,
+                dividendSchedule: "Chốt Tháng 9 - 10/2026",
+                ma20: 9550,
+                ma200: 9750,
+                pBreak150: 10500,
+                fundamental: "Đã sạch 100% nợ vay dài hạn, LN 6T > 508 tỷ",
+                priorityRank: 3
+            },
+            {
+                ticker: "MBB",
+                exchange: "HOSE",
+                group: "Tăng trưởng",
+                price: 21050,
+                g1: 22550,
+                g2: 30000,
+                dividendCash: 475,
+                dividendSchedule: "Chốt Tháng 10 (15-20% CP + 500đ TM)",
+                ma20: 21300,
+                ma200: 20900,
+                pBreak150: 24000,
+                fundamental: "Top 1 CASA, LLR > 100%, ROE ~23%",
+                priorityRank: 4
+            },
+            {
+                ticker: "SJD",
+                exchange: "HOSE",
+                group: "Dòng tiền",
+                price: 13950,
+                g1: 12700,
+                g2: 19000,
+                dividendCash: 1520,
+                dividendSchedule: "Chốt Tháng 11/2026",
+                ma20: 13900,
+                ma200: 13600,
+                pBreak150: 15200,
+                fundamental: "Khấu hao gần hết, sạch nợ, FCF dồi dào",
+                priorityRank: 5
+            },
+            {
+                ticker: "QTP",
+                exchange: "UPCoM",
+                group: "Dòng tiền",
+                price: 11100,
+                g1: 11900,
+                g2: 16000,
+                dividendCash: 475,
+                dividendSchedule: "Chốt đợt 2: Tháng 10 - 11/2026",
+                ma20: 11050,
+                ma200: 11200,
+                pBreak150: 12500,
+                fundamental: "Khấu hao xong, sạch nợ dài hạn, ROE ~15%",
+                priorityRank: 6
+            },
+            {
+                ticker: "ACB",
+                exchange: "HOSE",
+                group: "Tăng trưởng",
+                price: 22650,
+                g1: 23100,
+                g2: 32000,
+                dividendCash: 0,
+                dividendSchedule: "Đã hoàn tất chia cổ tức 2026",
+                ma20: 22500,
+                ma200: 21800,
+                pBreak150: 24500,
+                fundamental: "NPL < 1.3%, không rủi ro trái phiếu, ROE > 23%",
+                priorityRank: 7
+            }
+        ];
 
-          <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
-            <button class="btn btn-sm btn-outline-secondary px-3" onclick="openEditModal('${key}')">
-              <i class="fa-solid fa-pen me-1"></i> Sửa
-            </button>
-            <button class="btn btn-sm btn-outline-danger px-3" onclick="deleteStock('${key}')">
-              <i class="fa-solid fa-trash me-1"></i> Xóa
-            </button>
-          </div>
-        `;
-        mobileContainer.appendChild(card);
-      });
+        // HÀM TÍNH TOÁN VÀ KIỂM TRA TÍN HIỆU MA150 (-30%)
+        function evaluateMA150(stock) {
+            const pTarget150 = stock.pBreak150 * 0.70; // Ngưỡng giảm 30% từ điểm gãy
+            const currentDiscount = (((stock.pBreak150 - stock.price) / stock.pBreak150) * 100).toFixed(1);
+            const isDiscount30 = stock.price <= pTarget150;
+            const isUnderG1 = stock.price <= stock.g1;
 
-      // Cập nhật Header
-      document.getElementById('statTotalNav').innerText = totalNav.toLocaleString('vi-VN') + ' đ';
-      document.getElementById('statTotalShares').innerText = totalSharesAll.toLocaleString('vi-VN') + ' CP trong danh mục';
-      document.getElementById('statAnnualDividend').innerText = totalAnnualDividend.toLocaleString('vi-VN') + ' đ';
-      document.getElementById('statMonthlyDividend').innerText = `~${Math.round(totalAnnualDividend / 12).toLocaleString('vi-VN')} đ/tháng`;
-      document.getElementById('statTotalStocks').innerText = totalStocks + ' mã';
-      document.getElementById('statTypeBreakdown').innerText = `${divCount} Tích sản | ${growthCount} Tăng trưởng`;
-      document.getElementById('statBuyAlerts').innerText = buyCount + ' mã';
-    }
+            if (isDiscount30 && isUnderG1) {
+                return {
+                    triggered: true,
+                    badge: `<span class="badge badge-sale-150"><i class="fa-solid fa-fire"></i> SĂN SALE ĐẠI HẠ GIÁ (MA150 -30%)</span>`,
+                    detail: `Đã chiết khấu <strong>-${currentDiscount}%</strong> từ điểm gãy MA150 (${stock.pBreak150.toLocaleString()} đ) và lọt sâu vào Vùng G1. Kích hoạt gom vét 100% tiền tươi!`
+                };
+            }
 
-    function toggleFormInputs() {
-      const isDiv = document.getElementById('radioDividend').checked;
-      document.getElementById('dividendInputGroup').classList.toggle('d-none', !isDiv);
-      document.getElementById('growthInputGroup').classList.toggle('d-none', isDiv);
-      document.getElementById('inputCashDividend').required = isDiv;
-      document.getElementById('inputBvps').required = !isDiv;
-    }
-
-    function openAddModal() {
-      document.getElementById('modalTitle').innerText = 'Thêm Mã Cổ Phiếu Mới';
-      document.getElementById('editKey').value = '';
-      document.getElementById('stockForm').reset();
-      document.getElementById('radioDividend').checked = true;
-      document.getElementById('inputTicker').readOnly = false;
-      toggleFormInputs();
-      stockModal.show();
-    }
-
-    function openEditModal(key) {
-      const stk = stocksData[key];
-      document.getElementById('modalTitle').innerText = 'Cập Nhật Mã ' + stk.ticker;
-      document.getElementById('editKey').value = key;
-      document.getElementById('inputTicker').value = stk.ticker;
-      document.getElementById('inputTicker').readOnly = true;
-      document.getElementById('inputShares').value = stk.sharesCount || 0;
-      document.getElementById('inputCurrentPrice').value = stk.currentPrice;
-
-      if (stk.stockType === 'DIVIDEND') {
-        document.getElementById('radioDividend').checked = true;
-        document.getElementById('inputCashDividend').value = stk.cashDividend || '';
-      } else {
-        document.getElementById('radioGrowth').checked = true;
-        document.getElementById('inputBvps').value = stk.bvps || '';
-      }
-
-      toggleFormInputs();
-      stockModal.show();
-    }
-
-    function handleFormSubmit(e) {
-      e.preventDefault();
-
-      const key = document.getElementById('editKey').value;
-      const ticker = document.getElementById('inputTicker').value.trim().toUpperCase();
-      const stockType = document.getElementById('radioDividend').checked ? 'DIVIDEND' : 'GROWTH';
-      const sharesCount = Number(document.getElementById('inputShares').value) || 0;
-      const currentPrice = Number(document.getElementById('inputCurrentPrice').value) || 0;
-      const cashDividend = stockType === 'DIVIDEND' ? (Number(document.getElementById('inputCashDividend').value) || 0) : 0;
-      const bvps = stockType === 'GROWTH' ? (Number(document.getElementById('inputBvps').value) || 0) : 0;
-
-      const data = { ticker, stockType, sharesCount, currentPrice, cashDividend, bvps };
-      const saveKey = key ? key : ticker;
-
-      // 1. Lưu ngay vào bộ nhớ máy (Local Cache) trước để bảo vệ dữ liệu tức thì
-      stocksData[saveKey] = data;
-      localStorage.setItem('CACHED_STOCKS_DATA', JSON.stringify(stocksData));
-      renderUI();
-      stockModal.hide();
-
-      // 2. Đồng bộ lên Firebase Realtime Database
-      if (db) {
-        db.ref('stocks/' + saveKey).set(data).catch(err => {
-          console.warn("Lỗi lưu Firebase (đang dùng cache máy):", err);
-        });
-      }
-    }
-
-    function deleteStock(key) {
-      if (confirm(`Xác nhận xóa mã ${key}?`)) {
-        delete stocksData[key];
-        localStorage.setItem('CACHED_STOCKS_DATA', JSON.stringify(stocksData));
-        renderUI();
-
-        if (db) {
-          db.ref('stocks/' + key).remove().catch(err => console.warn(err));
+            return {
+                triggered: false,
+                badge: `<span class="badge badge-neutral"><i class="fa-solid fa-shield-halved"></i> MA150 Chưa kích hoạt</span>`,
+                detail: `Điểm gãy MA150: ${stock.pBreak150.toLocaleString()} đ | Mức giá kích hoạt (-30%): &le; <strong>${Math.round(pTarget150).toLocaleString()} đ</strong> (Hiện tại: -${currentDiscount}%)`
+            };
         }
-      }
-    }
-  </script>
+
+        // HÀM XÁC ĐỊNH TÍN HIỆU XU HƯỚNG MA20 / MA200 & KHUYẾN NGHỊ HÀNH ĐỘNG
+        function evaluateStrategy(stock) {
+            const isUnderG1 = stock.price <= stock.g1;
+            const netYield = ((stock.dividendCash / stock.price) * 100).toFixed(2);
+            let maSignal = "";
+            let actionAdvice = "";
+
+            if (isUnderG1) {
+                if (stock.price >= stock.ma20) {
+                    maSignal = `<span class="badge badge-buy-strong"><i class="fa-solid fa-circle-check"></i> MUA GOM BƯỚC 2 (100% VỐN)</span>`;
+                    actionAdvice = `Định giá Rẻ (Yield: ${netYield}%) + Giá cắt lên trên MA20. Xác nhận hoàn tất đáy ngắn hạn. Giải ngân trọn gói hạn mức.`;
+                } else {
+                    maSignal = `<span class="badge badge-buy-strong"><i class="fa-solid fa-circle-dot"></i> MUA GOM BƯỚC 1 (50% VỐN)</span>`;
+                    actionAdvice = `Giá nằm trong Vùng G1 và vận động sát MA200 dài hạn. Thích hợp giải ngân 50% vốn thăm dò đáy.`;
+                }
+            } else {
+                maSignal = `<span class="badge badge-hold"><i class="fa-solid fa-hourglass-half"></i> NẮM GIỮ CHỜ QUYỀN</span>`;
+                actionAdvice = `Giá đang nằm ngoài vùng gom G1. Giữ nguyên vị thế, không mua đuổi, chờ nhận cổ tức.`;
+            }
+
+            return { netYield, maSignal, actionAdvice };
+        }
+
+        // RENDER DANH MỤC LÊN GIAO DIỆN
+        const container = document.getElementById("stocks-container");
+
+        portfolioData.forEach(stock => {
+            const ma150Result = evaluateMA150(stock);
+            const strategyResult = evaluateStrategy(stock);
+
+            const card = document.createElement("div");
+            card.className = "stock-card";
+            card.innerHTML = `
+                <div class="card-top">
+                    <div class="ticker-info">
+                        <span class="ticker-symbol">${stock.ticker}</span>
+                        <span class="exchange-tag">${stock.exchange}</span>
+                        <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(56, 139, 253, 0.15); color: #58a6ff;">#Ưu tiên ${stock.priorityRank}</span>
+                    </div>
+                    <div class="current-price">
+                        <div class="price-num">${stock.price.toLocaleString()} đ</div>
+                        <span style="font-size: 11px; color: var(--text-secondary);">Thị giá hiện tại</span>
+                    </div>
+                </div>
+
+                <div class="card-body-grid">
+                    <div class="data-item">
+                        <span>Vùng Gom G1 / G2:</span>
+                        <strong>&le; ${stock.g1.toLocaleString()} đ</strong> / ${stock.g2.toLocaleString()} đ
+                    </div>
+                    <div class="data-item">
+                        <span>Cổ tức TM (Yield ròng):</span>
+                        <strong style="color: #3fb950;">${stock.dividendCash.toLocaleString()} đ (${strategyResult.netYield}%)</strong>
+                    </div>
+                    <div class="data-item" style="grid-column: span 2;">
+                        <span>Lịch chốt quyền & Sức khỏe:</span>
+                        <strong>${stock.dividendSchedule}</strong>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">${stock.fundamental}</div>
+                    </div>
+                </div>
+
+                <div class="tech-block">
+                    <div class="tech-row">
+                        <span style="color: var(--text-secondary); font-size: 11.5px;">Xu hướng MA20 / MA200:</span>
+                        ${strategyResult.maSignal}
+                    </div>
+                    <div class="tech-values">
+                        MA20: ${stock.ma20.toLocaleString()} đ | MA200: ${stock.ma200.toLocaleString()} đ
+                    </div>
+
+                    <!-- KHỐI BỔ SUNG TÍN HIỆU MA150 -->
+                    <div class="ma150-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 11.5px; color: #8b949e;">Bắt đáy MA150 (-30%):</span>
+                            ${ma150Result.badge}
+                        </div>
+                        <div class="ma150-detail">
+                            ${ma150Result.detail}
+                        </div>
+                    </div>
+
+                    <div class="action-advice">
+                        <i class="fa-solid fa-lightbulb" style="color: var(--accent-orange); margin-right: 4px;"></i>
+                        ${strategyResult.actionAdvice}
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    </script>
 </body>
 </html>
