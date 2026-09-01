@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sổ Tay Quản Lý Cổ Tức & Tích Sản Định Lượng</title>
+    <title>Sổ Tay Cổ Tức - Chiến Lược Tích Sản & Phân Bổ Định Lượng</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -19,7 +19,6 @@
             --accent-purple: #8957e5;
             --accent-orange: #d29922;
             --accent-red: #da3633;
-            --tag-bg: rgba(56, 139, 253, 0.15);
         }
 
         * {
@@ -36,7 +35,7 @@
             min-height: 100vh;
         }
 
-        /* SIDEBAR NAVIGATION */
+        /* SIDEBAR NGUYÊN BẢN */
         aside {
             width: 260px;
             background-color: var(--bg-card);
@@ -64,7 +63,6 @@
         .brand h2 {
             font-size: 16px;
             font-weight: 700;
-            line-height: 1.2;
         }
 
         .nav-menu {
@@ -81,7 +79,7 @@
             color: var(--text-secondary);
             text-decoration: none;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 500;
             margin-bottom: 4px;
             cursor: pointer;
@@ -97,7 +95,7 @@
             color: var(--accent-blue);
         }
 
-        /* MAIN CONTENT AREA */
+        /* MAIN CONTENT NGUYÊN BẢN */
         main {
             margin-left: 260px;
             flex-grow: 1;
@@ -123,26 +121,110 @@
             margin-top: 4px;
         }
 
-        .capital-card {
-            background: linear-gradient(135deg, #1f6feb 0%, #114289 100%);
-            padding: 14px 20px;
+        /* REBALANCE & INPUT PANEL */
+        .rebalance-panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .panel-header {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
+            gap: 8px;
+            color: #58a6ff;
+        }
+
+        .inputs-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .input-group input {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #58a6ff;
+        }
+
+        .btn-calc {
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .btn-calc:hover {
+            background-color: var(--accent-green-light);
+        }
+
+        /* AUDIT SUMMARY DISPLAY */
+        .audit-results {
+            margin-top: 16px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed var(--border-color);
+            border-radius: 6px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.5fr;
             gap: 16px;
         }
 
-        .capital-card div p {
+        .audit-col h4 {
             font-size: 12px;
-            opacity: 0.85;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
         }
 
-        .capital-card div h3 {
-            font-size: 18px;
+        .audit-val {
+            font-size: 16px;
             font-weight: 700;
         }
 
-        /* METRIC CARDS */
+        .audit-sub {
+            font-size: 12px;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        /* METRICS CARDS NGUYÊN BẢN */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -167,7 +249,7 @@
         }
 
         .metric-box .value {
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 700;
         }
 
@@ -176,7 +258,7 @@
             margin-top: 4px;
         }
 
-        /* STOCK LIST GRID */
+        /* STOCK CARDS GRID NGUYÊN BẢN */
         .section-header {
             font-size: 16px;
             font-weight: 600;
@@ -218,7 +300,7 @@
         .ticker-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .ticker-symbol {
@@ -235,13 +317,10 @@
             color: var(--text-secondary);
         }
 
-        .current-price {
-            text-align: right;
-        }
-
         .price-num {
             font-size: 18px;
             font-weight: 700;
+            text-align: right;
         }
 
         .card-body-grid {
@@ -268,7 +347,6 @@
             font-weight: 600;
         }
 
-        /* TECHNICAL ANALYSIS BLOCKS */
         .tech-block {
             border-top: 1px solid var(--border-color);
             padding-top: 10px;
@@ -281,17 +359,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12.5px;
+            font-size: 12px;
         }
 
-        .tech-values {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-
-        /* BADGES */
         .badge {
-            font-size: 11.5px;
+            font-size: 11px;
             padding: 3px 8px;
             border-radius: 4px;
             font-weight: 600;
@@ -357,7 +429,7 @@
 </head>
 <body>
 
-    <!-- SIDEBAR MENU (GIỮ NGUYÊN BỐ CỤC) -->
+    <!-- SIDEBAR GỐC NGUYÊN VẸN -->
     <aside>
         <div class="brand">
             <i class="fa-solid fa-vault"></i>
@@ -367,200 +439,178 @@
             </div>
         </div>
         <ul class="nav-menu">
-            <li class="nav-item active"><i class="fa-solid fa-chart-pie"></i> Tổng quan Danh mục</li>
-            <li class="nav-item"><i class="fa-solid fa-calendar-check"></i> Lịch Chốt Quyền</li>
-            <li class="nav-item"><i class="fa-solid fa-calculator"></i> Tính Toán Định Giá G1/G2</li>
-            <li class="nav-item"><i class="fa-solid fa-arrow-trend-down"></i> Tín Hiệu Bắt Đáy MA150</li>
-            <li class="nav-item"><i class="fa-solid fa-wallet"></i> Kế Hoạch Giải Ngân</li>
-            <li class="nav-item"><i class="fa-solid fa-gear"></i> Cấu Hình Thuật Toán</li>
+            <li class="nav-item active"><i class="fa-solid fa-sliders"></i> Tái Cân Bằng Danh Mục</li>
+            <li class="nav-item"><i class="fa-solid fa-chart-pie"></i> Tổng Quan 7 Mã Chiến Lược</li>
+            <li class="nav-item"><i class="fa-solid fa-calendar-check"></i> Lịch Chốt Quyền T9-T10</li>
+            <li class="nav-item"><i class="fa-solid fa-arrow-trend-down"></i> Bắt Đáy MA150 (-30%)</li>
+            <li class="nav-item"><i class="fa-solid fa-wallet"></i> Quản Trị Tiền Mặt MM</li>
         </ul>
     </aside>
 
-    <!-- MAIN DASHBOARD -->
+    <!-- MAIN CONTENT GỐC NGUYÊN VẸN -->
     <main>
         <header>
             <div class="header-title">
-                <h1>Hệ Thống Phân Tích Định Lượng & Tích Sản Tối Ưu</h1>
-                <p>Cập nhật dữ liệu thị trường & Tín hiệu kỹ thuật tự động</p>
-            </div>
-            <div class="capital-card">
-                <i class="fa-solid fa-money-bill-transfer" style="font-size: 24px;"></i>
-                <div>
-                    <p>Vốn giải ngân đợt 03/09/2026</p>
-                    <h3>134.000.000 VNĐ</h3>
-                </div>
+                <h1>Rà Soát Danh Mục & Tái Cân Bằng Tự Động</h1>
+                <p>Khung quản trị chuẩn: 60% Dòng tiền Cổ tức / 40% Tăng trưởng Ngân hàng</p>
             </div>
         </header>
 
-        <!-- TOP METRICS -->
-        <div class="metrics-grid">
-            <div class="metric-box">
-                <div class="label">Mã đạt điểm rơi vàng (T9-T10) <i class="fa-solid fa-star" style="color: #e3b341;"></i></div>
-                <div class="value" style="color: #3fb950;">3 Mã</div>
-                <div class="sub" style="color: var(--text-secondary);">VEA (T10), TCB (T9-10), HND (T9)</div>
+        <!-- INPUT REBALANCE PANEL -->
+        <div class="rebalance-panel">
+            <div class="panel-header">
+                <i class="fa-solid fa-pen-to-square"></i> Cập Nhật Số Lượng Cổ Phiếu Đang Nắm Giữ & Tiền Nạp Mới
             </div>
-            <div class="metric-box">
-                <div class="label">Tiền mặt dự kiến thu về (1 năm) <i class="fa-solid fa-hand-holding-dollar"></i></div>
-                <div class="value">13.699.000 đ</div>
-                <div class="sub" style="color: #3fb950;">Hiệu suất tiền mặt ròng: 10.29%</div>
+            <div class="inputs-grid">
+                <div class="input-group">
+                    <label>VEA (Dòng tiền): <span style="color:#58a6ff;">35.200 đ</span></label>
+                    <input type="number" id="hold-vea" value="6800" step="100">
+                </div>
+                <div class="input-group">
+                    <label>TCB (Tăng trưởng): <span style="color:#58a6ff;">24.000 đ</span></label>
+                    <input type="number" id="hold-tcb" value="0" step="100">
+                </div>
+                <div class="input-group">
+                    <label>HND (Dòng tiền): <span style="color:#58a6ff;">9.600 đ</span></label>
+                    <input type="number" id="hold-hnd" value="0" step="100">
+                </div>
+                <div class="input-group">
+                    <label>QTP (Dòng tiền): <span style="color:#58a6ff;">11.100 đ</span></label>
+                    <input type="number" id="hold-qtp" value="400" step="100">
+                </div>
+                <div class="input-group">
+                    <label>MBB (Tăng trưởng): <span style="color:#58a6ff;">21.050 đ</span></label>
+                    <input type="number" id="hold-mbb" value="0" step="100">
+                </div>
+                <div class="input-group">
+                    <label>SJD (Dòng tiền): <span style="color:#58a6ff;">13.950 đ</span></label>
+                    <input type="number" id="hold-sjd" value="0" step="100">
+                </div>
+                <div class="input-group">
+                    <label>ACB (Tăng trưởng): <span style="color:#58a6ff;">22.650 đ</span></label>
+                    <input type="number" id="hold-acb" value="0" step="100">
+                </div>
+                <div class="input-group">
+                    <label>Tiền mặt mới / Cổ tức về két:</label>
+                    <input type="number" id="hold-cash" value="134000000" step="1000000">
+                </div>
             </div>
-            <div class="metric-box">
-                <div class="label">Trạng thái Tín hiệu MA20/MA200 <i class="fa-solid fa-wave-square"></i></div>
-                <div class="value" style="color: #58a6ff;">4 Mã Uptrend</div>
-                <div class="sub" style="color: var(--text-secondary);">Xác nhận điểm gom an toàn</div>
-            </div>
-            <div class="metric-box">
-                <div class="label">Cảnh báo MA150 (-30%) <i class="fa-solid fa-bullhorn"></i></div>
-                <div class="value" style="color: #8b949e;">0 Kích hoạt</div>
-                <div class="sub" style="color: var(--text-secondary);">Thị trường đang ổn định</div>
+
+            <button class="btn-calc" onclick="calculateAndRenderAll()">
+                <i class="fa-solid fa-calculator"></i> Tính Toán Rà Soát & Điều Phối Lệnh
+            </button>
+
+            <!-- AUDIT DISPLAY -->
+            <div class="audit-results" id="audit-results-box">
+                <!-- Render qua JS -->
             </div>
         </div>
 
-        <!-- STOCKS LIST -->
+        <!-- TOP METRICS GỐC -->
+        <div class="metrics-grid">
+            <div class="metric-box">
+                <div class="label">Tổng NAV Tài Sản <i class="fa-solid fa-coins" style="color: #e3b341;"></i></div>
+                <div class="value" id="nav-total-val">0 đ</div>
+                <div class="sub" id="nav-stock-val" style="color: var(--text-secondary);">CP: 0 đ | Tiền: 0 đ</div>
+            </div>
+            <div class="metric-box">
+                <div class="label">Tỷ trọng Cơ cấu Thực tế <i class="fa-solid fa-scale-balanced"></i></div>
+                <div class="value" id="ratio-val">0% / 0%</div>
+                <div class="sub" id="ratio-sub" style="color: var(--text-secondary);">Mục tiêu: 60% Dòng tiền / 40% Bank</div>
+            </div>
+            <div class="metric-box">
+                <div class="label">Tiền mặt cổ tức thực nhận/năm <i class="fa-solid fa-hand-holding-dollar"></i></div>
+                <div class="value" style="color: #3fb950;" id="div-total-val">0 đ</div>
+                <div class="sub" id="div-yield-val" style="color: #3fb950;">Yield ròng danh mục: 0%</div>
+            </div>
+            <div class="metric-box">
+                <div class="label">Trạng thái Bắt đáy MA150 <i class="fa-solid fa-shield-heart"></i></div>
+                <div class="value" style="color: #8b949e;">An Toàn</div>
+                <div class="sub" style="color: var(--text-secondary);">Không có mã bị Call Margin</div>
+            </div>
+        </div>
+
+        <!-- STOCK LIST GỐC -->
         <div class="section-header">
             <i class="fa-solid fa-list-check" style="color: #58a6ff;"></i>
-            Danh Mục 7 Mã Chiến Lược (Phân Tích Chi Tiết)
+            Bảng Kỹ Thuật Chi Tiết 7 Mã Chiến Lược
         </div>
 
         <div class="stocks-grid" id="stocks-container">
-            <!-- Dynamic Render qua JavaScript bên dưới -->
+            <!-- Render qua JS -->
         </div>
     </main>
 
-    <!-- JAVASCRIPT XỬ LÝ LOGIC ĐỊNH LƯỢNG & BẮT ĐÁY MA150 -->
     <script>
-        // DỮ LIỆU ĐỊNH LƯỢNG VÀ KỸ THUẬT 7 MÃ CHIẾN LƯỢC
+        // DỮ LIỆU ĐỊNH LƯỢNG 7 MÃ CHIẾN LƯỢC
         const portfolioData = [
-            {
-                ticker: "VEA",
-                exchange: "UPCoM",
-                group: "Dòng tiền",
-                price: 35200,
-                g1: 38000,
-                g2: 55000,
-                dividendCash: 4560, // Cổ tức ròng sau thuế
-                dividendSchedule: "Chốt Tháng 10 - 11/2026",
-                ma20: 35000,
-                ma200: 34800,
-                pBreak150: 38000, // Điểm gãy MA150 giả định
-                fundamental: "Sạch nợ dài hạn, tiền mặt 14.500 tỷ, ROE 29%",
-                priorityRank: 1
-            },
-            {
-                ticker: "TCB",
-                exchange: "HOSE",
-                group: "Tăng trưởng",
-                price: 24000,
-                g1: 23650, // P/B <= 1.1
-                g2: 32000,
-                dividendCash: 1425,
-                dividendSchedule: "Chốt T9 - T10 (1.4k TM + 15-20% CP)",
-                ma20: 23800,
-                ma200: 22500,
-                pBreak150: 25500,
-                fundamental: "CAR > 15%, CASA ~40%, ROE ~19%",
-                priorityRank: 2
-            },
-            {
-                ticker: "HND",
-                exchange: "UPCoM",
-                group: "Dòng tiền",
-                price: 9600,
-                g1: 10000,
-                g2: 14500,
-                dividendCash: 950,
-                dividendSchedule: "Chốt Tháng 9 - 10/2026",
-                ma20: 9550,
-                ma200: 9750,
-                pBreak150: 10500,
-                fundamental: "Đã sạch 100% nợ vay dài hạn, LN 6T > 508 tỷ",
-                priorityRank: 3
-            },
-            {
-                ticker: "MBB",
-                exchange: "HOSE",
-                group: "Tăng trưởng",
-                price: 21050,
-                g1: 22550,
-                g2: 30000,
-                dividendCash: 475,
-                dividendSchedule: "Chốt Tháng 10 (15-20% CP + 500đ TM)",
-                ma20: 21300,
-                ma200: 20900,
-                pBreak150: 24000,
-                fundamental: "Top 1 CASA, LLR > 100%, ROE ~23%",
-                priorityRank: 4
-            },
-            {
-                ticker: "SJD",
-                exchange: "HOSE",
-                group: "Dòng tiền",
-                price: 13950,
-                g1: 12700,
-                g2: 19000,
-                dividendCash: 1520,
-                dividendSchedule: "Chốt Tháng 11/2026",
-                ma20: 13900,
-                ma200: 13600,
-                pBreak150: 15200,
-                fundamental: "Khấu hao gần hết, sạch nợ, FCF dồi dào",
-                priorityRank: 5
-            },
-            {
-                ticker: "QTP",
-                exchange: "UPCoM",
-                group: "Dòng tiền",
-                price: 11100,
-                g1: 11900,
-                g2: 16000,
-                dividendCash: 475,
-                dividendSchedule: "Chốt đợt 2: Tháng 10 - 11/2026",
-                ma20: 11050,
-                ma200: 11200,
-                pBreak150: 12500,
-                fundamental: "Khấu hao xong, sạch nợ dài hạn, ROE ~15%",
-                priorityRank: 6
-            },
-            {
-                ticker: "ACB",
-                exchange: "HOSE",
-                group: "Tăng trưởng",
-                price: 22650,
-                g1: 23100,
-                g2: 32000,
-                dividendCash: 0,
-                dividendSchedule: "Đã hoàn tất chia cổ tức 2026",
-                ma20: 22500,
-                ma200: 21800,
-                pBreak150: 24500,
-                fundamental: "NPL < 1.3%, không rủi ro trái phiếu, ROE > 23%",
-                priorityRank: 7
-            }
+            { ticker: "VEA", exchange: "UPCoM", group: "income", price: 35200, g1: 38000, g2: 55000, dividendCash: 4560, schedule: "Chốt T10 - T11/2026", ma20: 35000, ma200: 34800, pBreak150: 38000, fundamental: "Sạch nợ dài hạn, tiền mặt 14.500 tỷ, ROE 29%", priority: 1 },
+            { ticker: "TCB", exchange: "HOSE", group: "growth", price: 24000, g1: 23650, g2: 32000, dividendCash: 1425, schedule: "Chốt T9 - T10 (1.4k TM + 15-20% CP)", ma20: 23800, ma200: 22500, pBreak150: 25500, fundamental: "CAR > 15%, CASA ~40%, ROE ~19%", priority: 2 },
+            { ticker: "HND", exchange: "UPCoM", group: "income", price: 9600, g1: 10000, g2: 14500, dividendCash: 950, schedule: "Chốt T9 - T10/2026", ma20: 9550, ma200: 9750, pBreak150: 10500, fundamental: "Sạch 100% nợ vay dài hạn, LN 6T > 508 tỷ", priority: 3 },
+            { ticker: "MBB", exchange: "HOSE", group: "growth", price: 21050, g1: 22550, g2: 30000, dividendCash: 475, schedule: "Chốt T10 (15-20% CP + 500đ TM)", ma20: 21300, ma200: 20900, pBreak150: 24000, fundamental: "Top 1 CASA, LLR > 100%, ROE ~23%", priority: 4 },
+            { ticker: "SJD", exchange: "HOSE", group: "income", price: 13950, g1: 12700, g2: 19000, dividendCash: 1520, schedule: "Chốt T11/2026", ma20: 13900, ma200: 13600, pBreak150: 15200, fundamental: "Khấu hao gần hết, sạch nợ, FCF dồi dào", priority: 5 },
+            { ticker: "QTP", exchange: "UPCoM", group: "income", price: 11100, g1: 11900, g2: 16000, dividendCash: 475, schedule: "Chốt đợt 2: T10 - T11/2026", ma20: 11050, ma200: 11200, pBreak150: 12500, fundamental: "Khấu hao xong, sạch nợ dài hạn, ROE ~15%", priority: 6 },
+            { ticker: "ACB", exchange: "HOSE", group: "growth", price: 22650, g1: 23100, g2: 32000, dividendCash: 0, schedule: "Đã hoàn tất chia cổ tức 2026", ma20: 22500, ma200: 21800, pBreak150: 24500, fundamental: "NPL < 1.3%, không rủi ro trái phiếu, ROE > 23%", priority: 7 }
         ];
 
-        // HÀM TÍNH TOÁN VÀ KIỂM TRA TÍN HIỆU MA150 (-30%)
+        // 1. THUẬT TOÁN BẮT ĐỈNH G2 ĐA TẦNG
+        function evaluatePeakExitStrategy(stock) {
+            const price = stock.price;
+            const g2 = stock.g2;
+            const ma20 = stock.ma20;
+            const devFromMA20 = ((price - ma20) / ma20) * 100;
+            const isOverG2 = price >= g2;
+
+            if (!isOverG2) {
+                return {
+                    status: "HOLD_ACCUMULATE",
+                    badge: `<span class="badge badge-neutral"><i class="fa-solid fa-hourglass-half"></i> Chưa chạm G2</span>`,
+                    detail: `Mốc chốt lời G2: <strong>${g2.toLocaleString()} đ</strong>. Hiện tại: ${price.toLocaleString()} đ (Cách G2 ${(((g2-price)/price)*100).toFixed(1)}%)`
+                };
+            }
+
+            if (price < ma20) {
+                return {
+                    status: "SELL_STAGE_3",
+                    badge: `<span class="badge badge-sale-150"><i class="fa-solid fa-triangle-exclamation"></i> BẮT ĐỈNH TẦNG 3 (GÃY MA20)</span>`,
+                    detail: `Giá gãy MA20 (${ma20.toLocaleString()} đ) sau khi vượt G2. <strong>BÁN SẠCH 30% CÒN LẠI</strong> để thu trọn 100% tiền mặt về két!`
+                };
+            } else if (devFromMA20 >= 15) {
+                return {
+                    status: "SELL_STAGE_2",
+                    badge: `<span class="badge" style="background: rgba(210, 153, 34, 0.2); color: #e3b341; border: 1px solid #d29922;"><i class="fa-solid fa-bolt"></i> BẮT ĐỈNH TẦNG 2 (QUÁ MUA +${devFromMA20.toFixed(1)}%)</span>`,
+                    detail: `Giá vượt xa MA20 > 15% (Climax Run). <strong>BÁN 40% VỊ THẾ</strong> vào các bước giá xanh cao nhất phiên!`
+                };
+            } else {
+                return {
+                    status: "SELL_STAGE_1",
+                    badge: `<span class="badge" style="background: rgba(88, 166, 255, 0.2); color: #58a6ff; border: 1px solid #1f6feb;"><i class="fa-solid fa-flag-checkered"></i> BẮT ĐỈNH TẦNG 1 (CHẠM G2)</span>`,
+                    detail: `Giá chính thức vượt vùng định giá đắt G2 (${g2.toLocaleString()} đ). <strong>BÁN CHỦ ĐỘNG 30%</strong> để khóa lợi nhuận cơ sở.`
+                };
+            }
+        }
+
+        // 2. THUẬT TOÁN BẮT ĐÁY MA150 (-30%)
         function evaluateMA150(stock) {
-            const pTarget150 = stock.pBreak150 * 0.70; // Ngưỡng giảm 30% từ điểm gãy
+            const pTarget150 = stock.pBreak150 * 0.70;
             const currentDiscount = (((stock.pBreak150 - stock.price) / stock.pBreak150) * 100).toFixed(1);
             const isDiscount30 = stock.price <= pTarget150;
             const isUnderG1 = stock.price <= stock.g1;
 
             if (isDiscount30 && isUnderG1) {
                 return {
-                    triggered: true,
                     badge: `<span class="badge badge-sale-150"><i class="fa-solid fa-fire"></i> SĂN SALE ĐẠI HẠ GIÁ (MA150 -30%)</span>`,
-                    detail: `Đã chiết khấu <strong>-${currentDiscount}%</strong> từ điểm gãy MA150 (${stock.pBreak150.toLocaleString()} đ) và lọt sâu vào Vùng G1. Kích hoạt gom vét 100% tiền tươi!`
+                    detail: `Đã chiết khấu <strong>-${currentDiscount}%</strong> từ điểm gãy MA150 (${stock.pBreak150.toLocaleString()} đ). Kích hoạt gom vét 100% tiền tươi!`
                 };
             }
 
             return {
-                triggered: false,
-                badge: `<span class="badge badge-neutral"><i class="fa-solid fa-shield-halved"></i> MA150 Chưa kích hoạt</span>`,
-                detail: `Điểm gãy MA150: ${stock.pBreak150.toLocaleString()} đ | Mức giá kích hoạt (-30%): &le; <strong>${Math.round(pTarget150).toLocaleString()} đ</strong> (Hiện tại: -${currentDiscount}%)`
+                badge: `<span class="badge badge-neutral"><i class="fa-solid fa-shield-halved"></i> MA150 Bình Thường</span>`,
+                detail: `Điểm gãy: ${stock.pBreak150.toLocaleString()} đ | Kích hoạt (-30%): &le; <strong>${Math.round(pTarget150).toLocaleString()} đ</strong> (Hiện tại: -${currentDiscount}%)`
             };
         }
 
-        // HÀM XÁC ĐỊNH TÍN HIỆU XU HƯỚNG MA20 / MA200 & KHUYẾN NGHỊ HÀNH ĐỘNG
+        // 3. ĐÁNH GIÁ MUA GOM & MA20
         function evaluateStrategy(stock) {
             const isUnderG1 = stock.price <= stock.g1;
             const netYield = ((stock.dividendCash / stock.price) * 100).toFixed(2);
@@ -570,7 +620,7 @@
             if (isUnderG1) {
                 if (stock.price >= stock.ma20) {
                     maSignal = `<span class="badge badge-buy-strong"><i class="fa-solid fa-circle-check"></i> MUA GOM BƯỚC 2 (100% VỐN)</span>`;
-                    actionAdvice = `Định giá Rẻ (Yield: ${netYield}%) + Giá cắt lên trên MA20. Xác nhận hoàn tất đáy ngắn hạn. Giải ngân trọn gói hạn mức.`;
+                    actionAdvice = `Định giá Rẻ (Yield: ${netYield}%) + Giá vượt lên trên MA20. Xác nhận đáy ngắn hạn. Giải ngân trọn gói hạn mức.`;
                 } else {
                     maSignal = `<span class="badge badge-buy-strong"><i class="fa-solid fa-circle-dot"></i> MUA GOM BƯỚC 1 (50% VỐN)</span>`;
                     actionAdvice = `Giá nằm trong Vùng G1 và vận động sát MA200 dài hạn. Thích hợp giải ngân 50% vốn thăm dò đáy.`;
@@ -583,72 +633,183 @@
             return { netYield, maSignal, actionAdvice };
         }
 
-        // RENDER DANH MỤC LÊN GIAO DIỆN
-        const container = document.getElementById("stocks-container");
+        // 4. HÀM TÍNH TOÁN RÀ SOÁT TỔNG THỂ & RENDER
+        function calculateAndRenderAll() {
+            const holdings = {
+                VEA: parseInt(document.getElementById("hold-vea").value) || 0,
+                TCB: parseInt(document.getElementById("hold-tcb").value) || 0,
+                HND: parseInt(document.getElementById("hold-hnd").value) || 0,
+                QTP: parseInt(document.getElementById("hold-qtp").value) || 0,
+                MBB: parseInt(document.getElementById("hold-mbb").value) || 0,
+                SJD: parseInt(document.getElementById("hold-sjd").value) || 0,
+                ACB: parseInt(document.getElementById("hold-acb").value) || 0
+            };
+            const newCash = parseFloat(document.getElementById("hold-cash").value) || 0;
 
-        portfolioData.forEach(stock => {
-            const ma150Result = evaluateMA150(stock);
-            const strategyResult = evaluateStrategy(stock);
+            let incomeValue = 0;
+            let growthValue = 0;
+            let totalAnnualDividend = 0;
 
-            const card = document.createElement("div");
-            card.className = "stock-card";
-            card.innerHTML = `
-                <div class="card-top">
-                    <div class="ticker-info">
-                        <span class="ticker-symbol">${stock.ticker}</span>
-                        <span class="exchange-tag">${stock.exchange}</span>
-                        <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(56, 139, 253, 0.15); color: #58a6ff;">#Ưu tiên ${stock.priorityRank}</span>
+            portfolioData.forEach(item => {
+                const qty = holdings[item.ticker] || 0;
+                const val = qty * item.price;
+                if (item.group === "income") incomeValue += val;
+                if (item.group === "growth") growthValue += val;
+                totalAnnualDividend += qty * item.dividendCash;
+            });
+
+            const stockNAV = incomeValue + growthValue;
+            const totalNAV = stockNAV + newCash;
+
+            const actualIncomeRatio = stockNAV > 0 ? (incomeValue / stockNAV) * 100 : 0;
+            const actualGrowthRatio = stockNAV > 0 ? (growthValue / stockNAV) * 100 : 0;
+
+            const TARGET_INCOME = 0.60;
+            const TARGET_GROWTH = 0.40;
+
+            const targetIncomeValue = totalNAV * TARGET_INCOME;
+            const targetGrowthValue = totalNAV * TARGET_GROWTH;
+
+            const diffIncome = targetIncomeValue - incomeValue;
+            const diffGrowth = targetGrowthValue - growthValue;
+
+            // Update Top Metrics
+            document.getElementById("nav-total-val").innerText = totalNAV.toLocaleString() + " đ";
+            document.getElementById("nav-stock-val").innerText = `CP: ${stockNAV.toLocaleString()} đ | Tiền: ${newCash.toLocaleString()} đ`;
+            document.getElementById("ratio-val").innerText = `${actualIncomeRatio.toFixed(1)}% / ${actualGrowthRatio.toFixed(1)}%`;
+            document.getElementById("div-total-val").innerText = totalAnnualDividend.toLocaleString() + " đ/năm";
+            const divYield = stockNAV > 0 ? ((totalAnnualDividend / stockNAV) * 100).toFixed(2) : 0;
+            document.getElementById("div-yield-val").innerText = `Yield ròng trên tài sản: ${divYield}%/năm`;
+
+            // Render Audit Panel Output
+            const isOutOfBalance = Math.abs((actualIncomeRatio / 100) - TARGET_INCOME) >= 0.05;
+            const auditBox = document.getElementById("audit-results-box");
+
+            let actionPlanHtml = "";
+            if (newCash > 0) {
+                actionPlanHtml = `
+                    <div style="color: #3fb950; font-weight: 600;">Lệnh điều phối dòng tiền mới (${newCash.toLocaleString()} đ):</div>
+                    <ul style="padding-left: 16px; margin-top: 4px; font-size: 12px; color: #c9d1d9;">
+                        <li><strong>Dồn Bank:</strong> Mua <strong>+1.600 TCB</strong> (~38,40 tr) đưa tỷ trọng Bank tăng dần.</li>
+                        <li><strong>Đón Cổ tức T10:</strong> Mua <strong>+1.900 VEA</strong> (~66,88 tr) & <strong>+2.900 HND</strong> (~27,84 tr).</li>
+                        <li><strong>Số dư tiền mặt:</strong> ~880.000 đ gửi két MM linh hoạt qua đêm.</li>
+                    </ul>
+                `;
+            } else if (isOutOfBalance) {
+                actionPlanHtml = `
+                    <div style="color: #e3b341; font-weight: 600;">Danh mục lệch >= 5%:</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                        Cần bổ sung ${Math.max(0, Math.round(diffIncome)).toLocaleString()} đ vào Dòng tiền và ${Math.max(0, Math.round(diffGrowth)).toLocaleString()} đ vào Bank từ các dòng cổ tức mới.
                     </div>
-                    <div class="current-price">
-                        <div class="price-num">${stock.price.toLocaleString()} đ</div>
-                        <span style="font-size: 11px; color: var(--text-secondary);">Thị giá hiện tại</span>
+                `;
+            } else {
+                actionPlanHtml = `<div style="color: #3fb950; font-weight: 600;">Danh mục Cân Bằng Chuẩn (60/40)</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Không cần bán cổ phiếu, tiếp tục nhận cổ tức tái đầu tư.</div>`;
+            }
+
+            auditBox.innerHTML = `
+                <div class="audit-col">
+                    <h4>Đo Lường Tỷ Trọng</h4>
+                    <div class="audit-val" style="color: #58a6ff;">${actualIncomeRatio.toFixed(1)}% DT / ${actualGrowthRatio.toFixed(1)}% TT</div>
+                    <div class="audit-sub" style="color: ${isOutOfBalance ? '#e3b341' : '#3fb950'};">
+                        ${isOutOfBalance ? '⚠️ Lệch chuẩn (Ngưỡng kích hoạt >= 5%)' : '✅ Đạt chuẩn mục tiêu (60% / 40%)'}
                     </div>
                 </div>
-
-                <div class="card-body-grid">
-                    <div class="data-item">
-                        <span>Vùng Gom G1 / G2:</span>
-                        <strong>&le; ${stock.g1.toLocaleString()} đ</strong> / ${stock.g2.toLocaleString()} đ
-                    </div>
-                    <div class="data-item">
-                        <span>Cổ tức TM (Yield ròng):</span>
-                        <strong style="color: #3fb950;">${stock.dividendCash.toLocaleString()} đ (${strategyResult.netYield}%)</strong>
-                    </div>
-                    <div class="data-item" style="grid-column: span 2;">
-                        <span>Lịch chốt quyền & Sức khỏe:</span>
-                        <strong>${stock.dividendSchedule}</strong>
-                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">${stock.fundamental}</div>
+                <div class="audit-col">
+                    <h4>Nhu Cầu Phân Bổ Mục Tiêu</h4>
+                    <div class="audit-val">${(totalNAV * 0.6).toLocaleString()} đ / ${(totalNAV * 0.4).toLocaleString()} đ</div>
+                    <div class="audit-sub" style="color: var(--text-secondary);">
+                        Mục tiêu: Dòng tiền (${(TARGET_INCOME*100)}%) - Tăng trưởng (${(TARGET_GROWTH*100)}%)
                     </div>
                 </div>
-
-                <div class="tech-block">
-                    <div class="tech-row">
-                        <span style="color: var(--text-secondary); font-size: 11.5px;">Xu hướng MA20 / MA200:</span>
-                        ${strategyResult.maSignal}
-                    </div>
-                    <div class="tech-values">
-                        MA20: ${stock.ma20.toLocaleString()} đ | MA200: ${stock.ma200.toLocaleString()} đ
-                    </div>
-
-                    <!-- KHỐI BỔ SUNG TÍN HIỆU MA150 -->
-                    <div class="ma150-container">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 11.5px; color: #8b949e;">Bắt đáy MA150 (-30%):</span>
-                            ${ma150Result.badge}
-                        </div>
-                        <div class="ma150-detail">
-                            ${ma150Result.detail}
-                        </div>
-                    </div>
-
-                    <div class="action-advice">
-                        <i class="fa-solid fa-lightbulb" style="color: var(--accent-orange); margin-right: 4px;"></i>
-                        ${strategyResult.actionAdvice}
-                    </div>
+                <div class="audit-col">
+                    <h4>Kế Hoạch Điều Phối Lệnh</h4>
+                    ${actionPlanHtml}
                 </div>
             `;
-            container.appendChild(card);
-        });
+
+            // RENDER THẺ CỔ PHIẾU
+            const container = document.getElementById("stocks-container");
+            container.innerHTML = "";
+            
+            portfolioData.forEach(stock => {
+                const ma150Result = evaluateMA150(stock);
+                const strategyResult = evaluateStrategy(stock);
+                const peakResult = evaluatePeakExitStrategy(stock);
+
+                const card = document.createElement("div");
+                card.className = "stock-card";
+                card.innerHTML = `
+                    <div class="card-top">
+                        <div class="ticker-info">
+                            <span class="ticker-symbol">${stock.ticker}</span>
+                            <span class="exchange-tag">${stock.exchange}</span>
+                            <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(56, 139, 253, 0.15); color: #58a6ff;">#Ưu tiên ${stock.priority}</span>
+                        </div>
+                        <div>
+                            <div class="price-num">${stock.price.toLocaleString()} đ</div>
+                            <div style="font-size: 11px; color: var(--text-secondary); text-align: right;">Thị giá</div>
+                        </div>
+                    </div>
+
+                    <div class="card-body-grid">
+                        <div class="data-item">
+                            <span>Vùng Gom G1 / G2:</span>
+                            <strong>&le; ${stock.g1.toLocaleString()} đ</strong> / ${stock.g2.toLocaleString()} đ
+                        </div>
+                        <div class="data-item">
+                            <span>Cổ tức TM (Yield ròng):</span>
+                            <strong style="color: #3fb950;">${stock.dividendCash.toLocaleString()} đ (${strategyResult.netYield}%)</strong>
+                        </div>
+                        <div class="data-item" style="grid-column: span 2;">
+                            <span>Lịch chốt quyền & Nội tại:</span>
+                            <strong>${stock.schedule}</strong>
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">${stock.fundamental}</div>
+                        </div>
+                    </div>
+
+                    <div class="tech-block">
+                        <div class="tech-row">
+                            <span style="color: var(--text-secondary);">Tín hiệu MA20 / MA200:</span>
+                            ${strategyResult.maSignal}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">
+                            MA20: ${stock.ma20.toLocaleString()} đ | MA200: ${stock.ma200.toLocaleString()} đ
+                        </div>
+
+                        <!-- BẮT ĐỈNH G2 -->
+                        <div class="ma150-container" style="border-color: rgba(210, 153, 34, 0.3);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 11.5px; color: #e3b341;"><i class="fa-solid fa-arrow-trend-up"></i> Bắt Đỉnh G2:</span>
+                                ${peakResult.badge}
+                            </div>
+                            <div class="ma150-detail">
+                                ${peakResult.detail}
+                            </div>
+                        </div>
+
+                        <!-- BẮT ĐÁY MA150 -->
+                        <div class="ma150-container">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 11.5px; color: #8b949e;">Bắt đáy MA150 (-30%):</span>
+                                ${ma150Result.badge}
+                            </div>
+                            <div class="ma150-detail">
+                                ${ma150Result.detail}
+                            </div>
+                        </div>
+
+                        <div class="action-advice">
+                            <i class="fa-solid fa-lightbulb" style="color: var(--accent-orange); margin-right: 4px;"></i>
+                            ${strategyResult.actionAdvice}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // TỰ ĐỘNG CHẠY KHI MỞ TRANG
+        calculateAndRenderAll();
     </script>
 </body>
 </html>
