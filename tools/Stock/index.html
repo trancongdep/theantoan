@@ -37,7 +37,7 @@
             flex-direction: column;
         }
 
-        /* TOP NAVIGATION BAR */
+        /* TOP NAVBAR */
         .top-navbar {
             background-color: var(--bg-card);
             border-bottom: 1px solid var(--border-color);
@@ -92,7 +92,7 @@
             color: #58a6ff;
         }
 
-        /* MAIN CONTENT AREA */
+        /* MAIN CONTENT */
         main {
             flex-grow: 1;
             padding: 16px 20px 40px 20px;
@@ -156,7 +156,7 @@
             color: var(--text-secondary);
         }
 
-        /* STOCK SUMMARY CARDS (CLEAN & MINIMAL) */
+        /* STOCK SUMMARY CARDS */
         .stocks-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -183,7 +183,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .ticker-group {
@@ -228,7 +228,7 @@
         }
 
         .current-price {
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 700;
         }
 
@@ -335,9 +335,9 @@
         .drawer-menu {
             position: fixed;
             top: 0;
-            right: -420px;
-            width: 400px;
-            max-width: 90%;
+            right: -520px;
+            width: 500px;
+            max-width: 95%;
             height: 100%;
             background-color: var(--bg-card);
             border-left: 1px solid var(--border-color);
@@ -389,18 +389,15 @@
         }
 
         .drawer-section-title {
-            font-size: 12.5px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 8px;
-        }
-
-        .drawer-inputs-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .drawer-input-group {
@@ -414,7 +411,7 @@
             color: var(--text-secondary);
         }
 
-        .drawer-input-group input {
+        .drawer-input-group input, .drawer-input-group select {
             background-color: var(--bg-main);
             border: 1px solid var(--border-color);
             border-radius: 6px;
@@ -426,8 +423,85 @@
             width: 100%;
         }
 
-        .drawer-input-group input:focus {
+        .drawer-input-group input:focus, .drawer-input-group select:focus {
             border-color: #58a6ff;
+        }
+
+        /* KHUNG NHẬP MỚI LỆNH MUA */
+        .add-tx-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tx-grid-inputs {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr 1.2fr;
+            gap: 8px;
+        }
+
+        .btn-add-tx {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .btn-add-tx:hover {
+            background-color: #388bfd;
+        }
+
+        /* BẢNG LỊCH SỬ NHẬT KÝ MUA TRONG DRAWER */
+        .tx-table-container {
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-main);
+        }
+
+        .tx-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11.5px;
+            text-align: left;
+        }
+
+        .tx-table th {
+            background-color: rgba(255, 255, 255, 0.04);
+            padding: 6px 8px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+        }
+
+        .tx-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .btn-del-tx {
+            background: none;
+            border: none;
+            color: var(--accent-red);
+            cursor: pointer;
+            font-size: 11px;
+            padding: 2px 4px;
         }
 
         .btn-calc-action {
@@ -445,7 +519,6 @@
             gap: 8px;
             transition: 0.2s;
             width: 100%;
-            margin-top: 4px;
         }
 
         .btn-calc-action:hover {
@@ -461,7 +534,7 @@
             line-height: 1.45;
         }
 
-        /* MODAL POPUP XEM CHI TIẾT CỔ PHIẾU */
+        /* MODAL POPUP CHI TIẾT */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -490,12 +563,12 @@
             border: 1px solid var(--border-color);
             border-radius: 10px;
             width: 100%;
-            max-width: 580px;
+            max-width: 600px;
             max-height: 90vh;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
             padding: 20px;
             transform: scale(0.95);
             transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -510,11 +583,11 @@
             justify-content: space-between;
             align-items: flex-start;
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 12px;
+            padding-bottom: 10px;
         }
 
         .modal-ticker {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 800;
             color: #58a6ff;
             display: flex;
@@ -551,7 +624,7 @@
         }
 
         .modal-block-detail {
-            font-size: 12.5px;
+            font-size: 12px;
             line-height: 1.4;
         }
 
@@ -564,34 +637,37 @@
             .stocks-grid {
                 grid-template-columns: 1fr;
             }
-            .drawer-inputs-grid {
-                grid-template-columns: 1fr;
+            .tx-grid-inputs {
+                grid-template-columns: 1fr 1fr;
             }
             main {
                 padding: 12px 14px 30px 14px;
+            }
+            .drawer-menu {
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- TOP NAVBAR VỚI MENU 3 GẠCH -->
+    <!-- TOP NAVBAR -->
     <header class="top-navbar">
         <div class="navbar-brand">
             <i class="fa-solid fa-vault"></i>
             <div>
                 <h1>Sổ tay tích sản ver 1.0</h1>
-                <span>Chiến Lược Định Lượng Cổ Tức 2030</span>
+                <span>Quản Trị Định Lượng & Lịch Sử Tích Sản 2030</span>
             </div>
         </div>
-        <button class="btn-menu-toggle" onclick="toggleDrawer(true)" title="Mở menu công cụ & nhập liệu">
+        <button class="btn-menu-toggle" onclick="toggleDrawer(true)" title="Mở menu sổ lệnh & tái cân bằng">
             <i class="fa-solid fa-bars"></i>
         </button>
     </header>
 
     <!-- MAIN DASHBOARD -->
     <main>
-        <!-- TOP METRICS SUMMARY -->
+        <!-- METRICS OVERVIEW -->
         <div class="metrics-grid">
             <div class="metric-box">
                 <div class="label">Tổng NAV Tài Sản <i class="fa-solid fa-coins" style="color: #e3b341;"></i></div>
@@ -606,38 +682,38 @@
             <div class="metric-box">
                 <div class="label">Cổ tức ròng/năm <i class="fa-solid fa-hand-holding-dollar"></i></div>
                 <div class="value" style="color: #3fb950;" id="div-total-val">0 đ</div>
-                <div class="sub" id="div-yield-val" style="color: #3fb950;">Yield: 0%/năm</div>
+                <div class="sub" id="div-yield-val" style="color: #3fb950;">Yield ròng: 0%/năm</div>
             </div>
             <div class="metric-box">
-                <div class="label">Thị trường <i class="fa-solid fa-shield-heart"></i></div>
-                <div class="value" style="color: #58a6ff;" id="market-status-val">Vùng Gom G1</div>
-                <div class="sub" style="color: var(--text-secondary);">An toàn gom tích sản</div>
+                <div class="label">Lãi / Lỗ Tạm Tính <i class="fa-solid fa-chart-line"></i></div>
+                <div class="value" id="pnl-total-val">0 đ</div>
+                <div class="sub" id="pnl-percent-val" style="color: var(--text-secondary);">0.00%</div>
             </div>
         </div>
 
-        <!-- STOCKS SECTION HEADER -->
+        <!-- SECTION HEADER -->
         <div class="section-header">
             <div class="section-title">
                 <i class="fa-solid fa-layer-group" style="color: #58a6ff;"></i>
-                Danh Mục 7 Mã Chiến Lược
+                Danh Mục 7 Mã Chiến Lược (Tổng Hợp)
             </div>
             <div class="section-hint">
-                <i class="fa-solid fa-arrow-pointer"></i> Bấm vào thẻ để xem đánh giá kỹ thuật chi tiết
+                <i class="fa-solid fa-arrow-pointer"></i> Bấm vào thẻ để xem nhật ký mua & kỹ thuật
             </div>
         </div>
 
-        <!-- STOCKS GRID (CLEAN SUMMARY CARDS) -->
+        <!-- STOCKS GRID -->
         <div class="stocks-grid" id="stocks-container">
-            <!-- Render danh sách tóm tắt qua JS -->
+            <!-- Render qua JS -->
         </div>
     </main>
 
-    <!-- DRAWER SIDEBAR (MENU 3 GẠCH CHỨA CÔNG CỤ NHẬP LIỆU & REFRESH) -->
+    <!-- DRAWER SIDEBAR (MENU 3 GẠCH QUẢN LÝ SỔ LỆNH & TÁI CÂN BẰNG) -->
     <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer(false)"></div>
     <div class="drawer-menu" id="drawer-menu">
         <div class="drawer-header">
             <div class="drawer-title">
-                <i class="fa-solid fa-sliders"></i> Công Cụ & Tái Cân Bằng
+                <i class="fa-solid fa-book-bookmark"></i> Sổ Lệnh & Quản Trị Danh Mục
             </div>
             <button class="btn-close-drawer" onclick="toggleDrawer(false)">
                 <i class="fa-solid fa-xmark"></i>
@@ -645,6 +721,7 @@
         </div>
 
         <div class="drawer-body">
+            <!-- TIỀN MẶT -->
             <div>
                 <div class="drawer-section-title"><i class="fa-solid fa-wallet"></i> Tiền Nạp Mới / Cổ Tức Về Két</div>
                 <div class="drawer-input-group">
@@ -653,37 +730,65 @@
                 </div>
             </div>
 
+            <!-- NHẬP LỆNH MUA MỚI (3 MỤC BẮT BUỘC: MÃ, SLG, GIÁ, NGÀY) -->
             <div>
-                <div class="drawer-section-title"><i class="fa-solid fa-cubes"></i> Cập Nhật Lượng Cổ Phiếu Đang Giữ</div>
-                <div class="drawer-inputs-grid">
-                    <div class="drawer-input-group">
-                        <label>VEA (Dòng tiền):</label>
-                        <input type="number" id="hold-vea" value="6800" step="100">
+                <div class="drawer-section-title">
+                    <span><i class="fa-solid fa-cart-plus"></i> Nhập Giao Dịch Mua Gom Mới</span>
+                </div>
+                <div class="add-tx-box">
+                    <div class="tx-grid-inputs">
+                        <div class="drawer-input-group">
+                            <label>Mã CP:</label>
+                            <select id="tx-ticker">
+                                <option value="VEA">VEA</option>
+                                <option value="TCB">TCB</option>
+                                <option value="HND">HND</option>
+                                <option value="QTP">QTP</option>
+                                <option value="MBB">MBB</option>
+                                <option value="SJD">SJD</option>
+                                <option value="ACB">ACB</option>
+                            </select>
+                        </div>
+                        <div class="drawer-input-group">
+                            <label>Số lượng:</label>
+                            <input type="number" id="tx-qty" placeholder="VD: 1000" step="100">
+                        </div>
+                        <div class="drawer-input-group">
+                            <label>Giá mua (đ):</label>
+                            <input type="number" id="tx-price" placeholder="VD: 35200" step="100">
+                        </div>
+                        <div class="drawer-input-group">
+                            <label>Ngày mua:</label>
+                            <input type="date" id="tx-date" value="2026-09-01">
+                        </div>
                     </div>
-                    <div class="drawer-input-group">
-                        <label>TCB (Tăng trưởng):</label>
-                        <input type="number" id="hold-tcb" value="0" step="100">
-                    </div>
-                    <div class="drawer-input-group">
-                        <label>HND (Dòng tiền):</label>
-                        <input type="number" id="hold-hnd" value="0" step="100">
-                    </div>
-                    <div class="drawer-input-group">
-                        <label>QTP (Dòng tiền):</label>
-                        <input type="number" id="hold-qtp" value="400" step="100">
-                    </div>
-                    <div class="drawer-input-group">
-                        <label>MBB (Tăng trưởng):</label>
-                        <input type="number" id="hold-mbb" value="0" step="100">
-                    </div>
-                    <div class="drawer-input-group">
-                        <label>SJD (Dòng tiền):</label>
-                        <input type="number" id="hold-sjd" value="0" step="100">
-                    </div>
-                    <div class="drawer-input-group" style="grid-column: span 2;">
-                        <label>ACB (Tăng trưởng):</label>
-                        <input type="number" id="hold-acb" value="0" step="100">
-                    </div>
+                    <button class="btn-add-tx" onclick="addNewTransaction()">
+                        <i class="fa-solid fa-plus"></i> Thêm Vào Sổ Lệnh Nhật Ký
+                    </button>
+                </div>
+            </div>
+
+            <!-- BẢNG LỊCH SỬ TẤT CẢ GIAO DỊCH -->
+            <div>
+                <div class="drawer-section-title">
+                    <span><i class="fa-solid fa-clock-rotate-left"></i> Sổ Lệnh Lịch Sử Mua Đã Lưu</span>
+                    <span id="tx-count" style="font-size: 11px; color: #58a6ff;">(2 lệnh)</span>
+                </div>
+                <div class="tx-table-container">
+                    <table class="tx-table">
+                        <thead>
+                            <tr>
+                                <th>Mã</th>
+                                <th>Ngày</th>
+                                <th>Khối lượng</th>
+                                <th>Giá mua</th>
+                                <th>Xóa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tx-table-body">
+                            <!-- Render danh sách lệnh mua qua JS -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -691,8 +796,9 @@
                 <i class="fa-solid fa-arrows-rotate"></i> Tính Toán & Cập Nhật Toàn Bộ
             </button>
 
+            <!-- BÁO CÁO PHÂN BỔ TÀI SẢN -->
             <div>
-                <div class="drawer-section-title"><i class="fa-solid fa-clipboard-check"></i> Báo Cáo Rà Soát Tỷ Trọng</div>
+                <div class="drawer-section-title"><i class="fa-solid fa-clipboard-check"></i> Rà Soát Phân Bổ Tài Sản</div>
                 <div class="drawer-audit-box" id="drawer-audit-content">
                     <!-- Render qua JS -->
                 </div>
@@ -700,7 +806,7 @@
         </div>
     </div>
 
-    <!-- MODAL POPUP: XEM CHI TIẾT ĐÁNH GIÁ KỸ THUẬT CỦA TỪNG MÃ -->
+    <!-- MODAL POPUP XEM CHI TIẾT CỔ PHIẾU & LỊCH SỬ RIÊNG TỪNG MÃ -->
     <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnOutside(event)">
         <div class="modal-content" id="modal-content-box">
             <!-- Render chi tiết qua JS khi click vào thẻ -->
@@ -718,6 +824,89 @@
             { ticker: "QTP", exchange: "UPCoM", group: "income", price: 11100, g1: 11900, g2: 16000, dividendCash: 475, schedule: "Chốt đợt 2: T10 - T11/2026", ma20: 11050, ma200: 11200, pBreak150: 12500, fundamental: "Khấu hao xong, sạch nợ dài hạn, ROE ~15%", priority: 6 },
             { ticker: "ACB", exchange: "HOSE", group: "growth", price: 22650, g1: 23100, g2: 32000, dividendCash: 0, schedule: "Đã hoàn tất chia cổ tức 2026", ma20: 22500, ma200: 21800, pBreak150: 24500, fundamental: "NPL < 1.3%, không rủi ro trái phiếu, ROE > 23%", priority: 7 }
         ];
+
+        // SỔ LỆNH GIAO DỊCH LƯU TRỮ (MỖI MÃ CÓ ÍT NHẤT 3 MỤC: SỐ LƯỢNG, GIÁ MUA, NGÀY MUA)
+        let transactions = [
+            { id: 1, ticker: "VEA", qty: 6800, buyPrice: 35000, date: "2026-08-15" },
+            { id: 2, ticker: "QTP", qty: 400, buyPrice: 11000, date: "2026-08-20" }
+        ];
+
+        // THÊM GIAO DỊCH MỚI
+        function addNewTransaction() {
+            const ticker = document.getElementById("tx-ticker").value;
+            const qty = parseInt(document.getElementById("tx-qty").value);
+            const buyPrice = parseFloat(document.getElementById("tx-price").value);
+            const date = document.getElementById("tx-date").value;
+
+            if (!qty || qty <= 0 || !buyPrice || buyPrice <= 0 || !date) {
+                alert("Vui lòng nhập đầy đủ Số lượng (>0), Giá mua (>0) và Ngày mua!");
+                return;
+            }
+
+            const newTx = {
+                id: Date.now(),
+                ticker: ticker,
+                qty: qty,
+                buyPrice: buyPrice,
+                date: date
+            };
+
+            transactions.push(newTx);
+            document.getElementById("tx-qty").value = "";
+            document.getElementById("tx-price").value = "";
+            renderTransactionTable();
+            calculateAndRenderAll();
+        }
+
+        // XÓA GIAO DỊCH
+        function deleteTransaction(id) {
+            transactions = transactions.filter(tx => tx.id !== id);
+            renderTransactionTable();
+            calculateAndRenderAll();
+        }
+
+        // RENDER BẢNG GIAO DỊCH TRONG DRAWER
+        function renderTransactionTable() {
+            const tbody = document.getElementById("tx-table-body");
+            tbody.innerHTML = "";
+            document.getElementById("tx-count").innerText = `(${transactions.length} lệnh)`;
+
+            transactions.forEach(tx => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><strong style="color:#58a6ff;">${tx.ticker}</strong></td>
+                    <td style="color:var(--text-secondary);">${tx.date}</td>
+                    <td>${tx.qty.toLocaleString()} CP</td>
+                    <td>${tx.buyPrice.toLocaleString()} đ</td>
+                    <td><button class="btn-del-tx" onclick="deleteTransaction(${tx.id})"><i class="fa-solid fa-trash"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // THUẬT TOÁN TÍNH TỔNG HỢP THEO TỪNG MÃ (SỐ LƯỢNG, GIÁ VỐN BÌNH QUÂN, TỔNG TIỀN VỐN)
+        function getAggregatedHoldings() {
+            const aggregated = {};
+            portfolioData.forEach(p => {
+                aggregated[p.ticker] = { totalQty: 0, totalCost: 0, avgPrice: 0, txList: [] };
+            });
+
+            transactions.forEach(tx => {
+                if (aggregated[tx.ticker]) {
+                    aggregated[tx.ticker].totalQty += tx.qty;
+                    aggregated[tx.ticker].totalCost += (tx.qty * tx.buyPrice);
+                    aggregated[tx.ticker].txList.push(tx);
+                }
+            });
+
+            for (const ticker in aggregated) {
+                if (aggregated[ticker].totalQty > 0) {
+                    aggregated[ticker].avgPrice = Math.round(aggregated[ticker].totalCost / aggregated[ticker].totalQty);
+                }
+            }
+
+            return aggregated;
+        }
 
         // 1. THUẬT TOÁN BẮT ĐỈNH G2 ĐA TẦNG
         function evaluatePeakExitStrategy(stock) {
@@ -799,33 +988,29 @@
             return { netYield, maSignal, actionAdvice };
         }
 
-        // 4. HÀM TÍNH TOÁN RÀ SOÁT TỔNG THỂ & RENDER
+        // 4. HÀM TÍNH TOÁN RÀ SOÁT TỔNG THỂ & PHÂN BỔ TÀI SẢN
         function calculateAndRenderAll() {
-            const holdings = {
-                VEA: parseInt(document.getElementById("hold-vea").value) || 0,
-                TCB: parseInt(document.getElementById("hold-tcb").value) || 0,
-                HND: parseInt(document.getElementById("hold-hnd").value) || 0,
-                QTP: parseInt(document.getElementById("hold-qtp").value) || 0,
-                MBB: parseInt(document.getElementById("hold-mbb").value) || 0,
-                SJD: parseInt(document.getElementById("hold-sjd").value) || 0,
-                ACB: parseInt(document.getElementById("hold-acb").value) || 0
-            };
+            const holdings = getAggregatedHoldings();
             const newCash = parseFloat(document.getElementById("hold-cash").value) || 0;
 
             let incomeValue = 0;
             let growthValue = 0;
             let totalAnnualDividend = 0;
+            let totalCostAll = 0;
 
             portfolioData.forEach(item => {
-                const qty = holdings[item.ticker] || 0;
-                const val = qty * item.price;
-                if (item.group === "income") incomeValue += val;
-                if (item.group === "growth") growthValue += val;
-                totalAnnualDividend += qty * item.dividendCash;
+                const h = holdings[item.ticker] || { totalQty: 0, totalCost: 0 };
+                const marketVal = h.totalQty * item.price;
+                if (item.group === "income") incomeValue += marketVal;
+                if (item.group === "growth") growthValue += marketVal;
+                totalAnnualDividend += h.totalQty * item.dividendCash;
+                totalCostAll += h.totalCost;
             });
 
             const stockNAV = incomeValue + growthValue;
             const totalNAV = stockNAV + newCash;
+            const totalPnl = stockNAV - totalCostAll;
+            const pnlPercent = totalCostAll > 0 ? ((totalPnl / totalCostAll) * 100).toFixed(2) : "0.00";
 
             const actualIncomeRatio = stockNAV > 0 ? (incomeValue / stockNAV) * 100 : 0;
             const actualGrowthRatio = stockNAV > 0 ? (growthValue / stockNAV) * 100 : 0;
@@ -839,7 +1024,7 @@
             const diffIncome = targetIncomeValue - incomeValue;
             const diffGrowth = targetGrowthValue - growthValue;
 
-            // Update Top Metrics Display
+            // CẬP NHẬT TOP METRICS
             document.getElementById("nav-total-val").innerText = totalNAV.toLocaleString() + " đ";
             document.getElementById("nav-stock-val").innerText = `CP: ${stockNAV.toLocaleString()} đ | Tiền: ${newCash.toLocaleString()} đ`;
             document.getElementById("ratio-val").innerText = `${actualIncomeRatio.toFixed(1)}% / ${actualGrowthRatio.toFixed(1)}%`;
@@ -847,7 +1032,13 @@
             const divYield = stockNAV > 0 ? ((totalAnnualDividend / stockNAV) * 100).toFixed(2) : 0;
             document.getElementById("div-yield-val").innerText = `Yield ròng: ${divYield}%/năm`;
 
-            // Render Drawer Audit Summary
+            const pnlEl = document.getElementById("pnl-total-val");
+            const pnlSubEl = document.getElementById("pnl-percent-val");
+            pnlEl.innerText = (totalPnl >= 0 ? "+" : "") + totalPnl.toLocaleString() + " đ";
+            pnlEl.style.color = totalPnl >= 0 ? "#3fb950" : "#f85149";
+            pnlSubEl.innerText = (totalPnl >= 0 ? "+" : "") + pnlPercent + "% so với vốn gốc";
+
+            // RENDER BÁO CÁO PHÂN BỔ TRONG DRAWER
             const isOutOfBalance = Math.abs((actualIncomeRatio / 100) - TARGET_INCOME) >= 0.05;
             const auditBox = document.getElementById("drawer-audit-content");
 
@@ -873,17 +1064,26 @@
             }
 
             auditBox.innerHTML = `
-                <div style="margin-bottom: 8px;">
-                    <strong>Tỷ trọng hiện tại:</strong> <span style="color: #58a6ff;">${actualIncomeRatio.toFixed(1)}% DT / ${actualGrowthRatio.toFixed(1)}% TT</span>
+                <div style="margin-bottom: 6px;">
+                    <strong>Tỷ trọng thực tế:</strong> <span style="color: #58a6ff;">${actualIncomeRatio.toFixed(1)}% DT / ${actualGrowthRatio.toFixed(1)}% TT</span>
+                </div>
+                <div style="margin-bottom: 8px; font-size: 11px; color: var(--text-secondary);">
+                    Tổng vốn gốc đã mua: ${totalCostAll.toLocaleString()} đ | Thị giá hiện tại: ${stockNAV.toLocaleString()} đ
                 </div>
                 ${actionPlanHtml}
             `;
 
-            // RENDER THẺ CỔ PHIẾU TÓM TẮT TRÊN TRANG CHÍNH
+            // RENDER THẺ CỔ PHIẾU TỔNG HỢP TRÊN TRANG CHÍNH
             const container = document.getElementById("stocks-container");
             container.innerHTML = "";
             
             portfolioData.forEach((stock, index) => {
+                const h = holdings[stock.ticker] || { totalQty: 0, totalCost: 0, avgPrice: 0 };
+                const marketVal = h.totalQty * stock.price;
+                const pnlStock = marketVal - h.totalCost;
+                const pnlStockPercent = h.totalCost > 0 ? ((pnlStock / h.totalCost) * 100).toFixed(1) : "0.0";
+                const weightInNAV = stockNAV > 0 ? ((marketVal / stockNAV) * 100).toFixed(1) : "0.0";
+
                 const strategyResult = evaluateStrategy(stock);
                 const isIncome = stock.group === "income";
 
@@ -907,21 +1107,31 @@
 
                     <div class="card-main-info">
                         <div class="info-cell">
-                            <span>Vùng Gom G1:</span>
-                            <strong>&le; ${stock.g1.toLocaleString()} đ</strong>
+                            <span>Đang nắm giữ (Tổng):</span>
+                            <strong>${h.totalQty.toLocaleString()} CP (${weightInNAV}% NAV)</strong>
                         </div>
                         <div class="info-cell">
-                            <span>Mục tiêu G2:</span>
-                            <strong style="color: #58a6ff;">${stock.g2.toLocaleString()} đ</strong>
+                            <span>Giá vốn TB:</span>
+                            <strong style="color:${h.avgPrice > 0 ? '#58a6ff' : 'var(--text-secondary)'};">
+                                ${h.avgPrice > 0 ? h.avgPrice.toLocaleString() + ' đ' : 'Chưa có hàng'}
+                            </strong>
                         </div>
-                        <div class="info-cell" style="grid-column: span 2;">
-                            <span>Cổ tức TM / Năm:</span>
-                            <strong style="color: #3fb950;">${stock.dividendCash.toLocaleString()} đ/CP (Yield: ${strategyResult.netYield}%)</strong>
+                        <div class="info-cell">
+                            <span>Vùng Gom G1 / Mục tiêu G2:</span>
+                            <strong>&le; ${stock.g1.toLocaleString()} đ</strong> / ${stock.g2.toLocaleString()} đ
+                        </div>
+                        <div class="info-cell">
+                            <span>Cổ tức TM (Yield ròng):</span>
+                            <strong style="color: #3fb950;">${stock.dividendCash.toLocaleString()} đ (${strategyResult.netYield}%)</strong>
                         </div>
                     </div>
 
                     <div class="card-status-bar">
-                        <span style="color: var(--text-secondary);">Trạng thái gom:</span>
+                        <span style="color: var(--text-secondary);">
+                            Lãi/Lỗ: <strong style="color: ${pnlStock >= 0 ? '#3fb950' : '#f85149'};">
+                                ${h.totalQty > 0 ? (pnlStock >= 0 ? '+' : '') + pnlStockPercent + '%' : '0.0%'}
+                            </strong>
+                        </span>
                         ${strategyResult.maSignal}
                     </div>
                 `;
@@ -929,12 +1139,31 @@
             });
         }
 
-        // HÀM MỞ POPUP XEM CHI TIẾT KỸ THUẬT & ĐÁNH GIÁ CỔ PHIẾU
+        // HÀM MỞ POPUP XEM CHI TIẾT KỸ THUẬT & LIỆT KÊ LỊCH SỬ MUA
         function openStockDetailModal(stockIndex) {
             const stock = portfolioData[stockIndex];
+            const holdings = getAggregatedHoldings();
+            const h = holdings[stock.ticker] || { totalQty: 0, totalCost: 0, avgPrice: 0, txList: [] };
+
             const strategyResult = evaluateStrategy(stock);
             const peakResult = evaluatePeakExitStrategy(stock);
             const ma150Result = evaluateMA150(stock);
+
+            let txRowsHtml = "";
+            if (h.txList.length > 0) {
+                h.txList.forEach((tx, idx) => {
+                    txRowsHtml += `
+                        <tr>
+                            <td style="color:var(--text-secondary); padding:4px 6px;">#${idx+1} - ${tx.date}</td>
+                            <td style="padding:4px 6px;"><strong>${tx.qty.toLocaleString()} CP</strong></td>
+                            <td style="padding:4px 6px;">${tx.buyPrice.toLocaleString()} đ</td>
+                            <td style="padding:4px 6px; text-align:right;">${(tx.qty * tx.buyPrice).toLocaleString()} đ</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                txRowsHtml = `<tr><td colspan="4" style="text-align:center; color:var(--text-secondary); padding:8px;">Chưa có lệnh mua nào được lưu.</td></tr>`;
+            }
 
             const modalBox = document.getElementById("modal-content-box");
             modalBox.innerHTML = `
@@ -952,6 +1181,36 @@
                     </button>
                 </div>
 
+                <!-- LỊCH SỬ MUA GOM CHI TIẾT TỪNG ĐỢT CỦA MÃ NÀY -->
+                <div class="modal-block" style="border-color: rgba(88, 166, 255, 0.3);">
+                    <div class="modal-block-title" style="color: #58a6ff;">
+                        <i class="fa-solid fa-receipt"></i> Lịch Sử Các Đợt Mua Gom Đang Nắm Giữ
+                    </div>
+                    <div class="modal-block-detail">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:11.5px;">
+                            <span>Tổng nắm: <strong>${h.totalQty.toLocaleString()} CP</strong></span>
+                            <span>Giá vốn TB: <strong style="color:#58a6ff;">${h.avgPrice.toLocaleString()} đ</strong></span>
+                            <span>Tổng vốn: <strong>${h.totalCost.toLocaleString()} đ</strong></span>
+                        </div>
+                        <div style="background:var(--bg-main); border-radius:4px; border:1px solid var(--border-color); overflow-x:auto;">
+                            <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                                <thead>
+                                    <tr style="background:rgba(255,255,255,0.04); color:var(--text-secondary); border-bottom:1px solid var(--border-color);">
+                                        <th style="padding:4px 6px; text-align:left;">Ngày mua</th>
+                                        <th style="padding:4px 6px; text-align:left;">Khối lượng</th>
+                                        <th style="padding:4px 6px; text-align:left;">Giá mua</th>
+                                        <th style="padding:4px 6px; text-align:right;">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${txRowsHtml}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHỈ BÁO KỸ THUẬT & KHUYẾN NGHỊ -->
                 <div class="modal-block">
                     <div class="modal-block-title"><i class="fa-solid fa-chart-line"></i> Chỉ Báo MA & Khuyến Nghị Hành Động</div>
                     <div class="modal-block-detail">
@@ -960,33 +1219,36 @@
                             <span>MA20: <strong>${stock.ma20.toLocaleString()} đ</strong> | MA200: <strong>${stock.ma200.toLocaleString()} đ</strong></span>
                         </div>
                         <div style="margin-bottom: 6px;">${strategyResult.maSignal}</div>
-                        <div style="font-size: 12px; color: #c9d1d9; background: rgba(56, 139, 253, 0.1); padding: 8px; border-left: 3px solid var(--accent-blue); border-radius: 0 4px 4px 0;">
+                        <div style="font-size: 11.5px; color: #c9d1d9; background: rgba(56, 139, 253, 0.1); padding: 8px; border-left: 3px solid var(--accent-blue); border-radius: 0 4px 4px 0;">
                             ${strategyResult.actionAdvice}
                         </div>
                     </div>
                 </div>
 
+                <!-- BẮT ĐỈNH G2 -->
                 <div class="modal-block" style="border-color: rgba(210, 153, 34, 0.3);">
                     <div class="modal-block-title" style="color: #e3b341;"><i class="fa-solid fa-arrow-trend-up"></i> Bắt Đỉnh Đa Tầng G2 (P &ge; ${stock.g2.toLocaleString()} đ)</div>
                     <div class="modal-block-detail">
-                        <div style="margin-bottom: 6px;">${peakResult.badge}</div>
-                        <div style="font-size: 12px; color: var(--text-secondary);">${peakResult.detail}</div>
+                        <div style="margin-bottom: 4px;">${peakResult.badge}</div>
+                        <div style="font-size: 11.5px; color: var(--text-secondary);">${peakResult.detail}</div>
                     </div>
                 </div>
 
+                <!-- BẮT ĐÁY MA150 -->
                 <div class="modal-block">
                     <div class="modal-block-title" style="color: #f85149;"><i class="fa-solid fa-arrow-trend-down"></i> Bắt Đáy Đại Hạ Giá MA150 (-30%)</div>
                     <div class="modal-block-detail">
-                        <div style="margin-bottom: 6px;">${ma150Result.badge}</div>
-                        <div style="font-size: 12px; color: var(--text-secondary);">${ma150Result.detail}</div>
+                        <div style="margin-bottom: 4px;">${ma150Result.badge}</div>
+                        <div style="font-size: 11.5px; color: var(--text-secondary);">${ma150Result.detail}</div>
                     </div>
                 </div>
 
+                <!-- LỊCH CHỐT QUYỀN & NỘI TẠI -->
                 <div class="modal-block">
                     <div class="modal-block-title"><i class="fa-solid fa-calendar-days"></i> Lịch Chốt Quyền & Sức Khỏe Doanh Nghiệp</div>
                     <div class="modal-block-detail">
-                        <div style="margin-bottom: 4px;"><strong>Lịch chi trả:</strong> ${stock.schedule}</div>
-                        <div style="font-size: 12px; color: var(--text-secondary);"><strong>Nội tại:</strong> ${stock.fundamental}</div>
+                        <div style="margin-bottom: 3px;"><strong>Lịch chi trả:</strong> ${stock.schedule}</div>
+                        <div style="font-size: 11.5px; color: var(--text-secondary);"><strong>Nội tại:</strong> ${stock.fundamental}</div>
                     </div>
                 </div>
             `;
@@ -1018,6 +1280,7 @@
         }
 
         // TỰ ĐỘNG CHẠY KHI MỞ TRANG
+        renderTransactionTable();
         calculateAndRenderAll();
     </script>
 </body>
