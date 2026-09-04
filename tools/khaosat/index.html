@@ -2,162 +2,160 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Báo Cáo Khảo Sát Thiết Bị Tại Hiện Trường</title>
   
+  <!-- Firebase App & Realtime Database SDK (Miễn phí hoàn toàn) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <style>
+    :root {
+      --primary: #0b3cb5;
+      --primary-hover: #072a83;
+      --bg-main: #e9f3f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+      --risk-high: #dc2626;
+      --risk-high-bg: #fee2e2;
+      --risk-med: #d97706;
+      --risk-med-bg: #fef3c7;
+      --risk-low: #166534;
+      --risk-low-bg: #dcfce7;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background-color: #e9f3f9;
-      color: #1e293b;
+      background-color: var(--bg-main);
+      color: var(--text-main);
       min-height: 100vh;
       line-height: 1.4;
     }
 
+    /* Header */
     .header {
-      background-color: #0b3cb5;
+      background-color: var(--primary);
       color: #ffffff;
-      padding: 14px 32px;
+      padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
     }
 
     .brand-section {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
 
     .logo-circle {
-      width: 52px;
-      height: 52px;
+      width: 46px;
+      height: 46px;
       background: #ffffff;
       border-radius: 50%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }
 
     .logo-text {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 900;
-      color: #0b3cb5;
+      color: var(--primary);
       line-height: 1;
     }
 
     .logo-subtext {
-      font-size: 5.5px;
+      font-size: 5px;
       color: #475569;
       text-transform: uppercase;
       font-weight: 700;
-      margin-top: 2px;
+      margin-top: 1px;
     }
 
     .header-title {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 800;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
       text-transform: uppercase;
     }
 
-    .header-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .btn-header {
-      background-color: #2557d6;
-      color: #ffffff;
-      border: 1px solid #3d6de6;
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn-header:hover {
-      background-color: #1d46b3;
-    }
-
     .container {
-      max-width: 1400px;
+      max-width: 1440px;
       margin: 0 auto;
-      padding: 20px 24px;
+      padding: 16px 20px 80px 20px; /* chừa đáy cho bottom nav trên mobile */
     }
 
     .page-title {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 800;
-      color: #0f172a;
+      color: var(--text-main);
       margin-bottom: 2px;
     }
 
     .page-subtitle {
-      font-size: 13.5px;
-      color: #475569;
-      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
     }
 
+    /* Metrics Grid */
     .metrics-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 20px;
+      gap: 12px;
+      margin-bottom: 16px;
     }
 
     .metric-card {
-      background: #ffffff;
-      padding: 16px 20px;
+      background: var(--card-bg);
+      padding: 14px 16px;
       border-radius: 10px;
       border: 1px solid #e2e8f0;
       box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
 
     .metric-value {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 800;
-      color: #0f172a;
       line-height: 1;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .metric-label {
-      font-size: 13px;
-      color: #64748b;
+      font-size: 12px;
+      color: var(--text-muted);
       font-weight: 500;
     }
 
+    /* Content Layout */
     .content-grid {
       display: grid;
       grid-template-columns: 460px 1fr;
-      gap: 20px;
+      gap: 16px;
       align-items: start;
     }
 
     .card {
-      background: #ffffff;
+      background: var(--card-bg);
       border-radius: 10px;
-      padding: 20px;
+      padding: 18px;
       border: 1px solid #e2e8f0;
       box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
@@ -165,28 +163,28 @@
     .card-title {
       font-size: 16px;
       font-weight: 800;
-      color: #0f172a;
       margin-bottom: 2px;
     }
 
     .card-subtitle {
       font-size: 12px;
-      color: #64748b;
-      margin-bottom: 16px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
     }
 
+    /* Form Fields */
     .form-group-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 14px;
+      gap: 10px;
+      margin-bottom: 12px;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      margin-bottom: 14px;
+      gap: 4px;
+      margin-bottom: 12px;
     }
 
     .form-group-row .form-group {
@@ -200,47 +198,42 @@
     }
 
     .required {
-      color: #dc2626;
+      color: var(--risk-high);
     }
 
     .input-field, .select-field, .textarea-field {
       width: 100%;
-      padding: 8px 11px;
-      border: 1px solid #cbd5e1;
+      padding: 9px 12px;
+      border: 1px solid var(--border-color);
       border-radius: 6px;
-      font-size: 13px;
-      color: #1e293b;
+      font-size: 13.5px;
+      color: var(--text-main);
       outline: none;
       background-color: #f8fafc;
       transition: all 0.2s;
     }
 
     .input-field:focus, .select-field:focus, .textarea-field:focus {
-      border-color: #0b3cb5;
+      border-color: var(--primary);
       background-color: #ffffff;
       box-shadow: 0 0 0 2px rgba(11, 60, 181, 0.1);
     }
 
     .textarea-field {
       resize: vertical;
-      min-height: 64px;
+      min-height: 60px;
     }
 
+    /* Risk Score Matrix */
     .risk-score-box {
       background: #f1f5f9;
-      border: 1px solid #cbd5e1;
+      border: 1px solid var(--border-color);
       border-radius: 6px;
       padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 14px;
-    }
-
-    .risk-score-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: #475569;
+      margin-bottom: 12px;
     }
 
     .risk-badge {
@@ -252,26 +245,53 @@
       text-transform: uppercase;
     }
 
-    .risk-high { background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
-    .risk-medium { background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
-    .risk-low { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .risk-high { background-color: var(--risk-high-bg); color: var(--risk-high); border: 1px solid #fca5a5; }
+    .risk-medium { background-color: var(--risk-med-bg); color: var(--risk-med); border: 1px solid #fde68a; }
+    .risk-low { background-color: var(--risk-low-bg); color: var(--risk-low); border: 1px solid #bbf7d0; }
 
+    /* Photo Upload on Mobile / Desktop */
     .file-upload-wrapper {
-      position: relative;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
+    }
+
+    .upload-btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .btn-camera, .btn-gallery {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px dashed var(--border-color);
+      background: #f8fafc;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .btn-camera:hover, .btn-gallery:hover {
+      background: #e2e8f0;
     }
 
     .img-preview {
       width: 100%;
-      height: 120px;
-      border: 1px dashed #cbd5e1;
+      height: 130px;
+      border: 1px dashed var(--border-color);
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       background-color: #f8fafc;
-      margin-top: 6px;
+      margin-top: 8px;
+      position: relative;
     }
 
     .img-preview img {
@@ -280,124 +300,155 @@
       object-fit: cover;
     }
 
+    .btn-remove-img {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(15, 23, 42, 0.7);
+      color: #ffffff;
+      border: none;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      cursor: pointer;
+      font-size: 12px;
+      display: none;
+    }
+
+    /* Form Actions */
     .form-actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
 
     .btn-submit {
       flex: 1;
-      background-color: #0b3cb5;
+      background-color: var(--primary);
       color: #ffffff;
       border: none;
-      padding: 10px;
+      padding: 12px;
       border-radius: 6px;
       font-weight: 700;
-      font-size: 13px;
+      font-size: 14px;
       cursor: pointer;
-      transition: background-color 0.2s;
+      min-height: 44px;
     }
 
-    .btn-submit:hover { background-color: #072a83; }
+    .btn-submit:hover { background-color: var(--primary-hover); }
 
     .btn-reset {
       background-color: #f1f5f9;
       color: #475569;
-      border: 1px solid #cbd5e1;
-      padding: 10px 16px;
+      border: 1px solid var(--border-color);
+      padding: 12px 16px;
       border-radius: 6px;
       font-weight: 600;
       font-size: 13px;
       cursor: pointer;
     }
 
-    .btn-reset:hover { background-color: #e2e8f0; }
-
+    /* List Tools (Laptop & Desktop Synthesis) */
     .list-header-bar {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
     }
 
     .btn-group {
       display: flex;
       gap: 6px;
+      flex-wrap: wrap;
     }
 
     .btn-action {
       background: #ffffff;
-      border: 1px solid #cbd5e1;
-      padding: 6px 12px;
+      border: 1px solid var(--border-color);
+      padding: 7px 11px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 600;
       color: #334155;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: background 0.2s;
     }
 
     .btn-action:hover { background: #f8fafc; }
 
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-field {
+      flex: 1;
+      min-width: 180px;
+      padding: 7px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 12.5px;
+      outline: none;
+      background: #ffffff;
+    }
+
     .filter-select {
-      width: 190px;
-      padding: 6px 10px;
-      border: 1px solid #cbd5e1;
+      width: 160px;
+      padding: 7px 10px;
+      border: 1px solid var(--border-color);
       border-radius: 6px;
       font-size: 12.5px;
       background-color: #ffffff;
       color: #334155;
       outline: none;
-      margin-bottom: 14px;
     }
 
     .report-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      max-height: 680px;
+      gap: 8px;
+      max-height: 720px;
       overflow-y: auto;
-      padding-right: 4px;
+      padding-right: 2px;
     }
 
     .report-item {
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      padding: 10px 14px;
+      padding: 10px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       background: #ffffff;
-      transition: border-color 0.2s;
-    }
-
-    .report-item:hover {
-      border-color: #94a3b8;
+      gap: 8px;
     }
 
     .item-info {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
     }
 
     .item-thumb {
-      width: 65px;
-      height: 50px;
+      width: 60px;
+      height: 48px;
       background-color: #f1f5f9;
       border: 1px solid #e2e8f0;
       border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
-      color: #64748b;
+      font-size: 9.5px;
+      color: var(--text-muted);
       overflow: hidden;
+      flex-shrink: 0;
     }
 
     .item-thumb img {
@@ -406,130 +457,205 @@
       object-fit: cover;
     }
 
+    .item-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
     .item-meta-title {
       font-size: 13.5px;
       font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 3px;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .item-meta-detail {
       font-size: 11.5px;
-      color: #64748b;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .item-actions {
       display: flex;
       align-items: center;
       gap: 6px;
+      flex-shrink: 0;
     }
 
     .btn-sm {
       background: #ffffff;
-      border: 1px solid #cbd5e1;
-      padding: 5px 9px;
+      border: 1px solid var(--border-color);
+      padding: 6px 9px;
       border-radius: 5px;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       color: #334155;
+      min-height: 36px;
     }
-
-    .btn-sm:hover { background: #f8fafc; }
 
     .btn-delete {
       color: #94a3b8;
       border: 1px solid transparent;
       background: transparent;
-      padding: 5px 8px;
+      padding: 6px 8px;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 14px;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .btn-delete:hover {
-      color: #dc2626;
-      background: #fee2e2;
+      color: var(--risk-high);
+      background: var(--risk-high-bg);
     }
 
+    /* Mobile Bottom Navigation */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-top: 1px solid #cbd5e1;
+      height: 56px;
+      z-index: 200;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      gap: 3px;
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+    }
+
+    /* Responsive Design (Mobile / Laptop) */
+    @media (max-width: 900px) {
+      .header-title {
+        font-size: 14px;
+      }
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+      .bottom-nav {
+        display: flex;
+      }
+      /* Ẩn hiện tab trên điện thoại */
+      .mobile-tab-content {
+        display: none;
+      }
+      .mobile-tab-content.active {
+        display: block;
+      }
+      .container {
+        padding: 12px 12px 75px 12px;
+      }
+      .card {
+        padding: 14px;
+      }
+    }
+
+    /* Print styling */
     @media print {
       body * { visibility: hidden; }
-      .header, .btn-action, .filter-select, .form-actions { display: none !important; }
+      .header, .bottom-nav, .filter-bar, .list-header-bar, .form-actions, #form-section { display: none !important; }
+      .print-window, .print-window * { visibility: visible; }
     }
   </style>
 </head>
 <body>
 
+  <!-- Header -->
   <header class="header">
     <div class="brand-section">
       <div class="logo-circle">
         <span class="logo-text">KMP</span>
         <span class="logo-subtext">EQUIPMENT</span>
       </div>
-      <h1 class="header-title">Báo cáo khảo sát thiết bị tại hiện trường</h1>
-    </div>
-    <div class="header-actions">
-      <button class="btn-header">Data Base ▾</button>
-      <button class="btn-header">File ▾</button>
+      <h1 class="header-title">Khảo Sát An Toàn Thiết Bị</h1>
     </div>
   </header>
 
   <div class="container">
     <h2 class="page-title">Báo cáo phân tích rủi ro</h2>
-    <p class="page-subtitle">Ghi nhận mối nguy tại thiết bị, xác định mức rủi ro và lưu biện pháp kiểm soát để theo dõi.</p>
+    <p class="page-subtitle">Hệ thống đồng bộ dữ liệu hiện trường và tổng hợp trên Firebase Realtime Database.</p>
 
+    <!-- Thống kê tổng hợp -->
     <div class="metrics-grid">
       <div class="metric-card">
         <div class="metric-value" id="count-total">0</div>
         <div class="metric-label">Báo cáo đã lưu</div>
       </div>
       <div class="metric-card">
-        <div class="metric-value" id="count-high" style="color: #dc2626;">0</div>
+        <div class="metric-value" id="count-high" style="color: var(--risk-high);">0</div>
         <div class="metric-label">Rủi ro cao</div>
       </div>
       <div class="metric-card">
-        <div class="metric-value" id="count-medium" style="color: #d97706;">0</div>
+        <div class="metric-value" id="count-medium" style="color: var(--risk-med);">0</div>
         <div class="metric-label">Rủi ro trung bình</div>
       </div>
       <div class="metric-card">
-        <div class="metric-value" id="count-low" style="color: #166534;">0</div>
+        <div class="metric-value" id="count-low" style="color: var(--risk-low);">0</div>
         <div class="metric-label">Rủi ro thấp</div>
       </div>
     </div>
 
     <div class="content-grid">
       
-      <section class="card">
+      <!-- Cột Form Nhập (Tối ưu cho khảo sát hiện trường Mobile) -->
+      <section class="card mobile-tab-content active" id="tab-form">
         <h3 class="card-title">Ghi nhận mới</h3>
-        <p class="card-subtitle">Các trường có dấu <span class="required">*</span> là bắt buộc.</p>
+        <p class="card-subtitle">Trường có dấu <span class="required">*</span> là bắt buộc.</p>
 
         <form id="risk-form">
           <div class="form-group-row">
             <div class="form-group">
               <label>Tên thiết bị <span class="required">*</span></label>
-              <input type="text" id="equipment-name" class="input-field" placeholder="Chọn hoặc nhập tên thiết bị..." required>
+              <input type="text" id="equipment-name" class="input-field" placeholder="VD: Máy nén khí" required>
             </div>
             <div class="form-group">
               <label>Mã số thiết bị <span class="required">*</span></label>
-              <input type="text" id="equipment-code" class="input-field" placeholder="VD: HS-PR-014" required>
+              <input type="text" id="equipment-code" class="input-field" placeholder="VD: CP-01" required>
             </div>
           </div>
 
           <div class="form-group-row">
             <div class="form-group">
               <label>Vị trí lắp đặt</label>
-              <input type="text" id="location" class="input-field" placeholder="VD: Tầng 2, Line 3">
+              <input type="text" id="location" class="input-field" placeholder="VD: Line 2">
             </div>
             <div class="form-group">
-              <label>Khu vực / Phân xưởng</label>
-              <input type="text" id="workshop" class="input-field" placeholder="VD: Xưởng cơ điện">
+              <label>Khu vực / Xưởng</label>
+              <input type="text" id="workshop" class="input-field" placeholder="VD: Xưởng 1">
             </div>
           </div>
 
           <div class="form-group-row">
             <div class="form-group">
               <label>Người khảo sát <span class="required">*</span></label>
-              <input type="text" id="inspector" class="input-field" placeholder="Họ và tên..." required>
+              <input type="text" id="inspector" class="input-field" placeholder="Tên kỹ sư / NV" required>
             </div>
             <div class="form-group">
               <label>Ngày khảo sát <span class="required">*</span></label>
@@ -538,10 +664,11 @@
           </div>
 
           <div class="form-group">
-            <label>Mô tả mối nguy / Rủi ro tiềm ẩn <span class="required">*</span></label>
-            <textarea id="hazard-desc" class="textarea-field" placeholder="Mô tả dấu hiệu hư hỏng, rò rỉ, nguy cơ tai nạn..." required></textarea>
+            <label>Mô tả mối nguy / Rủi ro <span class="required">*</span></label>
+            <textarea id="hazard-desc" class="textarea-field" placeholder="Mô tả hiện trạng: rò rỉ khí, đồng hồ hết kiểm định, mất che chắn..." required></textarea>
           </div>
 
+          <!-- Đánh giá rủi ro nhanh -->
           <div class="form-group-row">
             <div class="form-group">
               <label>Khả năng xảy ra (P)</label>
@@ -554,7 +681,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Mức độ nghiêm trọng (S)</label>
+              <label>Mức nghiêm trọng (S)</label>
               <select id="sev-select" class="select-field" onchange="calculateRisk()">
                 <option value="1">1 - Không đáng kể</option>
                 <option value="2" selected>2 - Nhẹ</option>
@@ -566,20 +693,33 @@
           </div>
 
           <div class="risk-score-box">
-            <span class="risk-score-title">Điểm rủi ro: <strong id="risk-score-val" style="color: #0f172a; font-size: 14px;">6</strong></span>
+            <span style="font-size: 12.5px; font-weight: 700; color: #475569;">
+              Điểm rủi ro: <strong id="risk-score-val" style="color: #0f172a; font-size: 15px;">6</strong>
+            </span>
             <span id="risk-badge" class="risk-badge risk-low">Thấp</span>
           </div>
 
           <div class="form-group">
             <label>Biện pháp kiểm soát đề xuất</label>
-            <textarea id="control-measures" class="textarea-field" placeholder="Biện pháp khắc phục tạm thời hoặc lâu dài..."></textarea>
+            <textarea id="control-measures" class="textarea-field" placeholder="Biện pháp xử lý ngay hoặc đề xuất thay thế..."></textarea>
           </div>
 
+          <!-- Upload hình ảnh: Hỗ trợ Chụp ảnh Camera trực tiếp hoặc Chọn tệp -->
           <div class="file-upload-wrapper">
             <label>Hình ảnh hiện trường thiết bị</label>
-            <input type="file" id="image-input" accept="image/*" class="input-field" style="padding: 5px;" onchange="handleImagePreview(event)">
+            <div class="upload-btn-group">
+              <label class="btn-camera">
+                📷 Chụp Camera
+                <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none;" onchange="handleImage(event)">
+              </label>
+              <label class="btn-gallery">
+                🖼️ Chọn từ thư viện
+                <input type="file" id="gallery-input" accept="image/*" style="display:none;" onchange="handleImage(event)">
+              </label>
+            </div>
             <div class="img-preview" id="preview-box">
-              <span style="font-size: 11.5px; color: #94a3b8;">Chưa có ảnh được chọn</span>
+              <span style="font-size: 12px; color: #94a3b8;">Chưa có ảnh</span>
+              <button type="button" class="btn-remove-img" id="btn-remove-img" onclick="clearImage()">✕</button>
             </div>
           </div>
 
@@ -590,25 +730,28 @@
         </form>
       </section>
 
-      <section class="card">
+      <!-- Cột Danh Sách Báo Cáo & Công Cụ Quản Lý / Tổng Hợp Laptop -->
+      <section class="card mobile-tab-content" id="tab-list">
         <div class="list-header-bar">
           <div>
             <h3 class="card-title">Danh sách báo cáo</h3>
-            <p class="card-subtitle" style="margin-bottom:0;">Tải tệp PDF, Excel hoặc in trực tiếp từng báo cáo.</p>
+            <p class="card-subtitle" style="margin-bottom:0;">Tra cứu, lọc và kết xuất báo cáo.</p>
           </div>
           <div class="btn-group">
-            <button class="btn-action" onclick="exportSummaryPDF()">📊 Báo cáo tổng PDF</button>
-            <button class="btn-action" onclick="exportCSV()">▤ Lưu Excel</button>
-            <button class="btn-action" onclick="window.print()">🖨 In báo cáo</button>
+            <button class="btn-action" onclick="exportCSV()">▤ Xuất Excel</button>
+            <button class="btn-action" onclick="printTableSummary()">🖨 Bảng tổng hợp</button>
           </div>
         </div>
 
-        <select class="filter-select" id="risk-filter" onchange="renderReports()">
-          <option value="ALL">Tất cả mức độ</option>
-          <option value="Cao">Rủi ro cao</option>
-          <option value="Trung bình">Rủi ro trung bình</option>
-          <option value="Thấp">Rủi ro thấp</option>
-        </select>
+        <div class="filter-bar">
+          <input type="text" id="search-input" class="search-field" placeholder="🔍 Tìm tên thiết bị, mã số, xưởng..." oninput="renderReports()">
+          <select class="filter-select" id="risk-filter" onchange="renderReports()">
+            <option value="ALL">Tất cả mức độ</option>
+            <option value="Cao">Rủi ro cao</option>
+            <option value="Trung bình">Rủi ro trung bình</option>
+            <option value="Thấp">Rủi ro thấp</option>
+          </select>
+        </div>
 
         <div class="report-list" id="report-items-container"></div>
       </section>
@@ -616,7 +759,20 @@
     </div>
   </div>
 
+  <!-- Bottom Navigation Bar cho Mobile -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="nav-btn-form" onclick="switchMobileTab('form')">
+      <span style="font-size: 16px;">📝</span>
+      <span>Ghi nhận</span>
+    </div>
+    <div class="nav-item" id="nav-btn-list" onclick="switchMobileTab('list')">
+      <span style="font-size: 16px;">📋</span>
+      <span>Danh sách (<span id="mobile-badge-count">0</span>)</span>
+    </div>
+  </nav>
+
   <script>
+    // Cấu hình Firebase Realtime Database
     const firebaseConfig = {
       apiKey: "AIzaSyCkBRre5ajocg0EIuOchb6QknsdL6Qq9FA",
       authDomain: "theantoan-fea9e.firebaseapp.com",
@@ -638,6 +794,22 @@
 
     document.getElementById("survey-date").value = new Date().toISOString().split('T')[0];
 
+    // Chuyển Tab trên Mobile
+    function switchMobileTab(tab) {
+      document.querySelectorAll('.mobile-tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+      if (tab === 'form') {
+        document.getElementById('tab-form').classList.add('active');
+        document.getElementById('nav-btn-form').classList.add('active');
+      } else {
+        document.getElementById('tab-list').classList.add('active');
+        document.getElementById('nav-btn-list').classList.add('active');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Tính ma trận rủi ro
     function calculateRisk() {
       const p = parseInt(document.getElementById("prob-select").value, 10);
       const s = parseInt(document.getElementById("sev-select").value, 10);
@@ -663,35 +835,49 @@
       return { score, level };
     }
 
-    function handleImagePreview(event) {
+    // Nén ảnh giảm kích thước tối ưu cho mobile upload và gói miễn phí
+    function handleImage(event) {
       const file = event.target.files[0];
-      const previewBox = document.getElementById("preview-box");
+      if (!file) return;
 
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const img = new Image();
-          img.onload = function() {
-            const canvas = document.createElement("canvas");
-            const MAX_WIDTH = 640;
-            const scale = Math.min(MAX_WIDTH / img.width, 1);
-            canvas.width = img.width * scale;
-            canvas.height = img.height * scale;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 600; // chuẩn hóa chiều rộng 600px
+          const scale = Math.min(MAX_WIDTH / img.width, 1);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
 
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            currentBase64Image = canvas.toDataURL("image/jpeg", 0.75);
-            previewBox.innerHTML = `<img src="${currentBase64Image}" alt="Ảnh hiện trường">`;
-          };
-          img.src = e.target.result;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          // Nén JPEG chất lượng 0.65 -> dung lượng file khoảng 30-50KB
+          currentBase64Image = canvas.toDataURL("image/jpeg", 0.65);
+          
+          const previewBox = document.getElementById("preview-box");
+          previewBox.innerHTML = `
+            <img src="${currentBase64Image}" alt="Hiện trường">
+            <button type="button" class="btn-remove-img" style="display:block;" onclick="clearImage()">✕</button>
+          `;
         };
-        reader.readAsDataURL(file);
-      } else {
-        currentBase64Image = "";
-        previewBox.innerHTML = `<span style="font-size: 11.5px; color: #94a3b8;">Chưa có ảnh được chọn</span>`;
-      }
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
+    function clearImage() {
+      currentBase64Image = "";
+      document.getElementById("camera-input").value = "";
+      document.getElementById("gallery-input").value = "";
+      document.getElementById("preview-box").innerHTML = `
+        <span style="font-size: 12px; color: #94a3b8;">Chưa có ảnh</span>
+        <button type="button" class="btn-remove-img" id="btn-remove-img" onclick="clearImage()">✕</button>
+      `;
+    }
+
+    // Lắng nghe dữ liệu thời gian thực
     dbRef.on("value", (snapshot) => {
       reportsData = [];
       snapshot.forEach((child) => {
@@ -700,8 +886,8 @@
       reportsData.reverse();
       updateMetrics();
       renderReports();
-    }, (error) => {
-      console.error("Lỗi Realtime Database:", error);
+    }, (err) => {
+      console.error(err);
     });
 
     function updateMetrics() {
@@ -714,20 +900,26 @@
       document.getElementById("count-high").innerText = high;
       document.getElementById("count-medium").innerText = med;
       document.getElementById("count-low").innerText = low;
+      document.getElementById("mobile-badge-count").innerText = total;
     }
 
     function renderReports() {
       const filter = document.getElementById("risk-filter").value;
+      const search = (document.getElementById("search-input").value || "").toLowerCase().trim();
       const container = document.getElementById("report-items-container");
       container.innerHTML = "";
 
       const filtered = reportsData.filter(item => {
-        if (filter === "ALL") return true;
-        return item.riskLevel === filter;
+        const matchLevel = (filter === "ALL") || (item.riskLevel === filter);
+        const matchSearch = !search || 
+          (item.equipmentName && item.equipmentName.toLowerCase().includes(search)) ||
+          (item.equipmentCode && item.equipmentCode.toLowerCase().includes(search)) ||
+          (item.workshop && item.workshop.toLowerCase().includes(search));
+        return matchLevel && matchSearch;
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding: 24px; color: #64748b; font-size: 13px;">Không có báo cáo nào phù hợp.</div>`;
+        container.innerHTML = `<div style="text-align:center; padding: 24px; color: #64748b; font-size: 13px;">Không tìm thấy báo cáo nào.</div>`;
         return;
       }
 
@@ -738,31 +930,32 @@
         const riskClass = report.riskLevel === "Cao" ? "risk-high" : (report.riskLevel === "Trung bình" ? "risk-medium" : "risk-low");
         const thumbContent = report.image 
           ? `<img src="${report.image}" alt="thumb">` 
-          : `Không có ảnh`;
+          : `Không ảnh`;
 
         item.innerHTML = `
           <div class="item-info">
             <div class="item-thumb">${thumbContent}</div>
-            <div>
+            <div class="item-meta">
               <div class="item-meta-title">${report.equipmentName} - ${report.equipmentCode}</div>
-              <div class="item-meta-detail">Ngày: ${report.surveyDate} | Khảo sát: ${report.inspector}</div>
+              <div class="item-meta-detail">${report.workshop || 'Chưa rõ xưởng'} • ${report.surveyDate}</div>
             </div>
           </div>
           <div class="item-actions">
             <span class="risk-badge ${riskClass}">${report.riskLevel}</span>
-            <button class="btn-sm" onclick="printSingleReport('${report.id}')">Tải tệp PDF / In</button>
-            <button class="btn-delete" title="Xóa bản ghi" onclick="deleteReport('${report.id}')">✕</button>
+            <button class="btn-sm" onclick="printSingleReport('${report.id}')">In / PDF</button>
+            <button class="btn-delete" title="Xóa" onclick="deleteReport('${report.id}')">✕</button>
           </div>
         `;
         container.appendChild(item);
       });
     }
 
+    // Submit form
     document.getElementById("risk-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const saveBtn = document.getElementById("save-btn");
       saveBtn.disabled = true;
-      saveBtn.textContent = "Đang lưu...";
+      saveBtn.textContent = "Đang gửi dữ liệu...";
 
       const { score, level } = calculateRisk();
 
@@ -786,8 +979,11 @@
       try {
         await dbRef.push(newRecord);
         resetForm();
+        if (window.innerWidth <= 900) {
+          switchMobileTab('list');
+        }
       } catch (err) {
-        alert("Lỗi khi lưu lên Firebase: " + err.message);
+        alert("Lỗi khi lưu dữ liệu: " + err.message);
       } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = "Lưu Báo Cáo";
@@ -797,13 +993,12 @@
     function resetForm() {
       document.getElementById("risk-form").reset();
       document.getElementById("survey-date").value = new Date().toISOString().split('T')[0];
-      currentBase64Image = "";
-      document.getElementById("preview-box").innerHTML = `<span style="font-size: 11.5px; color: #94a3b8;">Chưa có ảnh được chọn</span>`;
+      clearImage();
       calculateRisk();
     }
 
     async function deleteReport(id) {
-      if (confirm("Bạn có chắc chắn muốn xóa báo cáo này không?")) {
+      if (confirm("Bạn có chắc chắn muốn xóa bản ghi khảo sát này?")) {
         try {
           await dbRef.child(id).remove();
         } catch (err) {
@@ -812,21 +1007,22 @@
       }
     }
 
+    // Xuất Excel tổng hợp trên Laptop (CSV BOM UTF-8)
     function exportCSV() {
       if (reportsData.length === 0) {
-        alert("Không có dữ liệu để xuất Excel.");
+        alert("Không có dữ liệu để xuất.");
         return;
       }
 
       let csvContent = "\uFEFF";
-      csvContent += "Tên thiết bị,Mã số,Vị trí,Phân xưởng,Người khảo sát,Ngày khảo sát,Khả năng(P),Nghiêm trọng(S),Điểm rủi ro,Mức độ rủi ro,Mô tả mối nguy,Biện pháp kiểm soát\n";
+      csvContent += "Mã thiết bị,Tên thiết bị,Phân xưởng,Vị trí,Người khảo sát,Ngày khảo sát,Xác suất (P),Mức nghiêm trọng (S),Điểm rủi ro,Phân loại rủi ro,Mô tả mối nguy,Biện pháp khắc phục\n";
 
       reportsData.forEach(row => {
         const line = [
-          `"${row.equipmentName || ''}"`,
           `"${row.equipmentCode || ''}"`,
-          `"${row.location || ''}"`,
+          `"${row.equipmentName || ''}"`,
           `"${row.workshop || ''}"`,
+          `"${row.location || ''}"`,
           `"${row.inspector || ''}"`,
           `"${row.surveyDate || ''}"`,
           row.probability,
@@ -843,61 +1039,118 @@
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `Bao_Cao_Khao_Sat_${new Date().toISOString().slice(0,10)}.csv`);
+      link.setAttribute("download", `Tong_Hop_Khao_Sat_${new Date().toISOString().slice(0,10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
+    // In phiếu chi tiết 1 thiết bị
     function printSingleReport(id) {
       const item = reportsData.find(r => r.id === id);
       if (!item) return;
 
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(`
+      const printWin = window.open('', '_blank');
+      printWin.document.write(`
         <html>
           <head>
-            <title>Báo cáo ${item.equipmentName} - ${item.equipmentCode}</title>
+            <title>Phiếu Khảo Sát - ${item.equipmentCode}</title>
             <style>
-              body { font-family: Arial, sans-serif; padding: 24px; color: #1e293b; }
-              .header { text-align: center; border-bottom: 2px solid #0b3cb5; padding-bottom: 12px; margin-bottom: 20px; }
-              .header h2 { color: #0b3cb5; margin: 0; text-transform: uppercase; }
+              body { font-family: Arial, sans-serif; padding: 24px; color: #0f172a; line-height: 1.4; }
+              .header-box { text-align: center; border-bottom: 2px solid #0b3cb5; padding-bottom: 12px; margin-bottom: 20px; }
+              .header-box h2 { color: #0b3cb5; margin: 0; text-transform: uppercase; font-size: 18px; }
               table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-              th, td { border: 1px solid #cbd5e1; padding: 8px 12px; font-size: 13px; text-align: left; }
-              th { background: #f1f5f9; width: 25%; }
-              .img-box { text-align: center; margin-top: 20px; }
-              .img-box img { max-width: 320px; max-height: 240px; border: 1px solid #cbd5e1; border-radius: 4px; }
+              th, td { border: 1px solid #cbd5e1; padding: 9px 12px; font-size: 13px; text-align: left; }
+              th { background: #f1f5f9; width: 28%; font-weight: bold; }
+              .img-container { text-align: center; margin-top: 20px; }
+              .img-container img { max-width: 380px; max-height: 260px; border: 1px solid #cbd5e1; border-radius: 4px; }
             </style>
           </head>
           <body>
-            <div class="header">
+            <div class="header-box">
               <h2>PHIẾU ĐÁNH GIÁ RỦI RO THIẾT BỊ TẠI HIỆN TRƯỜNG</h2>
-              <p>Mã thiết bị: <strong>${item.equipmentCode}</strong></p>
+              <p style="margin-top: 4px;">Mã thiết bị: <strong>${item.equipmentCode}</strong></p>
             </div>
             <table>
               <tr><th>Tên thiết bị</th><td>${item.equipmentName}</td></tr>
-              <tr><th>Vị trí / Phân xưởng</th><td>${item.location || '---'} / ${item.workshop || '---'}</td></tr>
+              <tr><th>Khu vực / Xưởng</th><td>${item.workshop || '---'} (Vị trí: ${item.location || '---'})</td></tr>
               <tr><th>Người khảo sát</th><td>${item.inspector}</td></tr>
               <tr><th>Ngày khảo sát</th><td>${item.surveyDate}</td></tr>
-              <tr><th>Mô tả mối nguy</th><td>${item.hazardDesc}</td></tr>
-              <tr><th>Điểm ma trận (P x S)</th><td>${item.probability} x ${item.severity} = <strong>${item.riskScore}</strong></td></tr>
+              <tr><th>Hiện trạng / Mối nguy</th><td>${item.hazardDesc}</td></tr>
+              <tr><th>Ma trận rủi ro (P x S)</th><td>${item.probability} x ${item.severity} = <strong>${item.riskScore}</strong></td></tr>
               <tr><th>Mức độ rủi ro</th><td><strong>${item.riskLevel}</strong></td></tr>
-              <tr><th>Biện pháp kiểm soát</th><td>${item.controlMeasures || '---'}</td></tr>
+              <tr><th>Biện pháp đề xuất</th><td>${item.controlMeasures || '---'}</td></tr>
             </table>
-            ${item.image ? `<div class="img-box"><h4>Hình ảnh hiện trường:</h4><img src="${item.image}"></div>` : ''}
+            ${item.image ? `<div class="img-container"><h4>Ảnh ghi nhận hiện trường:</h4><img src="${item.image}"></div>` : ''}
           </body>
         </html>
       `);
-      printWindow.document.close();
-      printWindow.focus();
+      printWin.document.close();
+      printWin.focus();
       setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 300);
+        printWin.print();
+        printWin.close();
+      }, 350);
     }
 
-    function exportSummaryPDF() {
-      window.print();
+    // In bảng danh sách tổng hợp (chuyên phục vụ báo cáo họp trên laptop)
+    function printTableSummary() {
+      if (reportsData.length === 0) {
+        alert("Chưa có dữ liệu để in.");
+        return;
+      }
+      const printWin = window.open('', '_blank');
+      let rowsHtml = reportsData.map((r, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td><strong>${r.equipmentCode}</strong></td>
+          <td>${r.equipmentName}</td>
+          <td>${r.workshop || ''}</td>
+          <td>${r.hazardDesc}</td>
+          <td style="text-align:center;">${r.riskScore}</td>
+          <td style="text-align:center; font-weight:bold;">${r.riskLevel}</td>
+          <td>${r.controlMeasures || ''}</td>
+        </tr>
+      `).join('');
+
+      printWin.document.write(`
+        <html>
+          <head>
+            <title>Bảng Tổng Hợp Khảo Sát Thiết Bị</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; color: #0f172a; }
+              h2 { text-align: center; margin-bottom: 16px; color: #0b3cb5; text-transform: uppercase; }
+              table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+              th, td { border: 1px solid #94a3b8; padding: 6px 8px; text-align: left; }
+              th { background: #f1f5f9; }
+            </style>
+          </head>
+          <body>
+            <h2>BẢNG TỔNG HỢP NGUY CƠ RỦI RO THIẾT BỊ</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:30px;">STT</th>
+                  <th>Mã thiết bị</th>
+                  <th>Tên thiết bị</th>
+                  <th>Khu vực</th>
+                  <th>Mối nguy</th>
+                  <th style="width:45px;">Điểm</th>
+                  <th style="width:70px;">Mức độ</th>
+                  <th>Biện pháp kiểm soát</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </body>
+        </html>
+      `);
+      printWin.document.close();
+      printWin.focus();
+      setTimeout(() => {
+        printWin.print();
+        printWin.close();
+      }, 350);
     }
 
     calculateRisk();
