@@ -309,7 +309,10 @@ body {
 //  STATE
 // ═══════════════════════════════════════════════════════════════
 let settings = {
-  githubUser: '', repoName: '', pat: '', gistId: ''
+  githubUser: '', repoName: '', pat: '', gistId: '',
+  // Path to status.json within the repo. Defaults to root, but can be set
+  // to e.g. 'tools/doffice/status.json' if your project is nested.
+  statusPath: 'tools/doffice/status.json',
 };
 let allDocs = [];
 let quanTamList = ['Hồ Minh Tuấn', 'Nguyễn Văn Biển', 'Trần Ngọc Lâm', 'LĐ2 - Tổ Đường Dây'];
@@ -354,16 +357,31 @@ async function fetchStatus() {
             statusData = JSON.parse(gist.files['status.json'].content);
           }
         }
-      } catch(e) {}
+        // If gist returns 403/404, just fall back silently
+      } catch(e) { /* silent */ }
     }
     
     // Fallback to repo status.json (via API, no cache)
     if (!statusData) {
-      const resp = await githubApi('/contents/status.json');
-      if (resp.ok) {
-        const data = await resp.json();
-        const content = atob(data.content);
-        statusData = JSON.parse(content);
+      const statusPath = settings.statusPath || 'status.json';
+      
+      // Try raw.githubusercontent.com first (works for public repos, faster)
+      try {
+        const rawUrl = `https://raw.githubusercontent.com/${settings.githubUser}/${settings.repoName}/main/${statusPath}?t=${Date.now()}`;
+        const rawResp = await fetch(rawUrl);
+        if (rawResp.ok) {
+          statusData = await rawResp.json();
+        }
+      } catch(e) {}
+      
+      // Fallback to GitHub Contents API (works for private repos)
+      if (!statusData) {
+        const resp = await githubApi('/contents/' + statusPath);
+        if (resp.ok) {
+          const data = await resp.json();
+          const content = atob(data.content);
+          statusData = JSON.parse(content);
+        }
       }
     }
     
@@ -719,11 +737,12 @@ async function checkSetup() {
 
   // 4. Check status.json exists
   try {
-    const statusResp = await githubApi('/contents/status.json');
+    const statusPath = settings.statusPath || 'status.json';
+    const statusResp = await githubApi('/contents/' + statusPath);
     if (statusResp.ok) {
-      ok('status.json tồn tại trong repo');
+      ok('status.json tồn tại: ' + statusPath);
     } else if (statusResp.status === 404) {
-      warn('status.json chưa có trong repo (sẽ tạo sau khi chạy workflow)');
+      warn('status.json chưa có (' + statusPath + ') - sẽ tạo sau khi chạy workflow');
     } else {
       warn('Lỗi kiểm tra status.json: ' + statusResp.status);
     }
@@ -743,12 +762,14 @@ async function checkSetup() {
           warn('Gist chưa có file status.json');
         }
       } else if (gistResp.status === 404) {
-        fail('Gist không tồn tại (ID: ' + settings.gistId + ')');
+        warn('Gist không tồn tại (ID: ' + settings.gistId + ') - bỏ qua, dùng status.json trong repo');
+      } else if (gistResp.status === 403) {
+        warn('Gist truy cập bị từ chối (403) - có thể gist riêng tư hoặc thiếu scope - bỏ qua, dùng status.json trong repo');
       } else {
-        warn('Lỗi kiểm tra gist: ' + gistResp.status);
+        warn('Lỗi kiểm tra gist: ' + gistResp.status + ' - bỏ qua');
       }
     } catch(e) {
-      warn('Không thể kiểm tra gist: ' + e.message);
+      warn('Không thể kiểm tra gist: ' + e.message + ' - bỏ qua');
     }
   } else {
     info('Gist chưa cấu hình (tùy chọn, cho real-time updates)');
@@ -923,6 +944,7 @@ function saveSettings() {
   settings.repoName = document.getElementById('setRepoName').value.trim();
   settings.pat = document.getElementById('setPat').value.trim();
   settings.gistId = document.getElementById('setGistId').value.trim();
+  // statusPath is not editable in UI; uses default
   localStorage.setItem('doffice_settings', JSON.stringify(settings));
   hideSettings();
   fetchStatus();
