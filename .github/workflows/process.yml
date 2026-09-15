@@ -6,7 +6,7 @@ on:
   
   # Scheduled: every 30 minutes during work hours (7am-5pm, Mon-Fri, GMT+7)
   schedule:
-    - cron: '0 0,30 * * 1-5'  # 7:00, 7:30, ... 17:00 GMT+7 = 0,30 0-10 * * 1-5 UTC
+    - cron: '0,30 0-9 * * 1-5'  # 7:00, 7:30, ... 17:00 GMT+7 = 0,30 0-10 * * 1-5 UTC
   
 jobs:
   process:
