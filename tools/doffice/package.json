@@ -1,0 +1,11 @@
+{
+  "name": "doffice-dashboard",
+  "version": "1.0.0",
+  "description": "D-Office dashboard - GitHub Pages + Actions",
+  "scripts": {
+    "process": "node scripts/processor.js"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}

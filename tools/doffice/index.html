@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D-Office - Xử lý văn bản</title>
+<style>
+:root {
+  --primary: #0d6efd; --success: #198754; --warning: #fd7e14;
+  --danger: #dc3545; --purple: #6f42c1; --light: #f8f9fa;
+  --border: #dee2e6; --text: #1a1a2e; --muted: #6c757d;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--light); color: var(--text); padding: 12px;
+  max-width: 1400px; margin: 0 auto;
+}
+.header {
+  text-align: center; padding: 20px 12px;
+  background: linear-gradient(135deg, var(--primary), #0dcaf0);
+  color: #fff; border-radius: 12px; margin-bottom: 16px;
+}
+.header h1 { font-size: 22px; margin-bottom: 4px; }
+.header .date { font-size: 13px; opacity: 0.85; }
+.header .status-dot {
+  display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+  background: #ff0; margin-right: 6px; vertical-align: middle;
+}
+.header .status-dot.online { background: #0f0; }
+.header .status-dot.offline { background: #f00; }
+.header .status-dot.processing { background: #ff0; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0.3; } }
+.header .tags { margin-top: 8px; }
+.header .tag {
+  display: inline-block; background: rgba(255,255,255,0.2);
+  padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px;
+}
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px; margin-bottom: 16px;
+}
+.stat-card {
+  background: #fff; border-radius: 10px; padding: 16px;
+  text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-card .num { font-size: 28px; font-weight: 700; }
+.stat-card .label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.stat-card .num.blue { color: var(--primary); }
+.stat-card .num.green { color: var(--success); }
+.stat-card .num.orange { color: var(--warning); }
+.stat-card .num.red { color: var(--danger); }
+.stat-card .num.purple { color: var(--purple); }
+.stat-card .num.gray { color: var(--muted); }
+.section {
+  background: #fff; border-radius: 10px; padding: 16px;
+  margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.section h2 {
+  font-size: 16px; margin-bottom: 12px; color: var(--primary);
+  border-bottom: 2px solid var(--border); padding-bottom: 8px;
+}
+.controls {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+  justify-content: center;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 12px 24px; border: none; border-radius: 8px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  color: #fff; text-decoration: none; transition: all 0.2s;
+}
+.btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-blue { background: var(--primary); }
+.btn-green { background: var(--success); }
+.btn-orange { background: var(--warning); }
+.btn-purple { background: var(--purple); }
+.btn-gray { background: var(--muted); }
+.btn-large { padding: 14px 32px; font-size: 16px; }
+.btn-pulse { animation: pulse 1.5s infinite; }
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(13,110,253,0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(13,110,253,0); }
+}
+.progress-bar {
+  width: 100%; height: 24px; background: #e9ecef;
+  border-radius: 12px; overflow: hidden; margin: 12px 0;
+}
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--primary), #0dcaf0);
+  border-radius: 12px; transition: width 0.3s;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: #fff; font-weight: 600;
+}
+.log-container {
+  max-height: 200px; overflow-y: auto;
+  background: #1a1a2e; color: #0f0; font-family: 'Consolas', monospace;
+  font-size: 12px; padding: 12px; border-radius: 8px; margin-top: 12px;
+}
+.log-entry { margin: 2px 0; }
+.log-entry.error { color: #f66; }
+.log-entry.success { color: #0f0; }
+.search-bar {
+  width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+  border-radius: 8px; font-size: 14px; margin-bottom: 10px;
+}
+.filter-row {
+  display: flex; gap: 8px; margin-bottom: 10px;
+  flex-wrap: wrap; align-items: center;
+}
+.chip {
+  padding: 6px 14px; border-radius: 16px; font-size: 12px;
+  font-weight: 600; cursor: pointer; border: 2px solid var(--border);
+  background: #fff; color: var(--muted);
+}
+.chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.chip.active.green { background: var(--success); border-color: var(--success); }
+.chip.active.orange { background: var(--warning); border-color: var(--warning); }
+.doc-table {
+  width: 100%; border-collapse: collapse; font-size: 12px;
+}
+.doc-table th {
+  background: var(--primary); color: #fff; padding: 8px;
+  text-align: left; position: sticky; top: 0; z-index: 1;
+}
+.doc-table td {
+  padding: 6px 8px; border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.doc-table tr:nth-child(even) { background: #f8f9fa; }
+.doc-table tr.quan-tam { background: #fff9e6; }
+.doc-table tr.quan-tam:hover { background: #fff3cd; }
+.doc-table tr:hover { background: #e9ecef; }
+.doc-table-container {
+  max-height: 500px; overflow-y: auto;
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.link-btn {
+  display: inline-block; padding: 2px 8px; background: #cfe2ff;
+  color: #084293; border-radius: 4px; font-size: 11px;
+  text-decoration: none; margin: 1px;
+}
+.link-btn:hover { background: var(--primary); color: #fff; }
+.no-files { color: #adb5bd; font-size: 11px; }
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 12px;
+  font-size: 10px; font-weight: 600;
+}
+.badge-green { background: #d4edda; color: #155724; }
+.badge-yellow { background: #fff3cd; color: #664d03; }
+.badge-blue { background: #cfe2ff; color: #084293; }
+.badge-gray { background: #e9ecef; color: var(--muted); }
+.footer {
+  text-align: center; padding: 12px; color: var(--muted);
+  font-size: 12px;
+}
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 100; justify-content: center;
+  align-items: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #fff; border-radius: 12px; padding: 24px;
+  max-width: 500px; width: 90%;
+}
+.modal h2 { margin-bottom: 16px; }
+.modal label { display: block; margin: 8px 0 4px; font-weight: 600; font-size: 14px; }
+.modal input {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+  border-radius: 6px; font-size: 14px; margin-bottom: 12px;
+}
+.modal .btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+@media(max-width: 768px) {
+  .header h1 { font-size: 18px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-card .num { font-size: 22px; }
+  .btn { padding: 10px 16px; font-size: 13px; }
+  .doc-table { font-size: 11px; }
+  .doc-table th, .doc-table td { padding: 4px 6px; }
+  .hide-mobile { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>D-Office - Xử lý văn bản</h1>
+  <div class="date">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="connStatus">Đang kết nối...</span> | 
+    <span id="lastUpdate">--</span>
+  </div>
+  <div class="tags" id="quanTamTags">
+    <span class="tag">Đang tải...</span>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="num blue" id="choXuLy">--</div>
+    <div class="label">Công việc chờ xử lý</div>
+  </div>
+  <div class="stat-card">
+    <div class="num orange" id="vbNoiBo">--</div>
+    <div class="label">VB đi nội bộ chưa ký</div>
+  </div>
+  <div class="stat-card">
+    <div class="num red" id="vbNgoai">--</div>
+    <div class="label">VB đi ngoài chưa ký</div>
+  </div>
+  <div class="stat-card">
+    <div class="num green" id="daXuLy">0</div>
+    <div class="label">Đã xử lý</div>
+  </div>
+  <div class="stat-card">
+    <div class="num purple" id="tongVB">0</div>
+    <div class="label">Tổng văn bản</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-blue btn-large btn-pulse" id="btnProcess" onclick="startProcess()">
+    ⚡ Xử lý
+  </button>
+  <a href="https://doffice.hcmpc.com.vn/" target="_blank" class="btn btn-gray">D-Office</a>
+  <a href="https://drive.google.com/drive/folders/1VkN7uGemD3dm0kZKysFJzBruGPHtXxWI" target="_blank" class="btn btn-green">Google Drive</a>
+  <a href="#" id="sheetLink" target="_blank" class="btn btn-orange" style="display:none">Google Sheet</a>
+  <button class="btn btn-purple" onclick="refreshStatus()">🔄 Làm mới</button>
+  <button class="btn btn-gray" onclick="showSettings()">⚙️ Cài đặt</button>
+</div>
+
+<div class="section" id="progressSection" style="display:none">
+  <h2>Tiến độ xử lý</h2>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width:0%">0%</div>
+  </div>
+  <div id="progressText" style="text-align:center;font-size:13px;margin:8px 0">Sẵn sàng</div>
+  <div class="stats-grid" style="margin-bottom:8px">
+    <div class="stat-card"><div class="num green" id="pCompleted">0</div><div class="label">Đã hoàn thành</div></div>
+    <div class="stat-card"><div class="num orange" id="pQuanTam">0</div><div class="label">Quan tâm</div></div>
+    <div class="stat-card"><div class="num purple" id="pFiles">0</div><div class="label">File đã tải</div></div>
+  </div>
+  <div class="log-container" id="logContainer">
+    <div class="log-entry">Đang chờ...</div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Danh sách văn bản</h2>
+  <input type="text" class="search-bar" id="searchBar" placeholder="Tìm kiếm theo ký hiệu, trích yếu, chủ trì..." oninput="renderDocs()">
+  <div class="filter-row">
+    <div class="chip active" id="chipAll" onclick="setFilter('all')">Tất cả (<span id="countAll">0</span>)</div>
+    <div class="chip" id="chipQT" onclick="setFilter('qt')">Quan tâm (<span id="countQT">0</span>)</div>
+    <div class="chip" id="chipFile" onclick="setFilter('file')">Có file (<span id="countFile">0</span>)</div>
+    <div class="chip" id="chipToday" onclick="setFilter('today')">Hôm nay (<span id="countToday">0</span>)</div>
+  </div>
+  <div class="doc-table-container">
+    <table class="doc-table">
+      <thead><tr>
+        <th>STT</th><th>Ký hiệu</th><th class="hide-mobile">Trích yếu</th>
+        <th>Chủ trì</th><th class="hide-mobile">Ngày VB</th>
+        <th>File</th><th>Trạng thái</th><th>Link</th>
+      </tr></thead>
+      <tbody id="docTableBody">
+        <tr><td colspan="8" style="text-align:center;color:#adb5bd;padding:20px">Chưa có dữ liệu</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="footer">
+  D-Office Dashboard | GitHub Pages | 
+  <span id="serverInfo">--</span> |
+  <span id="nextRun">--</span>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>⚙️ Cài đặt</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:12px">
+      Cấu hình để kết nối với GitHub repo và kích hoạt xử lý từ dashboard.
+    </p>
+    <label>GitHub Username</label>
+    <input type="text" id="setGithubUser" placeholder="vd: your-username">
+    <label>Repository Name</label>
+    <input type="text" id="setRepoName" placeholder="vd: doffice-dashboard">
+    <label>Personal Access Token (PAT)</label>
+    <input type="password" id="setPat" placeholder="ghp_xxxxxxxxxxxx" style="font-family:monospace">
+    <p style="color:var(--muted);font-size:11px;margin:-8px 0 12px">
+      Cần scope: repo, workflow. Token chỉ lưu trong trình duyệt (localStorage).
+    </p>
+    <label>Gist ID (tùy chọn - cập nhật real-time)</label>
+    <input type="text" id="setGistId" placeholder="gist_id_for_realtime_updates">
+    <div class="btn-row">
+      <button class="btn btn-gray" onclick="hideSettings()">Hủy</button>
+      <button class="btn btn-blue" onclick="saveSettings()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+let settings = {
+  githubUser: '', repoName: '', pat: '', gistId: ''
+};
+let allDocs = [];
+let quanTamList = ['Hồ Minh Tuấn', 'Nguyễn Văn Biển', 'Trần Ngọc Lâm', 'LĐ2 - Tổ Đường Dây'];
+let currentFilter = 'all';
+let isProcessing = false;
+let pollTimer = null;
+
+// Load settings from localStorage
+try {
+  const saved = localStorage.getItem('doffice_settings');
+  if (saved) settings = { ...settings, ...JSON.parse(saved) };
+} catch(e) {}
+
+// ═══════════════════════════════════════════════════════════════
+//  GITHUB API HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+function githubApi(path, options = {}) {
+  const base = `https://api.github.com/repos/${settings.githubUser}/${settings.repoName}`;
+  const url = path.startsWith('http') ? path : base + path;
+  const headers = { 'Accept': 'application/vnd.github.v3+json', ...options.headers };
+  if (settings.pat) headers['Authorization'] = `Bearer ${settings.pat}`;
+  return fetch(url, { ...options, headers });
+}
+
+async function fetchStatus() {
+  if (!settings.githubUser || !settings.repoName) {
+    document.getElementById('connStatus').textContent = 'Chưa cấu hình - bấm ⚙️ Cài đặt';
+    document.getElementById('statusDot').className = 'status-dot offline';
+    return;
+  }
+  
+  try {
+    // Try Gist first (for real-time, no cache)
+    let statusData = null;
+    if (settings.gistId) {
+      try {
+        const gistResp = await fetch(`https://api.github.com/gists/${settings.gistId}`);
+        if (gistResp.ok) {
+          const gist = await gistResp.json();
+          if (gist.files && gist.files['status.json']) {
+            statusData = JSON.parse(gist.files['status.json'].content);
+          }
+        }
+      } catch(e) {}
+    }
+    
+    // Fallback to repo status.json (via API, no cache)
+    if (!statusData) {
+      const resp = await githubApi('/contents/status.json');
+      if (resp.ok) {
+        const data = await resp.json();
+        const content = atob(data.content);
+        statusData = JSON.parse(content);
+      }
+    }
+    
+    if (!statusData) {
+      document.getElementById('connStatus').textContent = 'Chưa có dữ liệu';
+      document.getElementById('statusDot').className = 'status-dot offline';
+      return;
+    }
+    
+    // Update UI
+    document.getElementById('choXuLy').textContent = statusData.choXuLy ?? '--';
+    document.getElementById('vbNoiBo').textContent = statusData.vbDiNoiBoChuaKy ?? '--';
+    document.getElementById('vbNgoai').textContent = statusData.vbDiNgoaiChuaKy ?? '--';
+    document.getElementById('daXuLy').textContent = statusData.processed ?? 0;
+    document.getElementById('tongVB').textContent = statusData.totalDocs ?? 0;
+    
+    isProcessing = statusData.isProcessing;
+    document.getElementById('connStatus').textContent = 
+      isProcessing ? 'Đang xử lý...' : (statusData.status === 'error' ? 'Lỗi' : 'Đã kết nối');
+    document.getElementById('statusDot').className = 
+      `status-dot ${isProcessing ? 'processing' : 'online'}`;
+    document.getElementById('lastUpdate').textContent = 
+      'Cập nhật: ' + new Date(statusData.lastRun || Date.now()).toLocaleTimeString('vi-VN');
+    
+    // Tags
+    if (statusData.quanTamList) quanTamList = statusData.quanTamList;
+    document.getElementById('quanTamTags').innerHTML = 
+      quanTamList.map(t => `<span class="tag">${t}</span>`).join('');
+    
+    // Sheet link
+    if (statusData.sheetUrl) {
+      const link = document.getElementById('sheetLink');
+      link.href = statusData.sheetUrl;
+      link.style.display = 'inline-flex';
+    }
+    
+    // Docs
+    if (statusData.docs) {
+      allDocs = statusData.docs;
+      renderDocs();
+    }
+    
+    // Drive link
+    document.getElementById('serverInfo').textContent = 
+      `${settings.githubUser}/${settings.repoName}`;
+    
+    // Progress section
+    if (isProcessing) {
+      document.getElementById('progressSection').style.display = 'block';
+      if (statusData.total) {
+        const pct = statusData.current ? 
+          Math.round((statusData.current / statusData.total) * 100) : 0;
+        document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('progressFill').textContent = pct + '%';
+      }
+      document.getElementById('pCompleted').textContent = statusData.processed ?? 0;
+      document.getElementById('pQuanTam').textContent = statusData.quanTam ?? 0;
+      document.getElementById('pFiles').textContent = statusData.files ?? 0;
+      if (statusData.currentTask) {
+        document.getElementById('progressText').textContent = 
+          `[${statusData.current || '?'}/${statusData.total || '?'}] ${statusData.currentTask} - ${statusData.currentChuTri || ''}`;
+      }
+    }
+    
+    // Log
+    if (statusData.processingLog) {
+      const logHtml = statusData.processingLog.map(l => 
+        `<div class="log-entry">${l}</div>`).join('');
+      document.getElementById('logContainer').innerHTML = logHtml;
+    }
+    
+    updateProcessButton();
+    scheduleNextPoll();
+  } catch(e) {
+    document.getElementById('connStatus').textContent = 'Lỗi: ' + e.message;
+    document.getElementById('statusDot').className = 'status-dot offline';
+  }
+}
+
+async function fetchDocsCsv() {
+  // Try to fetch docs from Google Sheet CSV
+  try {
+    const statusResp = await githubApi('/contents/status.json');
+    if (!statusResp.ok) return;
+    const data = await statusResp.json();
+    const status = JSON.parse(atob(data.content));
+    
+    if (!status.sheetCsvUrl && !status.sheetUrl) return;
+    
+    // Use published CSV URL or construct from sheet URL
+    let csvUrl = status.sheetCsvUrl;
+    if (!csvUrl && status.sheetUrl) {
+      const sheetId = status.sheetUrl.match(/\/d\/([^/]+)/)?.[1];
+      if (sheetId) csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv`;
+    }
+    
+    if (!csvUrl) return;
+    
+    const csvResp = await fetch(csvUrl + '?t=' + Date.now());
+    if (!csvResp.ok) return;
+    const csv = await csvResp.text();
+    
+    // Parse CSV
+    const lines = csv.split('\n').filter(l => l.trim());
+    if (lines.length < 2) return;
+    
+    const headers = parseCsvLine(lines[0]);
+    allDocs = lines.slice(1).map(line => {
+      const cols = parseCsvLine(line);
+      return {
+        id: cols[1], kyHieu: cols[2], trichYeu: cols[3],
+        chuTri: cols[4], ngayVB: cols[5], noiBanHanh: cols[6],
+        soFile: parseInt(cols[7]) || 0,
+        folderLink: cols[8], fileLinks: cols[9] ? 
+          cols[9].split('\n').filter(l => l.trim()).map(l => ({ link: l, name: l.split('/').pop() })) : [],
+        quanTam: quanTamList.includes(cols[4]),
+        status: 'HOAN_THANH',
+        processedAt: status.lastRun,
+      };
+    });
+    renderDocs();
+  } catch(e) { /* silent - CSV is optional */ }
+}
+
+function parseCsvLine(line) {
+  const result = [];
+  let current = '', inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (c === ',' && !inQuotes) {
+      result.push(current); current = '';
+    } else { current += c; }
+  }
+  result.push(current);
+  return result;
+}
+
+async function startProcess() {
+  if (isProcessing) return;
+  if (!settings.githubUser || !settings.repoName || !settings.pat) {
+    alert('Vui lòng cấu hình GitHub trong ⚙️ Cài đặt trước khi xử lý.');
+    showSettings();
+    return;
+  }
+  
+  if (!confirm('Bắt đầu xử lý tất cả công việc chờ thực hiện?\n\n' +
+      '• Công việc quan tâm: tải file + upload Drive + ghi Sheet\n' +
+      '• Tất cả công việc: báo cáo hoàn thành\n\n' +
+      'Quan tâm: ' + quanTamList.join(', ') + '\n\n' +
+      'Lưu ý: Xử lý qua GitHub Actions, mất ~1-2 phút để bắt đầu.')) return;
+  
+  try {
+    // Trigger GitHub Actions workflow_dispatch
+    const resp = await githubApi('/actions/workflows/process.yml/dispatches', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref: 'main' }),
+    });
+    
+    if (resp.status === 204) {
+      console.log('Workflow triggered successfully');
+      isProcessing = true;
+      document.getElementById('progressSection').style.display = 'block';
+      document.getElementById('logContainer').innerHTML = 
+        '<div class="log-entry">Đã kích hoạt GitHub Actions. Đang chờ bắt đầu...</div>';
+      updateProcessButton();
+      // Start fast polling
+      pollTimer = setInterval(fetchStatus, 10000);
+    } else {
+      const err = await resp.text();
+      alert('Lỗi kích hoạt: ' + resp.status + ' ' + err);
+    }
+  } catch(e) {
+    alert('Lỗi: ' + e.message);
+  }
+}
+
+function refreshStatus() { fetchStatus(); fetchDocsCsv(); }
+
+function scheduleNextPoll() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  // Poll every 10s when processing, every 60s otherwise
+  const interval = isProcessing ? 10000 : 60000;
+  pollTimer = setInterval(fetchStatus, interval);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PROCESS BUTTON
+// ═══════════════════════════════════════════════════════════════
+
+function updateProcessButton() {
+  const btn = document.getElementById('btnProcess');
+  if (isProcessing) {
+    btn.disabled = true;
+    btn.classList.remove('btn-pulse', 'btn-blue');
+    btn.classList.add('btn-gray');
+    btn.textContent = '⏳ Đang xử lý...';
+  } else {
+    btn.disabled = false;
+    btn.classList.add('btn-pulse', 'btn-blue');
+    btn.classList.remove('btn-gray');
+    btn.textContent = '⚡ Xử lý';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DOCUMENT TABLE
+// ═══════════════════════════════════════════════════════════════
+
+function setFilter(filter) {
+  currentFilter = filter;
+  ['All', 'QT', 'File', 'Today'].forEach(f => {
+    document.getElementById('chip' + f).classList.remove('active', 'green', 'orange');
+  });
+  const chipMap = { all: 'chipAll', qt: 'chipQT', file: 'chipFile', today: 'chipToday' };
+  const colorMap = { qt: 'orange', file: 'green', today: 'green' };
+  document.getElementById(chipMap[filter]).classList.add('active');
+  if (colorMap[filter]) document.getElementById(chipMap[filter]).classList.add(colorMap[filter]);
+  renderDocs();
+}
+
+function getFilteredDocs() {
+  let docs = allDocs;
+  const search = document.getElementById('searchBar').value.toLowerCase();
+  if (search) {
+    docs = docs.filter(d => 
+      (d.kyHieu || '').toLowerCase().includes(search) ||
+      (d.trichYeu || '').toLowerCase().includes(search) ||
+      (d.chuTri || '').toLowerCase().includes(search)
+    );
+  }
+  switch (currentFilter) {
+    case 'qt': return docs.filter(d => d.quanTam);
+    case 'file': return docs.filter(d => d.soFile > 0);
+    case 'today':
+      const today = new Date().toISOString().split('T')[0];
+      return docs.filter(d => d.processedAt && d.processedAt.startsWith(today));
+    default: return docs;
+  }
+}
+
+function renderDocs() {
+  const docs = getFilteredDocs();
+  const tbody = document.getElementById('docTableBody');
+  document.getElementById('countAll').textContent = allDocs.length;
+  document.getElementById('countQT').textContent = allDocs.filter(d => d.quanTam).length;
+  document.getElementById('countFile').textContent = allDocs.filter(d => d.soFile > 0).length;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('countToday').textContent = 
+    allDocs.filter(d => d.processedAt && d.processedAt.startsWith(today)).length;
+  
+  if (docs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#adb5bd;padding:20px">Không có dữ liệu</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = docs.slice(0, 200).map((d, i) => {
+    const qtBadge = d.quanTam ? '<span class="badge badge-yellow">QT</span> ' : '';
+    const fileBadge = d.soFile > 0 
+      ? `<span class="badge badge-green">${d.soFile} file</span>` 
+      : '<span class="badge badge-gray">0 file</span>';
+    const statusBadge = d.status === 'HOAN_THANH' 
+      ? '<span class="badge badge-blue">Hoàn thành</span>' 
+      : '<span class="badge badge-gray">--</span>';
+    let links = '';
+    if (d.folderLink) links += `<a href="${d.folderLink}" target="_blank" class="link-btn">Thư mục</a> `;
+    if (d.fileLinks && d.fileLinks.length > 0) {
+      links += d.fileLinks.slice(0, 3).map(f => 
+        `<a href="${f.link}" target="_blank" class="link-btn">${(f.name||'file').substring(0,15)}</a>`).join(' ');
+    }
+    if (!links) links = '<span class="no-files">-</span>';
+    return `<tr class="${d.quanTam ? 'quan-tam' : ''}">
+      <td>${i + 1}</td>
+      <td><b>${d.kyHieu || ''}</b></td>
+      <td class="hide-mobile">${(d.trichYeu || '').substring(0, 80)}</td>
+      <td>${qtBadge}${d.chuTri || ''}</td>
+      <td class="hide-mobile">${d.ngayVB || ''}</td>
+      <td>${fileBadge}</td>
+      <td>${statusBadge}</td>
+      <td>${links}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SETTINGS MODAL
+// ═══════════════════════════════════════════════════════════════
+
+function showSettings() {
+  document.getElementById('setGithubUser').value = settings.githubUser;
+  document.getElementById('setRepoName').value = settings.repoName;
+  document.getElementById('setPat').value = settings.pat;
+  document.getElementById('setGistId').value = settings.gistId;
+  document.getElementById('settingsModal').classList.add('show');
+}
+
+function hideSettings() {
+  document.getElementById('settingsModal').classList.remove('show');
+}
+
+function saveSettings() {
+  settings.githubUser = document.getElementById('setGithubUser').value.trim();
+  settings.repoName = document.getElementById('setRepoName').value.trim();
+  settings.pat = document.getElementById('setPat').value.trim();
+  settings.gistId = document.getElementById('setGistId').value.trim();
+  localStorage.setItem('doffice_settings', JSON.stringify(settings));
+  hideSettings();
+  fetchStatus();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+
+fetchStatus();
+fetchDocsCsv();
+scheduleNextPoll();
+</script>
+
+</body>
+</html>

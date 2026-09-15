@@ -1,0 +1,17 @@
+{
+  "lastRun": null,
+  "status": "pending",
+  "isProcessing": false,
+  "choXuLy": 0,
+  "vbDiNoiBoChuaKy": 0,
+  "vbDiNgoaiChuaKy": 0,
+  "processed": 0,
+  "quanTam": 0,
+  "files": 0,
+  "totalDocs": 0,
+  "docs": [],
+  "processingLog": [],
+  "quanTamList": ["Hồ Minh Tuấn", "Nguyễn Văn Biển", "Trần Ngọc Lâm", "LĐ2 - Tổ Đường Dây"],
+  "driveUrl": "https://drive.google.com/drive/folders/1VkN7uGemD3dm0kZKysFJzBruGPHtXxWI",
+  "dofficeUrl": "https://doffice.hcmpc.com.vn/"
+}
