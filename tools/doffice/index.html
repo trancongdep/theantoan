@@ -230,6 +230,7 @@ body {
   <a href="https://drive.google.com/drive/folders/1VkN7uGemD3dm0kZKysFJzBruGPHtXxWI" target="_blank" class="btn btn-green">Google Drive</a>
   <a href="#" id="sheetLink" target="_blank" class="btn btn-orange" style="display:none">Google Sheet</a>
   <button class="btn btn-purple" onclick="refreshStatus()">🔄 Làm mới</button>
+  <button class="btn btn-orange" onclick="checkSetup()">🔍 Kiểm tra cài đặt</button>
   <button class="btn btn-gray" onclick="showSettings()">⚙️ Cài đặt</button>
 </div>
 
@@ -518,28 +519,99 @@ async function startProcess() {
       'Lưu ý: Xử lý qua GitHub Actions, mất ~1-2 phút để bắt đầu.')) return;
   
   try {
-    // Trigger GitHub Actions workflow_dispatch
-    const resp = await githubApi('/actions/workflows/process.yml/dispatches', {
+    // Step 1: Detect default branch
+    const repoResp = await githubApi('');
+    let branch = 'main';
+    if (repoResp.ok) {
+      const repoData = await repoResp.json();
+      branch = repoData.default_branch || 'main';
+      console.log('Default branch:', branch);
+    } else {
+      console.warn('Could not fetch repo info, trying main');
+    }
+
+    // Step 2: Find the workflow
+    const wfResp = await githubApi('/actions/workflows');
+    if (!wfResp.ok) {
+      const err = await wfResp.text();
+      let msg = `Không thể lấy danh sách workflow (${wfResp.status}).\n\n`;
+      if (wfResp.status === 404) {
+        msg += 'Nguyên nhân có thể:\n' +
+              '• Repo không tồn tại hoặc sai tên\n' +
+              '• PAT không có quyền repo\n' +
+              '• GitHub Actions chưa được bật cho repo này\n\n' +
+              'Vào: Settings → Actions → General → Allow all actions';
+      } else if (wfResp.status === 403) {
+        msg += 'PAT thiếu quyền. Cần scope: repo + workflow.\n' +
+               'Tạo token mới tại: https://github.com/settings/tokens';
+      } else if (wfResp.status === 401) {
+        msg += 'PAT không hợp lệ hoặc đã hết hạn.\n' +
+               'Tạo token mới tại: https://github.com/settings/tokens';
+      }
+      alert(msg);
+      return;
+    }
+
+    const wfData = await wfResp.json();
+    let workflow = wfData.workflows?.find(w => 
+      w.name.includes('D-Office') || 
+      w.path.includes('process.yml') || 
+      w.path.endsWith('process.yml')
+    );
+    
+    if (!workflow && wfData.workflows?.length > 0) {
+      workflow = wfData.workflows[0];
+      console.log('Using first workflow:', workflow.name, workflow.path);
+    }
+
+    if (!workflow) {
+      alert('Không tìm thấy workflow trong repo!\n\n' +
+            'Đảm bảo file .github/workflows/process.yml đã được đẩy lên repo.\n' +
+            'Kiểm tra: ' + `https://github.com/${settings.githubUser}/${settings.repoName}/actions`);
+      return;
+    }
+
+    console.log('Found workflow:', workflow.id, workflow.name, workflow.path);
+
+    // Step 3: Trigger workflow_dispatch
+    const dispatchPath = `/actions/workflows/${workflow.id}/dispatches`;
+    const dispatchResp = await githubApi(dispatchPath, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ref: 'main' }),
+      body: JSON.stringify({ ref: branch }),
     });
-    
-    if (resp.status === 204) {
+
+    if (dispatchResp.status === 204) {
       console.log('Workflow triggered successfully');
       isProcessing = true;
       document.getElementById('progressSection').style.display = 'block';
       document.getElementById('logContainer').innerHTML = 
-        '<div class="log-entry">Đã kích hoạt GitHub Actions. Đang chờ bắt đầu...</div>';
+        `<div class="log-entry">✅ Đã kích hoạt workflow "${workflow.name}" trên branch "${branch}"</div>` +
+        `<div class="log-entry">⏳ Đang chờ GitHub Actions bắt đầu (1-2 phút)...</div>`;
       updateProcessButton();
       // Start fast polling
+      if (pollTimer) clearInterval(pollTimer);
       pollTimer = setInterval(fetchStatus, 10000);
     } else {
-      const err = await resp.text();
-      alert('Lỗi kích hoạt: ' + resp.status + ' ' + err);
+      const errText = await dispatchResp.text();
+      let msg = `Lỗi kích hoạt workflow (${dispatchResp.status}).\n\n`;
+      try {
+        const errJson = JSON.parse(errText);
+        msg += errJson.message + '\n';
+        if (errJson.documentation_url) msg += '\nXem: ' + errJson.documentation_url;
+      } catch(_) {
+        msg += errText;
+      }
+      if (dispatchResp.status === 404) {
+        msg += '\n\nNguyên nhân: Workflow file chưa được push lên repo, hoặc branch sai.';
+        msg += `\n\nBranch phát hiện: ${branch}`;
+        msg += `\nWorkflow ID: ${workflow.id}`;
+        msg += `\nWorkflow path: ${workflow.path}`;
+      }
+      alert(msg);
     }
   } catch(e) {
-    alert('Lỗi: ' + e.message);
+    alert('Lỗi: ' + e.message + '\n\nKiểm tra kết nối mạng và cấu hình GitHub.');
   }
 }
 
@@ -550,6 +622,179 @@ function scheduleNextPoll() {
   // Poll every 10s when processing, every 60s otherwise
   const interval = isProcessing ? 10000 : 60000;
   pollTimer = setInterval(fetchStatus, interval);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DIAGNOSTICS / CHECK SETUP
+// ═══════════════════════════════════════════════════════════════
+
+async function checkSetup() {
+  if (!settings.githubUser || !settings.repoName) {
+    alert('Chưa cấu hình GitHub! Bấm ⚙️ Cài đặt để nhập thông tin.');
+    showSettings();
+    return;
+  }
+
+  const results = [];
+  const ok = (msg) => results.push('<span style="color:#198754">✅ ' + msg + '</span>');
+  const fail = (msg) => results.push('<span style="color:#dc3545">❌ ' + msg + '</span>');
+  const warn = (msg) => results.push('<span style="color:#fd7e14">⚠️ ' + msg + '</span>');
+  const info = (msg) => results.push('<span style="color:#6c757d">ℹ️ ' + msg + '</span>');
+
+  results.push('<h3 style="margin:0 0 12px">🔍 Kết quả kiểm tra cài đặt</h3>');
+
+  // 1. Check repo access
+  try {
+    const repoResp = await githubApi('');
+    if (repoResp.ok) {
+      const repo = await repoResp.json();
+      ok('Repo: ' + repo.full_name);
+      info('Branch mặc định: ' + repo.default_branch);
+      if (!repo.default_branch) fail('Không xác định được branch mặc định');
+    } else if (repoResp.status === 404) {
+      fail('Repo không tồn tại hoặc PAT không có quyền truy cập');
+      fail('Kiểm tra: ' + settings.githubUser + '/' + settings.repoName);
+    } else if (repoResp.status === 401) {
+      fail('PAT không hợp lệ hoặc đã hết hạn');
+      info('Tạo token mới: https://github.com/settings/tokens');
+    } else {
+      fail('Lỗi truy cập repo: ' + repoResp.status);
+    }
+  } catch(e) {
+    fail('Lỗi mạng khi kiểm tra repo: ' + e.message);
+  }
+
+  // 2. Check PAT scopes
+  try {
+    const patResp = await fetch('https://api.github.com/user', {
+      headers: { 'Authorization': 'Bearer ' + settings.pat, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (patResp.ok) {
+      const scopes = patResp.headers.get('x-oauth-scopes') || '';
+      if (scopes) {
+        ok('PAT hợp lệ. Scopes: ' + scopes);
+        if (!scopes.includes('repo')) fail('PAT thiếu scope: repo');
+        if (!scopes.includes('workflow')) fail('PAT thiếu scope: workflow (cần để kích hoạt Actions)');
+        if (!scopes.includes('gist') && settings.gistId) warn('PAT thiếu scope: gist (cần cho real-time updates)');
+      } else {
+        ok('PAT hợp lệ (không đọc được scopes do CORS - đảm bảo token có scopes: repo, workflow, gist)');
+      }
+    } else if (patResp.status === 401) {
+      fail('PAT không hợp lệ. Tạo token mới tại: https://github.com/settings/tokens');
+    } else {
+      fail('PAT kiểm tra thất bại: ' + patResp.status);
+    }
+  } catch(e) {
+    fail('Không thể kiểm tra PAT: ' + e.message);
+  }
+
+  // 3. Check workflow exists
+  try {
+    const wfResp = await githubApi('/actions/workflows');
+    if (wfResp.ok) {
+      const wfData = await wfResp.json();
+      if (wfData.workflows && wfData.workflows.length > 0) {
+        ok('Tìm thấy ' + wfData.workflows.length + ' workflow(s):');
+        wfData.workflows.forEach(w => {
+          info('  - ' + w.name + ' (' + w.path + ') [ID: ' + w.id + ', state: ' + w.state + ']');
+        });
+        const target = wfData.workflows.find(w => w.path.includes('process.yml'));
+        if (!target) warn('Không tìm thấy workflow process.yml. Đảm bảo file .github/workflows/process.yml đã push');
+        else if (target.state === 'disabled') {
+          fail('Workflow bị disabled. Vào Settings → Actions để bật lại');
+        } else ok('Workflow process.yml: ' + target.state);
+      } else {
+        fail('Không có workflow nào trong repo');
+        info('Push file .github/workflows/process.yml lên repo');
+      }
+    } else if (wfResp.status === 404) {
+      fail('GitHub Actions chưa được bật hoặc repo không tồn tại');
+      info('Vào: Settings → Actions → General → Allow all actions');
+    } else {
+      fail('Lỗi kiểm tra workflow: ' + wfResp.status);
+    }
+  } catch(e) {
+    fail('Không thể kiểm tra workflow: ' + e.message);
+  }
+
+  // 4. Check status.json exists
+  try {
+    const statusResp = await githubApi('/contents/status.json');
+    if (statusResp.ok) {
+      ok('status.json tồn tại trong repo');
+    } else if (statusResp.status === 404) {
+      warn('status.json chưa có trong repo (sẽ tạo sau khi chạy workflow)');
+    } else {
+      warn('Lỗi kiểm tra status.json: ' + statusResp.status);
+    }
+  } catch(e) {}
+
+  // 5. Check Gist (if configured)
+  if (settings.gistId) {
+    try {
+      const gistResp = await fetch('https://api.github.com/gists/' + settings.gistId);
+      if (gistResp.ok) {
+        ok('Gist tồn tại và có thể truy cập');
+        const gist = await gistResp.json();
+        if (gist.files && gist.files['status.json']) {
+          const content = JSON.parse(gist.files['status.json'].content);
+          info('Gist status: ' + (content.status || 'unknown') + ', isProcessing: ' + content.isProcessing);
+        } else {
+          warn('Gist chưa có file status.json');
+        }
+      } else if (gistResp.status === 404) {
+        fail('Gist không tồn tại (ID: ' + settings.gistId + ')');
+      } else {
+        warn('Lỗi kiểm tra gist: ' + gistResp.status);
+      }
+    } catch(e) {
+      warn('Không thể kiểm tra gist: ' + e.message);
+    }
+  } else {
+    info('Gist chưa cấu hình (tùy chọn, cho real-time updates)');
+  }
+
+  // 6. Check recent workflow runs
+  try {
+    const runsResp = await githubApi('/actions/runs?per_page=3');
+    if (runsResp.ok) {
+      const runsData = await runsResp.json();
+      if (runsData.workflow_runs && runsData.workflow_runs.length > 0) {
+        info('Lần chạy gần nhất:');
+        runsData.workflow_runs.slice(0, 3).forEach(r => {
+          const time = new Date(r.created_at).toLocaleString('vi-VN');
+          const icon = r.conclusion === 'success' ? '✅' : (r.conclusion === 'failure' ? '❌' : '⏳');
+          results.push('<span style="color:#6c757d">  ' + icon + ' ' + time + ' - ' + (r.conclusion || r.status) + '</span>');
+        });
+      } else {
+        warn('Chưa có lần chạy workflow nào (workflow chưa được kích hoạt)');
+      }
+    }
+  } catch(e) {}
+
+  // Show results
+  const passed = results.filter(r => r.includes('✅')).length;
+  const failed = results.filter(r => r.includes('❌')).length;
+  const summary = failed === 0 
+    ? '<div style="margin-top:12px;padding:8px;background:#d4edda;border-radius:6px;color:#155724;font-weight:600">🎉 Tất cả kiểm tra cơ bản đã qua! (' + passed + ' OK, ' + failed + ' lỗi)</div>'
+    : '<div style="margin-top:12px;padding:8px;background:#f8d7da;border-radius:6px;color:#721c24;font-weight:600">⚠️ Có ' + failed + ' lỗi cần sửa. Xem chi tiết bên dưới.</div>';
+
+  // Use a modal to show results
+  let modal = document.getElementById('diagModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'diagModal';
+    modal.className = 'modal-overlay show';
+    modal.innerHTML = 
+      '<div class="modal" style="max-width:650px;max-height:80vh;overflow-y:auto">' +
+      '<div id="diagContent"></div>' +
+      '<div class="btn-row"><button class="btn btn-blue" onclick="document.getElementById(\'diagModal\').classList.remove(\'show\')">Đóng</button></div>' +
+      '</div>';
+    document.body.appendChild(modal);
+  }
+  document.getElementById('diagContent').innerHTML = 
+    results.join('<br>\n') + summary;
+  modal.classList.add('show');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -618,7 +863,14 @@ function renderDocs() {
     allDocs.filter(d => d.processedAt && d.processedAt.startsWith(today)).length;
   
   if (docs.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#adb5bd;padding:20px">Không có dữ liệu</td></tr>';
+    const msg = allDocs.length === 0 
+      ? '<tr><td colspan="8" style="text-align:center;color:#6c757d;padding:30px">' +
+        '📋 Chưa có dữ liệu văn bản<br><br>' +
+        'Bấm <b>⚡ Xử lý</b> để kích hoạt xử lý qua GitHub Actions<br>' +
+        'hoặc đợi lịch tự động (30 phút/lần, giờ hành chính)<br><br>' +
+        'Nếu đã bấm Xử lý nhưng vẫn trống, bấm <b>🔍 Kiểm tra cài đặt</b></td></tr>'
+      : '<tr><td colspan="8" style="text-align:center;color:#adb5bd;padding:20px">Không có văn bản phù hợp bộ lọc</td></tr>';
+    tbody.innerHTML = msg;
     return;
   }
   

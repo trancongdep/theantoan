@@ -99,15 +99,46 @@ Vào repo > Settings > Secrets and variables > Actions > New repository secret:
 - **Tự động**: GitHub Actions chạy mỗi 30 phút (7:00-17:00, Thứ 2-Thứ 6)
 - **Thủ công**: Bấm nút **⚡ Xử lý** trên dashboard
 - **Làm mới**: Bấm **🔄 Làm mới** để cập nhật số liệu
+- **Kiểm tra cài đặt**: Bấm **🔍 Kiểm tra cài đặt** để chẩn đoán lỗi (repo, PAT, workflow, Gist, runs)
 - **Cài đặt**: Bấm **⚙️ Cài đặt** để thay đổi cấu hình
+
+## Khắc phục lỗi
+
+### Lỗi 404 khi bấm "Xử lý"
+
+Nguyên nhân phổ biến:
+1. **Workflow file chưa push lên repo**: Kiểm tra `.github/workflows/process.yml` tồn tại trong repo
+2. **PAT thiếu scope `workflow`**: Tạo lại PAT với scopes: `repo`, `workflow`, `gist`
+3. **GitHub Actions chưa bật**: Vào repo > Settings > Actions > General > "Allow all actions"
+4. **Branch sai**: Dashboard tự phát hiện branch (`main` hoặc `master`), nhưng kiểm tra lại
+
+Bấm **🔍 Kiểm tra cài đặt** để chẩn đoán chi tiết.
+
+### Dashboard không có thông tin văn bản
+
+Nguyên nhân: `status.json` trong repo vẫn là file trống ban đầu.
+- Workflow phải chạy thành công ít nhất 1 lần để tạo `status.json` với dữ liệu
+- Bấm **⚡ Xử lý** và chờ 2-3 phút
+- Hoặc chờ lịch tự động (30 phút/lần)
+
+### GitHub Actions chạy nhưng báo lỗi
+
+Kiểm tra log: `https://github.com/USER/REPO/actions`
+- Lỗi `GOOGLE_SERVICE_ACCOUNT not set`: Thêm secret (xem Bước 5)
+- Lỗi `Login failed`: Kiểm tra `DOFFICE_USERNAME` và `DOFFICE_PASSWORD`
+- Lỗi D-Office WAF block: IP GitHub Actions có thể bị chặn bởi firewall D-Office
 
 ## API Endpoints sử dụng
 
 | Endpoint | Chức năng |
 |---|---|
+| `GET /repos/USER/REPO` | Lấy thông tin repo + branch mặc định |
 | `GET /repos/USER/REPO/contents/status.json` | Đọc status (bypass cache) |
+| `GET /repos/USER/REPO/actions/workflows` | Liệt kê workflows + tìm workflow đúng |
+| `POST /repos/USER/REPO/actions/workflows/{id}/dispatches` | Kích hoạt xử lý (dùng workflow ID) |
+| `GET /repos/USER/REPO/actions/runs` | Kiểm tra lần chạy gần nhất |
 | `GET /gists/GIST_ID` | Đọc real-time progress |
-| `POST /repos/USER/REPO/actions/workflows/process.yml/dispatches` | Kích hoạt xử lý |
+| `GET /user` | Kiểm tra PAT hợp lệ + scopes |
 
 ## Lưu ý
 
