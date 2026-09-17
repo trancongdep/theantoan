@@ -2,13 +2,12 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hệ Thống Đấu Trường ATVSLĐ - Màn Hình Giảng Viên</title>
-    <!-- Firebase SDK (Chỉ dùng để lấy đề thi 1 lần) -->
+    <title>Đấu Trường ATVSLĐ - Màn Hình Giảng Viên</title>
+    <!-- Firebase SDK (Chỉ đọc đề 1 lần từ Firestore) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-    <!-- MQTT & QRCode (Chịu tải 160+ học viên kết nối thời gian thực) -->
+    <!-- MQTT & QRCode (Chịu tải 160+ học viên tham gia) -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -110,20 +109,21 @@
 </div>
 
 <script>
-// --- CẤU HÌNH THÔNG SỐ FIREBASE CỦA BẠN TẠI ĐÂY ---
+// CẤU HÌNH THÔNG SỐ FIREBASE CHÍNH THỨC
 const firebaseConfig = {
-    apiKey: "AIzaSyYOUR_API_KEY",
-    authDomain: "hse-arena.firebaseapp.com",
-    projectId: "hse-arena",
-    storageBucket: "hse-arena.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef"
+    apiKey: "AIzaSyCkBRre5ajocg0EIuOchb6QknsdL6Qq9FA",
+    authDomain: "theantoan-fea9e.firebaseapp.com",
+    databaseURL: "https://theantoan-fea9e-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "theantoan-fea9e",
+    storageBucket: "theantoan-fea9e.firebasestorage.app",
+    messagingSenderId: "161371447668",
+    appId: "1:161371447668:web:3f3c2f9c0b967ace91cc21",
+    measurementId: "G-G5R89QH44C"
 };
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const db = firebase.firestore();
 
-// --- ÂM THANH THỜI GIAN THỰC (WEB AUDIO API) ---
+// --- ÂM THANH WEB AUDIO API ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let tickInterval = null;
 function playTone(freq, duration, type='sine', gain=0.1) {
@@ -146,38 +146,36 @@ function playResultFanfare() {
     [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => setTimeout(() => playTone(f, 0.4, 'triangle', 0.15), i * 120));
 }
 
-// --- ĐỌC THAM SỐ URL & TẢI ĐỀ THI 1 LẦN TỪ FIRESTORE ---
+// --- ĐỌC DỮ LIỆU ĐỀ THI 1 LẦN DUY NHẤT TỪ FIRESTORE ---
 const urlParams = new URLSearchParams(window.location.search);
 const ROOM = urlParams.get('room') || ("FPT_" + Math.floor(1000 + Math.random() * 9000));
 const quizId = urlParams.get('quiz');
+const uid = urlParams.get('uid');
 document.getElementById('room-id').innerText = ROOM;
 
 let activeQuestions = [];
 let timePerQuestion = 30;
 
-auth.onAuthStateChanged(user => {
-    if (user && quizId) {
-        // Chỉ đọc đúng 1 bản ghi của đề thi này từ Firestore rồi dừng
-        db.collection("users").doc(user.uid).collection("quizzes").doc(quizId).get().then(doc => {
-            if (doc.exists) {
-                const data = doc.data();
-                document.getElementById('lobby-title').innerText = data.title;
-                activeQuestions = data.questions;
-                timePerQuestion = data.timePerQuestion || 30;
-                initMQTTAndQR();
-            } else {
-                alert("Không tìm thấy dữ liệu đề thi trên hệ thống!");
-            }
-        });
-    } else {
-        // Dự phòng khi mở trực tiếp không qua dashboard
-        document.getElementById('lobby-title').innerText = "HUẤN LUYỆN ATVSLĐ - FPT TELECOM";
-        initMQTTAndQR();
-    }
-});
+if (uid && quizId) {
+    db.collection("users").doc(uid).collection("quizzes").doc(quizId).get().then(doc => {
+        if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('lobby-title').innerText = data.title;
+            activeQuestions = data.questions;
+            timePerQuestion = data.timePerQuestion || 30;
+            initMQTTAndQR();
+        } else {
+            alert("Không tìm thấy dữ liệu đề thi trên Firestore!");
+        }
+    }).catch(err => {
+        alert("Lỗi tải đề thi: " + err.message);
+    });
+} else {
+    document.getElementById('lobby-title').innerText = "HUẤN LUYỆN ATVSLĐ - FPT TELECOM";
+    initMQTTAndQR();
+}
 
 function initMQTTAndQR() {
-    // Tạo mã QR dẫn học viên vào phòng qua MQTT
     const studentURL = window.location.href.split('host.html')[0] + "play.html?room=" + ROOM;
     const qrContainer = document.getElementById("qrcode");
     qrContainer.innerHTML = '';
@@ -186,7 +184,7 @@ function initMQTTAndQR() {
     startMQTT();
 }
 
-// --- TOÀN BỘ KẾT NỐI HỌC VIÊN QUA MQTT BROKER (KHÔNG CHẠM FIREBASE) ---
+// --- MQTT BROKER (ĐẢM BẢO 160+ HỌC VIÊN KHÔNG BAO GIỜ TREO FIREBASE) ---
 let currentQ = 0;
 let players = {};
 let timer = null;
