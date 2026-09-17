@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hệ Thống Đấu Trường ATVSLĐ - Giảng Viên</title>
+    <title>Hệ Thống Đấu Trường ATVSLĐ - Màn Hình Giảng Viên</title>
     <!-- MQTT, QRCode & Mammoth DOCX Parser -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -10,25 +10,35 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-x: hidden; }
-        .box { width: 92%; max-width: 1050px; background: #1e293b; border-radius: 20px; padding: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); position: relative; }
-        h1 { color: #f59e0b; margin-bottom: 15px; font-size: 26px; text-transform: uppercase; letter-spacing: 1px; }
-        .fs-btn { position: absolute; top: 20px; right: 25px; background: #334155; color: #fff; border: 1px solid #475569; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .box { width: 94%; max-width: 1100px; background: #1e293b; border-radius: 20px; padding: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); position: relative; }
+        h1 { color: #f59e0b; margin-bottom: 20px; font-size: 26px; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
+        
+        .fs-btn { position: absolute; top: 20px; right: 25px; background: #334155; color: #fff; border: 1px solid #475569; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .fs-btn:hover { background: #475569; }
-        
-        /* Dashboard chọn đề */
-        .grid-configs { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin: 20px 0; text-align: left; }
-        .panel { background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #334155; }
+
+        /* GIAI ĐOẠN 1: CẤU HÌNH */
+        .form-group { margin-bottom: 18px; text-align: left; }
         label { display: block; font-weight: bold; margin-bottom: 8px; color: #38bdf8; font-size: 15px; }
-        select, input[type="file"] { width: 100%; padding: 12px; background: #1e293b; color: #fff; border: 1px solid #475569; border-radius: 8px; font-size: 15px; margin-bottom: 12px; }
-        
-        .badge { background: #0284c7; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 16px; display: inline-block; }
-        #qr-container { display: flex; flex-direction: column; align-items: center; margin: 15px 0; }
-        #qrcode { padding: 12px; background: #fff; border-radius: 12px; margin-bottom: 10px; }
-        
-        .btn { background: #10b981; color: #fff; border: none; padding: 14px 28px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-        .btn:hover { background: #059669; }
-        
-        /* Màn hình thi */
+        input[type="text"], select, input[type="file"] { width: 100%; padding: 12px 16px; background: #0f172a; color: #fff; border: 1px solid #334155; border-radius: 8px; font-size: 15px; }
+        .btn-open { width: 100%; background: #2563eb; color: #fff; border: none; padding: 16px; border-radius: 10px; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 15px; }
+        .btn-open:hover { background: #1d4ed8; }
+
+        /* GIAI ĐOẠN 2: SẢNH CHỜ THI ĐẤU */
+        .lobby-layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 30px; margin-top: 15px; align-items: start; }
+        .lobby-left { display: flex; flex-direction: column; align-items: center; background: #0f172a; padding: 25px; border-radius: 16px; border: 1px solid #334155; text-align: center; }
+        #qrcode { padding: 12px; background: #fff; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .badge { background: #0284c7; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 16px; display: inline-block; margin-bottom: 12px; }
+        .btn-start { width: 100%; background: #10b981; color: #fff; border: none; padding: 15px; border-radius: 10px; font-size: 22px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-start:hover { background: #059669; }
+
+        /* CỘT DANH SÁCH HỌC VIÊN THAM GIA */
+        .lobby-right { background: #0f172a; padding: 20px; border-radius: 16px; border: 1px solid #334155; text-align: left; height: 490px; display: flex; flex-direction: column; }
+        .player-list-header { font-size: 18px; font-weight: bold; color: #38bdf8; border-bottom: 2px solid #334155; padding-bottom: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; }
+        .player-list-scroll { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; padding-right: 5px; }
+        .player-chip { background: #334155; color: #f8fafc; padding: 7px 14px; border-radius: 20px; font-size: 14px; font-weight: 500; border: 1px solid #475569; animation: popIn 0.2s ease-out; }
+        @keyframes popIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* MÀN HÌNH THI & LEADERBOARD */
         .live-status { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .timer-bar { width: 100%; height: 14px; background: #334155; border-radius: 7px; overflow: hidden; margin: 15px 0; }
         .timer-progress { width: 100%; height: 100%; background: #ef4444; }
@@ -36,61 +46,91 @@
         .opt-card { padding: 22px; border-radius: 12px; font-size: 19px; font-weight: bold; line-height: 1.4; }
         .opt-0 { background: #dc2626; } .opt-1 { background: #2563eb; } .opt-2 { background: #d97706; } .opt-3 { background: #16a34a; }
         .correct-mark { border: 4px solid #fff; box-shadow: 0 0 20px #fff; transform: scale(1.02); transition: 0.2s; }
-        
-        /* Bảng xếp hạng */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 14px; text-align: left; border-bottom: 1px solid #334155; }
         th { background: #0f172a; color: #f59e0b; }
+        .btn-next { background: #10b981; color: #fff; border: none; padding: 14px 28px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div class="box" id="lobby-screen">
+<!-- GIAI ĐOẠN 1: THIẾT LẬP THÔNG TIN CUỘC THI -->
+<div class="box" id="phase1-screen">
     <button class="fs-btn" onclick="toggleFullScreen()">⛶ Toàn màn hình</button>
-    <h1>HỆ THỐNG ĐẤU TRƯỜNG ATVSLĐ</h1>
+    <h1>⚙ THIẾT LẬP CUỘC THI ĐẤU TRƯỜNG</h1>
     
-    <div class="grid-configs">
-        <div class="panel">
-            <label>1. Chọn bộ đề thi huấn luyện:</label>
+    <div class="form-group">
+        <label>Tiêu đề cuộc thi / Lớp huấn luyện:</label>
+        <input type="text" id="setup-title" value="HUẤN LUYỆN ATVSLĐ NHÓM 1 & 2 - FPT TELECOM">
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px;">
+        <div class="form-group">
+            <label>Chọn bộ đề thi trắc nghiệm:</label>
             <select id="quiz-select" onchange="onQuizChange()">
                 <option value="p1">Phần 1: Pháp luật ATVSLĐ & An toàn điện (4 câu)</option>
                 <option value="p2">Phần 2: Nghiệp vụ công tác ATVSLĐ (3 câu)</option>
                 <option value="p3">Phần 3: Nhận diện yếu tố nguy hiểm, có hại (4 câu)</option>
                 <option value="p4">Phần 4: Kiểm soát rủi ro & Văn hóa Bradley (3 câu)</option>
-                <option value="custom">-- Nạp từ file Word (.docx) khác --</option>
+                <option value="custom">-- Nạp từ file Word (.docx) chuẩn Azota --</option>
             </select>
-            <div id="file-upload-box" class="hidden">
+            <div id="file-upload-box" class="hidden" style="margin-top: 10px;">
                 <input type="file" id="docx-input" accept=".docx" onchange="parseDocx(event)">
-                <small style="color:#94a3b8;">Hỗ trợ file cấu trúc chuẩn Azota (.docx)</small>
             </div>
-            <p id="quiz-summary" style="margin-top:10px; color:#cbd5e1; font-size:14px;"></p>
+            <p id="quiz-summary" style="margin-top: 8px; color:#cbd5e1; font-size: 14px;"></p>
         </div>
-        
-        <div class="panel">
-            <label>2. Thời gian mỗi câu hỏi:</label>
+
+        <div class="form-group">
+            <label>Thời gian trả lời mỗi câu:</label>
             <select id="time-select">
                 <option value="15">15 Giây (Thần tốc)</option>
                 <option value="20">20 Giây</option>
-                <option value="30" selected>30 Giây (Chuẩn)</option>
+                <option value="30" selected>30 Giây (Tiêu chuẩn)</option>
                 <option value="45">45 Giây</option>
                 <option value="60">60 Giây</option>
             </select>
-            <div style="margin-top: 15px;">
-                <span class="badge">Phòng: <span id="room-id">FPT</span></span>
-            </div>
         </div>
     </div>
 
-    <div id="qr-container">
-        <div id="qrcode"></div>
-        <p style="font-size: 16px; color: #94a3b8;">Học viên quét mã để tham gia trực tiếp trên điện thoại</p>
-    </div>
-    <div style="font-size: 22px; margin: 10px 0;">Đã kết nối: <span id="player-count" style="color:#10b981; font-weight:bold;">0</span> học viên</div>
-    <button class="btn" onclick="startQuiz()">BẮT ĐẦU ĐẤU TRƯỜNG</button>
+    <button class="btn-open" onclick="goToPhase2()">MỞ PHÒNG THI ➔</button>
 </div>
 
-<!-- Màn hình Trắc nghiệm -->
+<!-- GIAI ĐOẠN 2: SẢNH CHỜ THI ĐẤU (QUÉT MÃ & THEO DÕI HỌC VIÊN) -->
+<div class="box hidden" id="phase2-screen">
+    <button class="fs-btn" onclick="toggleFullScreen()">⛶ Toàn màn hình</button>
+    <h1 id="lobby-title" style="margin-bottom: 8px;">TIÊU ĐỀ CUỘC THI</h1>
+    <div style="text-align: center; margin-bottom: 20px;">
+        <span class="badge">Phòng thi: <span id="room-id">FPT</span></span>
+    </div>
+
+    <div class="lobby-layout">
+        <!-- Bên trái: Mã QR, Số lượng, Nút Bắt đầu -->
+        <div class="lobby-left">
+            <div id="qrcode"></div>
+            <p style="font-size: 15px; color: #94a3b8; margin-bottom: 12px;">Học viên mở camera điện thoại quét mã vào thi</p>
+            
+            <div style="font-size: 22px; margin-bottom: 20px;">
+                Số học viên đã tham gia: <span id="player-count" style="color:#10b981; font-weight:bold; font-size:26px;">0</span>
+            </div>
+            
+            <button class="btn-start" onclick="startQuiz()">BẮT ĐẦU CUỘC THI</button>
+        </div>
+
+        <!-- Cột bên phải: Danh sách tên học viên đã tham gia -->
+        <div class="lobby-right">
+            <div class="player-list-header">
+                <span>Danh sách học viên tham gia</span>
+                <span id="list-count" style="color:#f59e0b;">(0)</span>
+            </div>
+            <div class="player-list-scroll" id="player-chips-container">
+                <!-- Tên học viên kết nối sẽ tự nhảy vào đây -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MÀN HÌNH THI (TỪNG CÂU HỎI) -->
 <div class="box hidden" id="quiz-screen">
     <button class="fs-btn" onclick="toggleFullScreen()">⛶ Toàn màn hình</button>
     <div class="live-status">
@@ -98,16 +138,16 @@
         <span class="badge" style="background:#0d9488;" id="submit-counter">Đã nộp: 0 / 0</span>
         <span class="badge" style="background:#ef4444;" id="time-left">30s</span>
     </div>
-    <h2 id="q-text" style="font-size: 22px; margin: 15px 0; min-height: 55px; line-height: 1.4;"></h2>
+    <h2 id="q-text" style="font-size: 22px; margin: 15px 0; min-height: 55px; line-height: 1.4; text-align: left;"></h2>
     <div class="timer-bar"><div class="timer-progress" id="progress-bar"></div></div>
     <div class="grid-options" id="options-container"></div>
     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
         <div id="explain-box" style="text-align: left; color: #cbd5e1; font-style: italic; max-width: 75%;"></div>
-        <button class="btn hidden" id="next-btn" onclick="nextQuestion()">CÂU TIẾP THEO</button>
+        <button class="btn-next hidden" id="next-btn" onclick="nextQuestion()">CÂU TIẾP THEO</button>
     </div>
 </div>
 
-<!-- Màn hình Leaderboard -->
+<!-- MÀN HÌNH BẢNG XẾP HẠNG LEADERBOARD -->
 <div class="box hidden" id="leaderboard-screen">
     <button class="fs-btn" onclick="toggleFullScreen()">⛶ Toàn màn hình</button>
     <h1>🏆 BẢNG XẾP HẠNG TOP THI ĐẤU 🏆</h1>
@@ -115,11 +155,13 @@
         <thead><tr><th>Hạng</th><th>Tên học viên</th><th>Điểm số</th></tr></thead>
         <tbody id="leaderboard-body"></tbody>
     </table>
-    <button class="btn" id="finish-btn" onclick="returnToQuiz()">TIẾP TỤC</button>
+    <div style="margin-top: 25px; text-align: center;">
+        <button class="btn-next" id="finish-btn" onclick="returnToQuiz()">TIẾP TỤC</button>
+    </div>
 </div>
 
 <script>
-// --- AUDIO ENGINE (TỔNG HỢP ÂM THANH BẰNG WEB AUDIO API) ---
+// --- WEB AUDIO API (TỰ SINH ÂM THANH ĐỘC LẬP) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let tickInterval = null;
 
@@ -137,18 +179,9 @@ function playTone(freq, duration, type='sine', gain=0.1) {
     osc.stop(audioCtx.currentTime + duration);
 }
 
-function playTickSound() {
-    playTone(800, 0.05, 'triangle', 0.04);
-}
-
-function startCountdownAudio() {
-    clearInterval(tickInterval);
-    tickInterval = setInterval(playTickSound, 1000);
-}
-
-function stopCountdownAudio() {
-    clearInterval(tickInterval);
-}
+function playTickSound() { playTone(800, 0.05, 'triangle', 0.04); }
+function startCountdownAudio() { clearInterval(tickInterval); tickInterval = setInterval(playTickSound, 1000); }
+function stopCountdownAudio() { clearInterval(tickInterval); }
 
 function playResultFanfare() {
     [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
@@ -156,29 +189,29 @@ function playResultFanfare() {
     });
 }
 
-// --- KHO 4 BỘ ĐỀ CHUẨN ĐÃ ĐƯỢC TÍCH HỢP SẴN ---
+// --- 4 BỘ ĐỀ CHUẨN TÍCH HỢP SẴN ---
 const prebuiltQuizzes = {
     p1: [
-        { text: "Theo NĐ 62/2025/NĐ-CP, nhân viên kỹ thuật đối tác mới tuyển dụng, chưa qua sát hạch an toàn điện thì chỉ được bố trí công việc nào sau đây?", opts: ["Trèo cột kéo cáp hạ thế", "Cắt điện và lắp đặt tủ điện", "Tham gia phụ việc, không tiếp xúc với thiết bị hoặc dây dẫn mang điện (Bậc 1/5)", "Vận hành máy nạp ắc quy tại đài trạm"], ans: 2, explain: "Căn cứ Điều 28 NĐ 62/2025/NĐ-CP, người chưa sát hạch an toàn điện chỉ làm việc Bậc 1/5." },
-        { text: "Theo QCVN 33:2019/BTTTT, khi thi công, kiểm tra bên trong đường hầm cáp viễn thông, kích thước lối đi tối thiểu phải đảm bảo thông số nào?", opts: ["Cao tối thiểu 1,7 m; rộng tối thiểu 0,5 m", "Cao tối thiểu 1,9 m; rộng tối thiểu 0,7 m", "Cao tối thiểu 2,0 m; rộng tối thiểu 1,0 m", "Không quy định, tùy thuộc vào tuyến cáp"], ans: 1, explain: "Mục 2.4.3 QCVN 33:2019/BTTTT quy định kích thước chuẩn lối đi tối thiểu 1,9m x 0,7m." },
-        { text: "Theo Thông tư 06/2020/TT-BLĐTBXH, kỹ thuật viên làm việc trên cao từ độ cao bao nhiêu mét trở lên bắt buộc phải có thẻ an toàn Nhóm 3?", opts: ["Từ 1,5 mét trở lên", "Từ 2,0 mét trở lên", "Từ 3,0 mét trở lên", "Từ 5,0 mét trở lên"], ans: 1, explain: "Làm việc cách mặt bằng từ 2m trở lên thuộc danh mục công việc nghiêm ngặt." },
-        { text: "Nếu người quản lý vi phạm quy định về an toàn lao động dẫn đến hậu quả làm chết người tại hiện trường, chế tài xử lý nghiêm khắc nhất là gì?", opts: ["Khiển trách nội bộ và cắt thưởng", "Phạt vi phạm hành chính doanh nghiệp", "Truy cứu trách nhiệm hình sự theo Điều 295 Bộ luật Hình sự", "Bồi thường tiền viện phí là hoàn tất nghĩa vụ"], ans: 2, explain: "Căn cứ Điều 295 BLHS về tội vi phạm quy định an toàn lao động." }
+        { text: "Theo NĐ 62/2025/NĐ-CP, nhân viên kỹ thuật đối tác mới tuyển dụng, chưa qua sát hạch an toàn điện thì chỉ được bố trí công việc nào sau đây?", opts: ["Trèo cột kéo cáp hạ thế", "Cắt điện và lắp đặt tủ điện", "Tham gia phụ việc, không tiếp xúc với thiết bị hoặc dây dẫn mang điện (Bậc 1/5)", "Vận hành máy nạp ắc quy tại đài trạm"], ans: 2, explain: "Căn cứ Điều 28 NĐ 62/2025/NĐ-CP, người chưa sát hạch chỉ làm việc Bậc 1/5." },
+        { text: "Theo QCVN 33:2019/BTTTT, khi thi công, kiểm tra bên trong đường hầm cáp viễn thông, kích thước lối đi tối thiểu phải đảm bảo thông số nào?", opts: ["Cao tối thiểu 1,7 m; rộng tối thiểu 0,5 m", "Cao tối thiểu 1,9 m; rộng tối thiểu 0,7 m", "Cao tối thiểu 2,0 m; rộng tối thiểu 1,0 m", "Không quy định, tùy thuộc vào tuyến cáp"], ans: 1, explain: "Mục 2.4.3 QCVN 33:2019/BTTTT quy định lối đi tối thiểu cao 1,9m và rộng 0,7m." },
+        { text: "Theo Thông tư 06/2020/TT-BLĐTBXH, kỹ thuật viên làm việc trên cao từ độ cao bao nhiêu mét trở lên bắt buộc phải được huấn luyện và cấp thẻ an toàn Nhóm 3?", opts: ["Từ 1,5 mét trở lên", "Từ 2,0 mét trở lên", "Từ 3,0 mét trở lên", "Từ 5,0 mét trở lên"], ans: 1, explain: "Danh mục 7 Thông tư 06/2020: làm việc từ 2 mét trở lên là công việc có yêu cầu nghiêm ngặt." },
+        { text: "Nếu người quản lý vi phạm quy định về an toàn lao động dẫn đến hậu quả làm chết người tại hiện trường, chế tài xử lý nghiêm khắc nhất là gì?", opts: ["Khiển trách nội bộ và cắt thưởng", "Phạt vi phạm hành chính doanh nghiệp", "Truy cứu trách nhiệm hình sự theo Điều 295 Bộ luật Hình sự", "Bồi thường tiền viện phí là hoàn tất nghĩa vụ"], ans: 2, explain: "Căn cứ Điều 295 Bộ luật Hình sự về tội vi phạm quy định ATVSLĐ." }
     ],
     p2: [
-        { text: "Tại chi nhánh, phòng giao dịch FPT Telecom, tần suất tự kiểm tra ATVSLĐ toàn diện cấp cơ sở tối thiểu là bao lâu?", opts: ["01 lần trong 03 tháng", "01 lần trong 06 tháng", "Ít nhất 01 lần trong 01 năm", "02 năm một lần khi có kiểm toán"], ans: 2, explain: "Cơ sở thông thường tự kiểm tra toàn diện ít nhất 1 lần/năm (Khoản 4 Điều 9 TT 07/2016)." },
-        { text: "Khi xảy ra tai nạn lao động chết người hoặc tai nạn nặng trên địa bàn theo NĐ 129/2025/NĐ-CP, đơn vị phải gửi báo cáo nhanh đến cơ quan nào đầu tiên?", opts: ["Chỉ báo cáo nội bộ lên Ban Giám đốc", "Công an cấp xã và UBND cấp xã nơi xảy ra tai nạn", "Bộ Lao động - Thương binh và Xã hội", "Đợi điều tra xong nội bộ mới thông báo"], ans: 1, explain: "Điều 42 NĐ 129/2025/NĐ-CP phân cấp cấp xã là đầu mối tiếp nhận ban đầu." },
-        { text: "Vụ tai nạn lao động làm bị thương nặng từ 02 người trở lên hoặc có người chết thuộc thẩm quyền thành lập đoàn điều tra của cấp nào?", opts: ["Đoàn điều tra cấp cơ sở (Do Giám đốc thành lập)", "Đoàn điều tra cấp tỉnh (Do Giám đốc Sở LĐTBXH thành lập)", "Đội ngũ an toàn vệ sinh viên cơ sở tự lập biên bản", "BCH Công đoàn cơ sở chủ trì điều tra"], ans: 1, explain: "Tai nạn nặng từ 2 người trở lên hoặc chết người thuộc thẩm quyền cấp tỉnh." }
+        { text: "Tại chi nhánh, phòng giao dịch FPT Telecom, tần suất tự kiểm tra ATVSLĐ toàn diện cấp cơ sở tối thiểu là bao lâu?", opts: ["01 lần trong 03 tháng", "01 lần trong 06 tháng", "Ít nhất 01 lần trong 01 năm", "02 năm một lần khi có kiểm toán"], ans: 2, explain: "Khoản 4 Điều 9 Thông tư 07/2016/TT-BLĐTBXH quy định cơ sở tự kiểm tra toàn diện ít nhất 1 lần/năm." },
+        { text: "Khi xảy ra tai nạn lao động chết người hoặc tai nạn nặng trên địa bàn theo NĐ 129/2025/NĐ-CP, đơn vị phải gửi báo cáo nhanh đến cơ quan nào đầu tiên?", opts: ["Chỉ báo cáo nội bộ lên Ban Giám đốc", "Công an cấp xã và UBND cấp xã nơi xảy ra tai nạn", "Bộ Lao động - Thương binh và Xã hội", "Đợi điều tra xong nội bộ mới thông báo"], ans: 1, explain: "Điều 42 NĐ 129/2025/NĐ-CP quy định UBND và Công an cấp xã là đầu mối tiếp nhận ban đầu." },
+        { text: "Vụ tai nạn lao động làm bị thương nặng từ 02 người trở lên hoặc có người chết thuộc thẩm quyền thành lập đoàn điều tra của cấp nào?", opts: ["Đoàn điều tra cấp cơ sở (Do Giám đốc thành lập)", "Đoàn điều tra cấp tỉnh (Do Giám đốc Sở LĐTBXH thành lập)", "Đội ngũ an toàn vệ sinh viên cơ sở tự lập biên bản", "BCH Công đoàn cơ sở chủ trì điều tra"], ans: 1, explain: "Tai nạn nặng từ 2 người trở lên hoặc có ca tử vong thuộc thẩm quyền cấp Tỉnh." }
     ],
     p3: [
-        { text: "Nguyên nhân trực tiếp phổ biến nhất gây ra sự cố phóng hồ quang điện khi bảo trì tủ điện hạ thế/phòng máy là gì?", opts: ["Thao tác dụng cụ không cách điện gây ngắn mạch pha-pha hoặc pha-đất", "Nhiệt độ phòng máy quá cao", "Cáp viễn thông bị suy hao tín hiệu", "Hệ thống đèn chiếu sáng không đủ Lux"], ans: 0, explain: "Dụng cụ không cách điện gây chạm chập ngắn mạch tạo ra hồ quang nhiệt độ cao." },
-        { text: "Theo Kim tự tháp tỷ lệ tai nạn Heinrich, đằng sau 1 vụ tai nạn chết người/chấn thương nặng thì có bao nhiêu hành vi và điều kiện không an toàn tiềm ẩn?", opts: ["300", "3.000", "30.000", "300.000"], ans: 2, explain: "Tỷ lệ chuẩn Heinrich là 1 tử vong : 30 nặng : 300 nhẹ : 3.000 suýt : 30.000 vi phạm." },
-        { text: "Hành vi nào tại Phòng giao dịch hoặc kho phụ trợ chi nhánh tiềm ẩn nguy cơ phát sinh hỏa hoạn lớn nhất?", opts: ["Mở máy tính làm việc liên tục 8 tiếng", "Cắm nhiều thiết bị tải lớn chung một ổ cắm nối dài và sạc thiết bị qua đêm sát bìa carton", "Mở điều hòa ở mức 26 độ C", "Sử dụng máy in tài liệu trong phòng kín"], ans: 1, explain: "Quá tải ổ cắm kết hợp vật liệu bắt cháy dễ bén là nguyên nhân hàng đầu." },
-        { text: "Theo QCVN 24:2016/BYT, mức ồn tối đa cho phép tại nơi làm việc trong ca lao động 8 giờ liên tục là bao nhiêu dB?", opts: ["75 dB", "80 dB", "85 dB", "90 dB"], ans: 2, explain: "Quy chuẩn vệ sinh lao động giới hạn 8 giờ là 85 dBA." }
+        { text: "Nguyên nhân trực tiếp phổ biến nhất gây ra sự cố phóng hồ quang điện khi bảo trì tủ điện hạ thế/phòng máy là gì?", opts: ["Thao tác dụng cụ không cách điện gây ngắn mạch pha-pha hoặc pha-đất", "Nhiệt độ phòng máy quá cao", "Cáp viễn thông bị suy hao tín hiệu", "Hệ thống đèn chiếu sáng không đủ Lux"], ans: 0, explain: "Chạm chập, ngắn mạch do dụng cụ hở cách điện là nguyên nhân chính gây phóng hồ quang." },
+        { text: "Theo Kim tự tháp tỷ lệ tai nạn Heinrich, đằng sau 1 vụ tai nạn chết người/chấn thương nặng thì có bao nhiêu hành vi và điều kiện không an toàn tiềm ẩn?", opts: ["300", "3.000", "30.000", "300.000"], ans: 2, explain: "Tỷ lệ chuẩn Heinrich là 1 tử vong : 30 nặng : 300 nhẹ : 3.000 suýt xảy ra : 30.000 vi phạm." },
+        { text: "Hành vi nào tại Phòng giao dịch hoặc kho phụ trợ chi nhánh tiềm ẩn nguy cơ phát sinh hỏa hoạn lớn nhất?", opts: ["Mở máy tính làm việc liên tục 8 tiếng", "Cắm nhiều thiết bị tải lớn chung một ổ cắm nối dài và sạc thiết bị qua đêm sát bìa carton", "Mở điều hòa ở mức 26 độ C", "Sử dụng máy in tài liệu trong phòng kín"], ans: 1, explain: "Quá tải ổ cắm điện kèm vật liệu bắt cháy dễ bén là nguyên nhân hàng đầu gây cháy tại văn phòng." },
+        { text: "Theo QCVN 24:2016/BYT, mức ồn tối đa cho phép tại nơi làm việc trong ca lao động 8 giờ liên tục là bao nhiêu dB?", opts: ["75 dB", "80 dB", "85 dB", "90 dB"], ans: 2, explain: "Giới hạn tiếp xúc tiếng ồn ca 8 giờ theo quy chuẩn y tế là 85 dBA." }
     ],
     p4: [
-        { text: "Theo Tháp 5 cấp độ kiểm soát rủi ro, biện pháp nào mang lại hiệu quả an toàn cao nhất và bền vững nhất?", opts: ["Trang bị đồ bảo hộ cá nhân (PPE) cao cấp nhất", "Huấn luyện quy trình an toàn (Biện pháp hành chính)", "Lắp đặt rào chắn, biển báo (Kiểm soát kỹ thuật)", "Loại bỏ hoàn toàn mối nguy từ gốc (Elimination)"], ans: 3, explain: "Loại bỏ mối nguy luôn là biện pháp triệt để nhất tại gốc rễ." },
-        { text: "Cấp độ Văn hóa An toàn Tương tác/Đồng đội (Interdependent) theo mô hình Bradley thể hiện qua hành động nào dưới đây?", opts: ["Chỉ tuân thủ quy định khi có mặt cán bộ giám sát kiểm tra", "Làm an toàn để bản thân không bị trừ lương, phạt tiền", "Chủ động bảo vệ chính mình và nhắc nhở, ngăn chặn đồng đội khi thấy nguy cơ mất an toàn", "Xem an toàn là trách nhiệm riêng của bộ phận chuyên trách HSE"], ans: 2, explain: "Văn hóa tương tác hướng tới việc đồng đội chủ động bảo vệ lẫn nhau." },
-        { text: "Khi thấy thợ kéo cáp đối tác TIN làm việc trên cột điện nhưng không thắt đai an toàn, hành động chuẩn mực đầu tiên của Quản lý đối tác là gì?", opts: ["Chờ hết ca làm việc rồi về văn phòng lập biên bản phạt tiền", "Lập tức yêu cầu tạm dừng thi công, đưa công nhân xuống vị trí an toàn và chấn chỉnh bảo hộ", "Bỏ qua vì đây là nhân sự thuộc công ty thầu ngoài", "Chụp ảnh gửi lên nhóm chat chung"], ans: 1, explain: "Ngăn chặn rủi ro rơi ngã tức thì là trách nhiệm sống còn." }
+        { text: "Theo Tháp 5 cấp độ kiểm soát rủi ro, biện pháp nào mang lại hiệu quả an toàn cao nhất và bền vững nhất?", opts: ["Trang bị đồ bảo hộ cá nhân (PPE) cao cấp nhất", "Huấn luyện quy trình an toàn (Biện pháp hành chính)", "Lắp đặt rào chắn, biển báo (Kiểm soát kỹ thuật)", "Loại bỏ hoàn toàn mối nguy từ gốc (Elimination)"], ans: 3, explain: "Loại bỏ mối nguy khỏi nơi làm việc luôn là tầng bảo vệ triệt để nhất tại gốc rễ." },
+        { text: "Cấp độ Văn hóa An toàn Tương tác/Đồng đội (Interdependent) theo mô hình Bradley thể hiện qua hành động nào dưới đây?", opts: ["Chỉ tuân thủ quy định khi có mặt cán bộ giám sát kiểm tra", "Làm an toàn để bản thân không bị trừ lương, phạt tiền", "Chủ động bảo vệ chính mình và nhắc nhở, ngăn chặn đồng đội khi thấy nguy cơ mất an toàn", "Xem an toàn là trách nhiệm riêng của bộ phận chuyên trách HSE"], ans: 2, explain: "Văn hóa tương tác thể hiện ở việc các đồng đội chủ động hỗ trợ, bảo vệ lẫn nhau." },
+        { text: "Khi thấy thợ kéo cáp đối tác TIN làm việc trên cột điện nhưng không thắt đai an toàn, hành động chuẩn mực đầu tiên của Quản lý đối tác là gì?", opts: ["Chờ hết ca làm việc rồi về văn phòng lập biên bản phạt tiền", "Lập tức yêu cầu tạm dừng thi công, đưa công nhân xuống vị trí an toàn và chấn chỉnh bảo hộ", "Bỏ qua vì đây là nhân sự thuộc công ty thầu ngoài", "Chụp ảnh gửi lên nhóm chat chung"], ans: 1, explain: "Ngăn chặn ngay hành vi mất an toàn là trách nhiệm bảo toàn tính mạng số 1 của người quản lý." }
     ]
 };
 
@@ -194,12 +227,12 @@ function onQuizChange() {
     } else {
         uploadBox.classList.add('hidden');
         activeQuestions = prebuiltQuizzes[val];
-        document.getElementById('quiz-summary').innerText = `Đã chọn: ${activeQuestions.length} câu hỏi sẵn sàng.`;
+        document.getElementById('quiz-summary').innerText = `✓ Đã chọn: ${activeQuestions.length} câu hỏi sẵn sàng.`;
     }
 }
 onQuizChange();
 
-// --- PARSER TỰ ĐỘNG BÓC TÁCH FILE WORD (.DOCX) AZOTA ---
+// --- BÓC TÁCH FILE WORD DOCX (MẪU AZOTA) ---
 function parseDocx(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -234,7 +267,22 @@ function parseDocx(event) {
     reader.readAsArrayBuffer(file);
 }
 
-// --- MQTT NETWORKING ---
+// --- CHUYỂN GIAI ĐOẠN 1 SANG GIAI ĐOẠN 2 ---
+function goToPhase2() {
+    const titleVal = document.getElementById('setup-title').value.trim();
+    document.getElementById('lobby-title').innerText = titleVal || "ĐẤU TRƯỜNG ATVSLĐ";
+
+    document.getElementById('phase1-screen').classList.add('hidden');
+    document.getElementById('phase2-screen').classList.remove('hidden');
+
+    // Khởi tạo mã QR với kích thước lớn 260px
+    const studentURL = window.location.href.replace('host.html', 'play.html') + "?room=" + ROOM;
+    const qrContainer = document.getElementById("qrcode");
+    qrContainer.innerHTML = '';
+    new QRCode(qrContainer, { text: studentURL, width: 260, height: 260 });
+}
+
+// --- MQTT NETWORKING & XỬ LÝ KẾT NỐI ---
 let currentQ = 0;
 let players = {};
 let timer = null;
@@ -249,16 +297,12 @@ client.on('connect', () => {
     client.subscribe(topicBase + "/answer");
 });
 
-// Sinh mã QR dẫn sang trang play.html
-const studentURL = window.location.href.replace('host.html', 'play.html') + "?room=" + ROOM;
-new QRCode(document.getElementById("qrcode"), { text: studentURL, width: 210, height: 210 });
-
 client.on('message', (topic, message) => {
     const data = JSON.parse(message.toString());
     if (topic.endsWith('/join')) {
         if (!players[data.id]) {
             players[data.id] = { name: data.name, score: 0, lastAns: -1 };
-            updatePlayerCount();
+            addPlayerToUI(data.name);
         }
     } else if (topic.endsWith('/answer')) {
         if (players[data.id] && players[data.id].lastAns === -1) {
@@ -270,7 +314,6 @@ client.on('message', (topic, message) => {
                 const score = Math.round(500 + (data.time / totalTime) * 500);
                 players[data.id].score += score;
             }
-            // Nếu tất cả đã nộp bài thì kết thúc sớm câu hỏi
             if (answeredCount >= Object.keys(players).length && Object.keys(players).length > 0) {
                 clearInterval(timer);
                 stopCountdownAudio();
@@ -280,9 +323,16 @@ client.on('message', (topic, message) => {
     }
 });
 
-function updatePlayerCount() {
-    document.getElementById('player-count').innerText = Object.keys(players).length;
-    updateSubmitCounter();
+function addPlayerToUI(name) {
+    const count = Object.keys(players).length;
+    document.getElementById('player-count').innerText = count;
+    document.getElementById('list-count').innerText = `(${count})`;
+
+    const chipsContainer = document.getElementById('player-chips-container');
+    const chip = document.createElement('div');
+    chip.className = 'player-chip';
+    chip.innerText = name;
+    chipsContainer.appendChild(chip);
 }
 
 function updateSubmitCounter() {
@@ -298,8 +348,9 @@ function toggleFullScreen() {
     }
 }
 
+// --- VẬN HÀNH THI ĐẤU ---
 function startQuiz() {
-    document.getElementById('lobby-screen').classList.add('hidden');
+    document.getElementById('phase2-screen').classList.add('hidden');
     document.getElementById('quiz-screen').classList.remove('hidden');
     loadQuestion(0);
 }
@@ -324,7 +375,7 @@ function loadQuestion(idx) {
     });
     document.getElementById('options-container').innerHTML = optHtml;
 
-    // Phát lệnh cho điện thoại học viên
+    // Phát lệnh sang điện thoại học viên
     client.publish(topicBase + "/question", JSON.stringify({
         qIndex: idx,
         text: q.text,
@@ -332,7 +383,7 @@ function loadQuestion(idx) {
         time: totalTime
     }));
 
-    // Bắt đầu đếm ngược & bật âm thanh
+    // Bắt đầu đếm ngược & bật âm thanh tích tắc
     timeLeft = totalTime;
     document.getElementById('time-left').innerText = timeLeft + 's';
     const bar = document.getElementById('progress-bar');
@@ -361,11 +412,10 @@ function showAnswerResult() {
     playResultFanfare();
     const q = activeQuestions[currentQ];
     
-    // Nổi bật đáp án đúng
     const box = document.getElementById(`opt-box-${q.ans}`);
     if (box) box.classList.add('correct-mark');
     if (q.explain) {
-        document.getElementById('explain-box').innerText = "💡 " + q.explain;
+        document.getElementById('explain-box').innerText = "💡 Lời giải: " + q.explain;
     }
 
     client.publish(topicBase + "/result", JSON.stringify({ correct: q.ans }));
