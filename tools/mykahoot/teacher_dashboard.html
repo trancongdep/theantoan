@@ -2,12 +2,11 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hệ Thống Đấu Trường ATVSLĐ - Quản Trị Giảng Viên</title>
+    <title>Quản Trị Giảng Viên - Hệ Thống Đấu Trường ATVSLĐ</title>
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
@@ -22,15 +21,14 @@
         .quiz-item { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .btn-launch { background: #10b981; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-launch:hover { background: #059669; }
-        .upload-section { background: #0f172a; border: 1px dashed #38bdf8; border-radius: 10px; padding: 20px; margin-bottom: 25px; }
-        input[type="file"] { width: 100%; padding: 10px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 8px; margin-top: 10px; }
+        .upload-section { background: #0f172a; border: 1px dashed #10b981; border-radius: 10px; padding: 20px; margin-bottom: 25px; }
+        input[type="file"] { width: 100%; padding: 10px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 8px; margin-top: 10px; cursor: pointer; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <!-- KHUNG ĐĂNG NHẬP -->
     <div id="login-section" style="text-align: center;">
         <h1 style="color:#f59e0b; margin-bottom: 10px;">HỆ THỐNG ĐẤU TRƯỜNG ATVSLĐ</h1>
         <p style="color:#94a3b8;">Dành cho Giảng viên & Chuyên viên An toàn Lao động</p>
@@ -40,7 +38,6 @@
         </button>
     </div>
 
-    <!-- KHUNG QUẢN LÝ ĐỀ THI (SAU KHI ĐĂNG NHẬP) -->
     <div id="dashboard-section" class="hidden">
         <div class="header-user">
             <div class="user-info">
@@ -54,8 +51,8 @@
         </div>
 
         <div class="upload-section">
-            <strong style="color: #38bdf8;">+ Thêm đề thi mới từ file Word (.docx) chuẩn Azota:</strong>
-            <input type="file" id="docx-file" accept=".docx" onchange="uploadNewQuizDocx(event)">
+            <strong style="color: #10b981;">+ Nạp đề thi mới từ file Markdown (.md) siêu nhẹ:</strong>
+            <input type="file" id="md-file" accept=".md,.txt" onchange="uploadMarkdownQuiz(event)">
             <p id="upload-status" style="margin-top: 8px; font-size: 13px; color: #cbd5e1;"></p>
         </div>
 
@@ -65,7 +62,6 @@
 </div>
 
 <script>
-// CẤU HÌNH FIREBASE CHÍNH THỨC CỦA BẠN
 const firebaseConfig = {
     apiKey: "AIzaSyCkBRre5ajocg0EIuOchb6QknsdL6Qq9FA",
     authDomain: "theantoan-fea9e.firebaseapp.com",
@@ -100,12 +96,10 @@ auth.onAuthStateChanged(user => {
 
 function loginWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(err => alert("Lỗi đăng nhập: " + err.message));
+    auth.signInWithPopup(provider).catch(err => alert("Lỗi: " + err.message));
 }
 
-function logout() {
-    auth.signOut();
-}
+function logout() { auth.signOut(); }
 
 function loadTeacherQuizzes(uid) {
     const listEl = document.getElementById('quiz-list');
@@ -114,7 +108,7 @@ function loadTeacherQuizzes(uid) {
     db.collection("users").doc(uid).collection("quizzes").get().then(snapshot => {
         listEl.innerHTML = '';
         if (snapshot.empty) {
-            initDefaultQuizzes(uid);
+            listEl.innerHTML = '<p style="color:#94a3b8;">Chưa có đề nào. Hãy chọn file .md phía trên để nạp đề!</p>';
             return;
         }
         snapshot.forEach(doc => {
@@ -133,103 +127,68 @@ function loadTeacherQuizzes(uid) {
     });
 }
 
-function initDefaultQuizzes(uid) {
-    const defaultData = [
-        {
-            title: "Phần 1: Pháp luật ATVSLĐ & An toàn điện",
-            timePerQuestion: 30,
-            questions: [
-                { text: "Theo NĐ 62/2025/NĐ-CP, nhân viên kỹ thuật đối tác mới tuyển dụng, chưa qua sát hạch an toàn điện thì chỉ được bố trí công việc nào sau đây?", opts: ["Trèo cột kéo cáp hạ thế", "Cắt điện và lắp đặt tủ điện", "Tham gia phụ việc, không tiếp xúc với thiết bị hoặc dây dẫn mang điện (Bậc 1/5)", "Vận hành máy nạp ắc quy tại đài trạm"], ans: 2, explain: "Căn cứ Điều 28 NĐ 62/2025/NĐ-CP, người chưa sát hạch an toàn điện chỉ làm việc Bậc 1/5." },
-                { text: "Theo QCVN 33:2019/BTTTT, khi thi công, kiểm tra bên trong đường hầm cáp viễn thông, kích thước lối đi tối thiểu phải đảm bảo thông số nào?", opts: ["Cao tối thiểu 1,7 m; rộng tối thiểu 0,5 m", "Cao tối thiểu 1,9 m; rộng tối thiểu 0,7 m", "Cao tối thiểu 2,0 m; rộng tối thiểu 1,0 m", "Không quy định, tùy thuộc vào tuyến cáp"], ans: 1, explain: "Mục 2.4.3 QCVN 33:2019/BTTTT quy định kích thước chuẩn lối đi tối thiểu 1,9m x 0,7m." },
-                { text: "Theo Thông tư 06/2020/TT-BLĐTBXH, kỹ thuật viên làm việc trên cao từ độ cao bao nhiêu mét trở lên bắt buộc phải có thẻ an toàn Nhóm 3?", opts: ["Từ 1,5 mét trở lên", "Từ 2,0 mét trở lên", "Từ 3,0 mét trở lên", "Từ 5,0 mét trở lên"], ans: 1, explain: "Làm việc cách mặt bằng từ 2m trở lên thuộc danh mục công việc nghiêm ngặt." },
-                { text: "Nếu người quản lý vi phạm quy định về an toàn lao động dẫn đến hậu quả làm chết người tại hiện trường, chế tài xử lý nghiêm khắc nhất là gì?", opts: ["Khiển trách nội bộ và cắt thưởng", "Phạt vi phạm hành chính doanh nghiệp", "Truy cứu trách nhiệm hình sự theo Điều 295 Bộ luật Hình sự", "Bồi thường tiền viện phí là hoàn tất nghĩa vụ"], ans: 2, explain: "Căn cứ Điều 295 BLHS về tội vi phạm quy định an toàn lao động." }
-            ]
-        },
-        {
-            title: "Phần 2: Nghiệp vụ công tác ATVSLĐ",
-            timePerQuestion: 35,
-            questions: [
-                { text: "Tại chi nhánh, phòng giao dịch FPT Telecom, tần suất tự kiểm tra ATVSLĐ toàn diện cấp cơ sở tối thiểu là bao lâu?", opts: ["01 lần trong 03 tháng", "01 lần trong 06 tháng", "Ít nhất 01 lần trong 01 năm", "02 năm một lần khi có kiểm toán"], ans: 2, explain: "Cơ sở thông thường tự kiểm tra toàn diện ít nhất 1 lần/năm (Khoản 4 Điều 9 TT 07/2016)." },
-                { text: "Khi xảy ra tai nạn lao động chết người hoặc tai nạn nặng trên địa bàn theo NĐ 129/2025/NĐ-CP, đơn vị phải gửi báo cáo nhanh đến cơ quan nào đầu tiên?", opts: ["Chỉ báo cáo nội bộ lên Ban Giám đốc", "Công an cấp xã và UBND cấp xã nơi xảy ra tai nạn", "Bộ Lao động - Thương binh và Xã hội", "Đợi điều tra xong nội bộ mới thông báo"], ans: 1, explain: "Điều 42 NĐ 129/2025/NĐ-CP phân cấp cấp xã là đầu mối tiếp nhận ban đầu." },
-                { text: "Vụ tai nạn lao động làm bị thương nặng từ 02 người trở lên hoặc có người chết thuộc thẩm quyền thành lập đoàn điều tra của cấp nào?", opts: ["Đoàn điều tra cấp cơ sở (Do Giám đốc thành lập)", "Đoàn điều tra cấp tỉnh (Do Giám đốc Sở LĐTBXH thành lập)", "Đội ngũ an toàn vệ sinh viên cơ sở tự lập biên bản", "BCH Công đoàn cơ sở chủ trì điều tra"], ans: 1, explain: "Tai nạn nặng từ 2 người trở lên hoặc chết người thuộc thẩm quyền cấp tỉnh." }
-            ]
-        },
-        {
-            title: "Phần 3: Nhận diện yếu tố nguy hiểm, có hại",
-            timePerQuestion: 30,
-            questions: [
-                { text: "Nguyên nhân trực tiếp phổ biến nhất gây ra sự cố phóng hồ quang điện khi bảo trì tủ điện hạ thế/phòng máy là gì?", opts: ["Thao tác dụng cụ không cách điện gây ngắn mạch pha-pha hoặc pha-đất", "Nhiệt độ phòng máy quá cao", "Cáp viễn thông bị suy hao tín hiệu", "Hệ thống đèn chiếu sáng không đủ Lux"], ans: 0, explain: "Dụng cụ không cách điện gây chạm chập ngắn mạch tạo ra hồ quang nhiệt độ cao." },
-                { text: "Theo Kim tự tháp tỷ lệ tai nạn Heinrich, đằng sau 1 vụ tai nạn chết người/chấn thương nặng thì có bao nhiêu hành vi và điều kiện không an toàn tiềm ẩn?", opts: ["300", "3.000", "30.000", "300.000"], ans: 2, explain: "Tỷ lệ chuẩn Heinrich là 1 tử vong : 30 nặng : 300 nhẹ : 3.000 suýt : 30.000 vi phạm." },
-                { text: "Hành vi nào tại Phòng giao dịch hoặc kho phụ trợ chi nhánh tiềm ẩn nguy cơ phát sinh hỏa hoạn lớn nhất?", opts: ["Mở máy tính làm việc liên tục 8 tiếng", "Cắm nhiều thiết bị tải lớn chung một ổ cắm nối dài và sạc thiết bị qua đêm sát bìa carton", "Mở điều hòa ở mức 26 độ C", "Sử dụng máy in tài liệu trong phòng kín"], ans: 1, explain: "Quá tải ổ cắm kết hợp vật liệu bắt cháy dễ bén là nguyên nhân hàng đầu." },
-                { text: "Theo QCVN 24:2016/BYT, mức ồn tối đa cho phép tại nơi làm việc trong ca lao động 8 giờ liên tục là bao nhiêu dB?", opts: ["75 dB", "80 dB", "85 dB", "90 dB"], ans: 2, explain: "Quy chuẩn vệ sinh lao động giới hạn 8 giờ là 85 dBA." }
-            ]
-        },
-        {
-            title: "Phần 4: Kiểm soát rủi ro & Văn hóa Bradley",
-            timePerQuestion: 30,
-            questions: [
-                { text: "Theo Tháp 5 cấp độ kiểm soát rủi ro, biện pháp nào mang lại hiệu quả an toàn cao nhất và bền vững nhất?", opts: ["Trang bị đồ bảo hộ cá nhân (PPE) cao cấp nhất", "Huấn luyện quy trình an toàn (Biện pháp hành chính)", "Lắp đặt rào chắn, biển báo (Kiểm soát kỹ thuật)", "Loại bỏ hoàn toàn mối nguy từ gốc (Elimination)"], ans: 3, explain: "Loại bỏ mối nguy luôn là biện pháp triệt để nhất tại gốc rễ." },
-                { text: "Cấp độ Văn hóa An toàn Tương tác/Đồng đội (Interdependent) theo mô hình Bradley thể hiện qua hành động nào dưới đây?", opts: ["Chỉ tuân thủ quy định khi có mặt cán bộ giám sát kiểm tra", "Làm an toàn để bản thân không bị trừ lương, phạt tiền", "Chủ động bảo vệ chính mình và nhắc nhở, ngăn chặn đồng đội khi thấy nguy cơ mất an toàn", "Xem an toàn là trách nhiệm riêng của bộ phận chuyên trách HSE"], ans: 2, explain: "Văn hóa tương tác hướng tới việc đồng đội chủ động bảo vệ lẫn nhau." },
-                { text: "Khi thấy thợ kéo cáp đối tác TIN làm việc trên cột điện nhưng không thắt đai an toàn, hành động chuẩn mực đầu tiên của Quản lý đối tác là gì?", opts: ["Chờ hết ca làm việc rồi về văn phòng lập biên bản phạt tiền", "Lập tức yêu cầu tạm dừng thi công, đưa công nhân xuống vị trí an toàn và chấn chỉnh bảo hộ", "Bỏ qua vì đây là nhân sự thuộc công ty thầu ngoài", "Chụp ảnh gửi lên nhóm chat chung"], ans: 1, explain: "Ngăn chặn rủi ro rơi ngã tức thì là trách nhiệm sống còn." }
-            ]
-        }
-    ];
-
-    const batch = db.batch();
-    defaultData.forEach(d => {
-        const docRef = db.collection("users").doc(uid).collection("quizzes").doc();
-        batch.set(docRef, d);
-    });
-    batch.commit().then(() => loadTeacherQuizzes(uid));
-}
-
-function uploadNewQuizDocx(event) {
+// BÓC TÁCH FILE MARKDOWN (.MD) SIÊU TỐC
+function uploadMarkdownQuiz(event) {
     const file = event.target.files[0];
     if (!file || !currentUserId) return;
     const statusEl = document.getElementById('upload-status');
-    statusEl.innerText = "Đang phân tích file Word...";
+    statusEl.innerText = "Đang nạp dữ liệu...";
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        mammoth.extractRawText({arrayBuffer: e.target.result})
-        .then(function(result) {
-            const text = result.value;
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            let parsed = [];
-            let curQ = null;
-            lines.forEach(line => {
-                if (/^Câu\s+\d+[\.:]/i.test(line)) {
-                    if (curQ && curQ.opts.length >= 2) parsed.push(curQ);
-                    curQ = { text: line.replace(/^Câu\s+\d+[\.:]\s*/i, ''), opts: [], ans: 0, explain: '' };
-                } else if (/^[A-D]\.\s*/.test(line) && curQ) {
-                    curQ.opts.push(line.replace(/^[A-D]\.\s*/, ''));
-                } else if (/^Lời giải:/i.test(line) && curQ) {
-                    curQ.explain = line.replace(/^Lời giải:\s*/i, '');
-                }
-            });
-            if (curQ && curQ.opts.length >= 2) parsed.push(curQ);
+        const text = e.target.result;
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        
+        let title = file.name.replace(/\.[^/.]+$/, "");
+        let parsedQuestions = [];
+        let curQ = null;
 
-            if (parsed.length > 0) {
-                const title = file.name.replace(/\.[^/.]+$/, "");
-                db.collection("users").doc(currentUserId).collection("quizzes").add({
-                    title: title,
-                    timePerQuestion: 30,
-                    questions: parsed
-                }).then(() => {
-                    statusEl.innerText = `✓ Đã lưu thành công bộ đề "${title}" (${parsed.length} câu)!`;
-                    loadTeacherQuizzes(currentUserId);
-                });
-            } else {
-                alert("Không thể bóc tách câu hỏi. Hãy kiểm tra cấu trúc file theo mẫu Azota.");
-                statusEl.innerText = "";
+        lines.forEach(line => {
+            if (line.startsWith('# ')) {
+                title = line.replace('# ', '').trim();
+            } else if (/^Câu\s+\d+[\.:]/i.test(line)) {
+                if (curQ && curQ.opts.length >= 2) parsedQuestions.push(curQ);
+                curQ = { 
+                    text: line.replace(/^Câu\s+\d+[\.:]\s*/i, ''), 
+                    opts: [], 
+                    ans: 0, 
+                    explain: '' 
+                };
+            } else if (/^(\*?[A-D])\.\s*(.+)/.test(line) && curQ) {
+                const match = line.match(/^(\*?[A-D])\.\s*(.+)/);
+                const prefix = match[1];
+                const content = match[2];
+                const isCorrect = prefix.startsWith('*');
+                const optIndex = curQ.opts.length;
+                
+                curQ.opts.push(content);
+                if (isCorrect) {
+                    curQ.ans = optIndex;
+                }
+            } else if (/^Lời giải:/i.test(line) && curQ) {
+                curQ.explain = line.replace(/^Lời giải:\s*/i, '');
             }
         });
+        if (curQ && curQ.opts.length >= 2) parsedQuestions.push(curQ);
+
+        if (parsedQuestions.length > 0) {
+            db.collection("users").doc(currentUserId).collection("quizzes").add({
+                title: title,
+                timePerQuestion: 30,
+                questions: parsedQuestions
+            }).then(() => {
+                statusEl.innerText = `✓ Đã nạp thành công "${title}" (${parsedQuestions.length} câu) trong 0.05s!`;
+                loadTeacherQuizzes(currentUserId);
+            });
+        } else {
+            alert("Không thể bóc tách câu hỏi. Hãy kiểm tra định dạng file MD.");
+            statusEl.innerText = "";
+        }
     };
-    reader.readAsArrayBuffer(file);
+    reader.readAsText(file, "UTF-8");
 }
 
 function launchRoom(quizId) {
-    // Tạo Room ID ngẫu nhiên có tiền tố theo UID của Giảng viên để chạy song song không trùng nhau
     const roomId = "FPT_" + Math.random().toString(36).substring(2, 7).toUpperCase();
     window.location.href = `host.html?room=${roomId}&quiz=${quizId}&uid=${currentUserId}`;
 }
