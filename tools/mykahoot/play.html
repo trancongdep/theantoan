@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Đấu Trường Học Viên</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background: #131427; color: #fff; display: flex; flex-direction: column; height: 100vh; text-align: center; }
+        .center-box { margin: auto; padding: 20px; width: 90%; max-width: 400px; background: #212345; border-radius: 12px; }
+        input { width: 100%; padding: 14px; margin: 15px 0; border-radius: 8px; border: 1px solid #4b5563; font-size: 16px; text-align: center; }
+        button.btn-join { width: 100%; padding: 14px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .grid-ans { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; height: 100vh; gap: 10px; padding: 10px; }
+        .ans-btn { border: none; border-radius: 12px; font-size: 40px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .b-0 { background: #e21b3c; } .b-1 { background: #1368ce; } .b-2 { background: #d89e00; } .b-3 { background: #26890c; }
+        .ans-btn:active { opacity: 0.7; }
+        .feedback { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-size: 26px; font-weight: bold; }
+        .correct { background: #10b981; } .incorrect { background: #ef4444; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<!-- Màn hình Đăng ký tên -->
+<div class="center-box" id="join-screen">
+    <h2 style="color: #f59e0b; margin-bottom: 10px;">ĐẤU TRƯỜNG ATVSLĐ</h2>
+    <p style="color:#9ca3af; font-size: 14px;">Nhập Mã tỉnh/Họ tên để vào phòng</p>
+    <input type="text" id="player-name" placeholder="VD: HN - Nguyễn Văn A">
+    <button class="btn-join" onclick="joinGame()">THAM GIA</button>
+</div>
+
+<!-- Màn hình Chờ lệnh từ Giảng viên -->
+<div class="center-box hidden" id="wait-screen">
+    <h3 style="color:#10b981;">ĐÃ VÀO PHÒNG ĐẤU!</h3>
+    <p style="margin-top: 15px; color:#cbd5e1;">Hãy nhìn màn hình Zoom của Giảng viên để theo dõi câu hỏi...</p>
+</div>
+
+<!-- Màn hình 4 nút bấm chọn đáp án (Kiểu Kahoot) -->
+<div class="grid-ans hidden" id="play-screen">
+    <button class="ans-btn b-0" onclick="sendAnswer(0)">▲</button>
+    <button class="ans-btn b-1" onclick="sendAnswer(1)">◆</button>
+    <button class="ans-btn b-2" onclick="sendAnswer(2)">●</button>
+    <button class="ans-btn b-3" onclick="sendAnswer(3)">■</button>
+</div>
+
+<!-- Màn hình Phản hồi Đúng/Sai -->
+<div class="feedback hidden" id="status-screen">
+    <div id="status-text"></div>
+</div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const ROOM = urlParams.get('room') || "FPT2026";
+const myId = "UID_" + Math.floor(Math.random() * 1000000);
+let client = null;
+let currentRemaining = 30;
+let qTimer = null;
+let mySelected = -1;
+
+function joinGame() {
+    const name = document.getElementById('player-name').value.trim();
+    if (!name) { alert("Vui lòng nhập tên!"); return; }
+
+    document.getElementById('join-screen').classList.add('hidden');
+    document.getElementById('wait-screen').classList.remove('hidden');
+
+    client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+    const topicBase = "fpt_hse_quiz/" + ROOM;
+
+    client.on('connect', () => {
+        client.publish(topicBase + "/join", JSON.stringify({ id: myId, name: name }));
+        client.subscribe(topicBase + "/question");
+        client.subscribe(topicBase + "/result");
+    });
+
+    client.on('message', (topic, message) => {
+        const data = JSON.parse(message.toString());
+        if (topic.endsWith('/question')) {
+            mySelected = -1;
+            document.getElementById('wait-screen').classList.add('hidden');
+            document.getElementById('status-screen').classList.add('hidden');
+            document.getElementById('play-screen').classList.remove('hidden');
+
+            currentRemaining = data.time;
+            clearInterval(qTimer);
+            qTimer = setInterval(() => {
+                currentRemaining--;
+                if (currentRemaining <= 0) clearInterval(qTimer);
+            }, 1000);
+        } else if (topic.endsWith('/result')) {
+            document.getElementById('play-screen').classList.add('hidden');
+            const statusBox = document.getElementById('status-screen');
+            statusBox.classList.remove('hidden');
+
+            if (mySelected === data.correct) {
+                statusBox.className = "feedback correct";
+                document.getElementById('status-text').innerHTML = "✓ CHÍNH XÁC!<br><span style='font-size:18px;'>Tốc độ ghi điểm tốt!</span>";
+            } else {
+                statusBox.className = "feedback incorrect";
+                document.getElementById('status-text').innerHTML = "✗ CHƯA ĐÚNG!<br><span style='font-size:18px;'>Hãy cố gắng ở câu sau!</span>";
+            }
+        }
+    });
+}
+
+function sendAnswer(opt) {
+    if (mySelected !== -1) return; // Chỉ cho phép bấm 1 lần
+    mySelected = opt;
+    const topicBase = "fpt_hse_quiz/" + ROOM;
+    client.publish(topicBase + "/answer", JSON.stringify({
+        id: myId,
+        opt: opt,
+        time: currentRemaining
+    }));
+
+    // Bấm xong chuyển sang trạng thái chờ chấm điểm
+    document.getElementById('play-screen').classList.add('hidden');
+    const statusBox = document.getElementById('status-screen');
+    statusBox.className = "feedback";
+    statusBox.style.background = "#374151";
+    statusBox.classList.remove('hidden');
+    document.getElementById('status-text').innerText = "Đã gửi câu trả lời! Chờ kết quả...";
+}
+</script>
+</body>
+</html>
