@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đấu Trường ATVSLĐ - Màn Hình Giảng Viên</title>
+    <!-- MQTT & QRCode CDN -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background: #131427; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .box { width: 90%; max-width: 1000px; background: #212345; border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: #f59e0b; margin-bottom: 20px; font-size: 28px; }
+        .badge { background: #3b82f6; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 18px; display: inline-block; margin-bottom: 15px; }
+        #qr-container { display: flex; flex-direction: column; align-items: center; margin: 20px 0; }
+        #qrcode { padding: 15px; background: #fff; border-radius: 12px; margin-bottom: 15px; }
+        .btn { background: #10b981; color: #fff; border: none; padding: 14px 28px; border-radius: 8px; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 15px; }
+        .btn:hover { background: #059669; }
+        .timer-bar { width: 100%; height: 12px; background: #374151; border-radius: 6px; overflow: hidden; margin: 20px 0; }
+        .timer-progress { width: 100%; height: 100%; background: #ef4444; transition: linear; }
+        .grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; text-align: left; }
+        .opt-card { padding: 20px; border-radius: 10px; font-size: 18px; font-weight: bold; }
+        .opt-0 { background: #e21b3c; } .opt-1 { background: #1368ce; } .opt-2 { background: #d89e00; } .opt-3 { background: #26890c; }
+        .correct-mark { border: 4px solid #fff; box-shadow: 0 0 15px #fff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #374151; }
+        th { background: #1f2937; color: #f59e0b; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="box" id="lobby-screen">
+    <h1>ĐẤU TRƯỜNG ATVSLĐ - FPT TELECOM</h1>
+    <div class="badge">Phòng thi: <span id="room-id">FPT2026</span></div>
+    <div id="qr-container">
+        <div id="qrcode"></div>
+        <p style="font-size: 18px; color: #9ca3af;">Quét mã QR bằng điện thoại để vào đấu trường</p>
+    </div>
+    <div style="font-size: 22px; margin: 15px 0;">Số học viên đã kết nối: <span id="player-count" style="color:#10b981; font-weight:bold;">0</span></div>
+    <button class="btn" onclick="startQuiz()">BẮT ĐẦU ĐẤU TRƯỜNG</button>
+</div>
+
+<div class="box hidden" id="quiz-screen">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="badge" id="q-counter">Câu 1/14</span>
+        <span class="badge" style="background:#ef4444;" id="time-left">30s</span>
+    </div>
+    <h2 id="q-text" style="font-size: 24px; margin: 20px 0; min-height: 60px;"></h2>
+    <div class="timer-bar"><div class="timer-progress" id="progress-bar"></div></div>
+    <div class="grid-options" id="options-container"></div>
+    <button class="btn hidden" id="next-btn" onclick="nextQuestion()">CÂU TIẾP THEO</button>
+</div>
+
+<div class="box hidden" id="leaderboard-screen">
+    <h1>🏆 BẢNG XẾP HẠNG TOP THI ĐẤU 🏆</h1>
+    <table>
+        <thead><tr><th>Hạng</th><th>Tên học viên</th><th>Điểm số</th></tr></thead>
+        <tbody id="leaderboard-body"></tbody>
+    </table>
+    <button class="btn" id="finish-btn" onclick="returnToQuiz()">TIẾP TỤC</button>
+</div>
+
+<script>
+const ROOM = "FPT2026_" + Math.floor(1000 + Math.random() * 9000);
+document.getElementById('room-id').innerText = ROOM;
+
+// 14 câu hỏi chuẩn nội dung
+const questions = [
+    { text: "Theo NĐ 62/2025/NĐ-CP, nhân viên kỹ thuật đối tác mới tuyển dụng, chưa qua sát hạch an toàn điện thì chỉ được bố trí công việc nào?", opts: ["Trèo cột kéo cáp hạ thế", "Cắt điện và lắp đặt tủ điện", "Tham gia phụ việc, không tiếp xúc với thiết bị/dây dẫn mang điện (Bậc 1/5)", "Vận hành máy nạp ắc quy tại đài trạm"], ans: 2, time: 30 },
+    { text: "Theo QCVN 33:2019/BTTTT, kích thước lối đi tối thiểu bên trong đường hầm cáp viễn thông phải đảm bảo thông số nào?", opts: ["Cao tối thiểu 1,7 m; rộng 0,5 m", "Cao tối thiểu 1,9 m; rộng 0,7 m", "Cao tối thiểu 2,0 m; rộng 1,0 m", "Không quy định, tùy tuyến cáp"], ans: 1, time: 30 },
+    { text: "Theo Thông tư 06/2020/TT-BLĐTBXH, làm việc trên cao từ bao nhiêu mét trở lên bắt buộc phải có thẻ an toàn Nhóm 3?", opts: ["Từ 1,5 mét trở lên", "Từ 2,0 mét trở lên", "Từ 3,0 mét trở lên", "Từ 5,0 mét trở lên"], ans: 1, time: 30 },
+    { text: "Nếu vi phạm an toàn lao động làm chết người tại hiện trường, chế tài xử lý nghiêm khắc nhất là gì?", opts: ["Khiển trách nội bộ và cắt thưởng", "Phạt vi phạm hành chính doanh nghiệp", "Truy cứu trách nhiệm hình sự (Điều 295 BLHS)", "Bồi thường viện phí"], ans: 2, time: 30 },
+    { text: "Tần suất tự kiểm tra ATVSLĐ toàn diện cấp cơ sở tối thiểu đối với đơn vị thông thường là bao lâu?", opts: ["01 lần trong 03 tháng", "01 lần trong 06 tháng", "Ít nhất 01 lần trong 01 năm", "02 năm một lần"], ans: 2, time: 35 },
+    { text: "Khi xảy ra TNLĐ chết người, theo NĐ 129/2025/NĐ-CP, báo cáo nhanh được gửi tới đâu đầu tiên?", opts: ["Chỉ gửi Ban Giám đốc", "Công an và UBND cấp xã nơi xảy ra tai nạn", "Bộ Lao động - Thương binh và Xã hội", "Đợi kết luận nội bộ mới gửi"], ans: 1, time: 35 },
+    { text: "TNLĐ làm bị thương nặng từ 2 người trở lên hoặc chết người thuộc thẩm quyền điều tra của cấp nào?", opts: ["Cấp cơ sở (Do Giám đốc thành lập)", "Cấp tỉnh (Do GĐ Sở LĐTBXH thành lập)", "Mạng lưới ATVSV cơ sở", "BCH Công đoàn"], ans: 1, time: 35 },
+    { text: "Nguyên nhân phổ biến gây phóng hồ quang điện khi thao tác tủ điện hạ thế là gì?", opts: ["Thao tác dụng cụ kim loại không cách điện gây ngắn mạch", "Nhiệt độ phòng máy cao", "Cáp viễn thông suy hao tín hiệu", "Độ sáng đèn không đủ"], ans: 0, time: 30 },
+    { text: "Theo Kim tự tháp Heinrich, đằng sau 1 vụ tử vong/thương nặng có bao nhiêu hành vi & điều kiện không an toàn?", opts: ["300", "3.000", "30.000", "300.000"], ans: 2, time: 30 },
+    { text: "Hành vi nào tại PGD/kho chi nhánh tiềm ẩn nguy cơ phát sinh hỏa hoạn cao nhất?", opts: ["Bật máy tính làm việc liên tục 8h", "Cắm nhiều tải lớn chung 1 ổ cắm và sạc qua đêm sát bìa carton", "Bật điều hòa 26 độ C", "Dùng máy in trong phòng kính"], ans: 1, time: 30 },
+    { text: "Theo QCVN 24:2016/BYT, mức ồn tối đa cho phép tại nơi làm việc trong ca 8 giờ là bao nhiêu?", opts: ["75 dB", "80 dB", "85 dB", "90 dB"], ans: 2, time: 30 },
+    { text: "Theo Tháp kiểm soát rủi ro, biện pháp nào mang lại hiệu quả cao nhất và bền vững nhất?", opts: ["Trang bị PPE cao cấp", "Huấn luyện quy trình an toàn", "Rào chắn, biển cảnh báo", "Loại bỏ hoàn toàn mối nguy từ gốc"], ans: 3, time: 30 },
+    { text: "Cấp độ Văn hóa An toàn Tương tác (Interdependent) thể hiện qua hành động nào?", opts: ["Chỉ tuân thủ khi có giám sát", "Làm an toàn để tránh phạt tiền", "Chủ động bảo vệ mình và ngăn chặn rủi ro cho đồng đội", "Khoán an toàn cho bộ phận HSE"], ans: 2, time: 30 },
+    { text: "Phát hiện thợ kéo cáp đối tác không thắt đai an toàn trên cột, Quản lý phải làm gì ngay?", opts: ["Chờ hết ca về phạt tiền", "Yêu cầu tạm dừng thi công ngay, đưa xuống vị trí an toàn", "Bỏ qua vì là thầu ngoài", "Chụp ảnh gửi chat nhóm"], ans: 1, time: 30 }
+];
+
+let currentQ = 0;
+let players = {};
+let timer = null;
+let timeLeft = 0;
+
+// Kết nối MQTT Broker qua WebSocket (WSS công cộng)
+const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+const topicBase = "fpt_hse_quiz/" + ROOM;
+
+client.on('connect', () => {
+    client.subscribe(topicBase + "/join");
+    client.subscribe(topicBase + "/answer");
+});
+
+// Tạo mã QR dẫn đến trang học viên
+const studentURL = window.location.href.replace('host.html', 'play.html') + "?room=" + ROOM;
+new QRCode(document.getElementById("qrcode"), { text: studentURL, width: 220, height: 220 });
+
+client.on('message', (topic, message) => {
+    const data = JSON.parse(message.toString());
+    if (topic.endsWith('/join')) {
+        if (!players[data.id]) {
+            players[data.id] = { name: data.name, score: 0, lastAns: -1, ansTime: 0 };
+            document.getElementById('player-count').innerText = Object.keys(players).length;
+        }
+    } else if (topic.endsWith('/answer')) {
+        if (players[data.id] && players[data.id].lastAns === -1) {
+            players[data.id].lastAns = data.opt;
+            players[data.id].ansTime = data.time;
+            if (data.opt === questions[currentQ].ans) {
+                // Tính điểm theo tốc độ trả lời (tối đa 1000 điểm)
+                const point = Math.round(500 + (data.time / questions[currentQ].time) * 500);
+                players[data.id].score += point;
+            }
+        }
+    }
+});
+
+function startQuiz() {
+    document.getElementById('lobby-screen').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    loadQuestion(0);
+}
+
+function loadQuestion(idx) {
+    currentQ = idx;
+    const q = questions[idx];
+    document.getElementById('q-counter').innerText = `Câu ${idx + 1}/${questions.length}`;
+    document.getElementById('q-text').innerText = q.text;
+    document.getElementById('next-btn').classList.add('hidden');
+    
+    // Reset lựa chọn
+    Object.keys(players).forEach(id => { players[id].lastAns = -1; });
+
+    let optHtml = '';
+    q.opts.forEach((opt, i) => {
+        optHtml += `<div class="opt-card opt-${i}" id="opt-box-${i}">${['▲','◆','●','■'][i]} ${opt}</div>`;
+    });
+    document.getElementById('options-container').innerHTML = optHtml;
+
+    // Phát lệnh cho điện thoại học viên
+    client.publish(topicBase + "/question", JSON.stringify({
+        qIndex: idx,
+        text: q.text,
+        opts: q.opts,
+        time: q.time
+    }));
+
+    // Bắt đầu đếm ngược
+    timeLeft = q.time;
+    document.getElementById('time-left').innerText = timeLeft + 's';
+    const bar = document.getElementById('progress-bar');
+    bar.style.transition = 'none';
+    bar.style.width = '100%';
+    setTimeout(() => {
+        bar.style.transition = `width ${q.time}s linear`;
+        bar.style.width = '0%';
+    }, 50);
+
+    clearInterval(timer);
+    timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('time-left').innerText = timeLeft + 's';
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            showAnswerResult();
+        }
+    }, 1000);
+}
+
+function showAnswerResult() {
+    const q = questions[currentQ];
+    // Nổi bật đáp án đúng
+    const correctBox = document.getElementById(`opt-box-${q.ans}`);
+    if(correctBox) correctBox.classList.add('correct-mark');
+
+    // Báo kết quả về điện thoại học viên
+    client.publish(topicBase + "/result", JSON.stringify({ correct: q.ans }));
+    document.getElementById('next-btn').classList.remove('hidden');
+}
+
+function nextQuestion() {
+    if (currentQ < questions.length - 1) {
+        showLeaderboard();
+    } else {
+        showFinalLeaderboard();
+    }
+}
+
+function showLeaderboard() {
+    document.getElementById('quiz-screen').classList.add('hidden');
+    document.getElementById('leaderboard-screen').classList.remove('hidden');
+    renderRanking();
+}
+
+function renderRanking() {
+    const sorted = Object.values(players).sort((a, b) => b.score - a.score).slice(0, 5);
+    let rows = '';
+    sorted.forEach((p, idx) => {
+        rows += `<tr><td>#${idx + 1}</td><td>${p.name}</td><td><strong>${p.score}</strong> pts</td></tr>`;
+    });
+    document.getElementById('leaderboard-body').innerHTML = rows;
+}
+
+function returnToQuiz() {
+    document.getElementById('leaderboard-screen').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    loadQuestion(currentQ + 1);
+}
+
+function showFinalLeaderboard() {
+    document.getElementById('quiz-screen').classList.add('hidden');
+    document.getElementById('leaderboard-screen').classList.remove('hidden');
+    document.querySelector('#leaderboard-screen h1').innerText = "🏆 CHUNG CUỘC: VINH DANH QUÁN QUÂN 🏆";
+    renderRanking();
+    document.getElementById('finish-btn').classList.add('hidden');
+}
+</script>
+</body>
+</html>
