@@ -6,57 +6,85 @@
     <title>Đấu Trường Học Viên</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
         body { background: #131427; color: #fff; display: flex; flex-direction: column; height: 100vh; text-align: center; }
         .center-box { margin: auto; padding: 20px; width: 90%; max-width: 400px; background: #212345; border-radius: 12px; }
         input { width: 100%; padding: 14px; margin: 15px 0; border-radius: 8px; border: 1px solid #4b5563; font-size: 16px; text-align: center; }
-        button.btn-join { width: 100%; padding: 14px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .btn-join { width: 100%; padding: 14px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        
+        /* GIAO DIỆN 4 NÚT CHỌN 1 */
         .grid-ans { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; height: 100vh; gap: 10px; padding: 10px; }
         .ans-btn { border: none; border-radius: 12px; font-size: 40px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .b-0 { background: #e21b3c; } .b-1 { background: #1368ce; } .b-2 { background: #d89e00; } .b-3 { background: #26890c; }
+        .b-0 { background: #dc2626; } .b-1 { background: #2563eb; } .b-2 { background: #d97706; } .b-3 { background: #16a34a; }
         .ans-btn:active { opacity: 0.7; }
+
+        /* GIAO DIỆN ĐÚNG SAI (2 NÚT) */
+        .grid-tf { display: flex; flex-direction: column; height: 100vh; gap: 15px; padding: 15px; }
+        .tf-btn { flex: 1; border: none; border-radius: 16px; font-size: 32px; font-weight: bold; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .tf-true { background: #16a34a; }
+        .tf-false { background: #dc2626; }
+
+        /* GIAO DIỆN CHỌN NHIỀU */
+        .multi-selected { border: 5px solid #fff !important; transform: scale(0.96); }
+        .submit-multi-bar { position: fixed; bottom: 15px; left: 15px; right: 15px; background: #f59e0b; color: #000; font-size: 20px; font-weight: bold; padding: 16px; border-radius: 12px; border: none; z-index: 10; }
+
         .feedback { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-size: 26px; font-weight: bold; }
         .correct { background: #10b981; } .incorrect { background: #ef4444; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<!-- Màn hình Đăng ký tên -->
 <div class="center-box" id="join-screen">
-    <h2 style="color: #f59e0b; margin-bottom: 10px;">ĐẤU TRƯỜNG ATVSLĐ</h2>
-    <p style="color:#9ca3af; font-size: 14px;">Nhập Mã tỉnh/Họ tên để vào phòng</p>
-    <input type="text" id="player-name" placeholder="VD: HN - Nguyễn Văn A">
+    <h2 style="color: #f59e0b; margin-bottom: 8px;">ĐẤU TRƯỜNG ATVSLĐ</h2>
+    <p style="color:#9ca3af; font-size: 14px;">Nhập Mã tỉnh / Họ tên để vào thi</p>
+    <input type="text" id="player-name" placeholder="VD: BDG - Nguyễn Văn A">
     <button class="btn-join" onclick="joinGame()">THAM GIA</button>
 </div>
 
-<!-- Màn hình Chờ lệnh từ Giảng viên -->
 <div class="center-box hidden" id="wait-screen">
-    <h3 style="color:#10b981;">ĐÃ VÀO PHÒNG ĐẤU!</h3>
-    <p style="margin-top: 15px; color:#cbd5e1;">Hãy nhìn màn hình Zoom của Giảng viên để theo dõi câu hỏi...</p>
+    <h3 style="color:#10b981;">ĐÃ VÀO ĐẤU TRƯỜNG!</h3>
+    <p style="margin-top: 15px; color:#cbd5e1;">Quan sát màn hình Zoom của Giảng viên để theo dõi đề thi...</p>
 </div>
 
-<!-- Màn hình 4 nút bấm chọn đáp án (Kiểu Kahoot) -->
-<div class="grid-ans hidden" id="play-screen">
-    <button class="ans-btn b-0" onclick="sendAnswer(0)">▲</button>
-    <button class="ans-btn b-1" onclick="sendAnswer(1)">◆</button>
-    <button class="ans-btn b-2" onclick="sendAnswer(2)">●</button>
-    <button class="ans-btn b-3" onclick="sendAnswer(3)">■</button>
+<!-- MÀN HÌNH CHỌN 1 ĐÁP ÁN -->
+<div class="grid-ans hidden" id="play-single-screen">
+    <button class="ans-btn b-0" onclick="sendSingleAnswer(0)">▲</button>
+    <button class="ans-btn b-1" onclick="sendSingleAnswer(1)">◆</button>
+    <button class="ans-btn b-2" onclick="sendSingleAnswer(2)">●</button>
+    <button class="ans-btn b-3" onclick="sendSingleAnswer(3)">■</button>
 </div>
 
-<!-- Màn hình Phản hồi Đúng/Sai -->
+<!-- MÀN HÌNH ĐÚNG / SAI -->
+<div class="grid-tf hidden" id="play-tf-screen">
+    <button class="tf-btn tf-true" onclick="sendTFAnswer('TRUE')">✔ ĐÚNG</button>
+    <button class="tf-btn tf-false" onclick="sendTFAnswer('FALSE')">✖ SAI</button>
+</div>
+
+<!-- MÀN HÌNH CHỌN NHIỀU ĐÁP ÁN -->
+<div class="grid-ans hidden" id="play-multi-screen" style="height: calc(100vh - 80px);">
+    <button class="ans-btn b-0" id="m-btn-0" onclick="toggleMultiSelect(0)">▲</button>
+    <button class="ans-btn b-1" id="m-btn-1" onclick="toggleMultiSelect(1)">◆</button>
+    <button class="ans-btn b-2" id="m-btn-2" onclick="toggleMultiSelect(2)">●</button>
+    <button class="ans-btn b-3" id="m-btn-3" onclick="toggleMultiSelect(3)">■</button>
+</div>
+<button class="submit-multi-bar hidden" id="multi-submit-btn" onclick="submitMultiAnswer()">NỘP BÀI (ĐÃ CHỌN: 0)</button>
+
+<!-- TRẠNG THÁI CHỜ / KẾT QUẢ -->
 <div class="feedback hidden" id="status-screen">
     <div id="status-text"></div>
 </div>
 
 <script>
 const urlParams = new URLSearchParams(window.location.search);
-const ROOM = urlParams.get('room') || "FPT2026";
+const ROOM = urlParams.get('room') || "FPT";
 const myId = "UID_" + Math.floor(Math.random() * 1000000);
 let client = null;
 let currentRemaining = 30;
 let qTimer = null;
-let mySelected = -1;
+let myAnswer = null;
+let multiSelected = [];
+let currentType = 'single';
 
 function joinGame() {
     const name = document.getElementById('player-name').value.trim();
@@ -77,10 +105,10 @@ function joinGame() {
     client.on('message', (topic, message) => {
         const data = JSON.parse(message.toString());
         if (topic.endsWith('/question')) {
-            mySelected = -1;
-            document.getElementById('wait-screen').classList.add('hidden');
-            document.getElementById('status-screen').classList.add('hidden');
-            document.getElementById('play-screen').classList.remove('hidden');
+            hideAllGameScreens();
+            myAnswer = null;
+            multiSelected = [];
+            currentType = data.type;
 
             currentRemaining = data.time;
             clearInterval(qTimer);
@@ -88,39 +116,104 @@ function joinGame() {
                 currentRemaining--;
                 if (currentRemaining <= 0) clearInterval(qTimer);
             }, 1000);
+
+            if (data.type === 'single') {
+                document.getElementById('play-single-screen').classList.remove('hidden');
+            } else if (data.type === 'tf') {
+                document.getElementById('play-tf-screen').classList.remove('hidden');
+            } else if (data.type === 'multi') {
+                for (let i = 0; i < 4; i++) {
+                    const el = document.getElementById(`m-btn-${i}`);
+                    if (el) el.classList.remove('multi-selected');
+                }
+                document.getElementById('play-multi-screen').classList.remove('hidden');
+                document.getElementById('multi-submit-btn').classList.remove('hidden');
+                document.getElementById('multi-submit-btn').innerText = "NỘP BÀI (ĐÃ CHỌN: 0)";
+            }
         } else if (topic.endsWith('/result')) {
-            document.getElementById('play-screen').classList.add('hidden');
+            hideAllGameScreens();
             const statusBox = document.getElementById('status-screen');
             statusBox.classList.remove('hidden');
 
-            if (mySelected === data.correct) {
+            let isCorrect = false;
+            if (data.type === 'single') {
+                isCorrect = (myAnswer === data.correctSingle);
+            } else if (data.type === 'tf') {
+                isCorrect = (myAnswer === data.correctTF);
+            } else if (data.type === 'multi') {
+                const userStr = (myAnswer || []).sort().join(',');
+                const correctStr = (data.correctMulti || []).sort().join(',');
+                isCorrect = (userStr === correctStr && userStr.length > 0);
+            }
+
+            if (isCorrect) {
                 statusBox.className = "feedback correct";
                 document.getElementById('status-text').innerHTML = "✓ CHÍNH XÁC!<br><span style='font-size:18px;'>Tốc độ ghi điểm tốt!</span>";
             } else {
                 statusBox.className = "feedback incorrect";
-                document.getElementById('status-text').innerHTML = "✗ CHƯA ĐÚNG!<br><span style='font-size:18px;'>Hãy cố gắng ở câu sau!</span>";
+                document.getElementById('status-text').innerHTML = "✗ CHƯA ĐÚNG!<br><span style='font-size:18px;'>Cố gắng ở câu tiếp theo!</span>";
             }
         }
     });
 }
 
-function sendAnswer(opt) {
-    if (mySelected !== -1) return; // Chỉ cho phép bấm 1 lần
-    mySelected = opt;
+function hideAllGameScreens() {
+    document.getElementById('wait-screen').classList.add('hidden');
+    document.getElementById('play-single-screen').classList.add('hidden');
+    document.getElementById('play-tf-screen').classList.add('hidden');
+    document.getElementById('play-multi-screen').classList.add('hidden');
+    document.getElementById('multi-submit-btn').classList.add('hidden');
+    document.getElementById('status-screen').classList.add('hidden');
+}
+
+function sendSingleAnswer(opt) {
+    if (myAnswer !== null) return;
+    myAnswer = opt;
+    publishAnswer(opt);
+}
+
+function sendTFAnswer(opt) {
+    if (myAnswer !== null) return;
+    myAnswer = opt;
+    publishAnswer(opt);
+}
+
+function toggleMultiSelect(opt) {
+    const idx = multiSelected.indexOf(opt);
+    const btn = document.getElementById(`m-btn-${opt}`);
+    if (idx > -1) {
+        multiSelected.splice(idx, 1);
+        btn.classList.remove('multi-selected');
+    } else {
+        multiSelected.push(opt);
+        btn.classList.add('multi-selected');
+    }
+    document.getElementById('multi-submit-btn').innerText = `NỘP BÀI (ĐÃ CHỌN: ${multiSelected.length})`;
+}
+
+function submitMultiAnswer() {
+    if (myAnswer !== null) return;
+    if (multiSelected.length === 0) {
+        alert("Bạn phải chọn ít nhất một đáp án trước khi nộp!");
+        return;
+    }
+    myAnswer = multiSelected;
+    publishAnswer(multiSelected);
+}
+
+function publishAnswer(val) {
     const topicBase = "fpt_hse_quiz/" + ROOM;
     client.publish(topicBase + "/answer", JSON.stringify({
         id: myId,
-        opt: opt,
+        opt: val,
         time: currentRemaining
     }));
-
-    // Bấm xong chuyển sang trạng thái chờ chấm điểm
-    document.getElementById('play-screen').classList.add('hidden');
+    hideAllGameScreens();
     const statusBox = document.getElementById('status-screen');
     statusBox.className = "feedback";
     statusBox.style.background = "#374151";
     statusBox.classList.remove('hidden');
-    document.getElementById('status-text').innerText = "Đã gửi câu trả lời! Chờ kết quả...";
+    document.getElementById('status-text').innerText = "Đã gửi bài! Đang chờ kết quả...";
 }
 </script>
 </body>
