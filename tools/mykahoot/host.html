@@ -261,13 +261,20 @@ document.getElementById('room-code').innerText = ROOM;
 
 function onQuizPick() {
     const val = document.getElementById('quiz-picker').value;
+    const statusEl = document.getElementById('quiz-status');
+    
     if (val === 'upload') {
         document.getElementById('upload-box').classList.remove('hidden');
+        // Đặt lại input file về rỗng để có thể chọn lại cùng 1 file nếu cần
+        document.getElementById('md-file').value = "";
+        statusEl.innerText = "⏳ Chờ tải lên file câu hỏi mới...";
+        statusEl.style.color = "#f59e0b"; // Màu vàng cam biểu thị trạng thái chờ
     } else {
         document.getElementById('upload-box').classList.add('hidden');
         if (BUILTIN_QUIZZES[val]) {
             activeQuestions = BUILTIN_QUIZZES[val];
-            document.getElementById('quiz-status').innerText = `✓ Đã nạp ${activeQuestions.length} câu hỏi sẵn sàng.`;
+            statusEl.innerText = `✓ Đã nạp ${activeQuestions.length} câu hỏi sẵn sàng.`;
+            statusEl.style.color = "#10b981"; // Màu xanh lá hoàn tất
         }
     }
 }
@@ -276,11 +283,16 @@ function onQuizPick() {
 function parseMarkdownFast(event) {
     const file = event.target.files[0];
     if (!file) return;
+    const statusEl = document.getElementById('quiz-status');
+    statusEl.innerText = "⚡ Đang xử lý file...";
+    statusEl.style.color = "#38bdf8";
+
     const reader = new FileReader();
     reader.onload = function(e) {
         const lines = e.target.result.split('\n').map(l => l.trim()).filter(l => l.length > 0);
         let parsed = [];
         let curQ = null;
+
         lines.forEach(line => {
             if (line.startsWith('# ')) {
                 document.getElementById('quiz-title-input').value = line.replace('# ', '').trim();
@@ -299,14 +311,19 @@ function parseMarkdownFast(event) {
 
         if (parsed.length > 0) {
             activeQuestions = parsed;
-            document.getElementById('quiz-status').innerText = `✓ Đã nạp thành công ${parsed.length} câu hỏi siêu tốc!`;
-            // Lưu lên Firestore cho riêng tài khoản này nếu đã đăng nhập
+            // Cập nhật thông báo thành công
+            statusEl.innerText = `✓ Đã nạp thành công ${parsed.length} câu hỏi từ file "${file.name}"!`;
+            statusEl.style.color = "#10b981";
+
             if (currentUid) {
                 db.collection("users").doc(currentUid).collection("quizzes").add({
                     title: document.getElementById('quiz-title-input').value,
                     questions: parsed
                 });
             }
+        } else {
+            statusEl.innerText = "❌ Lỗi cấu trúc: Không tìm thấy câu hỏi hợp lệ trong file!";
+            statusEl.style.color = "#ef4444";
         }
     };
     reader.readAsText(file, "UTF-8");
