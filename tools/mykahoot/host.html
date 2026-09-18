@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hệ Thống Đấu Trường ATVSLĐ - Giảng Viên</title>
+    <title>Hệ Thống Đấu Trường ATVSLĐ - Màn Hình Giảng Viên</title>
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -15,12 +15,12 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-x: hidden; }
-        .box { width: 94%; max-width: 1050px; background: #1e293b; border-radius: 20px; padding: 28px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); position: relative; }
+        .box { width: 94%; max-width: 1100px; background: #1e293b; border-radius: 20px; padding: 28px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); position: relative; }
         h1 { color: #f59e0b; margin-bottom: 12px; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
         .fs-btn { position: absolute; top: 20px; right: 25px; background: #334155; color: #fff; border: 1px solid #475569; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .fs-btn:hover { background: #475569; }
 
-        /* GIAI ĐOẠN 1: QUẢN LÝ & CẤU HÌNH */
+        /* GIAI ĐOẠN 1 */
         .header-auth { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 12px 20px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 20px; }
         .user-badge { display: flex; align-items: center; gap: 10px; }
         .user-badge img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #38bdf8; }
@@ -34,7 +34,7 @@
         .btn-open { width: 100%; background: #2563eb; color: #fff; border: none; padding: 15px; border-radius: 10px; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 15px; }
         .btn-open:hover { background: #1d4ed8; }
 
-        /* GIAI ĐOẠN 2: SẢNH CHỜ */
+        /* GIAI ĐOẠN 2 */
         .lobby-layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 25px; margin-top: 15px; align-items: start; }
         .lobby-left { display: flex; flex-direction: column; align-items: center; background: #0f172a; padding: 22px; border-radius: 16px; border: 1px solid #334155; text-align: center; }
         #qrcode { padding: 10px; background: #fff; border-radius: 12px; margin-bottom: 12px; }
@@ -42,10 +42,14 @@
         .btn-start { width: 100%; background: #10b981; color: #fff; border: none; padding: 15px; border-radius: 10px; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-start:hover { background: #059669; }
 
-        .lobby-right { background: #0f172a; padding: 18px; border-radius: 16px; border: 1px solid #334155; text-align: left; height: 460px; display: flex; flex-direction: column; }
+        .lobby-right { background: #0f172a; padding: 16px; border-radius: 16px; border: 1px solid #334155; text-align: left; height: 480px; display: flex; flex-direction: column; }
         .player-list-header { font-size: 16px; font-weight: bold; color: #38bdf8; border-bottom: 2px solid #334155; padding-bottom: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .player-list-scroll { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; }
-        .player-chip { background: #334155; color: #f8fafc; padding: 6px 12px; border-radius: 16px; font-size: 13px; border: 1px solid #475569; }
+        .player-list-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; padding-right: 6px; }
+        .player-list-scroll::-webkit-scrollbar { width: 6px; }
+        .player-list-scroll::-webkit-scrollbar-track { background: #1e293b; }
+        .player-list-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        .player-chip { background: #334155; color: #f8fafc; padding: 5px 10px; border-radius: 12px; font-size: 12px; border: 1px solid #475569; white-space: nowrap; animation: popIn 0.2s ease-out; }
+        @keyframes popIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         /* MÀN HÌNH THI */
         .live-status { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -64,11 +68,8 @@
 </head>
 <body>
 
-<!-- GIAI ĐOẠN 1: SETUP THÔNG TIN & CHỌN ĐỀ -->
 <div class="box" id="phase1-screen">
     <button class="fs-btn" onclick="toggleFullScreen()">⛶ Toàn màn hình</button>
-    
-    <!-- THANH XÁC THỰC GMAIL -->
     <div class="header-auth">
         <div id="auth-logged-in" class="user-badge hidden">
             <img id="user-avatar" src="" alt="">
@@ -80,15 +81,11 @@
         <div id="auth-logged-out">
             <span style="font-size: 13px; color:#cbd5e1;">Đăng nhập để lưu đề riêng: </span>
         </div>
-        <button id="btn-login" class="btn-google" onclick="loginGoogle()">
-            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M21.35 11.1H12v2.98h5.36c-.23 1.25-.94 2.31-2 3.01v2.5h3.24c1.89-1.74 2.98-4.3 2.98-7.39 0-.67-.06-1.32-.23-2.1z"/><path fill="currentColor" d="M12 21c2.7 0 4.96-.89 6.62-2.42l-3.24-2.5c-.9.6-2.05.96-3.38.96-2.6 0-4.8-1.75-5.59-4.11H3.06v2.58C4.74 18.84 8.1 21 12 21z"/><path fill="currentColor" d="M6.41 12.93c-.2-.6-.32-1.25-.32-1.93s.12-1.33.32-1.93V6.49H3.06C2.39 7.82 2 9.36 2 11s.39 3.18 1.06 4.51l3.35-2.58z"/><path fill="currentColor" d="M12 5.38c1.47 0 2.79.5 3.82 1.49l2.87-2.87C16.95 2.35 14.7 1.38 12 1.38 8.1 1.38 4.74 3.54 3.06 6.49l3.35 2.58c.79-2.36 2.99-4.11 5.59-4.11z"/></svg>
-            Đăng nhập Google
-        </button>
+        <button id="btn-login" class="btn-google" onclick="loginGoogle()">Đăng nhập Gmail</button>
         <button id="btn-logout" class="btn-logout hidden" onclick="logoutGoogle()">Đăng xuất</button>
     </div>
 
     <h1>⚙ THIẾT LẬP PHÒNG ĐẤU TRƯỜNG</h1>
-
     <div style="text-align: left; margin-bottom: 12px;">
         <label>Tiêu đề cuộc thi / Lớp đào tạo:</label>
         <input type="text" id="quiz-title-input" value="HUẤN LUYỆN ATVSLĐ NHÓM 1 & 2 - FPT TELECOM">
@@ -96,18 +93,14 @@
 
     <div class="grid-configs">
         <div class="panel">
-            <label>1. Chọn bộ đề thi (Tải tức thì):</label>
+            <label>1. Chọn bộ đề thi:</label>
             <select id="quiz-picker" onchange="onQuizPick()">
-                <option value="p1">Phần 1: Pháp luật ATVSLĐ & An toàn điện (4 câu)</option>
-                <option value="p2">Phần 2: Nghiệp vụ công tác ATVSLĐ (3 câu)</option>
-                <option value="p3">Phần 3: Nhận diện yếu tố nguy hiểm, có hại (4 câu)</option>
-                <option value="p4">Phần 4: Kiểm soát rủi ro & Bradley (3 câu)</option>
-                <option value="upload">-- Nạp file Markdown (.md) siêu tốc --</option>
+                <option value="upload" selected>-- Nạp file Markdown (.md) tổng hợp 3 dạng --</option>
             </select>
-            <div id="upload-box" class="hidden" style="margin-top: 10px;">
+            <div id="upload-box" style="margin-top: 10px;">
                 <input type="file" id="md-file" accept=".md,.txt" onchange="parseMarkdownFast(event)">
             </div>
-            <p id="quiz-status" style="margin-top: 8px; color: #10b981; font-size: 13px;">✓ Đã nạp 4 câu hỏi sẵn sàng.</p>
+            <p id="quiz-status" style="margin-top: 8px; color: #f59e0b; font-size: 13px;">⏳ Chờ tải lên file câu hỏi mới...</p>
         </div>
 
         <div class="panel">
@@ -115,20 +108,18 @@
             <select id="time-picker">
                 <option value="15">15 Giây</option>
                 <option value="20">20 Giây</option>
-                <option value="30" selected>30 Giây (Tiêu chuẩn)</option>
+                <option value="30" selected>30 Giây</option>
                 <option value="45">45 Giây</option>
                 <option value="60">60 Giây</option>
             </select>
             <div style="margin-top: 15px;">
-                <span class="badge">Phòng thi: <span id="room-code">...</span></span>
+                <span class="badge">Mã phòng: <span id="room-code">...</span></span>
             </div>
         </div>
     </div>
-
     <button class="btn-open" onclick="goToLobby()">MỞ PHÒNG THI ➔</button>
 </div>
 
-<!-- GIAI ĐOẠN 2: SẢNH CHỜ THI ĐẤU -->
 <div class="box hidden" id="phase2-screen">
     <button class="fs-btn" onclick="toggleFullScreen()">⛶ Toàn màn hình</button>
     <h1 id="lobby-title" style="margin-bottom: 4px;">TIÊU ĐỀ CUỘC THI</h1>
@@ -148,7 +139,7 @@
 
         <div class="lobby-right">
             <div class="player-list-header">
-                <span>Danh sách học viên</span>
+                <span>Danh sách học viên tham gia</span>
                 <span id="list-count" style="color:#f59e0b;">(0)</span>
             </div>
             <div class="player-list-scroll" id="player-chips"></div>
@@ -156,11 +147,11 @@
     </div>
 </div>
 
-<!-- MÀN HÌNH THI ĐẤU -->
 <div class="box hidden" id="quiz-screen">
     <button class="fs-btn" onclick="toggleFullScreen()">⛶ Toàn màn hình</button>
     <div class="live-status">
-        <span class="badge" id="q-counter">Câu 1/4</span>
+        <span class="badge" id="q-counter">Câu 1/10</span>
+        <span class="badge" style="background:#8b5cf6;" id="q-type-badge">Chọn 1 đáp án</span>
         <span class="badge" style="background:#0d9488;" id="submit-counter">Đã nộp: 0 / 0</span>
         <span class="badge" style="background:#ef4444;" id="time-left">30s</span>
     </div>
@@ -173,7 +164,6 @@
     </div>
 </div>
 
-<!-- BẢNG XẾP HẠNG LEADERBOARD -->
 <div class="box hidden" id="leaderboard-screen">
     <button class="fs-btn" onclick="toggleFullScreen()">⛶ Toàn màn hình</button>
     <h1>🏆 BẢNG XẾP HẠNG TOP THI ĐẤU 🏆</h1>
@@ -181,22 +171,21 @@
         <thead><tr><th>Hạng</th><th>Tên học viên</th><th>Điểm số</th></tr></thead>
         <tbody id="leaderboard-body"></tbody>
     </table>
+    
     <div style="margin-top: 20px; text-align: center;">
         <button class="btn-start" style="width: auto; padding: 10px 24px;" id="finish-btn" onclick="returnToQuiz()">TIẾP TỤC</button>
+    </div>
+
+    <div id="export-actions" class="hidden" style="margin-top: 25px; display: flex; justify-content: center; gap: 15px;">
+        <button class="btn-start" style="background: #0284c7; width: auto; padding: 10px 20px;" onclick="exportToCSV()">📥 Xuất file CSV</button>
     </div>
 </div>
 
 <script>
-// --- 1. FIREBASE AUTHENTICATION RÚT GỌN ---
 const firebaseConfig = {
     apiKey: "AIzaSyCkBRre5ajocg0EIuOchb6QknsdL6Qq9FA",
     authDomain: "theantoan-fea9e.firebaseapp.com",
-    databaseURL: "https://theantoan-fea9e-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "theantoan-fea9e",
-    storageBucket: "theantoan-fea9e.firebasestorage.app",
-    messagingSenderId: "161371447668",
-    appId: "1:161371447668:web:3f3c2f9c0b967ace91cc21",
-    measurementId: "G-G5R89QH44C"
+    projectId: "theantoan-fea9e"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -213,73 +202,27 @@ auth.onAuthStateChanged(user => {
         document.getElementById('user-name').innerText = user.displayName;
         document.getElementById('user-email').innerText = user.email;
         document.getElementById('user-avatar').src = user.photoURL;
-        loadSavedQuizzes(user.uid);
-    } else {
-        currentUid = null;
-        document.getElementById('auth-logged-out').classList.remove('hidden');
-        document.getElementById('btn-login').classList.remove('hidden');
-        document.getElementById('auth-logged-in').classList.add('hidden');
-        document.getElementById('btn-logout').classList.add('hidden');
     }
 });
 
-function loginGoogle() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(e => alert("Lỗi đăng nhập: " + e.message));
-}
+function loginGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
 function logoutGoogle() { auth.signOut(); }
 
-// --- 2. 4 BỘ ĐỀ TÍCH HỢP TỨC THÌ (KHÔNG CẦN CHỜ TẢI) ---
-const BUILTIN_QUIZZES = {
-    p1: [
-        { text: "Theo NĐ 62/2025/NĐ-CP, nhân viên kỹ thuật đối tác mới tuyển dụng, chưa qua sát hạch an toàn điện thì chỉ được bố trí công việc nào sau đây?", opts: ["Trèo cột kéo cáp hạ thế", "Cắt điện và lắp đặt tủ điện", "Tham gia phụ việc, không tiếp xúc với thiết bị hoặc dây dẫn mang điện (Bậc 1/5)", "Vận hành máy nạp ắc quy tại đài trạm"], ans: 2, explain: "Căn cứ Điều 28 NĐ 62/2025/NĐ-CP, người chưa sát hạch an toàn điện chỉ làm việc Bậc 1/5." },
-        { text: "Theo QCVN 33:2019/BTTTT, khi thi công, kiểm tra bên trong đường hầm cáp viễn thông, kích thước lối đi tối thiểu phải đảm bảo thông số nào?", opts: ["Cao tối thiểu 1,7 m; rộng tối thiểu 0,5 m", "Cao tối thiểu 1,9 m; rộng tối thiểu 0,7 m", "Cao tối thiểu 2,0 m; rộng tối thiểu 1,0 m", "Không quy định, tùy thuộc vào tuyến cáp"], ans: 1, explain: "Mục 2.4.3 QCVN 33:2019/BTTTT quy định lối đi tối thiểu 1,9m x 0,7m." },
-        { text: "Theo Thông tư 06/2020/TT-BLĐTBXH, kỹ thuật viên làm việc trên cao từ độ cao bao nhiêu mét trở lên bắt buộc phải có thẻ an toàn Nhóm 3?", opts: ["Từ 1,5 mét trở lên", "Từ 2,0 mét trở lên", "Từ 3,0 mét trở lên", "Từ 5,0 mét trở lên"], ans: 1, explain: "Làm việc cách mặt bằng từ 2 mét trở lên là công việc có yêu cầu nghiêm ngặt." },
-        { text: "Nếu người quản lý vi phạm quy định về an toàn lao động dẫn đến hậu quả làm chết người tại hiện trường, chế tài xử lý nghiêm khắc nhất là gì?", opts: ["Khiển trách nội bộ và cắt thưởng", "Phạt vi phạm hành chính doanh nghiệp", "Truy cứu trách nhiệm hình sự theo Điều 295 Bộ luật Hình sự", "Bồi thường tiền viện phí là hoàn tất nghĩa vụ"], ans: 2, explain: "Căn cứ Điều 295 Bộ luật Hình sự." }
-    ],
-    p2: [
-        { text: "Tại chi nhánh, phòng giao dịch FPT Telecom, tần suất tự kiểm tra ATVSLĐ toàn diện cấp cơ sở tối thiểu là bao lâu?", opts: ["01 lần trong 03 tháng", "01 lần trong 06 tháng", "Ít nhất 01 lần trong 01 năm", "02 năm một lần khi có kiểm toán"], ans: 2, explain: "Cơ sở thông thường tự kiểm tra toàn diện ít nhất 1 lần/năm." },
-        { text: "Khi xảy ra tai nạn lao động chết người hoặc tai nạn nặng trên địa bàn theo NĐ 129/2025/NĐ-CP, đơn vị phải gửi báo cáo nhanh đến cơ quan nào đầu tiên?", opts: ["Chỉ báo cáo nội bộ lên Ban Giám đốc", "Công an cấp xã và UBND cấp xã nơi xảy ra tai nạn", "Bộ Lao động - Thương binh và Xã hội", "Đợi điều tra xong nội bộ mới thông báo"], ans: 1, explain: "Điều 42 NĐ 129/2025/NĐ-CP phân cấp cấp xã là đầu mối tiếp nhận ban đầu." },
-        { text: "Vụ tai nạn lao động làm bị thương nặng từ 02 người trở lên hoặc có người chết thuộc thẩm quyền thành lập đoàn điều tra của cấp nào?", opts: ["Đoàn điều tra cấp cơ sở (Do Giám đốc thành lập)", "Đoàn điều tra cấp tỉnh (Do Giám đốc Sở Nội vụ thành lập)", "Đội ngũ an toàn vệ sinh viên cơ sở tự lập biên bản", "BCH Công đoàn cơ sở chủ trì điều tra"], ans: 1, explain: "Cấp Tỉnh thành lập đoàn điều tra." }
-    ],
-    p3: [
-        { text: "Nguyên nhân trực tiếp phổ biến nhất gây ra sự cố phóng hồ quang điện khi bảo trì tủ điện hạ thế/phòng máy là gì?", opts: ["Thao tác dụng cụ không cách điện gây ngắn mạch pha-pha hoặc pha-đất", "Nhiệt độ phòng máy quá cao", "Cáp viễn thông bị suy hao tín hiệu", "Hệ thống đèn chiếu sáng không đủ Lux"], ans: 0, explain: "Dụng cụ không cách điện gây chạm chập ngắn mạch tạo hồ quang." },
-        { text: "Theo Kim tự tháp tỷ lệ tai nạn Heinrich, đằng sau 1 vụ tai nạn chết người/chấn thương nặng thì có bao nhiêu hành vi và điều kiện không an toàn tiềm ẩn?", opts: ["300", "3.000", "30.000", "300.000"], ans: 2, explain: "Tỷ lệ chuẩn Heinrich là 1 tử vong : 30 nặng : 300 nhẹ : 3.000 suýt xảy ra : 30.000 vi phạm." },
-        { text: "Hành vi nào tại Phòng giao dịch hoặc kho phụ trợ chi nhánh tiềm ẩn nguy cơ phát sinh hỏa hoạn lớn nhất?", opts: ["Mở máy tính làm việc liên tục 8 tiếng", "Cắm nhiều thiết bị tải lớn chung một ổ cắm nối dài và sạc thiết bị qua đêm sát bìa carton", "Mở điều hòa ở mức 26 độ C", "Sử dụng máy in tài liệu trong phòng kín"], ans: 1, explain: "Quá tải ổ cắm điện kèm vật liệu bắt cháy dễ bén là nguyên nhân hàng đầu." },
-        { text: "Theo QCVN 24:2016/BYT, mức ồn tối đa cho phép tại nơi làm việc trong ca lao động 8 giờ liên tục là bao nhiêu dB?", opts: ["75 dB", "80 dB", "85 dB", "90 dB"], ans: 2, explain: "Quy chuẩn vệ sinh lao động giới hạn 8 giờ là 85 dBA." }
-    ],
-    p4: [
-        { text: "Theo Tháp 5 cấp độ kiểm soát rủi ro, biện pháp nào mang lại hiệu quả an toàn cao nhất và bền vững nhất?", opts: ["Trang bị đồ bảo hộ cá nhân (PPE) cao cấp nhất", "Huấn luyện quy trình an toàn (Biện pháp hành chính)", "Lắp đặt rào chắn, biển báo (Kiểm soát kỹ thuật)", "Loại bỏ hoàn toàn mối nguy từ gốc (Elimination)"], ans: 3, explain: "Loại bỏ mối nguy khỏi nơi làm việc luôn là tầng bảo vệ cao nhất." },
-        { text: "Cấp độ Văn hóa An toàn Tương tác/Đồng đội (Interdependent) theo mô hình Bradley thể hiện qua hành động nào dưới đây?", opts: ["Chỉ tuân thủ quy định khi có mặt cán bộ giám sát kiểm tra", "Làm an toàn để bản thân không bị trừ lương, phạt tiền", "Chủ động bảo vệ chính mình và nhắc nhở, ngăn chặn đồng đội khi thấy nguy cơ mất an toàn", "Xem an toàn là trách nhiệm riêng của bộ phận chuyên trách HSE"], ans: 2, explain: "Văn hóa tương tác thể hiện ở việc các đồng đội chủ động hỗ trợ, bảo vệ lẫn nhau." },
-        { text: "Khi thấy thợ kéo cáp đối tác TIN làm việc trên cột điện nhưng không thắt đai an toàn, hành động chuẩn mực đầu tiên của Quản lý đối tác là gì?", opts: ["Chờ hết ca làm việc rồi về văn phòng lập biên bản phạt tiền", "Lập tức yêu cầu tạm dừng thi công, đưa công nhân xuống vị trí an toàn và chấn chỉnh bảo hộ", "Bỏ qua vì đây là nhân sự thuộc công ty thầu ngoài", "Chụp ảnh gửi lên nhóm chat chung"], ans: 1, explain: "Ngăn chặn ngay hành vi mất an toàn là trách nhiệm bảo toàn tính mạng số 1." }
-    ]
-};
-
-let activeQuestions = BUILTIN_QUIZZES['p1'];
+let activeQuestions = [];
 const ROOM = "FPT_" + Math.random().toString(36).substring(2, 7).toUpperCase();
 document.getElementById('room-code').innerText = ROOM;
 
 function onQuizPick() {
     const val = document.getElementById('quiz-picker').value;
     const statusEl = document.getElementById('quiz-status');
-    
     if (val === 'upload') {
-        document.getElementById('upload-box').classList.remove('hidden');
-        // Đặt lại input file về rỗng để có thể chọn lại cùng 1 file nếu cần
         document.getElementById('md-file').value = "";
         statusEl.innerText = "⏳ Chờ tải lên file câu hỏi mới...";
-        statusEl.style.color = "#f59e0b"; // Màu vàng cam biểu thị trạng thái chờ
-    } else {
-        document.getElementById('upload-box').classList.add('hidden');
-        if (BUILTIN_QUIZZES[val]) {
-            activeQuestions = BUILTIN_QUIZZES[val];
-            statusEl.innerText = `✓ Đã nạp ${activeQuestions.length} câu hỏi sẵn sàng.`;
-            statusEl.style.color = "#10b981"; // Màu xanh lá hoàn tất
-        }
+        statusEl.style.color = "#f59e0b";
     }
 }
 
-// Bóc tách Markdown (<10ms)
+// BÓC TÁCH FILE MARKDOWN LINH HOẠT 3 DẠNG CÂU HỎI
 function parseMarkdownFast(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -297,55 +240,52 @@ function parseMarkdownFast(event) {
             if (line.startsWith('# ')) {
                 document.getElementById('quiz-title-input').value = line.replace('# ', '').trim();
             } else if (/^Câu\s+\d+[\.:]/i.test(line)) {
-                if (curQ && curQ.opts.length >= 2) parsed.push(curQ);
-                curQ = { text: line.replace(/^Câu\s+\d+[\.:]\s*/i, ''), opts: [], ans: 0, explain: '' };
+                if (curQ) parsed.push(curQ);
+                curQ = { 
+                    text: line.replace(/^Câu\s+\d+[\.:]\s*/i, ''), 
+                    opts: [], 
+                    correctIndices: [], 
+                    type: 'single', // Mặc định
+                    tfAnswer: null, 
+                    explain: '' 
+                };
             } else if (/^(\*?[A-D])\.\s*(.+)/.test(line) && curQ) {
                 const match = line.match(/^(\*?[A-D])\.\s*(.+)/);
-                if (match[1].startsWith('*')) curQ.ans = curQ.opts.length;
+                const isCorrect = match[1].startsWith('*');
+                const optIndex = curQ.opts.length;
                 curQ.opts.push(match[2]);
+                if (isCorrect) curQ.correctIndices.push(optIndex);
+            } else if (/^Đáp án:\s*(DUNG|ĐÚNG|SAI)/i.test(line) && curQ) {
+                curQ.type = 'tf';
+                const val = line.replace(/^Đáp án:\s*/i, '').toUpperCase();
+                curQ.tfAnswer = (val.includes('DUNG') || val.includes('ĐÚNG')) ? 'TRUE' : 'FALSE';
             } else if (/^Lời giải:/i.test(line) && curQ) {
                 curQ.explain = line.replace(/^Lời giải:\s*/i, '');
             }
         });
-        if (curQ && curQ.opts.length >= 2) parsed.push(curQ);
+        if (curQ) parsed.push(curQ);
+
+        // Phân loại dạng: multi hay single
+        parsed.forEach(q => {
+            if (q.type !== 'tf') {
+                if (q.correctIndices.length > 1) q.type = 'multi';
+                else q.type = 'single';
+            }
+        });
 
         if (parsed.length > 0) {
             activeQuestions = parsed;
-            // Cập nhật thông báo thành công
-            statusEl.innerText = `✓ Đã nạp thành công ${parsed.length} câu hỏi từ file "${file.name}"!`;
+            statusEl.innerText = `✓ Đã nạp thành công ${parsed.length} câu hỏi từ "${file.name}"!`;
             statusEl.style.color = "#10b981";
-
-            if (currentUid) {
-                db.collection("users").doc(currentUid).collection("quizzes").add({
-                    title: document.getElementById('quiz-title-input').value,
-                    questions: parsed
-                });
-            }
         } else {
-            statusEl.innerText = "❌ Lỗi cấu trúc: Không tìm thấy câu hỏi hợp lệ trong file!";
+            statusEl.innerText = "❌ Không tìm thấy câu hỏi hợp lệ theo mẫu MD!";
             statusEl.style.color = "#ef4444";
         }
     };
     reader.readAsText(file, "UTF-8");
 }
 
-function loadSavedQuizzes(uid) {
-    db.collection("users").doc(uid).collection("quizzes").get().then(snap => {
-        if (!snap.empty) {
-            const picker = document.getElementById('quiz-picker');
-            snap.forEach(doc => {
-                const d = doc.data();
-                const opt = document.createElement('option');
-                opt.value = "custom_" + doc.id;
-                opt.innerText = "[Riêng] " + d.title + ` (${d.questions.length} câu)`;
-                BUILTIN_QUIZZES[opt.value] = d.questions;
-                picker.insertBefore(opt, picker.lastElementChild);
-            });
-        }
-    });
-}
-
-// --- 3. ĐIỀU KHIỂN SẢNH CHỜ & MQTT ---
+// --- MQTT NETWORKING ---
 let currentQ = 0;
 let players = {};
 let timer = null;
@@ -355,18 +295,18 @@ let client = null;
 const topicBase = "fpt_hse_quiz/" + ROOM;
 
 function goToLobby() {
+    if (activeQuestions.length === 0) {
+        alert("Vui lòng tải lên file đề thi trước!");
+        return;
+    }
     document.getElementById('lobby-title').innerText = document.getElementById('quiz-title-input').value;
     document.getElementById('room-id-display').innerText = ROOM;
     document.getElementById('phase1-screen').classList.add('hidden');
     document.getElementById('phase2-screen').classList.remove('hidden');
 
-    // Sinh mã QR dẫn học viên vào play.html
     const studentURL = window.location.href.replace('host.html', 'play.html') + "?room=" + ROOM;
-    const qrContainer = document.getElementById("qrcode");
-    qrContainer.innerHTML = '';
-    new QRCode(qrContainer, { text: studentURL, width: 250, height: 250 });
+    new QRCode(document.getElementById("qrcode"), { text: studentURL, width: 250, height: 250 });
 
-    // Kích hoạt Broker MQTT công cộng (WSS)
     client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
     client.on('connect', () => {
         client.subscribe(topicBase + "/join");
@@ -377,7 +317,7 @@ function goToLobby() {
         const data = JSON.parse(message.toString());
         if (topic.endsWith('/join')) {
             if (!players[data.id]) {
-                players[data.id] = { name: data.name, score: 0, lastAns: -1 };
+                players[data.id] = { name: data.name, score: 0, lastAns: null, correctCount: 0, answers: [] };
                 const count = Object.keys(players).length;
                 document.getElementById('player-count').innerText = count;
                 document.getElementById('list-count').innerText = `(${count})`;
@@ -385,19 +325,37 @@ function goToLobby() {
                 const chip = document.createElement('div');
                 chip.className = 'player-chip';
                 chip.innerText = data.name;
-                document.getElementById('player-chips').appendChild(chip);
+                document.getElementById('player-chips').prepend(chip);
             }
         } else if (topic.endsWith('/answer')) {
-            if (players[data.id] && players[data.id].lastAns === -1) {
+            if (players[data.id] && players[data.id].lastAns === null) {
                 players[data.id].lastAns = data.opt;
                 answeredCount++;
                 const total = Object.keys(players).length;
                 document.getElementById('submit-counter').innerText = `Đã nộp: ${answeredCount} / ${total}`;
 
-                if (data.opt === activeQuestions[currentQ].ans) {
+                // Chấm điểm theo từng dạng
+                const q = activeQuestions[currentQ];
+                let isRight = false;
+                if (q.type === 'single') {
+                    isRight = (data.opt === q.correctIndices[0]);
+                } else if (q.type === 'tf') {
+                    isRight = (data.opt === q.tfAnswer);
+                } else if (q.type === 'multi') {
+                    // So sánh 2 mảng lựa chọn (dạng chuỗi hoặc mảng đã sắp xếp)
+                    const userArr = Array.isArray(data.opt) ? data.opt.sort().join(',') : String(data.opt);
+                    const correctArr = q.correctIndices.slice().sort().join(',');
+                    isRight = (userArr === correctArr);
+                }
+
+                if (isRight) {
                     const timePerQ = parseInt(document.getElementById('time-picker').value);
                     players[data.id].score += Math.round(500 + (data.time / timePerQ) * 500);
+                    players[data.id].correctCount++;
                 }
+
+                players[data.id].answers.push({ q: currentQ + 1, ok: isRight, chosen: data.opt });
+
                 if (answeredCount >= total && total > 0) {
                     clearInterval(timer);
                     showResult();
@@ -412,7 +370,6 @@ function toggleFullScreen() {
     else document.exitFullscreen().catch(() => {});
 }
 
-// --- 4. TIẾN HÀNH THI ĐẤU ---
 function startQuiz() {
     document.getElementById('phase2-screen').classList.add('hidden');
     document.getElementById('quiz-screen').classList.remove('hidden');
@@ -431,16 +388,31 @@ function loadQuestion(idx) {
     document.getElementById('next-btn').classList.add('hidden');
     document.getElementById('submit-counter').innerText = `Đã nộp: 0 / ${Object.keys(players).length}`;
 
-    Object.keys(players).forEach(id => { players[id].lastAns = -1; });
+    // Hiển thị loại câu hỏi
+    const badgeType = document.getElementById('q-type-badge');
+    if (q.type === 'single') { badgeType.innerText = "Chọn 1 đáp án"; badgeType.style.background = "#8b5cf6"; }
+    else if (q.type === 'multi') { badgeType.innerText = "Chọn NHIỀU đáp án"; badgeType.style.background = "#ea580c"; }
+    else if (q.type === 'tf') { badgeType.innerText = "Phán đoán ĐÚNG / SAI"; badgeType.style.background = "#059669"; }
+
+    Object.keys(players).forEach(id => { players[id].lastAns = null; });
 
     let optHtml = '';
-    q.opts.forEach((opt, i) => {
-        optHtml += `<div class="opt-card opt-${i}" id="opt-box-${i}">${['▲','◆','●','■'][i]} ${opt}</div>`;
-    });
+    if (q.type === 'tf') {
+        optHtml = `
+            <div class="opt-card opt-3" id="opt-box-TRUE" style="font-size:24px; text-align:center;">✔ ĐÚNG</div>
+            <div class="opt-card opt-0" id="opt-box-FALSE" style="font-size:24px; text-align:center;">✖ SAI</div>
+        `;
+    } else {
+        q.opts.forEach((opt, i) => {
+            optHtml += `<div class="opt-card opt-${i}" id="opt-box-${i}">${['▲','◆','●','■'][i]} ${opt}</div>`;
+        });
+    }
     document.getElementById('options-container').innerHTML = optHtml;
 
+    // Phát lệnh cho điện thoại học viên
     client.publish(topicBase + "/question", JSON.stringify({
         qIndex: idx,
+        type: q.type,
         text: q.text,
         opts: q.opts,
         time: totalTime
@@ -469,11 +441,25 @@ function loadQuestion(idx) {
 
 function showResult() {
     const q = activeQuestions[currentQ];
-    const box = document.getElementById(`opt-box-${q.ans}`);
-    if (box) box.classList.add('correct-mark');
+    if (q.type === 'tf') {
+        const target = document.getElementById(`opt-box-${q.tfAnswer}`);
+        if (target) target.classList.add('correct-mark');
+    } else {
+        q.correctIndices.forEach(idx => {
+            const box = document.getElementById(`opt-box-${idx}`);
+            if (box) box.classList.add('correct-mark');
+        });
+    }
+
     if (q.explain) document.getElementById('explain-box').innerText = "💡 Lời giải: " + q.explain;
 
-    client.publish(topicBase + "/result", JSON.stringify({ correct: q.ans }));
+    client.publish(topicBase + "/result", JSON.stringify({
+        type: q.type,
+        correctSingle: q.type === 'single' ? q.correctIndices[0] : null,
+        correctMulti: q.type === 'multi' ? q.correctIndices : null,
+        correctTF: q.type === 'tf' ? q.tfAnswer : null
+    }));
+
     document.getElementById('next-btn').classList.remove('hidden');
 }
 
@@ -488,6 +474,7 @@ function nextQuestion() {
         document.querySelector('#leaderboard-screen h1').innerText = "🏆 CHUNG CUỘC: VINH DANH QUÁN QUÂN 🏆";
         renderRanking();
         document.getElementById('finish-btn').classList.add('hidden');
+        document.getElementById('export-actions').classList.remove('hidden');
     }
 }
 
@@ -504,6 +491,21 @@ function returnToQuiz() {
     document.getElementById('leaderboard-screen').classList.add('hidden');
     document.getElementById('quiz-screen').classList.remove('hidden');
     loadQuestion(currentQ + 1);
+}
+
+function exportToCSV() {
+    let csv = "\uFEFF";
+    csv += "Họ và tên,Điểm số,Số câu đúng,Tổng số câu,Tỉ lệ đúng (%)\n";
+    Object.values(players).forEach(p => {
+        const percent = Math.round((p.correctCount / activeQuestions.length) * 100);
+        csv += `"${p.name}",${p.score},${p.correctCount},${activeQuestions.length},${percent}%\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Ket_Qua_${ROOM}.csv`;
+    a.click();
 }
 </script>
 </body>
