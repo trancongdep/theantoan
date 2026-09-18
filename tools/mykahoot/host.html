@@ -258,6 +258,11 @@ function parseMarkdownFast(event, existingDocId = null) {
     statusEl.innerText = "⚡ Đang xử lý dữ liệu...";
     statusEl.style.color = "#38bdf8";
 
+    // Kiểm tra đăng nhập trước khi tải
+    if (!currentUid) {
+        alert("⚠️ Bạn CHƯA ĐĂNG NHẬP GMAIL! Vui lòng bấm 'Đăng nhập Gmail' ở góc trên màn hình trước để bộ đề được lưu vĩnh viễn vào tài khoản.");
+    }
+
     const reader = new FileReader();
     reader.onload = function(e) {
         const lines = e.target.result.split('\n').map(l => l.trim()).filter(l => l.length > 0);
@@ -295,7 +300,6 @@ function parseMarkdownFast(event, existingDocId = null) {
         });
         if (curQ) parsed.push(curQ);
 
-        // Chuẩn hóa loại câu hỏi
         parsed.forEach(q => {
             if (q.type !== 'tf') {
                 q.type = (q.correctIndices.length > 1) ? 'multi' : 'single';
@@ -307,24 +311,23 @@ function parseMarkdownFast(event, existingDocId = null) {
             statusEl.innerText = `✓ Đã nạp ${parsed.length} câu hỏi thành công!`;
             statusEl.style.color = "#10b981";
 
-            // Nếu đã đăng nhập thì tự động lưu hoặc cập nhật lên Firestore
             if (currentUid) {
                 const quizData = {
-                    title: document.getElementById('quiz-title-input').value,
+                    title: document.getElementById('quiz-title-input').value || titleFromFile,
                     questions: parsed,
                     updatedAt: new Date().toISOString()
                 };
 
-                if (existingDocId) {
-                    db.collection("users").doc(currentUid).collection("quizzes").doc(existingDocId).set(quizData).then(() => {
-                        alert(`✓ Đã cập nhật thành công bộ đề "${quizData.title}"!`);
-                        loadSavedQuizzes(currentUid);
-                    });
-                } else {
-                    db.collection("users").doc(currentUid).collection("quizzes").add(quizData).then(() => {
-                        loadSavedQuizzes(currentUid);
-                    });
-                }
+                const quizCol = db.collection("users").doc(currentUid).collection("quizzes");
+                const savePromise = existingDocId ? quizCol.doc(existingDocId).set(quizData) : quizCol.add(quizData);
+
+                savePromise.then(() => {
+                    statusEl.innerText = `✓ Đã lưu thành công "${quizData.title}" (${parsed.length} câu) lên tài khoản!`;
+                    loadSavedQuizzes(currentUid);
+                }).catch(err => {
+                    console.error("Lỗi Firestore:", err);
+                    alert("Lỗi khi lưu lên Firebase: " + err.message + "\nVui lòng kiểm tra tab Rules trong Firestore Database.");
+                });
             }
         } else {
             statusEl.innerText = "❌ Không tìm thấy câu hỏi hợp lệ theo mẫu MD!";
