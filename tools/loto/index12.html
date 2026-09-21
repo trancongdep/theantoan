@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LOTO Console v1.2 - Thế An Toàn</title>
+    <title>LOTO Console v1.2 - Host Screen</title>
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -485,7 +485,7 @@
             initPracticeRoom();
         });
 
-        // TẠO PHÒNG VÀ LẮNG NGHE HỌC VIÊN
+        // TẠO PHÒNG VÀ LẮNG NGHE LỆNH TỪ REMOTE HỌC VIÊN
         function initPracticeRoom() {
             currentRoomPin = Math.floor(1000 + Math.random() * 9000).toString();
             const pinDisp = document.getElementById("room-pin-display");
@@ -501,11 +501,33 @@
             roomRef.child("controller_input").on("value", (snap) => {
                 const cmd = snap.val();
                 if (!cmd) return;
-                if (cmd.tool) selectTool(cmd.tool);
-                if (cmd.target === "CB1") handleTapCB(1);
-                if (cmd.target === "CB2") handleTapCB(2);
-                if (cmd.target === "MOTOR_M2") handleTapMachine();
-                showToast(`🎮 [${cmd.student_name}] thao tác: ${cmd.tool} -> ${cmd.target}`);
+
+                // Xử lý lệnh GẠT CB trực tiếp
+                if (cmd.action_type === 'TOGGLE_CB') {
+                    clearTool();
+                    if (cmd.target === "CB1") handleTapCB(1);
+                    if (cmd.target === "CB2") handleTapCB(2);
+                    showToast(`⚡ [${cmd.student_name}] vừa GẠT CẦN ${cmd.target}`);
+                    logAction(`[REMOTE] ${cmd.student_name}: Gạt đóng/cắt ${cmd.target}`);
+                    return;
+                }
+
+                // Xử lý lệnh STOP Quạt trực tiếp
+                if (cmd.action_type === 'STOP_MACHINE') {
+                    toggleMachine(false);
+                    showToast(`🛑 [${cmd.student_name}] vừa bấm DỪNG (STOP) Quạt`);
+                    logAction(`[REMOTE] ${cmd.student_name}: Bấm STOP quạt`);
+                    return;
+                }
+
+                // Xử lý lệnh ÁP DỤNG TOOL LOTO / TIẾP ĐỊA
+                if (cmd.tool) {
+                    selectTool(cmd.tool);
+                    if (cmd.target === "CB1") handleTapCB(1);
+                    if (cmd.target === "CB2") handleTapCB(2);
+                    if (cmd.target === "MOTOR_M2") handleTapMachine();
+                    showToast(`🎮 [${cmd.student_name}] áp dụng ${cmd.tool} lên ${cmd.target}`);
+                }
             });
         }
 
