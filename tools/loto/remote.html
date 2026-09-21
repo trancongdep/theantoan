@@ -2,124 +2,175 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>LOTO Remote Controller</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LOTO Remote - Thế An Toàn</title>
+    
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <style>
-        body { margin: 0; background: #111; color: white; font-family: sans-serif; text-align: center; }
-        .controller-screen { display: none; padding: 15px; }
-        .controller-screen.active { display: block; }
-        .grid-tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
-        .btn-tool { background: #222; border: 2px solid #444; border-radius: 8px; color: #fff; padding: 15px 5px; font-size: 0.8rem; }
-        .btn-tool.selected { border-color: #00a8ff; background: rgba(0,168,255,0.2); }
-        .btn-execute { background: #e84118; color: white; width: 100%; padding: 20px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 50px; margin-top: 20px; box-shadow: 0 0 15px #e84118; }
-        .btn-execute:active { transform: scale(0.95); background: #c23616; }
+        :root {
+            --primary: #00a8ff;
+            --danger: #e84118;
+            --success: #4cd137;
+            --warning: #f1c40f;
+            --dark: #1e272e;
+        }
+
+        body {
+            margin: 0; padding: 0; background-color: var(--dark);
+            color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            text-align: center; user-select: none;
+        }
+
+        .screen { display: none; padding: 20px; box-sizing: border-box; min-height: 100vh; flex-direction: column; justify-content: center; align-items: center; }
+        .screen.active { display: flex; }
+
+        input {
+            width: 85%; max-width: 320px; padding: 14px; margin-bottom: 15px;
+            border-radius: 8px; border: 1px solid #444; background: #2f3640; color: #fff;
+            font-size: 1.1rem; text-align: center; box-sizing: border-box;
+        }
+
+        .btn-main {
+            width: 85%; max-width: 320px; padding: 14px; border: none; border-radius: 8px;
+            background: var(--primary); color: #fff; font-size: 1.1rem; font-weight: bold; cursor: pointer;
+        }
+
+        .grid-tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin: 15px 0; }
+        .tool-btn {
+            background: #2f3640; border: 2px solid #444; border-radius: 8px; padding: 12px 4px;
+            color: #fff; font-size: 0.8rem; font-weight: bold; cursor: pointer;
+        }
+        .tool-btn.selected {
+            border-color: var(--primary); background: rgba(0, 168, 255, 0.25);
+        }
+
+        .select-target {
+            width: 100%; padding: 14px; background: #2f3640; color: #fff; border: 1px solid #555;
+            border-radius: 8px; font-size: 1rem; font-weight: bold; margin-bottom: 15px;
+        }
+
+        .btn-fire {
+            width: 100%; padding: 18px; border: none; border-radius: 50px;
+            background: var(--danger); color: white; font-size: 1.2rem; font-weight: bold; cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <!-- MÀN HÌNH ĐĂNG NHẬP PHÒNG -->
-    <div id="view-join" class="controller-screen active" style="padding-top: 50px;">
-        <h2>THẾ AN TOÀN REMOTE</h2>
-        <input type="number" id="room-pin" placeholder="Nhập mã PIN phòng (VD: 8899)" style="padding: 12px; font-size: 1.1rem; width: 80%; border-radius: 8px; text-align: center;"><br><br>
-        <input type="text" id="student-name" placeholder="Họ và Tên của bạn" style="padding: 12px; font-size: 1.1rem; width: 80%; border-radius: 8px; text-align: center;"><br><br>
-        <button onclick="joinRoom()" style="padding: 12px 30px; font-size: 1rem; background: #00a8ff; border: none; border-radius: 8px; color: white; font-weight: bold;">VÀO PHÒNG</button>
+    <!-- MÀN HÌNH 1: NHẬP PIN & TÊN -->
+    <div id="screen-join" class="screen active">
+        <h2 style="color: var(--primary); margin-top: 0;">LOTO REMOTE</h2>
+        <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 25px;">Nhập thông tin hiển thị trên màn hình Giảng viên</p>
+        <input type="number" id="input-pin" placeholder="Nhập Mã Phòng (4 số)">
+        <input type="text" id="input-name" placeholder="Họ và Tên học viên">
+        <button class="btn-main" onclick="joinPracticeRoom()">VÀO PHÒNG HỌC</button>
     </div>
 
-    <!-- MÀN HÌNH CHỜ LƯỢT -->
-    <div id="view-wait" class="controller-screen" style="padding-top: 80px;">
-        <div style="font-size: 3rem;">⏳</div>
-        <h3>BẠN ĐANG TRONG PHÒNG CHỜ</h3>
-        <p style="color: #aaa;">Hãy chú ý màn hình máy chiếu.<br>Giảng viên sẽ chỉ định bạn thực hiện thao tác.</p>
+    <!-- MÀN HÌNH 2: PHÒNG CHỜ -->
+    <div id="screen-waiting" class="screen">
+        <div style="font-size: 4rem;">⏳</div>
+        <h3 style="color: var(--warning); margin-bottom: 5px;">BẠN ĐANG Ở PHÒNG CHỜ</h3>
+        <p style="font-size: 0.95rem; color: #ccc;" id="waiting-student-name">Học viên: ...</p>
+        <p style="font-size: 0.85rem; color: #888; max-width: 280px;">
+            Quan sát màn hình Giảng viên. Khi được chỉ định, điện thoại của bạn sẽ mở bộ điều khiển.
+        </p>
     </div>
 
-    <!-- MÀN HÌNH REMOTE ĐIỀU KHIỂN (KHI ĐƯỢC CHỈ ĐỊNH) -->
-    <div id="view-remote" class="controller-screen">
-        <div style="font-size: 0.8rem; color: #4cd137; margin-bottom: 5px;">● ĐANG TRAO QUYỀN THAO TÁC</div>
-        <h3 id="current-task-text" style="margin: 0 0 10px 0; color: #f1c40f;">BƯỚC: CẮT ĐIỆN VÀ KHÓA LOTO</h3>
-        
-        <p style="font-size: 0.8rem; text-align: left; margin: 5px 0;">1. Chọn dụng cụ:</p>
-        <div class="grid-tools">
-            <button class="btn-tool" onclick="pickTool('lock')">🔒<br>Ổ Khóa</button>
-            <button class="btn-tool" onclick="pickTool('tag')">🏷️<br>Thẻ Báo</button>
-            <button class="btn-tool" onclick="pickTool('hasp')">🔗<br>Hasp</button>
-            <button class="btn-tool" onclick="pickTool('meter')">⚡<br>VOM</button>
-            <button class="btn-tool" onclick="pickTool('earth_earth')">⏚<br>Đất</button>
-            <button class="btn-tool" onclick="pickTool('earth_phase')">⚡<br>Pha</button>
+    <!-- MÀN HÌNH 3: BỘ ĐIỀU KHIỂN REMOTE -->
+    <div id="screen-remote" class="screen" style="justify-content: flex-start;">
+        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 8px;">
+            <span style="color: var(--success); font-weight: bold; font-size: 0.85rem;">● ĐÃ CẤP QUYỀN THỰC HÀNH</span>
+            <span id="remote-user-name" style="font-size: 0.85rem; color: #ccc;">...</span>
         </div>
 
-        <p style="font-size: 0.8rem; text-align: left; margin: 5px 0;">2. Chọn thiết bị thao tác:</p>
-        <select id="target-device" style="width: 100%; padding: 12px; background: #222; color: #fff; border: 1px solid #555; border-radius: 8px;">
-            <option value="CB1">Máy cắt / CB-1</option>
-            <option value="CB2">Máy cắt / CB-2 (Mục tiêu)</option>
-            <option value="MOTOR_M2">Động cơ / Quạt M2</option>
+        <p style="font-size: 0.85rem; text-align: left; width: 100%; margin: 12px 0 4px 0; color: #aaa;">1. Chọn Dụng cụ / Thao tác:</p>
+        <div class="grid-tools">
+            <button class="tool-btn" onclick="selectToolRemote('lock')">🔒<br>Ổ Khóa</button>
+            <button class="tool-btn" onclick="selectToolRemote('tag')">🏷️<br>Thẻ Báo</button>
+            <button class="tool-btn" onclick="selectToolRemote('hasp')">🔗<br>Hasp</button>
+            <button class="tool-btn" onclick="selectToolRemote('meter')">⚡<br>Đo VOM</button>
+            <button class="tool-btn" onclick="selectToolRemote('earth_earth')">⏚<br>Kẹp Đất</button>
+            <button class="tool-btn" onclick="selectToolRemote('earth_phase')">⚡<br>Kẹp Pha</button>
+            <button class="tool-btn" onclick="selectToolRemote('barrier')">🚧<br>Rào Chắn</button>
+            <button class="tool-btn" onclick="selectToolRemote('sign_prohibit')">🚫<br>Biển Cấm</button>
+            <button class="tool-btn" onclick="selectToolRemote('speaker')">📢<br>Loa Báo</button>
+        </div>
+
+        <p style="font-size: 0.85rem; text-align: left; width: 100%; margin: 8px 0 4px 0; color: #aaa;">2. Chọn Thiết bị tác động:</p>
+        <select id="target-select" class="select-target">
+            <option value="CB2">⚡ CB-2 (Mục tiêu cô lập)</option>
+            <option value="CB1">⚡ CB-1 (Nguồn dự phòng)</option>
+            <option value="MOTOR_M2">🏭 Quạt số 2 (Động cơ tải)</option>
         </select>
 
-        <button class="btn-execute" onclick="sendActionToHost()">XÁC NHẬN THỰC HIỆN</button>
+        <button class="btn-fire" onclick="sendAction()">THỰC HIỆN THAO TÁC</button>
     </div>
 
     <script>
-        // CẤU HÌNH FIREBASE PROJECT THEANTOAN
         const firebaseConfig = {
             apiKey: "AIzaSyCkBRre5ajocg0EIuOchb6QknsdL6Qq9FA",
+            authDomain: "theantoan-fea9e.firebaseapp.com",
             databaseURL: "https://theantoan-fea9e-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "theantoan-fea9e"
+            projectId: "theantoan-fea9e",
+            storageBucket: "theantoan-fea9e.firebasestorage.app",
+            messagingSenderId: "161371447668",
+            appId: "1:161371447668:web:3f3c2f9c0b967ace91cc21"
         };
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let roomPin = "", myStudentId = "", selectedTool = "";
+        let studentId = "";
+        let studentName = "";
+        let roomPin = "";
+        let chosenTool = "";
 
-        function joinRoom() {
-            roomPin = document.getElementById('room-pin').value.trim();
-            const name = document.getElementById('student-name').value.trim();
-            if(!roomPin || !name) return alert("Vui lòng nhập đủ PIN và Tên!");
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
 
-            myStudentId = "HV_" + Date.now().toString().slice(-4);
-            
-            // Đăng ký vào phòng
-            db.ref(`practice_rooms/ROOM_${roomPin}/students/${myStudentId}`).set({
-                name: name,
-                online: true
-            });
+        function joinPracticeRoom() {
+            roomPin = document.getElementById('input-pin').value.trim();
+            studentName = document.getElementById('input-name').value.trim();
+            if (!roomPin || !studentName) return alert("Vui lòng nhập đủ thông tin!");
 
-            // Lắng nghe lệnh từ Giảng viên
-            db.ref(`practice_rooms/ROOM_${roomPin}/config`).on('value', (snap) => {
-                const cfg = snap.val();
-                if(cfg && cfg.active_student_id === myStudentId) {
-                    showView('view-remote');
-                    if(navigator.vibrate) navigator.vibrate(200);
-                } else {
-                    showView('view-wait');
-                }
+            studentId = "STU_" + Date.now().toString().slice(-4);
+            const roomRef = db.ref(`practice_rooms/ROOM_${roomPin}`);
+
+            roomRef.once('value', (snap) => {
+                if (!snap.exists()) return alert("Mã phòng không tồn tại!");
+
+                roomRef.child(`students/${studentId}`).set({ id: studentId, name: studentName });
+                document.getElementById('waiting-student-name').innerText = `Học viên: ${studentName}`;
+                document.getElementById('remote-user-name').innerText = studentName;
+                showScreen('screen-waiting');
+
+                roomRef.child('active_student_id').on('value', (s) => {
+                    if (s.val() === studentId) {
+                        showScreen('screen-remote');
+                        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                    } else {
+                        showScreen('screen-waiting');
+                    }
+                });
             });
         }
 
-        function pickTool(tool) {
-            selectedTool = tool;
-            document.querySelectorAll('.btn-tool').forEach(b => b.classList.remove('selected'));
+        function selectToolRemote(tool) {
+            chosenTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('selected'));
             event.currentTarget.classList.add('selected');
         }
 
-        function sendActionToHost() {
-            if(!selectedTool) return alert("Vui lòng chọn 1 dụng cụ!");
-            const target = document.getElementById('target-device').value;
-
-            // Gửi dữ liệu điều khiển lên phòng của Giảng viên
+        function sendAction() {
+            if (!chosenTool) return alert("Vui lòng chọn 1 dụng cụ!");
+            const target = document.getElementById('target-select').value;
             db.ref(`practice_rooms/ROOM_${roomPin}/controller_input`).set({
-                student_id: myStudentId,
-                tool: selectedTool,
-                target: target,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-
-            alert("Đã gửi thao tác lên màn hình giảng viên!");
-        }
-
-        function showView(id) {
-            document.querySelectorAll('.controller-screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+                student_id: studentId, student_name: studentName,
+                tool: chosenTool, target: target, timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => alert("Đã gửi thao tác lên màn hình Giảng viên!"));
         }
     </script>
 </body>
