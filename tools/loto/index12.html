@@ -10,19 +10,193 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --bg-dark: #2f3640;
+            --primary: #00a8ff;
+            --danger: #e84118;
+            --success: #4cd137;
+            --warning: #f1c40f;
+            --text: #f5f6fa;
+            --sidebar-w: 280px; 
+            --header-h: 56px;
+            --bottom-nav-h: 60px;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-dark); color: var(--text);
+            overflow: hidden; touch-action: manipulation;
+        }
+
+        #screen-login:not(.show) { display: none !important; }
+
+        .header {
+            height: var(--header-h); background: #1e272e;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; border-bottom: 2px solid #444;
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 2000;
+            box-sizing: border-box;
+        }
+        #btn-menu { background: transparent; border: none; color: white; font-size: 1.8rem; cursor: pointer; }
+        .app-title { font-weight: 800; font-size: 1.1rem; color: var(--primary); }
+        .user-info { font-size: 0.8rem; color: #ccc; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .sidebar {
+            position: fixed; top: var(--header-h); bottom: 0; left: -100%;
+            width: 85%; background: #222; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 3000; overflow-y: auto; border-right: 1px solid #444;
+        }
+        .sidebar.active { left: 0; }
+        .menu-group { border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .menu-header { padding: 12px 20px 5px; font-size: 0.75rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; }
+        .menu-item {
+            padding: 12px 20px; display: flex; align-items: center; gap: 12px;
+            color: #ecf0f1; border-bottom: 1px solid #2f3640; cursor: pointer; font-size: 0.95rem;
+        }
+        .menu-item.active { background: rgba(0,168,255,0.15); border-left: 5px solid var(--primary); color: white; }
+        .tool-icon { font-size: 1.3rem; width: 25px; text-align: center; }
+
+        .backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2500; display: none; }
+        .backdrop.show { display: block; }
+
+        .main-content { 
+            margin-top: var(--header-h); height: calc(100vh - var(--header-h) - var(--bottom-nav-h)); 
+            overflow-y: auto; background: #2f3640; position: relative; box-sizing: border-box;
+        }
+        .tab-view { display: none; padding: 15px; flex-direction: column; align-items: center; }
+        .tab-view.show { display: flex; }
+
+        .card { 
+            background: #353b48; border-radius: 12px; padding: 15px; width: 100%; 
+            box-sizing: border-box; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; position: relative;
+        }
+
+        .fan-frame {
+            width: 150px; height: 150px; border: 8px solid #7f8c8d; border-radius: 50%;
+            background: #222; margin: 15px auto; position: relative; display: flex; align-items: center; justify-content: center;
+        }
+        .blade { width: 130px; height: 18px; background: silver; position: absolute; border-radius: 10px; }
+        .spin { animation: spin 0.2s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .controls-container { width: 100%; background: #353b48; padding: 10px; border-radius: 8px; box-sizing: border-box; }
+        .controls-row { display: flex; gap: 10px; justify-content: center; width: 100%; margin-bottom: 10px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; flex: 1; }
+        .btn-success { background: var(--success); color: #2f3640; }
+        .btn-danger { background: var(--danger); }
+        .btn-permit { background: var(--warning); color: #2f3640; width: 100%; border: 2px solid #f39c12; }
+
+        .mode-switcher-bar { display: flex; gap: 8px; background: #1e272e; padding: 6px; border-radius: 8px; margin-bottom: 12px; }
+        .mode-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; background: transparent; color: #aaa; font-weight: bold; cursor: pointer; }
+        .mode-btn.active { background: var(--primary); color: #fff; }
+
+        .panel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+        .cb-unit { background: #2f3640; border: 2px solid #555; border-radius: 8px; height: 150px; position: relative; display: flex; flex-direction: column; align-items: center; }
+        .cb-touch-area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; cursor: pointer; }
+        .cb-lever { width: 45px; height: 35px; background: var(--danger); margin-top: 25px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; transition: 0.3s; }
+        .cb-lever.off { transform: translateY(45px); background: var(--success); }
+
+        .lock-container { position: absolute; top: 10px; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        .vis-hasp { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 2.5rem; filter: drop-shadow(0 0 3px orange); }
+        .vis-lock { position: absolute; left: 50%; transform: translateX(-50%); font-size: 1.8rem; }
+        .lock-1 { top: 35px; margin-left: -10px; }
+        .lock-2 { top: 45px; margin-left: 10px; color: yellow; }
+        .vis-tag { position: absolute; top: 65px; left: 50%; transform: translateX(-50%) rotate(-10deg); font-size: 1.8rem; }
+
+        .hmi-frame { background: #0f172a; border: 3px solid #38bdf8; border-radius: 10px; padding: 12px; color: #f8fafc; text-align: left; }
+        .hmi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .hmi-card { background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 10px; text-align: center; }
+        .hmi-led { font-size: 0.75rem; font-weight: bold; padding: 4px; border-radius: 4px; margin-bottom: 6px; }
+        .led-on { background: rgba(232, 65, 24, 0.2); color: #ff6b6b; border: 1px solid #e84118; }
+        .led-off { background: rgba(76, 209, 55, 0.2); color: #4cd137; border: 1px solid #4cd137; }
+        .hmi-action-btn { flex: 1; padding: 8px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+
+        .vis-ground-set { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 80px; height: 100px; pointer-events: none; z-index: 9; }
+        .ground-wire { stroke: #f1c40f; stroke-width: 4; stroke-dasharray: 6; animation: dash 1s linear infinite; }
+        @keyframes dash { to { stroke-dashoffset: -12; } }
+
+        .barrier-overlay {
+            position: absolute; bottom: 10px; left: 5%; width: 90%; height: 35px;
+            border-top: 4px dashed #e74c3c; border-bottom: 4px dashed #f1c40f;
+            background: repeating-linear-gradient(45deg, #e74c3c, #e74c3c 10px, #f1c40f 10px, #f1c40f 20px);
+            opacity: 0.85; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: #000; font-size: 0.7rem; border-radius: 4px; z-index: 15;
+        }
+
+        .vis-sign { position: absolute; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; z-index: 12; }
+        .sign-prohibit { background: #e74c3c; color: #fff; top: 5px; right: 5px; }
+        .sign-danger { background: #f1c40f; color: #000; bottom: 50px; left: 10px; }
+        .sign-work { background: #2ecc71; color: #fff; top: 10px; left: 10px; }
+
+        .worker-container { position: absolute; bottom: 140px; left: 10px; z-index: 200; transition: transform 2.5s linear; pointer-events: none; }
+        .worker-svg { width: 75px; height: 120px; }
+        .worker-walk-out { transform: translateX(350px); opacity: 0; }
+        .worker-walk-in { transform: translateX(100px); }
+        .shocked { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) infinite; }
+        .shocked .worker-body { fill: #e74c3c !important; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        #shock-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 0, 0, 0.6); z-index: 9500; display: none; }
+        #active-tool-hud {
+            position: fixed; top: 65px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9); border: 2px solid var(--primary);
+            padding: 8px 18px; border-radius: 50px; display: none; align-items: center; gap: 10px; z-index: 4000;
+        }
+        #active-tool-hud.show { display: flex; }
+        .hud-close { background: #e74c3c; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+        #reset-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92);
+            z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column;
+        }
+        .reset-btn { padding: 16px 32px; font-size: 1.3rem; background: var(--primary); color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; }
+
+        .toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: rgba(40, 40, 40, 0.95); color: white; padding: 10px 20px; 
+            border-radius: 50px; font-size: 0.85rem; opacity: 0; transition: 0.3s; z-index: 6000;
+        }
+        .toast.show { opacity: 1; bottom: 75px; }
+
+        .log-panel { background: #111; color: #0f0; font-family: monospace; font-size: 0.8rem; padding: 10px; height: 150px; overflow-y: auto; border-radius: 6px; text-align: left; }
+        .log-danger { color: #e74c3c; font-weight: bold; }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: var(--bottom-nav-h);
+            background: #1e272e; border-top: 1px solid #444; display: flex; justify-content: space-around; align-items: center; z-index: 2000;
+        }
+        .bottom-nav-btn { background: transparent; border: none; color: #888; display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; cursor: pointer; }
+        .bottom-nav-btn.active { color: var(--primary); font-weight: bold; }
+
+        .mobile-only { display: flex; }
+        .desktop-only { display: none; }
+
+        @media (min-width: 1024px) {
+            :root { --bottom-nav-h: 0px; }
+            .mobile-only { display: none !important; }
+            .desktop-only { display: inline-block !important; }
+            .sidebar { left: 0 !important; width: var(--sidebar-w); top: var(--header-h); height: calc(100vh - var(--header-h)); background: #1a1e23; }
+            .main-content { margin-left: var(--sidebar-w); width: calc(100% - var(--sidebar-w)); height: calc(100vh - var(--header-h)); display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 15px; padding: 15px; }
+            .main-content .tab-view { display: flex !important; padding: 0; height: 100%; }
+        }
+    </style>
 </head>
 <body>
 
     <div id="shock-flash"></div>
 
-    <!-- RESET OVERLAY -->
     <div id="reset-overlay">
-        <h1 style="color: var(--danger); text-transform: uppercase; margin-bottom: 20px; text-shadow: 0 0 10px rgba(232, 65, 24, 0.8);">Đã xảy ra tai nạn điện</h1>
+        <h1 style="color: var(--danger); text-transform: uppercase; margin-bottom: 20px;">Đã xảy ra tai nạn điện</h1>
         <button class="reset-btn" onclick="resetSimulation()">🔄 LÀM BÀI MỚI</button>
     </div>
 
-    <!-- ACTIVE TOOL HUD -->
     <div id="active-tool-hud">
         <div style="font-size:1.5rem" id="hud-icon">🔧</div>
         <div style="font-weight:bold; color:white; font-size:0.9rem" id="hud-text">...</div>
@@ -32,26 +206,24 @@
     <div class="backdrop" id="backdrop" onclick="closeSidebar()"></div>
     <div id="toast" class="toast">Hệ thống sẵn sàng</div>
 
-    <!-- SCREEN LOGIN CONTAINER -->
+    <!-- MÀN HÌNH ĐĂNG NHẬP -->
     <div id="screen-login" class="tab-view show" style="justify-content: center; height: 100vh; position: fixed; top: 0; left: 0; z-index: 9999; background: #1e272e; width: 100%;">
-        <div class="card" style="max-width: 380px; padding: 25px; box-sizing: border-box;">
-            <h2 style="color:var(--primary); margin-top:0; margin-bottom: 5px;">THẾ AN TOÀN - LOTO</h2>
-            <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 15px;">Mô phỏng Quy trình Cắt điện - Khóa thẻ An toàn</p>
-            
-            <div style="font-size: 0.8rem; color: var(--warning); background: rgba(241, 196, 15, 0.1); padding: 5px 10px; border-radius: 20px; display: inline-block; margin-bottom: 20px; font-weight: bold; border: 1px solid var(--warning);">
+        <div class="card" style="max-width: 380px; padding: 25px;">
+            <h2 style="color:var(--primary); margin-top:0;">THẾ AN TOÀN - LOTO</h2>
+            <p style="font-size: 0.85rem; color: #ccc;">Mô phỏng Quy trình Cắt điện - Khóa thẻ An toàn</p>
+            <div style="font-size: 0.8rem; color: var(--warning); padding: 4px 10px; border-radius: 20px; display: inline-block; margin-bottom: 15px; border: 1px solid var(--warning);">
                 Phiên bản: <span id="login-version-display">v1.2</span>
             </div>
-
             <form onsubmit="handleLoginSubmit(event)" style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
                 <div>
-                    <label style="font-size: 0.8rem; color: #aaa; font-weight: bold; display: block; margin-bottom: 4px;">HỌ VÀ TÊN:</label>
-                    <input type="text" id="input-fullname" placeholder="Nhập họ và tên..." required style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #555; background: #2f3640; color: white; font-size: 0.95rem; box-sizing: border-box;">
+                    <label style="font-size: 0.8rem; color: #aaa; font-weight: bold;">HỌ VÀ TÊN:</label>
+                    <input type="text" id="input-fullname" placeholder="Nhập họ và tên..." required style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #555; background: #2f3640; color: white; box-sizing: border-box;">
                 </div>
                 <div>
-                    <label style="font-size: 0.8rem; color: #aaa; font-weight: bold; display: block; margin-bottom: 4px;">MẬT KHẨU:</label>
-                    <input type="password" id="input-password" placeholder="Nhập mật khẩu..." value="0399496319" required style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #555; background: #2f3640; color: white; font-size: 0.95rem; box-sizing: border-box;">
+                    <label style="font-size: 0.8rem; color: #aaa; font-weight: bold;">MẬT KHẨU:</label>
+                    <input type="password" id="input-password" value="0399496319" required style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #555; background: #2f3640; color: white; box-sizing: border-box;">
                 </div>
-                <button type="submit" class="btn btn-success" style="padding: 14px; font-size: 1rem; margin-top: 10px; width: 100%;">🔑 ĐĂNG NHẬP HỆ THỐNG</button>
+                <button type="submit" class="btn btn-success" style="padding: 14px; font-size: 1rem; width: 100%;">🔑 ĐĂNG NHẬP HỆ THỐNG</button>
             </form>
         </div>
     </div>
@@ -62,7 +234,7 @@
             <button id="btn-menu" class="mobile-only" onclick="toggleSidebar()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
             </button>
-            <div class="app-title">LOTO Console <span id="header-version-display" style="color: var(--warning); font-size: 0.85rem;">v1.2</span> <span class="desktop-only" style="font-size: 0.75rem; color: #888; font-weight: normal;">| Phím tắt: [1-6] Chọn tool | [Space] Gạt CB-2</span></div>
+            <div class="app-title">LOTO Console <span id="header-version-display" style="color: var(--warning); font-size: 0.85rem;">v1.2</span></div>
         </div>
         <div class="user-info" id="user-display">Chưa đăng nhập</div>
     </div>
@@ -75,7 +247,6 @@
             <div class="menu-item mobile-only" id="nav-m-electrical" onclick="nav('tab-electrical')"><span class="tool-icon">⚡</span> Đóng Cắt</div>
             <div class="menu-item mobile-only" id="nav-m-store" onclick="nav('tab-store')"><span class="tool-icon">📦</span> Sơ Đồ Mạch Điện</div>
         </div>
-
         <div class="menu-group">
             <div class="menu-header">Dụng Cụ LOTO</div>
             <div class="menu-item" onclick="selectTool('hasp')"><span class="tool-icon">🔗</span> Khóa Kéo Dài [1]</div>
@@ -85,25 +256,18 @@
             <div class="menu-item" onclick="selectTool('meter')"><span class="tool-icon">⚡</span> Đồng Hồ VOM [5]</div>
             <div class="menu-item" onclick="selectTool('speaker')"><span class="tool-icon">📢</span> Loa Thông Báo [6]</div>
         </div>
-
         <div class="menu-group">
             <div class="menu-header">Biện Pháp An Toàn Điện</div>
-            <div class="menu-item" onclick="selectTool('earth_earth')"><span class="tool-icon">⏚</span> 1. Kẹp Tiếp Địa (Đầu Đất)</div>
-            <div class="menu-item" onclick="selectTool('earth_phase')"><span class="tool-icon">⚡</span> 2. Kẹp Tiếp Địa (Đầu Pha)</div>
+            <div class="menu-item" onclick="selectTool('earth_earth')"><span class="tool-icon">⏚</span> 1. Kẹp Tiếp Địa (Đất)</div>
+            <div class="menu-item" onclick="selectTool('earth_phase')"><span class="tool-icon">⚡</span> 2. Kẹp Tiếp Địa (Pha)</div>
             <div class="menu-item" onclick="selectTool('barrier')"><span class="tool-icon">🚧</span> Rào Chắn An Toàn</div>
             <div class="menu-item" onclick="selectTool('sign_prohibit')"><span class="tool-icon">🚫</span> Biển Cấm Đóng Điện</div>
             <div class="menu-item" onclick="selectTool('sign_danger')"><span class="tool-icon">⚠️</span> Biển Cảnh Báo Có Điện</div>
             <div class="menu-item" onclick="selectTool('sign_work')"><span class="tool-icon">✅</span> Biển Làm Việc Tại Đây</div>
         </div>
-
         <div class="menu-group">
-            <div class="menu-header">Tài Liệu & Trợ Giúp</div>
+            <div class="menu-header">Tài Liệu</div>
             <div class="menu-item" onclick="window.open('hdsd.html', '_blank')"><span class="tool-icon">📖</span> Hướng Dẫn Sử Dụng</div>
-        </div>
-
-        <div class="menu-group" id="menu-instructor" style="border-top: 2px solid var(--danger);">
-             <div class="menu-header" style="color:var(--danger)">Giảng Viên</div>
-             <div class="menu-item" onclick="nav('tab-instructor')"><span class="tool-icon">🎓</span> Log & Giám Sát</div>
         </div>
     </div>
 
@@ -112,9 +276,22 @@
         
         <!-- SECTION 1: MÁY MÓC / THIẾT BỊ -->
         <div id="tab-device" class="tab-view show">
-            <div class="card" onclick="handleTapMachine()" style="position: relative; z-index: 1;">
+            <!-- HOST CONTROL PANEL (QUẢN LÝ PHÒNG CHO GV) -->
+            <div class="card" style="background: #1e272e; border: 2px solid var(--primary); text-align: left; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 6px;">
+                    <div>MÃ PHÒNG: <strong id="room-pin-display" style="font-size: 1.3rem; color: var(--warning);">----</strong></div>
+                    <div>THỰC HÀNH: <strong id="active-student-display" style="color: var(--success);">Chưa chỉ định</strong></div>
+                </div>
+                <div style="margin-top: 8px;">
+                    <div style="font-size: 0.75rem; color: #00a8ff; font-weight: bold;">HỌC VIÊN PHÒNG CHỜ (REMOTE):</div>
+                    <div id="students-waiting-list" style="max-height: 80px; overflow-y: auto; background: #2f3640; padding: 4px; font-size: 0.8rem; margin-top: 4px;">
+                        <em>Chưa có học viên nào kết nối...</em>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" onclick="handleTapMachine()">
                 <h3 style="margin:0; color:var(--primary)">QUẠT SỐ 02 (TẢI M2 - NGUỒN KÉP)</h3>
-                
                 <div id="worker-npc" class="worker-container">
                     <svg class="worker-svg" viewBox="0 0 100 200">
                         <circle cx="50" cy="30" r="20" fill="#f1c40f" stroke="#333" stroke-width="2"/>
@@ -125,7 +302,6 @@
                         <line x1="65" y1="130" x2="65" y2="190" stroke="#333" stroke-width="10" stroke-linecap="round"/>
                     </svg>
                 </div>
-
                 <div class="fan-frame">
                     <div class="blade spin" id="blade1"></div>
                     <div class="blade spin" id="blade2" style="transform: rotate(120deg);"></div>
@@ -146,31 +322,26 @@
         <!-- SECTION 2: TỦ ĐIỆN VÀ MÀN HÌNH HMI -->
         <div id="tab-electrical" class="tab-view">
             <div class="card">
-                <!-- NÚT CHUYỂN ĐỔI CHẾ ĐỘ THAO TÁC ĐÓNG CẮT -->
                 <div class="mode-switcher-bar">
                     <button id="btn-mode-panel" class="mode-btn active" onclick="switchControlMode('panel')">⚡ Tủ Điện Thực Tế</button>
-                    <button id="btn-mode-hmi" class="mode-btn" onclick="switchControlMode('hmi')">🖥️ Màn Hình HMI Số</button>
+                    <button id="btn-mode-hmi" class="mode-btn" onclick="switchControlMode('hmi')">🖥️ Màn Hình HMI</button>
                 </div>
 
-                <!-- VIEW 1: TỦ ĐIỆN THỰC TẾ (CƠ KHÍ & LOTO) -->
+                <!-- VIEW 1: TỦ ĐIỆN THỰC TẾ -->
                 <div id="view-panel-mode">
-                    <h3 style="margin:10px 0 5px 0; color:var(--primary)">TỦ ĐIỆN PHÂN PHỐI DB-01</h3>
-                    <p style="font-size:0.75rem; color:#aaa; margin-bottom:12px;">Chạm vào CB để gạt cần hoặc áp dụng dụng cụ LOTO / Tiếp địa</p>
                     <div class="panel-grid">
                         <div class="cb-unit">
                             <span style="font-size:0.7rem; margin-top:5px;">CB-1 (NGUỒN 1)</span>
                             <div class="cb-lever" id="cb1-lever">ON</div>
                             <div class="cb-touch-area" onclick="handleTapCB(1)"></div>
                         </div>
-
-                        <div class="cb-unit" style="border-color:var(--primary); box-shadow: 0 0 10px rgba(0,168,255,0.3);">
+                        <div class="cb-unit" style="border-color:var(--primary);">
                             <span style="font-size:0.7rem; margin-top:5px; color:var(--primary); font-weight:bold;">CB-2 (NGUỒN 2)</span>
                             <div class="cb-lever" id="cb2-lever">ON</div>
                             <div class="lock-container" id="cb2-locks"></div>
                             <div id="cb2-tag-viz"></div>
                             <div class="cb-touch-area" onclick="handleTapCB(2)"></div>
                         </div>
-
                         <div class="cb-unit">
                             <span style="font-size:0.7rem; margin-top:5px;">CB-3 (SOCK)</span>
                             <div class="cb-lever" id="cb3-lever">ON</div>
@@ -179,62 +350,45 @@
                     </div>
                 </div>
 
-                <!-- VIEW 2: MÀN HÌNH ĐIỀU KHIỂN CẢM ỨNG HMI -->
+                <!-- VIEW 2: MÀN HÌNH HMI -->
                 <div id="view-hmi-mode" style="display: none;">
                     <div class="hmi-frame">
-                        <div class="hmi-header-title">🖥️ SCADA / HMI CONTROL SYSTEM - DB01</div>
-                        <div class="hmi-status-bar">
-                            <span>ONLINE</span>
-                            <span id="hmi-interlock-status" style="color: var(--success);">INTERLOCK: NORMAL</span>
-                        </div>
-                        
+                        <div style="text-align:center; font-weight:bold; color:#38bdf8; font-size:0.85rem; margin-bottom:8px;">HMI SCADA SYSTEM - DB01</div>
                         <div class="hmi-grid">
-                            <!-- HMI CB1 -->
                             <div class="hmi-card">
-                                <div class="hmi-card-title">CB-01 (NGUỒN 1)</div>
+                                <div style="font-size:0.75rem; color:#aaa;">CB-01 (NGUỒN 1)</div>
                                 <div class="hmi-led led-on" id="hmi-led-cb1">ĐANG ĐÓNG (ON)</div>
-                                <div style="display:flex; gap:6px; margin-top:8px;">
-                                    <button class="hmi-action-btn hmi-btn-on" onclick="handleHMISwitch(1, true)">CLOSE</button>
-                                    <button class="hmi-action-btn hmi-btn-off" onclick="handleHMISwitch(1, false)">TRIP</button>
+                                <div style="display:flex; gap:6px; margin-top:6px;">
+                                    <button class="hmi-action-btn" style="background:#e84118; color:white;" onclick="handleHMISwitch(1, true)">CLOSE</button>
+                                    <button class="hmi-action-btn" style="background:#4cd137; color:#000;" onclick="handleHMISwitch(1, false)">TRIP</button>
                                 </div>
                             </div>
-
-                            <!-- HMI CB2 -->
-                            <div class="hmi-card" style="border-color: var(--primary);">
-                                <div class="hmi-card-title" style="color: var(--primary);">CB-02 (NGUỒN 2)</div>
+                            <div class="hmi-card">
+                                <div style="font-size:0.75rem; color:#aaa;">CB-02 (NGUỒN 2)</div>
                                 <div class="hmi-led led-on" id="hmi-led-cb2">ĐANG ĐÓNG (ON)</div>
-                                <div class="hmi-loto-msg" id="hmi-loto-msg-cb2">LOTO: BÌNH THƯỜNG</div>
-                                <div style="display:flex; gap:6px; margin-top:8px;">
-                                    <button class="hmi-action-btn hmi-btn-on" onclick="handleHMISwitch(2, true)">CLOSE</button>
-                                    <button class="hmi-action-btn hmi-btn-off" onclick="handleHMISwitch(2, false)">TRIP</button>
+                                <div style="font-size:0.65rem; color:var(--warning);" id="hmi-loto-msg-cb2">LOTO: BÌNH THƯỜNG</div>
+                                <div style="display:flex; gap:6px; margin-top:6px;">
+                                    <button class="hmi-action-btn" style="background:#e84118; color:white;" onclick="handleHMISwitch(2, true)">CLOSE</button>
+                                    <button class="hmi-action-btn" style="background:#4cd137; color:#000;" onclick="handleHMISwitch(2, false)">TRIP</button>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="hmi-footer">
-                            <span>ĐIỆN ÁP LƯỚI: <strong id="hmi-volt-disp">380V</strong></span>
-                            <span>TẢI M2: <strong id="hmi-motor-disp" style="color:var(--success)">RUNNING</strong></span>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
         <!-- SECTION 3: SƠ ĐỒ ĐƠN TUYẾN ĐỘNG & UPLOAD -->
         <div id="tab-store" class="tab-view">
-            <div class="card" style="background: #1e272e; color: #fff; text-align: center; border: 1px dashed var(--primary); padding: 10px;">
-                <h4 style="margin: 0 0 5px 0; color: var(--primary); font-size: 0.9rem;">📁 NẠP SƠ ĐỒ MẠCH TỰ DO (.SVG / .JSON)</h4>
+            <div class="card" style="background: #1e272e; color: #fff; padding: 10px;">
                 <input type="file" id="file-circuit-upload" accept=".svg, .json" onchange="handleCircuitUpload(event)" style="display: none;">
-                <button class="btn btn-success" onclick="document.getElementById('file-circuit-upload').click()" style="padding: 6px 12px; font-size: 0.8rem; width: auto;">
-                    📤 Chọn File Sơ Đồ
+                <button class="btn btn-success" onclick="document.getElementById('file-circuit-upload').click()" style="padding: 6px 12px; font-size: 0.8rem;">
+                    📤 Nạp File Sơ Đồ (.SVG / .JSON)
                 </button>
                 <div id="upload-filename" style="font-size: 0.75rem; color: var(--warning); margin-top: 4px;"></div>
             </div>
 
             <div class="card" style="background:#fff; color:#333; text-align: left;">
-                <h3 style="text-align: center; margin-top:5px; color:#2c3e50;">SƠ ĐỒ ĐƠN TUYẾN DB-01 (BFS ENGINE)</h3>
-                
                 <div id="diagram-container">
                     <svg width="100%" height="220" viewBox="0 0 350 220">
                         <defs>
@@ -242,7 +396,6 @@
                                 <path d="M0,0 L0,6 L9,3 z" fill="#333" />
                             </marker>
                         </defs>
-
                         <text x="10" y="20" font-weight="bold" font-size="12" fill="#e74c3c">BUSBAR 380V</text>
                         <line id="BUSBAR_L1" x1="20" y1="30" x2="20" y2="200" stroke="#e74c3c" stroke-width="6"/>
 
@@ -258,21 +411,16 @@
                         <text id="txt-CB2" x="67" y="144" font-size="10" fill="#e74c3c" font-weight="bold">CB-2 (ON)</text>
                         <path id="w_cb2_m2" d="M105 140 L280 140 L280 116" stroke="#e74c3c" stroke-width="3" fill="none"/>
 
-                        <!-- Tải Động Cơ M2 (Nguồn kép) -->
+                        <!-- Tải Động Cơ M2 -->
                         <circle id="MOTOR_M2" cx="280" cy="100" r="16" fill="#e74c3c"/>
                         <text x="275" y="105" font-size="12" fill="#fff" font-weight="bold">M</text>
                         <text x="245" y="135" font-size="11" font-weight="bold" fill="#2c3e50">M2 (QUẠT TẢI DỰ PHÒNG)</text>
                     </svg>
                 </div>
-
-                <div style="font-size: 0.75rem; color: #666; display: flex; justify-content: space-around; background: #f8f9fa; padding: 6px; border-radius: 4px; margin-top: 5px;">
-                    <span>🔴 Trạng thái: <strong id="diagram-status-text" style="color:#e74c3c">MẠCH MANG ĐIỆN</strong></span>
-                    <span>⚡ Điện áp: <strong id="diagram-voltage-text">380V</strong></span>
-                </div>
             </div>
 
             <div class="card" style="text-align: left; margin-bottom: 0;">
-                 <h3 style="color:var(--warning); margin:0 0 10px 0;">GIÁM SÁT & LOG THAO TÁC</h3>
+                 <h3 style="color:var(--warning); margin:0 0 10px 0;">LOG THAO TÁC</h3>
                  <div id="log-container" class="log-panel"></div>
                  <button class="btn btn-danger" onclick="resetSimulation()" style="margin-top:10px; width: 100%;">SOFT RESET</button>
             </div>
@@ -282,22 +430,323 @@
 
     </div>
 
-    <!-- BOTTOM NAVIGATION (MOBILE ONLY) -->
+    <!-- BOTTOM NAV (MOBILE) -->
     <div class="bottom-nav mobile-only">
-        <button class="bottom-nav-btn active" id="bnav-tab-device" onclick="nav('tab-device')">
-            <span class="icon">🏭</span>
-            <span>Máy Móc</span>
-        </button>
-        <button class="bottom-nav-btn" id="bnav-tab-electrical" onclick="nav('tab-electrical')">
-            <span class="icon">⚡</span>
-            <span>Đóng Cắt</span>
-        </button>
-        <button class="bottom-nav-btn" id="bnav-tab-store" onclick="nav('tab-store')">
-            <span class="icon">📦</span>
-            <span>Sơ Đồ</span>
-        </button>
+        <button class="bottom-nav-btn active" id="bnav-tab-device" onclick="nav('tab-device')"><span>🏭 Máy Móc</span></button>
+        <button class="bottom-nav-btn" id="bnav-tab-electrical" onclick="nav('tab-electrical')"><span>⚡ Đóng Cắt</span></button>
+        <button class="bottom-nav-btn" id="bnav-tab-store" onclick="nav('tab-store')"><span>📦 Sơ Đồ</span></button>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const APP_VERSION = "1.2";
+        const DEFAULT_PASS = "0399496319";
+
+        // CẤU HÌNH FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyCkBRre5ajocg0EIuOchb6QknsdL6Qq9FA",
+            authDomain: "theantoan-fea9e.firebaseapp.com",
+            databaseURL: "https://theantoan-fea9e-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "theantoan-fea9e",
+            storageBucket: "theantoan-fea9e.firebasestorage.app",
+            messagingSenderId: "161371447668",
+            appId: "1:161371447668:web:3f3c2f9c0b967ace91cc21"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+        let currentTool = null;
+        let userName = "Chưa đăng nhập";
+        let workerPresent = true;
+        let activeControlMode = "panel";
+        let currentRoomPin = "";
+        let currentActiveStudent = null;
+
+        let sys = { 
+            cb1: true, cb2: true, has_hasp: false, lock_count: 0, tagged: false,
+            ground_earth_connected: false, ground_phase_connected: false, barrier_placed: false,
+            signs: { prohibit: false, danger: false, work: false }
+        };
+
+        let circuitGraph = {
+            sources: ["BUSBAR_L1"],
+            devices: {
+                "CB1": { id: "CB1", type: "switch", inNode: "BUSBAR_L1", outNode: "NODE_CB1_OUT", state: true },
+                "CB2": { id: "CB2", type: "switch", inNode: "BUSBAR_L1", outNode: "NODE_CB2_OUT", state: true },
+                "MOTOR_M2": { id: "MOTOR_M2", type: "load", inNodes: ["NODE_CB1_OUT", "NODE_CB2_OUT"] }
+            },
+            wires: [
+                { id: "w_bus_cb1", from: "BUSBAR_L1", to: "CB1" },
+                { id: "w_cb1_m2", from: "CB1", to: "MOTOR_M2" },
+                { id: "w_bus_cb2", from: "BUSBAR_L1", to: "CB2" },
+                { id: "w_cb2_m2", from: "CB2", to: "MOTOR_M2" }
+            ]
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initPracticeRoom();
+        });
+
+        // TẠO PHÒNG VÀ LẮNG NGHE HỌC VIÊN
+        function initPracticeRoom() {
+            currentRoomPin = Math.floor(1000 + Math.random() * 9000).toString();
+            const pinDisp = document.getElementById("room-pin-display");
+            if (pinDisp) pinDisp.innerText = currentRoomPin;
+
+            const roomRef = firebase.database().ref(`practice_rooms/ROOM_${currentRoomPin}`);
+            roomRef.set({ pin: currentRoomPin, status: "open", created_at: firebase.database.ServerValue.TIMESTAMP });
+
+            roomRef.child("students").on("value", (snap) => {
+                renderWaitingList(snap.val());
+            });
+
+            roomRef.child("controller_input").on("value", (snap) => {
+                const cmd = snap.val();
+                if (!cmd) return;
+                if (cmd.tool) selectTool(cmd.tool);
+                if (cmd.target === "CB1") handleTapCB(1);
+                if (cmd.target === "CB2") handleTapCB(2);
+                if (cmd.target === "MOTOR_M2") handleTapMachine();
+                showToast(`🎮 [${cmd.student_name}] thao tác: ${cmd.tool} -> ${cmd.target}`);
+            });
+        }
+
+        function renderWaitingList(students) {
+            const container = document.getElementById("students-waiting-list");
+            if (!container) return;
+            if (!students) { container.innerHTML = `<em>Chưa có học viên nào kết nối...</em>`; return; }
+            let html = "";
+            Object.keys(students).forEach((sId) => {
+                const s = students[sId];
+                const isCurrent = (currentActiveStudent === sId);
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:3px; border-bottom:1px dashed #444;">
+                    <span>👤 ${s.name} ${isCurrent ? '<b style="color:#4cd137">(Đang làm)</b>' : ''}</span>
+                    <button onclick="grantStudentAccess('${sId}', '${s.name}')" style="background:#00a8ff; color:white; border:none; border-radius:4px; padding:3px 8px; cursor:pointer;">
+                        ${isCurrent ? 'Đã cấp' : 'Cho phép'}
+                    </button>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function grantStudentAccess(sId, sName) {
+            currentActiveStudent = sId;
+            document.getElementById("active-student-display").innerText = sName;
+            firebase.database().ref(`practice_rooms/ROOM_${currentRoomPin}`).update({
+                active_student_id: sId, active_student_name: sName
+            });
+            showToast(`Đã cấp quyền cho: ${sName}`);
+        }
+
+        function handleLoginSubmit(event) {
+            event.preventDefault();
+            const fullName = document.getElementById('input-fullname').value.trim();
+            const pass = document.getElementById('input-password').value.trim();
+            if (pass !== DEFAULT_PASS) return alert("Sai mật khẩu!");
+            userName = fullName;
+            firebase.database().ref('user_logins').push({ fullName: fullName, time: new Date().toLocaleString('vi-VN') });
+            document.getElementById('screen-login').style.display = 'none';
+            document.getElementById('user-display').innerText = userName;
+            nav('tab-device');
+            solveAndRenderCircuit();
+        }
+
+        function switchControlMode(mode) {
+            activeControlMode = mode;
+            document.getElementById('view-panel-mode').style.display = (mode === 'panel') ? 'block' : 'none';
+            document.getElementById('view-hmi-mode').style.display = (mode === 'hmi') ? 'block' : 'none';
+            document.getElementById('btn-mode-panel').classList.toggle('active', mode === 'panel');
+            document.getElementById('btn-mode-hmi').classList.toggle('active', mode === 'hmi');
+            updateHMIDisplay();
+        }
+
+        function solveCircuitBFS(graph) {
+            const liveNodes = new Set(graph.sources);
+            const liveWires = new Set();
+            const liveDevices = new Set();
+            const queue = [...graph.sources];
+
+            while (queue.length > 0) {
+                const cur = queue.shift();
+                graph.wires.forEach(w => {
+                    if (w.from === cur) {
+                        const target = w.to;
+                        if (graph.devices[target]) {
+                            const dev = graph.devices[target];
+                            if (dev.type === 'switch' && dev.state) {
+                                liveWires.add(w.id); liveDevices.add(target);
+                                if (!liveNodes.has(dev.outNode)) { liveNodes.add(dev.outNode); queue.push(dev.outNode); }
+                            } else if (dev.type === 'load') {
+                                liveWires.add(w.id); liveDevices.add(target);
+                            }
+                        } else if (graph.devices[cur]) {
+                            liveWires.add(w.id);
+                            if (!liveNodes.has(target)) { liveNodes.add(target); queue.push(target); }
+                        }
+                    }
+                });
+            }
+            return { liveWires, liveDevices };
+        }
+
+        function solveAndRenderCircuit() {
+            const { liveWires, liveDevices } = solveCircuitBFS(circuitGraph);
+            const liveColor = "#e74c3c";
+            const safeColor = "#2ecee0";
+
+            circuitGraph.wires.forEach(w => {
+                const el = document.getElementById(w.id);
+                if (el) el.setAttribute('stroke', liveWires.has(w.id) ? liveColor : safeColor);
+            });
+
+            Object.keys(circuitGraph.devices).forEach(devId => {
+                const dev = circuitGraph.devices[devId];
+                const el = document.getElementById(devId);
+                const txt = document.getElementById(`txt-${devId}`);
+                if (dev.type === 'switch') {
+                    if (el) el.setAttribute('stroke', dev.state ? liveColor : safeColor);
+                    if (txt) { txt.setAttribute('fill', dev.state ? liveColor : safeColor); txt.textContent = `${devId} (${dev.state ? 'ON' : 'OFF'})`; }
+                } else if (dev.type === 'load') {
+                    if (el) el.setAttribute('fill', liveDevices.has(devId) ? liveColor : safeColor);
+                }
+            });
+
+            const isMotorActive = liveDevices.has("MOTOR_M2");
+            document.querySelectorAll('.blade').forEach(b => b.style.animation = isMotorActive ? "spin 0.2s linear infinite" : "none");
+            document.getElementById('machine-status').innerText = isMotorActive ? "ĐANG CHẠY" : "ĐÃ DỪNG";
+            document.getElementById('machine-status').style.color = isMotorActive ? "var(--success)" : "#aaa";
+            updateHMIDisplay();
+        }
+
+        function updateHMIDisplay() {
+            const cb1State = circuitGraph.devices["CB1"].state;
+            const cb2State = circuitGraph.devices["CB2"].state;
+            const led1 = document.getElementById('hmi-led-cb1');
+            const led2 = document.getElementById('hmi-led-cb2');
+            if (led1) { led1.className = `hmi-led ${cb1State ? 'led-on' : 'led-off'}`; led1.innerText = cb1State ? "ĐANG ĐÓNG (ON)" : "TRIP (OFF)"; }
+            if (led2) { led2.className = `hmi-led ${cb2State ? 'led-on' : 'led-off'}`; led2.innerText = cb2State ? "ĐANG ĐÓNG (ON)" : "TRIP (OFF)"; }
+            const msg = document.getElementById('hmi-loto-msg-cb2');
+            if (msg) msg.innerText = (sys.lock_count > 0 || sys.has_hasp) ? "🔒 LOTO LOCKED" : "LOTO: BÌNH THƯỜNG";
+        }
+
+        function handleHMISwitch(id, targetState) {
+            const cbKey = `CB${id}`;
+            if (sys.lock_count > 0 || sys.has_hasp) return alert("⛔ Không thể thao tác HMI khi đã khóa LOTO tại tủ!");
+            circuitGraph.devices[cbKey].state = targetState;
+            sys[`cb${id}`] = targetState;
+            const el = document.getElementById(`cb${id}-lever`);
+            if (el) { el.classList.toggle('off', !targetState); el.innerText = targetState ? "ON" : "OFF"; }
+            solveAndRenderCircuit();
+        }
+
+        function handleTapCB(id) {
+            const cbKey = `CB${id}`;
+            const isLive = circuitGraph.devices[cbKey].state;
+
+            if (currentTool === 'earth_earth') {
+                sys.ground_earth_connected = true;
+                showToast("✅ Đã kẹp đầu ĐẤT tiếp địa.");
+                clearTool(); return;
+            }
+            if (currentTool === 'earth_phase') {
+                if (!sys.ground_earth_connected) return alert("Phải kẹp đầu ĐẤT trước khi kẹp đầu PHA!");
+                if (isLive) {
+                    document.getElementById('shock-flash').style.display = 'block';
+                    setTimeout(() => { document.getElementById('shock-flash').style.display = 'none'; document.getElementById('reset-overlay').style.display = 'flex'; }, 3000);
+                    return alert("💥 TAI NẠN: Nổ hồ quang do kẹp tiếp địa có điện!");
+                }
+                sys.ground_phase_connected = true;
+                showToast("✅ Đã kẹp đầu PHA tiếp địa.");
+                clearTool(); return;
+            }
+            if (currentTool === 'barrier') {
+                sys.barrier_placed = true;
+                showToast("✅ Đã dựng rào chắn an toàn.");
+                clearTool(); return;
+            }
+            if (currentTool === 'sign_prohibit') {
+                if (isLive) return alert("Phải ngắt điện trước khi treo biển Cấm!");
+                sys.signs.prohibit = true;
+                showToast("✅ Đã treo biển Cấm đóng điện.");
+                clearTool(); return;
+            }
+            if (currentTool === 'hasp') {
+                if (isLive) return alert("Còn điện! Không được kẹp Hasp.");
+                sys.has_hasp = true;
+                document.getElementById('cb2-locks').innerHTML = '<div class="vis-hasp">🔗</div>';
+                clearTool(); return;
+            }
+            if (currentTool === 'lock') {
+                if (isLive) return alert("Còn điện! Không được khóa.");
+                sys.lock_count++;
+                document.getElementById('cb2-locks').innerHTML += `<div class="vis-lock lock-${sys.lock_count}">🔒</div>`;
+                clearTool(); return;
+            }
+            if (currentTool === 'tag') {
+                if (sys.lock_count === 0) return alert("Phải khóa trước khi treo thẻ!");
+                sys.tagged = true;
+                document.getElementById('cb2-tag-viz').innerHTML = '<div class="vis-tag">🏷️</div>';
+                clearTool(); return;
+            }
+            if (currentTool === 'meter') {
+                showToast(`Kết quả đo ${cbKey}: ${isLive ? '380V (CÓ ĐIỆN)' : '0V (HẾT ĐIỆN)'}`);
+                return;
+            }
+            if (!currentTool) {
+                if (sys.lock_count > 0 || sys.has_hasp) return alert("CB đang khóa LOTO!");
+                circuitGraph.devices[cbKey].state = !circuitGraph.devices[cbKey].state;
+                sys[`cb${id}`] = circuitGraph.devices[cbKey].state;
+                const el = document.getElementById(`cb${id}-lever`);
+                el.classList.toggle('off', !circuitGraph.devices[cbKey].state);
+                el.innerText = circuitGraph.devices[cbKey].state ? "ON" : "OFF";
+                solveAndRenderCircuit();
+            }
+        }
+
+        function handlePermit() {
+            const { liveDevices } = solveCircuitBFS(circuitGraph);
+            const isMotorLive = liveDevices.has("MOTOR_M2");
+            if (isMotorLive || sys.lock_count === 0 || !sys.ground_phase_connected || !sys.barrier_placed || !sys.signs.prohibit) {
+                document.getElementById('shock-flash').style.display = 'block';
+                setTimeout(() => { document.getElementById('shock-flash').style.display = 'none'; document.getElementById('reset-overlay').style.display = 'flex'; }, 3000);
+                alert("⚡ TAI NẠN: Vi phạm an toàn (Chưa cắt điện, chưa khóa LOTO, chưa tiếp địa hoặc chưa rào chắn)!");
+            } else {
+                alert("✅ An toàn tuyệt đối theo chuẩn an toàn điện! Cho phép công nhân làm việc.");
+            }
+        }
+
+        function resetSimulation() {
+            location.reload();
+        }
+
+        function selectTool(t) {
+            currentTool = t;
+            document.getElementById('active-tool-hud').classList.add('show');
+            document.getElementById('hud-text').innerText = t;
+            closeSidebar();
+        }
+        function clearTool() { currentTool = null; document.getElementById('active-tool-hud').classList.remove('show'); }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('backdrop').classList.toggle('show'); }
+        function closeSidebar() { document.getElementById('sidebar').classList.remove('active'); document.getElementById('backdrop').classList.remove('show'); }
+        function nav(tabId) {
+            document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('show'));
+            document.getElementById(tabId).classList.add('show');
+            closeSidebar();
+        }
+        function showToast(m) {
+            const t = document.getElementById('toast');
+            t.innerText = m; t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+        function toggleMachine(run) {
+            if (!run) document.querySelectorAll('.blade').forEach(b => b.style.animation = "none");
+            else solveAndRenderCircuit();
+        }
+        function handleTapMachine() {
+            if (currentTool === 'speaker') {
+                showToast("📢 Đã phát loa thông báo");
+                document.getElementById('worker-npc').classList.add('worker-walk-out');
+                clearTool();
+            }
+        }
+    </script>
 </body>
 </html>
