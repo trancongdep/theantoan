@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng Dẫn Sử Dụng - LOTO Console v1.2</title>
+    <style>
+        body { font-family: 'Times New Roman', serif; line-height: 1.6; color: #333; background: #f0f2f5; margin: 0; padding: 20px; }
+        .action-bar { max-width: 800px; margin: 0 auto 20px auto; display: flex; gap: 15px; justify-content: flex-end; }
+        .btn-export { padding: 10px 20px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; color: white; }
+        .document-page { max-width: 800px; background: white; margin: 0 auto; padding: 40px 50px; border-radius: 4px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #1e272e; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        h2 { color: #2980b9; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        table, th, td { border: 1px solid #7f8c8d; }
+        th, td { padding: 8px 12px; text-align: left; }
+        th { background: #f2f2f2; }
+        @media print { .action-bar { display: none; } body { padding: 0; background: white; } .document-page { box-shadow: none; width: 100%; } }
+    </style>
+</head>
+<body>
+    <div class="action-bar">
+        <button class="btn-export" style="background:#e74c3c;" onclick="window.print()">📄 In / Xuất PDF</button>
+        <button class="btn-export" style="background:#2980b9;" onclick="exportWord()">📝 Xuất File Word (.doc)</button>
+    </div>
+
+    <div class="document-page" id="doc-content">
+        <h1>TÀI LIỆU HƯỚNG DẪN SỬ DỤNG LOTO CONSOLE V1.2</h1>
+        
+        <h2>1. TỔNG QUAN HỆ THỐNG</h2>
+        <p>Hệ thống mô phỏng toàn diện quy trình an toàn điện và LOTO (Lockout/Tagout) theo QCVN 01:2020/BCT. Cho phép Giảng viên trình chiếu mô hình trên máy chiếu (Host) và Học viên điều khiển tương tác trực tiếp qua điện thoại (Remote).</p>
+
+        <h2>2. QUY TRÌNH THỰC HÀNH CHUẨN 5 BIỆN PHÁP AN TOÀN ĐIỆN</h2>
+        <ol>
+            <li><strong>Thông báo:</strong> Dùng loa phát thanh cảnh báo công nhân rời khỏi khu vực máy.</li>
+            <li><strong>Cắt điện cô lập:</strong> Ngắt cả 2 máy cắt nguồn chính và nguồn dự phòng (CB-1 và CB-2).</li>
+            <li><strong>Khóa an toàn & Treo thẻ:</strong> Kẹp Hasp, treo Ổ khóa và gắn Thẻ cảnh báo LOTO tại tủ.</li>
+            <li><strong>Kiểm tra không còn điện:</strong> Dùng đồng hồ VOM đo điện áp xác nhận 0V.</li>
+            <li><strong>Tiếp địa di động & Rào chắn:</strong> Kẹp đầu ĐẤT trước, kẹp đầu PHA sau. Dựng rào chắn và treo biển "CẤM ĐÓNG ĐIỆN", "LÀM VIỆC TẠI ĐÂY".</li>
+        </ol>
+
+        <h2>3. DANH MỤC THAO TÁC VÀ DỤNG CỤ</h2>
+        <table>
+            <tr><th>Công cụ</th><th>Thao tác</th><th>Lưu ý an toàn</th></tr>
+            <tr><td>Kẹp Tiếp Địa</td><td>Kẹp Đất trước -> Kẹp Pha sau</td><td>Tuyệt đối không kẹp pha khi mạch còn điện (nổ hồ quang).</td></tr>
+            <tr><td>Khóa & Hasp</td><td>Khóa vào cần CB sau khi đã gạt OFF</td><td>Không được gạt CB khi đang có khóa LOTO.</td></tr>
+            <tr><td>Rào chắn & Biển báo</td><td>Dựng rào quanh vùng công tác</td><td>Bắt buộc phải có trước khi bấm Cấp phép làm việc.</td></tr>
+        </table>
+    </div>
+
+    <script>
+        function exportWord() {
+            const html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'></head><body>" + document.getElementById('doc-content').innerHTML + "</body></html>";
+            const blob = new Blob(['\ufeff' + html], { type: 'application/msword' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'HDSD_LOTO_v1.2.doc'; a.click();
+        }
+    </script>
+</body>
+</html>
