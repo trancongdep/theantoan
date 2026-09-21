@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LOTO Remote - Thế An Toàn</title>
+    <title>LOTO Remote - Học Viên</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -23,7 +23,7 @@
             text-align: center; user-select: none;
         }
 
-        .screen { display: none; padding: 20px; box-sizing: border-box; min-height: 100vh; flex-direction: column; justify-content: center; align-items: center; }
+        .screen { display: none; padding: 15px; box-sizing: border-box; min-height: 100vh; flex-direction: column; justify-content: center; align-items: center; }
         .screen.active { display: flex; }
 
         input {
@@ -37,7 +37,6 @@
             background: var(--primary); color: #fff; font-size: 1.1rem; font-weight: bold; cursor: pointer;
         }
 
-        .grid-tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin: 15px 0; }
         .tool-btn {
             background: #2f3640; border: 2px solid #444; border-radius: 8px; padding: 12px 4px;
             color: #fff; font-size: 0.8rem; font-weight: bold; cursor: pointer;
@@ -46,20 +45,22 @@
             border-color: var(--primary); background: rgba(0, 168, 255, 0.25);
         }
 
+        .grid-tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin: 10px 0; }
+
         .select-target {
             width: 100%; padding: 14px; background: #2f3640; color: #fff; border: 1px solid #555;
             border-radius: 8px; font-size: 1rem; font-weight: bold; margin-bottom: 15px;
         }
 
         .btn-fire {
-            width: 100%; padding: 18px; border: none; border-radius: 50px;
-            background: var(--danger); color: white; font-size: 1.2rem; font-weight: bold; cursor: pointer;
+            width: 100%; padding: 16px; border: none; border-radius: 50px;
+            background: var(--danger); color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <!-- MÀN HÌNH 1: NHẬP PIN & TÊN -->
+    <!-- MÀN HÌNH 1: NHẬP MÃ PIN & HỌ TÊN -->
     <div id="screen-join" class="screen active">
         <h2 style="color: var(--primary); margin-top: 0;">LOTO REMOTE</h2>
         <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 25px;">Nhập thông tin hiển thị trên màn hình Giảng viên</p>
@@ -74,18 +75,33 @@
         <h3 style="color: var(--warning); margin-bottom: 5px;">BẠN ĐANG Ở PHÒNG CHỜ</h3>
         <p style="font-size: 0.95rem; color: #ccc;" id="waiting-student-name">Học viên: ...</p>
         <p style="font-size: 0.85rem; color: #888; max-width: 280px;">
-            Quan sát màn hình Giảng viên. Khi được chỉ định, điện thoại của bạn sẽ mở bộ điều khiển.
+            Quan sát màn hình Giảng viên. Khi được chỉ định, điện thoại sẽ tự động mở bộ điều khiển.
         </p>
     </div>
 
-    <!-- MÀN HÌNH 3: BỘ ĐIỀU KHIỂN REMOTE -->
-    <div id="screen-remote" class="screen" style="justify-content: flex-start;">
+    <!-- MÀN HÌNH 3: BỘ ĐIỀU KHIỂN REMOTE ĐẦY ĐỦ -->
+    <div id="screen-remote" class="screen" style="justify-content: flex-start; padding-top: 10px;">
         <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 8px;">
             <span style="color: var(--success); font-weight: bold; font-size: 0.85rem;">● ĐÃ CẤP QUYỀN THỰC HÀNH</span>
             <span id="remote-user-name" style="font-size: 0.85rem; color: #ccc;">...</span>
         </div>
 
-        <p style="font-size: 0.85rem; text-align: left; width: 100%; margin: 12px 0 4px 0; color: #aaa;">1. Chọn Dụng cụ / Thao tác:</p>
+        <!-- CỤM THAO TÁC TRỰC TIẾP: GẠT CB & STOP QUẠT -->
+        <p style="font-size: 0.85rem; text-align: left; width: 100%; margin: 10px 0 4px 0; color: var(--warning); font-weight: bold;">
+            ⚡ Thao tác Đóng / Cắt nguồn trực tiếp:
+        </p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-bottom: 10px;">
+            <button class="tool-btn" style="background: #27ae60; border-color: #2ecc71; font-size: 0.9rem; padding: 12px;" onclick="sendDirectSwitch('TOGGLE_CB')">
+                ⚡ GẠT CB<br><small>(Đóng / Cắt ON-OFF)</small>
+            </button>
+            <button class="tool-btn" style="background: #c0392b; border-color: #e74c3c; font-size: 0.9rem; padding: 12px;" onclick="sendDirectSwitch('STOP_MACHINE')">
+                🛑 BẤM STOP<br><small>(Dừng quạt tải)</small>
+            </button>
+        </div>
+
+        <p style="font-size: 0.85rem; text-align: left; width: 100%; margin: 6px 0 4px 0; color: #aaa;">
+            1. Hoặc chọn Dụng cụ LOTO / Tiếp địa:
+        </p>
         <div class="grid-tools">
             <button class="tool-btn" onclick="selectToolRemote('lock')">🔒<br>Ổ Khóa</button>
             <button class="tool-btn" onclick="selectToolRemote('tag')">🏷️<br>Thẻ Báo</button>
@@ -98,14 +114,16 @@
             <button class="tool-btn" onclick="selectToolRemote('speaker')">📢<br>Loa Báo</button>
         </div>
 
-        <p style="font-size: 0.85rem; text-align: left; width: 100%; margin: 8px 0 4px 0; color: #aaa;">2. Chọn Thiết bị tác động:</p>
+        <p style="font-size: 0.85rem; text-align: left; width: 100%; margin: 8px 0 4px 0; color: #aaa;">
+            2. Chọn Thiết bị tác động:
+        </p>
         <select id="target-select" class="select-target">
             <option value="CB2">⚡ CB-2 (Mục tiêu cô lập)</option>
             <option value="CB1">⚡ CB-1 (Nguồn dự phòng)</option>
             <option value="MOTOR_M2">🏭 Quạt số 2 (Động cơ tải)</option>
         </select>
 
-        <button class="btn-fire" onclick="sendAction()">THỰC HIỆN THAO TÁC</button>
+        <button class="btn-fire" onclick="sendAction()">ÁP DỤNG DỤNG CỤ LÊN THIẾT BỊ</button>
     </div>
 
     <script>
@@ -164,13 +182,37 @@
             event.currentTarget.classList.add('selected');
         }
 
-        function sendAction() {
-            if (!chosenTool) return alert("Vui lòng chọn 1 dụng cụ!");
+        // Gửi lệnh đóng cắt / dừng trực tiếp lên Host
+        function sendDirectSwitch(actionType) {
             const target = document.getElementById('target-select').value;
             db.ref(`practice_rooms/ROOM_${roomPin}/controller_input`).set({
-                student_id: studentId, student_name: studentName,
-                tool: chosenTool, target: target, timestamp: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => alert("Đã gửi thao tác lên màn hình Giảng viên!"));
+                student_id: studentId,
+                student_name: studentName,
+                action_type: actionType,
+                tool: null,
+                target: target,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                if (navigator.vibrate) navigator.vibrate(60);
+                alert(`Đã gửi lệnh thao tác trực tiếp lên ${target}!`);
+            });
+        }
+
+        // Gửi lệnh áp dụng dụng cụ LOTO
+        function sendAction() {
+            if (!chosenTool) return alert("Vui lòng chọn 1 dụng cụ bên trên trước!");
+            const target = document.getElementById('target-select').value;
+            db.ref(`practice_rooms/ROOM_${roomPin}/controller_input`).set({
+                student_id: studentId,
+                student_name: studentName,
+                action_type: 'APPLY_TOOL',
+                tool: chosenTool,
+                target: target,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                if (navigator.vibrate) navigator.vibrate(60);
+                alert(`Đã gửi dụng cụ [${chosenTool}] lên ${target}!`);
+            });
         }
     </script>
 </body>
