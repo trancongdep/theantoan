@@ -1,0 +1,99 @@
+<!-- ==================== SƠ ĐỒ MẶT BẰNG CHUẨN TỶ LỆ THỰC ĐỊA ==================== -->
+<svg id="svg-layout" viewBox="0 0 1700 960">
+  
+  <!-- 1. KHU VỰC TRẠM BIẾN ÁP 110kV & NHÀ ĐIỀU HÀNH (GÓC ĐÔNG BẮC) -->
+  <g id="substation-area" transform="translate(1320, 40)">
+    <rect x="0" y="0" width="340" height="280" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+    <text x="15" y="25" class="device-label" fill="#38bdf8" font-size="13">TBA 110kV & NHÀ ĐIỀU HÀNH</text>
+    
+    <!-- Sân phân phối 110kV: Giàn C11, C12 -->
+    <line id="lay-C11" x1="30" y1="60" x2="160" y2="60" stroke-width="8" class="layout-block energized"/>
+    <text x="70" y="52" class="device-label" font-size="10">C11</text>
+    
+    <line id="lay-C12" x1="180" y1="60" x2="310" y2="60" stroke-width="8" class="layout-block energized"/>
+    <text x="220" y="52" class="device-label" font-size="10">C12</text>
+
+    <!-- Bệ móng 02 MBA Chính T1 & T2 -->
+    <rect id="lay-T1" x="50" y="90" width="90" height="65" rx="4" class="layout-block energized"/>
+    <text x="68" y="128" class="device-label" font-size="11">MBA T1</text>
+
+    <rect id="lay-T2" x="200" y="90" width="90" height="65" rx="4" class="layout-block energized"/>
+    <text x="218" y="128" class="device-label" font-size="11">MBA T2</text>
+
+    <!-- Tòa nhà điều hành & Dãy tủ Switchgear 22kV -->
+    <rect x="30" y="180" width="280" height="80" rx="4" fill="#0f172a" stroke="#cbd5e1" stroke-width="1.5"/>
+    <rect id="lay-C41" x="45" y="195" width="115" height="50" rx="3" class="layout-block energized"/>
+    <text x="65" y="225" class="device-label" font-size="11">TỦ C41 (22kV)</text>
+
+    <rect id="lay-C42" x="180" y="195" width="115" height="50" rx="3" class="layout-block energized"/>
+    <text x="200" y="225" class="device-label" font-size="11">TỦ C42 (22kV)</text>
+  </g>
+
+  <!-- 2. TRỤC ĐƯỜNG GIAO THÔNG NỘI BỘ ĐÔNG - TÂY -->
+  <line x1="50" y1="520" x2="1650" y2="520" stroke="#475569" stroke-width="26" stroke-linecap="round"/>
+  <line x1="50" y1="520" x2="1650" y2="520" stroke="#94a3b8" stroke-width="2" stroke-dasharray="12 12"/>
+  <text x="750" y="525" class="device-label" fill="#f8fafc" font-size="11">TRỤC ĐƯỜNG VẬN HÀNH CHÍNH ĐÔNG - TÂY</text>
+
+  <!-- 3. CÁC TRẠM INVERTER DẢI BẮC (MẠCH VÒNG C41: T07 - T05 - T03 - T01) -->
+  <!-- Trạm T07 (Tây Bắc) -->
+  <g id="lay-T07" class="layout-block energized" transform="translate(100, 420)">
+    <rect width="110" height="60" rx="4"/>
+    <text x="15" y="28" class="device-label" font-size="12">SKID T07</text>
+    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
+  </g>
+
+  <!-- Trạm T05 (Giữa Tây - Bắc) -->
+  <g id="lay-T05" class="layout-block energized" transform="translate(480, 420)">
+    <rect width="110" height="60" rx="4"/>
+    <text x="15" y="28" class="device-label" font-size="12">SKID T05</text>
+    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
+  </g>
+
+  <!-- Trạm T03 (Giữa Đông - Bắc) -->
+  <g id="lay-T03" class="layout-block energized" transform="translate(860, 420)">
+    <rect width="110" height="60" rx="4"/>
+    <text x="15" y="28" class="device-label" font-size="12">SKID T03</text>
+    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
+  </g>
+
+  <!-- Trạm T01 (Đông Bắc - Cận kề TBA 110kV) -->
+  <g id="lay-T01" class="layout-block energized" transform="translate(1200, 420)">
+    <rect width="110" height="60" rx="4"/>
+    <text x="15" y="28" class="device-label" font-size="12">SKID T01</text>
+    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
+  </g>
+
+  <!-- 4. CÁC TRẠM INVERTER DẢI NAM (MẠCH VÒNG C42: T04 - T02 - T06 - T08) -->
+  <!-- Trạm T04 (Tây Nam) -->
+  <g id="lay-T04" class="layout-block energized" transform="translate(100, 560)">
+    <rect width="110" height="60" rx="4"/>
+    <text x="15" y="28" class="device-label" font-size="12">SKID T04</text>
+    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
+  </g>
+
+  <!-- Trạm T02 (Giữa Tây - Nam) -->
+  <g id="lay-T02" class="layout-block energized" transform="translate(480, 560)">
+    <rect width="110" height="60" rx="4"/>
+    <text x="15" y="28" class="device-label" font-size="12">SKID T02</text>
+    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
+  </g>
+
+  <!-- Trạm T06 (Giữa Đông - Nam) -->
+  <g id="lay-T06" class="layout-block energized" transform="translate(860, 560)">
+    <rect width="110" height="60" rx="4"/>
+    <text x="15" y="28" class="device-label" font-size="12">SKID T06</text>
+    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
+  </g>
+
+  <!-- Trạm T08 (Đông Nam - Đối diện TBA) -->
+  <g id="lay-T08" class="layout-block energized" transform="translate(1200, 560)">
+    <rect width="110" height="60" rx="4"/>
+    <text x="15" y="28" class="device-label" font-size="12">SKID T08</text>
+    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
+  </g>
+
+  <!-- Tuyến cáp ngầm 22kV kết nối từ TBA đến các trạm -->
+  <path d="M 1365 245 L 1365 370 L 1255 370 L 1255 420" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="5 3"/>
+  <path d="M 1500 245 L 1500 660 L 1255 660 L 1255 620" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="5 3"/>
+
+</svg>
