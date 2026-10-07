@@ -1,99 +1,718 @@
-<!-- ==================== SƠ ĐỒ MẶT BẰNG CHUẨN TỶ LỆ THỰC ĐỊA ==================== -->
-<svg id="svg-layout" viewBox="0 0 1700 960">
-  
-  <!-- 1. KHU VỰC TRẠM BIẾN ÁP 110kV & NHÀ ĐIỀU HÀNH (GÓC ĐÔNG BẮC) -->
-  <g id="substation-area" transform="translate(1320, 40)">
-    <rect x="0" y="0" width="340" height="280" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
-    <text x="15" y="25" class="device-label" fill="#38bdf8" font-size="13">TBA 110kV & NHÀ ĐIỀU HÀNH</text>
-    
-    <!-- Sân phân phối 110kV: Giàn C11, C12 -->
-    <line id="lay-C11" x1="30" y1="60" x2="160" y2="60" stroke-width="8" class="layout-block energized"/>
-    <text x="70" y="52" class="device-label" font-size="10">C11</text>
-    
-    <line id="lay-C12" x1="180" y1="60" x2="310" y2="60" stroke-width="8" class="layout-block energized"/>
-    <text x="220" y="52" class="device-label" font-size="10">C12</text>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>110kV HONG PHONG 4 SUBSTATION - SINGLE LINE DISPLAY</title>
+<style>
+  :root {
+    --scada-bg: #406f5e;           /* Màu nền SCADA trạm chuẩn EVN */
+    --scada-panel: #2b5143;
+    --voltage-110kv: #ff3b30;       /* Cấp 110kV: Đỏ cam */
+    --voltage-22kv: #00e5ff;        /* Cấp 22kV: Xanh lam neon */
+    --dead-wire: #5a7d71;          /* Dây mất điện/cô lập */
+    --cb-closed: #ff2d55;          /* Máy cắt đóng (Đỏ) */
+    --cb-open: #00ff66;            /* Máy cắt mở (Xanh lá) */
+    --ds-closed: #ffcc00;
+    --text-scada: #ffffff;
+    --meas-bg: rgba(20, 45, 36, 0.9);
+  }
 
-    <!-- Bệ móng 02 MBA Chính T1 & T2 -->
-    <rect id="lay-T1" x="50" y="90" width="90" height="65" rx="4" class="layout-block energized"/>
-    <text x="68" y="128" class="device-label" font-size="11">MBA T1</text>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background-color: var(--scada-bg);
+    color: var(--text-scada);
+    font-family: 'Consolas', 'Segoe UI', Tahoma, monospace;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
 
-    <rect id="lay-T2" x="200" y="90" width="90" height="65" rx="4" class="layout-block energized"/>
-    <text x="218" y="128" class="device-label" font-size="11">MBA T2</text>
+  /* SCADA Top Navigation Bar */
+  header {
+    background: #27473b;
+    padding: 6px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #193229;
+    font-size: 13px;
+  }
+  .station-title {
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #ffff80;
+  }
+  .nav-btn-group {
+    display: flex;
+    gap: 6px;
+  }
+  .scada-btn {
+    background: #335d4e;
+    color: #e2e8f0;
+    border: 1px solid #1f3b31;
+    padding: 4px 14px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+  .scada-btn.active {
+    background: #ffcc00;
+    color: #000;
+    border-color: #eab308;
+  }
 
-    <!-- Tòa nhà điều hành & Dãy tủ Switchgear 22kV -->
-    <rect x="30" y="180" width="280" height="80" rx="4" fill="#0f172a" stroke="#cbd5e1" stroke-width="1.5"/>
-    <rect id="lay-C41" x="45" y="195" width="115" height="50" rx="3" class="layout-block energized"/>
-    <text x="65" y="225" class="device-label" font-size="11">TỦ C41 (22kV)</text>
+  /* Main Workspace */
+  .scada-container {
+    flex: 1;
+    position: relative;
+    overflow: auto;
+    background-color: var(--scada-bg);
+  }
+  .view-panel {
+    display: none;
+    width: 100%;
+    height: 100%;
+    min-width: 1600px;
+    min-height: 900px;
+  }
+  .view-panel.active { display: block; }
 
-    <rect id="lay-C42" x="180" y="195" width="115" height="50" rx="3" class="layout-block energized"/>
-    <text x="200" y="225" class="device-label" font-size="11">TỦ C42 (22kV)</text>
-  </g>
+  svg {
+    width: 100%;
+    height: 100%;
+    min-width: 1600px;
+    min-height: 900px;
+  }
 
-  <!-- 2. TRỤC ĐƯỜNG GIAO THÔNG NỘI BỘ ĐÔNG - TÂY -->
-  <line x1="50" y1="520" x2="1650" y2="520" stroke="#475569" stroke-width="26" stroke-linecap="round"/>
-  <line x1="50" y1="520" x2="1650" y2="520" stroke="#94a3b8" stroke-width="2" stroke-dasharray="12 12"/>
-  <text x="750" y="525" class="device-label" fill="#f8fafc" font-size="11">TRỤC ĐƯỜNG VẬN HÀNH CHÍNH ĐÔNG - TÂY</text>
+  /* Đường dây & Thanh cái */
+  .bus-110 { stroke-width: 7; stroke-linecap: square; transition: stroke 0.25s; }
+  .bus-22 { stroke-width: 6; stroke-linecap: square; transition: stroke 0.25s; }
+  .wire-110 { stroke-width: 3; fill: none; transition: stroke 0.25s; }
+  .wire-22 { stroke-width: 2.5; fill: none; transition: stroke 0.25s; }
 
-  <!-- 3. CÁC TRẠM INVERTER DẢI BẮC (MẠCH VÒNG C41: T07 - T05 - T03 - T01) -->
-  <!-- Trạm T07 (Tây Bắc) -->
-  <g id="lay-T07" class="layout-block energized" transform="translate(100, 420)">
-    <rect width="110" height="60" rx="4"/>
-    <text x="15" y="28" class="device-label" font-size="12">SKID T07</text>
-    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
-  </g>
+  .p-110-live { stroke: var(--voltage-110kv) !important; }
+  .p-22-live { stroke: var(--voltage-22kv) !important; }
+  .p-dead { stroke: var(--dead-wire) !important; }
 
-  <!-- Trạm T05 (Giữa Tây - Bắc) -->
-  <g id="lay-T05" class="layout-block energized" transform="translate(480, 420)">
-    <rect width="110" height="60" rx="4"/>
-    <text x="15" y="28" class="device-label" font-size="12">SKID T05</text>
-    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
-  </g>
+  /* Bảng đo lường SCADA */
+  .scada-table {
+    fill: var(--meas-bg);
+    stroke: #5a8a77;
+    stroke-width: 1;
+  }
+  .scada-val {
+    font-family: 'Consolas', monospace;
+    font-size: 10.5px;
+    fill: #00ffcc;
+  }
+  .scada-lbl {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 10px;
+    fill: #d1d5db;
+  }
 
-  <!-- Trạm T03 (Giữa Đông - Bắc) -->
-  <g id="lay-T03" class="layout-block energized" transform="translate(860, 420)">
-    <rect width="110" height="60" rx="4"/>
-    <text x="15" y="28" class="device-label" font-size="12">SKID T03</text>
-    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
-  </g>
+  /* Thiết bị đóng cắt tương tác */
+  .interactive-cb, .interactive-ds {
+    cursor: pointer;
+  }
+  .interactive-cb:hover rect, .interactive-ds:hover circle {
+    filter: brightness(1.3);
+  }
 
-  <!-- Trạm T01 (Đông Bắc - Cận kề TBA 110kV) -->
-  <g id="lay-T01" class="layout-block energized" transform="translate(1200, 420)">
-    <rect width="110" height="60" rx="4"/>
-    <text x="15" y="28" class="device-label" font-size="12">SKID T01</text>
-    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
-  </g>
+  /* Footer Alarm Strip */
+  footer {
+    background: #193229;
+    padding: 4px 15px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    border-top: 1px solid #0f211b;
+  }
+  .alarm-text { color: #ffcc00; }
+</style>
+</head>
+<body>
 
-  <!-- 4. CÁC TRẠM INVERTER DẢI NAM (MẠCH VÒNG C42: T04 - T02 - T06 - T08) -->
-  <!-- Trạm T04 (Tây Nam) -->
-  <g id="lay-T04" class="layout-block energized" transform="translate(100, 560)">
-    <rect width="110" height="60" rx="4"/>
-    <text x="15" y="28" class="device-label" font-size="12">SKID T04</text>
-    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
-  </g>
+<header>
+  <div class="station-title">110kV HONG PHONG 4 SUBSTATION - PROCESS DISPLAY</div>
+  <div class="nav-btn-group">
+    <button class="scada-btn active" onclick="showTab('sld')">SƠ ĐỒ NHẤT THỨ (SLD)</button>
+    <button class="scada-btn" onclick="showTab('layout')">MẶT BẰNG TRẠM & KHỐI INVERTER</button>
+  </div>
+  <div>HỆ THỐNG: <span style="color:#00ff66">ONLINE</span> | ĐIỀU KHIỂN: <span style="color:#ffcc00">REMOTE</span></div>
+</header>
 
-  <!-- Trạm T02 (Giữa Tây - Nam) -->
-  <g id="lay-T02" class="layout-block energized" transform="translate(480, 560)">
-    <rect width="110" height="60" rx="4"/>
-    <text x="15" y="28" class="device-label" font-size="12">SKID T02</text>
-    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
-  </g>
+<div class="scada-container">
 
-  <!-- Trạm T06 (Giữa Đông - Nam) -->
-  <g id="lay-T06" class="layout-block energized" transform="translate(860, 560)">
-    <rect width="110" height="60" rx="4"/>
-    <text x="15" y="28" class="device-label" font-size="12">SKID T06</text>
-    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
-  </g>
+  <!-- ======================== TAB 1: SLD CHUẨN EVN SURVALENT ======================== -->
+  <div id="panel-sld" class="view-panel active">
+    <svg id="svg-sld" viewBox="0 0 1650 920">
 
-  <!-- Trạm T08 (Đông Nam - Đối diện TBA) -->
-  <g id="lay-T08" class="layout-block energized" transform="translate(1200, 560)">
-    <rect width="110" height="60" rx="4"/>
-    <text x="15" y="28" class="device-label" font-size="12">SKID T08</text>
-    <text x="15" y="46" class="device-label" font-size="10" fill="#facc15">5.5MVA</text>
-  </g>
+      <!-- ================= 1. BẢNG TIÊU ĐỀ NGĂN LỘ 110kV TRÊN CÙNG ================= -->
+      <g transform="translate(180, 20)">
+        <rect width="180" height="42" fill="#2d5849" stroke="#689f89" stroke-width="1"/>
+        <text x="90" y="18" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">110kV LƯƠNG SƠN</text>
+        <text x="90" y="34" text-anchor="middle" font-size="10" fill="#ffcc00">(BAY 171)</text>
+      </g>
 
-  <!-- Tuyến cáp ngầm 22kV kết nối từ TBA đến các trạm -->
-  <path d="M 1365 245 L 1365 370 L 1255 370 L 1255 420" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="5 3"/>
-  <path d="M 1500 245 L 1500 660 L 1255 660 L 1255 620" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="5 3"/>
+      <g transform="translate(540, 20)">
+        <rect width="180" height="42" fill="#2d5849" stroke="#689f89" stroke-width="1"/>
+        <text x="90" y="18" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">MBA T1 25MVA</text>
+        <text x="90" y="34" text-anchor="middle" font-size="10" fill="#ffcc00">(BAY 131)</text>
+      </g>
 
-</svg>
+      <g transform="translate(735, 20)">
+        <rect width="180" height="42" fill="#2d5849" stroke="#689f89" stroke-width="1"/>
+        <text x="90" y="18" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">NGĂN LIÊN LẠC</text>
+        <text x="90" y="34" text-anchor="middle" font-size="10" fill="#ffcc00">(BAY 112)</text>
+      </g>
+
+      <g transform="translate(930, 20)">
+        <rect width="180" height="42" fill="#2d5849" stroke="#689f89" stroke-width="1"/>
+        <text x="90" y="18" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">MBA T2 25MVA</text>
+        <text x="90" y="34" text-anchor="middle" font-size="10" fill="#ffcc00">(BAY 132)</text>
+      </g>
+
+      <g transform="translate(1290, 20)">
+        <rect width="180" height="42" fill="#2d5849" stroke="#689f89" stroke-width="1"/>
+        <text x="90" y="18" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">110kV MŨI NÉ</text>
+        <text x="90" y="34" text-anchor="middle" font-size="10" fill="#ffcc00">(BAY 172)</text>
+      </g>
+
+      <!-- ================= 2. BẢNG ĐO LƯỜNG SCADA 110kV ================= -->
+      <!-- Bảng Bay 171 -->
+      <g transform="translate(180, 75)">
+        <rect width="180" height="75" class="scada-table"/>
+        <text x="8" y="16" class="scada-lbl">U :</text><text id="val-171-u" x="40" y="16" class="scada-val">116.8 kV</text>
+        <text x="8" y="32" class="scada-lbl">I :</text><text id="val-171-i" x="40" y="32" class="scada-val">124.5 A</text>
+        <text x="8" y="48" class="scada-lbl">P :</text><text id="val-171-p" x="40" y="48" class="scada-val">24.8 MW</text>
+        <text x="8" y="64" class="scada-lbl">Q :</text><text id="val-171-q" x="40" y="64" class="scada-val">3.2 MVAr</text>
+        <text x="110" y="64" class="scada-lbl">PF: <span style="color:#00ffcc">0.99</span></text>
+      </g>
+
+      <!-- Bảng Bay 172 -->
+      <g transform="translate(1290, 75)">
+        <rect width="180" height="75" class="scada-table"/>
+        <text x="8" y="16" class="scada-lbl">U :</text><text id="val-172-u" x="40" y="16" class="scada-val">116.9 kV</text>
+        <text x="8" y="32" class="scada-lbl">I :</text><text id="val-172-i" x="40" y="32" class="scada-val">122.1 A</text>
+        <text x="8" y="48" class="scada-lbl">P :</text><text id="val-172-p" x="40" y="48" class="scada-val">24.2 MW</text>
+        <text x="8" y="64" class="scada-lbl">Q :</text><text id="val-172-q" x="40" y="64" class="scada-val">2.9 MVAr</text>
+        <text x="110" y="64" class="scada-lbl">PF: <span style="color:#00ffcc">0.99</span></text>
+      </g>
+
+      <!-- ================= 3. GIÀN THANH CÁI 110kV (C11, C12) ================= -->
+      <line id="bus-C11" x1="120" y1="210" x2="800" y2="210" class="bus-110 p-110-live"/>
+      <text x="50" y="215" font-size="16" fill="#fff" font-weight="bold">C11</text>
+      <!-- Khối đo U & F thanh cái C11 -->
+      <rect x="120" y="220" width="105" height="26" class="scada-table"/>
+      <text id="val-c11-meas" x="126" y="238" font-size="11" fill="#ffff00" font-family="Consolas">117.2kV 50.0Hz</text>
+
+      <line id="bus-C12" x1="850" y1="210" x2="1530" y2="210" class="bus-110 p-110-live"/>
+      <text x="1545" y="215" font-size="16" fill="#fff" font-weight="bold">C12</text>
+      <!-- Khối đo U & F thanh cái C12 -->
+      <rect x="1425" y="220" width="105" height="26" class="scada-table"/>
+      <text id="val-c12-meas" x="1431" y="238" font-size="11" fill="#ffff00" font-family="Consolas">117.1kV 50.0Hz</text>
+
+      <!-- ================= 4. CÁC NGĂN LỘ 110kV ================= -->
+      <!-- Lộ vào 171 -->
+      <line id="w-171-in" x1="270" y1="150" x2="270" y2="175" class="wire-110 p-110-live"/>
+      <g id="ds-171-7" class="interactive-ds" onclick="toggleSwitch('171-7')"></g>
+      <line id="w-171-mid" x1="270" y1="185" x2="270" y2="210" class="wire-110 p-110-live"/>
+      <g id="cb-171" class="interactive-cb" onclick="toggleSwitch('171')"></g>
+
+      <!-- Lộ vào 172 -->
+      <line id="w-172-in" x1="1380" y1="150" x2="1380" y2="175" class="wire-110 p-110-live"/>
+      <g id="ds-172-7" class="interactive-ds" onclick="toggleSwitch('172-7')"></g>
+      <line id="w-172-mid" x1="1380" y1="185" x2="1380" y2="210" class="wire-110 p-110-live"/>
+      <g id="cb-172" class="interactive-cb" onclick="toggleSwitch('172')"></g>
+
+      <!-- Ngăn Liên lạc 112 -->
+      <line id="w-112-l" x1="800" y1="210" x2="800" y2="270" class="wire-110 p-110-live"/>
+      <line id="w-112-r" x1="850" y1="210" x2="850" y2="270" class="wire-110 p-110-live"/>
+      <line id="w-112-tie" x1="800" y1="270" x2="850" y2="270" class="wire-110 p-110-live"/>
+      <g id="cb-112" class="interactive-cb" onclick="toggleSwitch('112')"></g>
+
+      <!-- Ngăn Lộ tổng MBA T1 (131) -->
+      <line id="w-131" x1="630" y1="210" x2="630" y2="340" class="wire-110 p-110-live"/>
+      <g id="cb-131" class="interactive-cb" onclick="toggleSwitch('131')"></g>
+
+      <!-- Máy biến áp T1 & Bảng thông số Tap/Temp chuẩn SCADA -->
+      <g id="trafo-t1" transform="translate(630, 370)">
+        <circle id="t1-c1" cy="-18" r="26" fill="none" stroke="var(--voltage-110kv)" stroke-width="3.5"/>
+        <circle id="t1-c2" cy="18" r="26" fill="none" stroke="var(--voltage-22kv)" stroke-width="3.5"/>
+        <!-- Mũi tên OLTC -->
+        <line x1="-25" y1="25" x2="25" y2="-25" stroke="#ffff00" stroke-width="2.5"/>
+        <polygon points="25,-25 15,-25 25,-15" fill="#ffff00"/>
+        <text x="35" y="5" font-size="14" fill="#fff" font-weight="bold">T1 25MVA</text>
+      </g>
+      <!-- Bảng Tap Pos / Temp T1 -->
+      <g transform="translate(480, 360)">
+        <rect width="130" height="65" class="scada-table"/>
+        <text x="6" y="16" class="scada-lbl">TAP POS : <span style="color:#00ffcc">6</span></text>
+        <text x="6" y="32" class="scada-lbl">OIL TEMP: <span style="color:#00ffcc">46.5°C</span></text>
+        <text x="6" y="48" class="scada-lbl">WDG TEMP: <span style="color:#00ffcc">52.1°C</span></text>
+        <text x="6" y="60" class="scada-lbl">FAN 1/2 : <span style="color:#00ff66">RUN</span></text>
+      </g>
+
+      <!-- Ngăn Lộ tổng MBA T2 (132) -->
+      <line id="w-132" x1="1020" y1="210" x2="1020" y2="340" class="wire-110 p-110-live"/>
+      <g id="cb-132" class="interactive-cb" onclick="toggleSwitch('132')"></g>
+
+      <!-- Máy biến áp T2 -->
+      <g id="trafo-t2" transform="translate(1020, 370)">
+        <circle id="t2-c1" cy="-18" r="26" fill="none" stroke="var(--voltage-110kv)" stroke-width="3.5"/>
+        <circle id="t2-c2" cy="18" r="26" fill="none" stroke="var(--voltage-22kv)" stroke-width="3.5"/>
+        <line x1="-25" y1="25" x2="25" y2="-25" stroke="#ffff00" stroke-width="2.5"/>
+        <polygon points="25,-25 15,-25 25,-15" fill="#ffff00"/>
+        <text x="35" y="5" font-size="14" fill="#fff" font-weight="bold">T2 25MVA</text>
+      </g>
+      <!-- Bảng Tap Pos / Temp T2 -->
+      <g transform="translate(1070, 360)">
+        <rect width="130" height="65" class="scada-table"/>
+        <text x="6" y="16" class="scada-lbl">TAP POS : <span style="color:#00ffcc">6</span></text>
+        <text x="6" y="32" class="scada-lbl">OIL TEMP: <span style="color:#00ffcc">45.8°C</span></text>
+        <text x="6" y="48" class="scada-lbl">WDG TEMP: <span style="color:#00ffcc">51.4°C</span></text>
+        <text x="6" y="60" class="scada-lbl">FAN 1/2 : <span style="color:#00ff66">RUN</span></text>
+      </g>
+
+      <!-- ================= 5. GIÀN THANH CÁI 22kV (C41, C42) ================= -->
+      <!-- Dây từ T1, T2 xuống 22kV -->
+      <line id="w-t1-431" x1="630" y1="400" x2="630" y2="520" class="wire-22 p-22-live"/>
+      <g id="cb-431" class="interactive-cb" onclick="toggleSwitch('431')"></g>
+
+      <line id="w-t2-432" x1="1020" y1="400" x2="1020" y2="520" class="wire-22 p-22-live"/>
+      <g id="cb-432" class="interactive-cb" onclick="toggleSwitch('432')"></g>
+
+      <!-- Thanh cái 22kV C41 & C42 -->
+      <line id="bus-C41" x1="100" y1="520" x2="790" y2="520" class="bus-22 p-22-live"/>
+      <text x="50" y="525" font-size="16" fill="#00e5ff" font-weight="bold">C41</text>
+      <rect x="100" y="530" width="95" height="22" class="scada-table"/>
+      <text id="val-c41-meas" x="105" y="545" font-size="10.5" fill="#00ffcc" font-family="Consolas">23.1kV 50.0Hz</text>
+
+      <line id="bus-C42" x1="860" y1="520" x2="1550" y2="520" class="bus-22 p-22-live"/>
+      <text x="1565" y="525" font-size="16" fill="#00e5ff" font-weight="bold">C42</text>
+      <rect x="1455" y="530" width="95" height="22" class="scada-table"/>
+      <text id="val-c42-meas" x="1460" y="545" font-size="10.5" fill="#00ffcc" font-family="Consolas">23.1kV 50.0Hz</text>
+
+      <!-- Máy cắt liên lạc 22kV (412) -->
+      <line id="w-412" x1="790" y1="520" x2="860" y2="520" class="wire-22 p-dead"/>
+      <g id="cb-412" class="interactive-cb" onclick="toggleSwitch('412')"></g>
+
+      <!-- Lộ Tự dùng TD41 -->
+      <line id="w-td41" x1="240" y1="520" x2="240" y2="600" class="wire-22 p-22-live"/>
+      <g id="cb-473" class="interactive-cb" onclick="toggleSwitch('473')"></g>
+      <circle cx="240" cy="625" r="14" fill="none" stroke="var(--voltage-22kv)" stroke-width="2.5"/>
+      <circle cx="240" cy="645" r="14" fill="none" stroke="#fff" stroke-width="2.5"/>
+      <text x="265" y="635" font-size="11" fill="#fff">TD41 (250kVA)</text>
+
+      <!-- ================= 6. XUẤT TUYẾN 22kV VÀ CÁC TRẠM INVERTER ================= -->
+      <!-- Lộ 471 (C41 ra Mạch vòng 1: T01 - T03 - T05 - T07) -->
+      <line id="w-471" x1="450" y1="520" x2="450" y2="640" class="wire-22 p-22-live"/>
+      <g id="cb-471" class="interactive-cb" onclick="toggleSwitch('471')"></g>
+
+      <!-- Lộ 472 (C42 ra Mạch vòng 2: T08 - T06 - T02 - T04) -->
+      <line id="w-472" x1="1200" y1="520" x2="1200" y2="640" class="wire-22 p-22-live"/>
+      <g id="cb-472" class="interactive-cb" onclick="toggleSwitch('472')"></g>
+
+      <!-- Tuyến gom cáp ngầm mạch 1 -->
+      <line id="loop-w1" x1="120" y1="640" x2="680" y2="640" class="wire-22 p-22-live"/>
+      <!-- Tuyến gom cáp ngầm mạch 2 -->
+      <line id="loop-w2" x1="960" y1="640" x2="1520" y2="640" class="wire-22 p-22-live"/>
+
+      <!-- CÁC KHỐI INVERTER STATION DƯỚI ĐÁY SCADA -->
+      <!-- T01 -->
+      <g transform="translate(70, 680)">
+        <rect width="120" height="90" fill="#204235" stroke="#4e826f" stroke-width="1.5"/>
+        <text x="60" y="20" text-anchor="middle" font-size="12" fill="#00e5ff" font-weight="bold">SKID T01</text>
+        <text x="60" y="38" text-anchor="middle" font-size="10" fill="#ffcc00">5.5MVA</text>
+        <line x1="60" y1="-40" x2="60" y2="0" class="wire-22 p-22-live" id="w-t01"/>
+        <g id="cb-4301" class="interactive-cb" onclick="toggleSwitch('4301')"></g>
+        <text x="60" y="78" text-anchor="middle" font-size="10" fill="#a7f3d0">2x2.75MW</text>
+      </g>
+
+      <!-- T03 -->
+      <g transform="translate(220, 680)">
+        <rect width="120" height="90" fill="#204235" stroke="#4e826f" stroke-width="1.5"/>
+        <text x="60" y="20" text-anchor="middle" font-size="12" fill="#00e5ff" font-weight="bold">SKID T03</text>
+        <text x="60" y="38" text-anchor="middle" font-size="10" fill="#ffcc00">5.5MVA</text>
+        <line x1="60" y1="-40" x2="60" y2="0" class="wire-22 p-22-live" id="w-t03"/>
+        <g id="cb-4303" class="interactive-cb" onclick="toggleSwitch('4303')"></g>
+        <text x="60" y="78" text-anchor="middle" font-size="10" fill="#a7f3d0">2x2.75MW</text>
+      </g>
+
+      <!-- T05 -->
+      <g transform="translate(370, 680)">
+        <rect width="120" height="90" fill="#204235" stroke="#4e826f" stroke-width="1.5"/>
+        <text x="60" y="20" text-anchor="middle" font-size="12" fill="#00e5ff" font-weight="bold">SKID T05</text>
+        <text x="60" y="38" text-anchor="middle" font-size="10" fill="#ffcc00">5.5MVA</text>
+        <line x1="60" y1="-40" x2="60" y2="0" class="wire-22 p-22-live" id="w-t05"/>
+        <g id="cb-4305" class="interactive-cb" onclick="toggleSwitch('4305')"></g>
+        <text x="60" y="78" text-anchor="middle" font-size="10" fill="#a7f3d0">2x2.75MW</text>
+      </g>
+
+      <!-- T07 -->
+      <g transform="translate(520, 680)">
+        <rect width="120" height="90" fill="#204235" stroke="#4e826f" stroke-width="1.5"/>
+        <text x="60" y="20" text-anchor="middle" font-size="12" fill="#00e5ff" font-weight="bold">SKID T07</text>
+        <text x="60" y="38" text-anchor="middle" font-size="10" fill="#ffcc00">5.5MVA</text>
+        <line x1="60" y1="-40" x2="60" y2="0" class="wire-22 p-22-live" id="w-t07"/>
+        <g id="cb-4307" class="interactive-cb" onclick="toggleSwitch('4307')"></g>
+        <text x="60" y="78" text-anchor="middle" font-size="10" fill="#a7f3d0">2x2.75MW</text>
+      </g>
+
+      <!-- T08 -->
+      <g transform="translate(950, 680)">
+        <rect width="120" height="90" fill="#204235" stroke="#4e826f" stroke-width="1.5"/>
+        <text x="60" y="20" text-anchor="middle" font-size="12" fill="#00e5ff" font-weight="bold">SKID T08</text>
+        <text x="60" y="38" text-anchor="middle" font-size="10" fill="#ffcc00">5.5MVA</text>
+        <line x1="60" y1="-40" x2="60" y2="0" class="wire-22 p-22-live" id="w-t08"/>
+        <g id="cb-4308" class="interactive-cb" onclick="toggleSwitch('4308')"></g>
+        <text x="60" y="78" text-anchor="middle" font-size="10" fill="#a7f3d0">2x2.75MW</text>
+      </g>
+
+      <!-- T06 -->
+      <g transform="translate(1100, 680)">
+        <rect width="120" height="90" fill="#204235" stroke="#4e826f" stroke-width="1.5"/>
+        <text x="60" y="20" text-anchor="middle" font-size="12" fill="#00e5ff" font-weight="bold">SKID T06</text>
+        <text x="60" y="38" text-anchor="middle" font-size="10" fill="#ffcc00">5.5MVA</text>
+        <line x1="60" y1="-40" x2="60" y2="0" class="wire-22 p-22-live" id="w-t06"/>
+        <g id="cb-4306" class="interactive-cb" onclick="toggleSwitch('4306')"></g>
+        <text x="60" y="78" text-anchor="middle" font-size="10" fill="#a7f3d0">2x2.75MW</text>
+      </g>
+
+      <!-- T02 -->
+      <g transform="translate(1250, 680)">
+        <rect width="120" height="90" fill="#204235" stroke="#4e826f" stroke-width="1.5"/>
+        <text x="60" y="20" text-anchor="middle" font-size="12" fill="#00e5ff" font-weight="bold">SKID T02</text>
+        <text x="60" y="38" text-anchor="middle" font-size="10" fill="#ffcc00">5.5MVA</text>
+        <line x1="60" y1="-40" x2="60" y2="0" class="wire-22 p-22-live" id="w-t02"/>
+        <g id="cb-4302" class="interactive-cb" onclick="toggleSwitch('4302')"></g>
+        <text x="60" y="78" text-anchor="middle" font-size="10" fill="#a7f3d0">2x2.75MW</text>
+      </g>
+
+      <!-- T04 -->
+      <g transform="translate(1400, 680)">
+        <rect width="120" height="90" fill="#204235" stroke="#4e826f" stroke-width="1.5"/>
+        <text x="60" y="20" text-anchor="middle" font-size="12" fill="#00e5ff" font-weight="bold">SKID T04</text>
+        <text x="60" y="38" text-anchor="middle" font-size="10" fill="#ffcc00">5.5MVA</text>
+        <line x1="60" y1="-40" x2="60" y2="0" class="wire-22 p-22-live" id="w-t04"/>
+        <g id="cb-4304" class="interactive-cb" onclick="toggleSwitch('4304')"></g>
+        <text x="60" y="78" text-anchor="middle" font-size="10" fill="#a7f3d0">2x2.75MW</text>
+      </g>
+
+    </svg>
+  </div>
+
+  <!-- ======================== TAB 2: MẶT BẰNG THỰC ĐỊA ======================== -->
+  <div id="panel-layout" class="view-panel">
+    <svg id="svg-layout" viewBox="0 0 1650 920">
+      
+      <!-- Cánh đồng pin nền vệ tinh -->
+      <rect x="60" y="320" width="1200" height="130" rx="4" fill="#2a5242" stroke="#447360" stroke-width="1.5"/>
+      <text x="75" y="345" font-size="13" fill="#86efac" font-weight="bold">DẢI PIN MẶT TRỜI PHÍA BẮC (NORTH ARRAY)</text>
+
+      <rect x="60" y="590" width="1520" height="260" rx="4" fill="#2a5242" stroke="#447360" stroke-width="1.5"/>
+      <text x="75" y="615" font-size="13" fill="#86efac" font-weight="bold">DẢI PIN MẶT TRỜI PHÍA NAM (SOUTH ARRAY)</text>
+
+      <!-- Trục đường nội bộ chính Đông - Tây -->
+      <line x1="40" y1="510" x2="1600" y2="510" stroke="#1f3b31" stroke-width="28" stroke-linecap="round"/>
+      <line x1="40" y1="510" x2="1600" y2="510" stroke="#facc15" stroke-width="2" stroke-dasharray="16 12"/>
+      <text x="700" y="515" font-size="12" fill="#fff" font-weight="bold">ĐƯỜNG NỘI BỘ VẬN HÀNH TRỤC ĐÔNG - TÂY</text>
+
+      <!-- TBA 110kV & Nhà điều hành góc Đông Bắc -->
+      <g transform="translate(1280, 40)">
+        <rect width="320" height="260" rx="6" fill="#274b3d" stroke="#facc15" stroke-width="2"/>
+        <text x="20" y="26" font-size="13" fill="#facc15" font-weight="bold">TBA 110kV & NHÀ ĐIỀU HÀNH TRUNG TÂM</text>
+
+        <!-- Sân 110kV -->
+        <line id="lay-c11" x1="30" y1="60" x2="150" y2="60" stroke-width="7" class="p-110-live"/>
+        <text x="75" y="52" font-size="10" fill="#fff">C11</text>
+        <line id="lay-c12" x1="170" y1="60" x2="290" y2="60" stroke-width="7" class="p-110-live"/>
+        <text x="215" y="52" font-size="10" fill="#fff">C12</text>
+
+        <!-- Bệ T1 & T2 -->
+        <rect id="lay-t1" x="35" y="85" width="110" height="60" rx="4" fill="#ff3b30" stroke="#fff" stroke-width="1.5"/>
+        <text x="55" y="120" font-size="12" fill="#fff" font-weight="bold">MBA T1</text>
+
+        <rect id="lay-t2" x="175" y="85" width="110" height="60" rx="4" fill="#ff3b30" stroke="#fff" stroke-width="1.5"/>
+        <text x="195" y="120" font-size="12" fill="#fff" font-weight="bold">MBA T2</text>
+
+        <!-- Phòng phân phối 22kV -->
+        <rect id="lay-c41" x="35" y="175" width="110" height="55" rx="3" fill="#00e5ff" stroke="#fff" stroke-width="1.5"/>
+        <text x="55" y="208" font-size="11" fill="#000" font-weight="bold">TỦ C41</text>
+
+        <rect id="lay-c42" x="175" y="175" width="110" height="55" rx="3" fill="#00e5ff" stroke="#fff" stroke-width="1.5"/>
+        <text x="195" y="208" font-size="11" fill="#000" font-weight="bold">TỦ C42</text>
+      </g>
+
+      <!-- 8 Khối Inverter bố trí theo ảnh thực địa -->
+      <!-- Dải Bắc: T07, T05, T03, T01 -->
+      <g id="lay-t07" transform="translate(100, 380)">
+        <rect width="110" height="60" rx="4" fill="#00e5ff" stroke="#fff" stroke-width="1.5"/>
+        <text x="20" y="35" font-size="13" fill="#000" font-weight="bold">SKID T07</text>
+      </g>
+      <g id="lay-t05" transform="translate(450, 380)">
+        <rect width="110" height="60" rx="4" fill="#00e5ff" stroke="#fff" stroke-width="1.5"/>
+        <text x="20" y="35" font-size="13" fill="#000" font-weight="bold">SKID T05</text>
+      </g>
+      <g id="lay-t03" transform="translate(800, 380)">
+        <rect width="110" height="60" rx="4" fill="#00e5ff" stroke="#fff" stroke-width="1.5"/>
+        <text x="20" y="35" font-size="13" fill="#000" font-weight="bold">SKID T03</text>
+      </g>
+      <g id="lay-t01" transform="translate(1140, 380)">
+        <rect width="110" height="60" rx="4" fill="#00e5ff" stroke="#fff" stroke-width="1.5"/>
+        <text x="20" y="35" font-size="13" fill="#000" font-weight="bold">SKID T01</text>
+      </g>
+
+      <!-- Dải Nam: T04, T02, T06, T08 -->
+      <g id="lay-t04" transform="translate(100, 560)">
+        <rect width="110" height="60" rx="4" fill="#00e5ff" stroke="#fff" stroke-width="1.5"/>
+        <text x="20" y="35" font-size="13" fill="#000" font-weight="bold">SKID T04</text>
+      </g>
+      <g id="lay-t02" transform="translate(450, 560)">
+        <rect width="110" height="60" rx="4" fill="#00e5ff" stroke="#fff" stroke-width="1.5"/>
+        <text x="20" y="35" font-size="13" fill="#000" font-weight="bold">SKID T02</text>
+      </g>
+      <g id="lay-t06" transform="translate(800, 560)">
+        <rect width="110" height="60" rx="4" fill="#00e5ff" stroke="#fff" stroke-width="1.5"/>
+        <text x="20" y="35" font-size="13" fill="#000" font-weight="bold">SKID T06</text>
+      </g>
+      <g id="lay-t08" transform="translate(1360, 560)">
+        <rect width="110" height="60" rx="4" fill="#00e5ff" stroke="#fff" stroke-width="1.5"/>
+        <text x="20" y="35" font-size="13" fill="#000" font-weight="bold">SKID T08</text>
+      </g>
+
+    </svg>
+  </div>
+
+</div>
+
+<footer>
+  <div class="alarm-text" id="status-bar">TRẠNG THÁI: TẤT CẢ PHÂN ĐOẠN ĐANG VẬN HÀNH BÌNH THƯỜNG - NHẤP VÀO MÁY CẮT ĐỂ THAO TÁC ĐÓNG/CẮT SCADA.</div>
+  <div>SCADA SERVER: <span style="color:#00ffcc">MASTER (PRI)</span></div>
+</footer>
+
+<script>
+  // Trạng thái các thiết bị đóng cắt
+  const devState = {
+    '171': true, '171-7': true,
+    '172': true, '172-7': true,
+    '112': true,
+    '131': true, '132': true,
+    '431': true, '432': true,
+    '412': false, // MC Phân đoạn 22kV thường mở
+    '473': true,
+    '471': true, '472': true,
+    '4301': true, '4303': true, '4305': true, '4307': true,
+    '4308': true, '4306': true, '4302': true, '4304': true
+  };
+
+  // Tọa độ vẽ thiết bị
+  const coords = {
+    '171': { x: 270, y: 195, type: 'cb', label: '171' },
+    '171-7': { x: 270, y: 165, type: 'ds', label: '171-7' },
+    '172': { x: 1380, y: 195, type: 'cb', label: '172' },
+    '172-7': { x: 1380, y: 165, type: 'ds', label: '172-7' },
+    '112': { x: 825, y: 270, type: 'cb', label: '112' },
+    '131': { x: 630, y: 270, type: 'cb', label: '131' },
+    '132': { x: 1020, y: 270, type: 'cb', label: '132' },
+    '431': { x: 630, y: 470, type: 'cb', label: '431' },
+    '432': { x: 1020, y: 470, type: 'cb', label: '432' },
+    '412': { x: 825, y: 520, type: 'cb', label: '412' },
+    '473': { x: 240, y: 560, type: 'cb', label: '473' },
+    '471': { x: 450, y: 580, type: 'cb', label: '471' },
+    '472': { x: 1200, y: 580, type: 'cb', label: '472' },
+    '4301': { x: 130, y: 720, type: 'cb', label: '4301' },
+    '4303': { x: 280, y: 720, type: 'cb', label: '4303' },
+    '4305': { x: 430, y: 720, type: 'cb', label: '4305' },
+    '4307': { x: 580, y: 720, type: 'cb', label: '4307' },
+    '4308': { x: 1010, y: 720, type: 'cb', label: '4308' },
+    '4306': { x: 1160, y: 720, type: 'cb', label: '4306' },
+    '4302': { x: 1310, y: 720, type: 'cb', label: '4302' },
+    '4304': { x: 1460, y: 720, type: 'cb', label: '4304' }
+  };
+
+  // Vẽ biểu tượng SCADA chuẩn
+  function drawSymbols() {
+    for (const [id, c] of Object.entries(coords)) {
+      const el = document.getElementById(c.type === 'cb' ? `cb-${id}` : `ds-${id}`);
+      if (!el) continue;
+
+      const isClosed = devState[id];
+
+      if (c.type === 'cb') {
+        // Máy cắt: Vuông đỏ solid (Đóng) / Viền vuông rỗng xanh lá (Mở)
+        el.innerHTML = `
+          <rect x="${c.x - 11}" y="${c.y - 11}" width="22" height="22" rx="2"
+                fill="${isClosed ? 'var(--cb-closed)' : '#274b3d'}"
+                stroke="${isClosed ? '#fff' : 'var(--cb-open)'}" stroke-width="2.5"/>
+          <text x="${c.x + 16}" y="${c.y + 5}" font-size="11" font-weight="bold" fill="#ffffff">${c.label}</text>
+        `;
+      } else {
+        // Dao cách ly: 2 chấm tròn
+        el.innerHTML = `
+          <circle cx="${c.x}" cy="${c.y - 8}" r="4" fill="${isClosed ? 'var(--ds-closed)' : '#fff'}"/>
+          <circle cx="${c.x}" cy="${c.y + 8}" r="4" fill="${isClosed ? 'var(--ds-closed)' : '#fff'}"/>
+          <line x1="${c.x}" y1="${c.y - 8}" x2="${isClosed ? c.x : c.x + 12}" y2="${c.y + 8}" 
+                stroke="${isClosed ? 'var(--ds-closed)' : '#fff'}" stroke-width="2.5"/>
+          <text x="${c.x + 16}" y="${c.y + 4}" font-size="10" fill="#ffff80">${c.label}</text>
+        `;
+      }
+    }
+  }
+
+  // Thuật toán truy vết dòng điện
+  function solveTopology() {
+    const s171 = devState['171'] && devState['171-7'];
+    const s172 = devState['172'] && devState['172-7'];
+
+    let c11 = s171;
+    let c12 = s172;
+
+    if (devState['112']) {
+      if (c11 || c12) { c11 = true; c12 = true; }
+    }
+
+    const t1 = c11 && devState['131'];
+    const t2 = c12 && devState['132'];
+
+    let c41 = t1 && devState['431'];
+    let c42 = t2 && devState['432'];
+
+    if (devState['412']) {
+      if (c41 || c42) { c41 = true; c42 = true; }
+    }
+
+    const f471 = c41 && devState['471'];
+    const f472 = c42 && devState['472'];
+
+    // Cập nhật giao diện SLD
+    setWire('bus-C11', c11, '110');
+    setWire('bus-C12', c12, '110');
+    setWire('w-171-in', s171, '110');
+    setWire('w-171-mid', s171, '110');
+    setWire('w-172-in', s172, '110');
+    setWire('w-172-mid', s172, '110');
+    setWire('w-112-l', c11, '110');
+    setWire('w-112-r', c12, '110');
+    setWire('w-112-tie', devState['112'] && (c11 || c12), '110');
+
+    setWire('w-131', c11, '110');
+    setTrafo('trafo-t1', t1);
+    setWire('w-t1-431', t1, '22');
+
+    setWire('w-132', c12, '110');
+    setTrafo('trafo-t2', t2);
+    setWire('w-t2-432', t2, '22');
+
+    setWire('bus-C41', c41, '22');
+    setWire('bus-C42', c42, '22');
+    setWire('w-412', devState['412'] && (c41 || c42), '22');
+    setWire('w-471', c41, '22');
+    setWire('w-472', c42, '22');
+    setWire('loop-w1', f471, '22');
+    setWire('loop-w2', f472, '22');
+
+    // Cập nhật số liệu đo lường SCADA theo trạng thái
+    document.getElementById('val-171-u').innerText = s171 ? '116.8 kV' : '0.0 kV';
+    document.getElementById('val-171-i').innerText = s171 ? '124.5 A' : '0.0 A';
+    document.getElementById('val-171-p').innerText = s171 ? '24.8 MW' : '0.0 MW';
+
+    document.getElementById('val-c11-meas').innerText = c11 ? '117.2kV 50.0Hz' : '0.0kV 0.0Hz';
+    document.getElementById('val-c12-meas').innerText = c12 ? '117.1kV 50.0Hz' : '0.0kV 0.0Hz';
+    document.getElementById('val-c41-meas').innerText = c41 ? '23.1kV 50.0Hz' : '0.0kV 0.0Hz';
+    document.getElementById('val-c42-meas').innerText = c42 ? '23.1kV 50.0Hz' : '0.0kV 0.0Hz';
+
+    // Cập nhật Tab Mặt bằng
+    setLayoutItem('lay-c11', c11, '110');
+    setLayoutItem('lay-c12', c12, '110');
+    setLayoutItem('lay-t1', t1, 'box');
+    setLayoutItem('lay-t2', t2, 'box');
+    setLayoutItem('lay-c41', c41, '22box');
+    setLayoutItem('lay-c42', c42, '22box');
+
+    // 8 trạm inverter
+    setLayoutItem('lay-t01', f471 && devState['4301'], '22box');
+    setLayoutItem('lay-t03', f471 && devState['4303'], '22box');
+    setLayoutItem('lay-t05', f471 && devState['4305'], '22box');
+    setLayoutItem('lay-t07', f471 && devState['4307'], '22box');
+
+    setLayoutItem('lay-t08', f472 && devState['4308'], '22box');
+    setLayoutItem('lay-t06', f472 && devState['4306'], '22box');
+    setLayoutItem('lay-t02', f472 && devState['4302'], '22box');
+    setLayoutItem('lay-t04', f472 && devState['4304'], '22box');
+  }
+
+  function setWire(id, isLive, level) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('p-110-live', 'p-22-live', 'p-dead');
+    if (isLive) {
+      el.classList.add(level === '110' ? 'p-110-live' : 'p-22-live');
+    } else {
+      el.classList.add('p-dead');
+    }
+  }
+
+  function setTrafo(id, isLive) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const c1 = el.querySelector('circle:nth-child(1)');
+    const c2 = el.querySelector('circle:nth-child(2)');
+    if (isLive) {
+      c1.setAttribute('stroke', 'var(--voltage-110kv)');
+      c2.setAttribute('stroke', 'var(--voltage-22kv)');
+    } else {
+      c1.setAttribute('stroke', 'var(--dead-wire)');
+      c2.setAttribute('stroke', 'var(--dead-wire)');
+    }
+  }
+
+  function setLayoutItem(id, isLive, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const target = el.tagName === 'g' ? el.querySelector('rect') : el;
+    if (!target) return;
+
+    if (type === '110') {
+      target.style.stroke = isLive ? 'var(--voltage-110kv)' : 'var(--dead-wire)';
+    } else if (type === 'box') {
+      target.style.fill = isLive ? '#ff3b30' : '#475569';
+    } else if (type === '22box') {
+      target.style.fill = isLive ? '#00e5ff' : '#475569';
+    }
+  }
+
+  function toggleSwitch(id) {
+    devState[id] = !devState[id];
+    const st = devState[id] ? "ĐÓNG (ON)" : "CẮT (OFF)";
+    document.getElementById('status-bar').innerText = 
+      `LỆNH ĐIỀU KHIỂN SCADA THÀNH CÔNG: THIẾT BỊ [${id}] ĐÃ CHUYỂN SANG TRẠNG THÁI ${st}.`;
+    drawSymbols();
+    solveTopology();
+  }
+
+  function showTab(tab) {
+    document.querySelectorAll('.scada-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+    if (tab === 'sld') {
+      document.querySelectorAll('.scada-btn')[0].classList.add('active');
+      document.getElementById('panel-sld').classList.add('active');
+    } else {
+      document.querySelectorAll('.scada-btn')[1].classList.add('active');
+      document.getElementById('panel-layout').classList.add('active');
+    }
+  }
+
+  window.onload = () => {
+    drawSymbols();
+    solveTopology();
+  };
+</script>
+
+</body>
+</html>
