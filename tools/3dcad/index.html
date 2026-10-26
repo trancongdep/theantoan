@@ -1,0 +1,3023 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoCAD Web Studio 2D/3D — DXF/CAD Viewer & Modeler</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; user-select: none; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0f19;
+      color: #e2e8f0;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .tool-btn {
+      transition: all 0.15s ease;
+    }
+    .tool-btn.active {
+      background-color: #2563eb;
+      color: #ffffff;
+      border-color: #3b82f6;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.45);
+    }
+    .viewport-canvas {
+      cursor: none;
+    }
+    .viewport-canvas.pan-cursor {
+      cursor: grab;
+    }
+    .viewport-canvas.pan-cursor:active {
+      cursor: grabbing;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen w-screen overflow-hidden bg-[#0b0f19] text-slate-200">
+
+  <!-- TOP RIBBON / HEADER BAR -->
+  <header class="h-12 bg-[#111827] border-b border-slate-800 px-3 flex items-center justify-between gap-2 shrink-0 z-20">
+    <!-- Brand & File Actions -->
+    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+      <div class="flex items-center gap-2 pr-2 border-r border-slate-800">
+        <div class="w-7 h-7 rounded bg-gradient-to-br from-red-600 to-rose-700 flex items-center justify-center font-bold text-white text-xs shadow">
+          A
+        </div>
+        <div class="leading-tight hidden sm:block">
+          <div class="font-bold text-xs tracking-wide text-white flex items-center gap-1.5">
+            CAD STUDIO <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-semibold">2D/3D DXF</span>
+          </div>
+          <div id="currentFileName" class="text-[10px] text-slate-400 mono truncate max-w-[150px]">villa_floorplan.dxf</div>
+        </div>
+      </div>
+
+      <!-- File Open / Samples / Export -->
+      <label for="dxfFileInput" class="cursor-pointer px-2.5 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium flex items-center gap-1.5 transition shrink-0 shadow-sm">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        <span>Mở File CAD (.DXF/.DWG)</span>
+      </label>
+      <input id="dxfFileInput" type="file" accept=".dxf,.dwg,.json,.cad" class="hidden" />
+
+      <div class="relative">
+        <select id="presetSelect" aria-label="Bản vẽ mẫu" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer">
+          <option value="villa">Mẫu 1: Mặt bằng & 3D Kiến trúc Villa</option>
+          <option value="mechanical">Mẫu 2: Chi tiết Cơ khí Mặt bích & Bánh răng</option>
+          <option value="steel">Mẫu 3: Kết cấu Khung Nhà Thép 3D</option>
+          <option value="empty">Bản vẽ trống mới (Blank CAD)</option>
+        </select>
+      </div>
+
+      <button id="btnExportDXF" class="px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium flex items-center gap-1 text-emerald-400 transition shrink-0" title="Xuất ra file chuẩn AutoCAD .DXF">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        <span class="hidden md:inline">Xuất .DXF</span>
+      </button>
+
+      <button id="btnExportPNG" class="px-2 py-1.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 transition shrink-0 hidden lg:flex items-center gap-1" title="Chụp ảnh bản vẽ PNG">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+        <span>Ảnh PNG</span>
+      </button>
+    </div>
+
+    <!-- Center Viewport Mode Switcher (2D / Split / 3D) -->
+    <div class="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800 shrink-0">
+      <button id="mode2DBtn" class="px-2.5 py-1 rounded-md text-xs font-semibold transition bg-blue-600 text-white">
+        2D CAD
+      </button>
+      <button id="modeSplitBtn" class="px-2.5 py-1 rounded-md text-xs font-semibold transition text-slate-400 hover:text-white">
+        Song song 2D+3D
+      </button>
+      <button id="mode3DBtn" class="px-2.5 py-1 rounded-md text-xs font-semibold transition text-slate-400 hover:text-white">
+        3D Orbit
+      </button>
+    </div>
+
+    <!-- Right Quick Actions (Undo, Redo, Zoom Extents, Help) -->
+    <div class="flex items-center gap-1 shrink-0">
+      <button id="btnUndo" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs" title="Hoàn tác (Ctrl+Z)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h10a5 5 0 015 5v2M3 10l4-4M3 10l4 4"/></svg>
+      </button>
+      <button id="btnRedo" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs" title="Làm lại (Ctrl+Y)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10H11a5 5 0 00-5 5v2m15-7l-4-4m4 4l-4 4"/></svg>
+      </button>
+      <button id="btnZoomFit" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700" title="Thu phóng vừa khít toàn bộ bản vẽ (Zoom Extents)">
+        Zoom Fit
+      </button>
+      <button id="btnDeleteSelected" class="px-2 py-1 rounded bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 text-xs font-medium" title="Xóa đối tượng đang chọn (Delete)">
+        Xóa
+      </button>
+      <button id="btnHelpModal" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold border border-slate-700" title="Hướng dẫn & Phím tắt AutoCAD">
+        ?
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE AREA -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT DRAWING & 3D TOOLBAR -->
+    <aside class="w-12 sm:w-14 bg-[#111827] border-r border-slate-800 flex flex-col items-center py-2 gap-1.5 overflow-y-auto shrink-0 z-10">
+      <div class="text-[9px] font-bold uppercase tracking-wider text-slate-500">Chuột</div>
+      <button data-tool="SELECT" class="tool-btn active w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center text-slate-300 hover:bg-slate-700" title="Chọn & Chỉnh sửa đối tượng (ESC / V)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
+        <span class="text-[8px] mt-0.5">Select</span>
+      </button>
+
+      <button data-tool="PAN" class="tool-btn w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center text-slate-300 hover:bg-slate-700" title="Kéo mặt phẳng bản vẽ (H hoặc giữ chuột giữa)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>
+        <span class="text-[8px] mt-0.5">Pan</span>
+      </button>
+
+      <div class="w-7 border-t border-slate-800 my-0.5"></div>
+      <div class="text-[9px] font-bold uppercase tracking-wider text-slate-500">Vẽ 2D</div>
+
+      <button data-tool="LINE" class="tool-btn w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center text-slate-300 hover:bg-slate-700" title="Lệnh LINE (L) - Vẽ đoạn thẳng">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="4"/><circle cx="4" cy="20" r="2" fill="currentColor"/><circle cx="20" cy="4" r="2" fill="currentColor"/></svg>
+        <span class="text-[8px] mt-0.5">Line</span>
+      </button>
+
+      <button data-tool="POLYLINE" class="tool-btn w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center text-slate-300 hover:bg-slate-700" title="Lệnh POLYLINE (PL) - Vẽ đường đa tuyến liên tiếp (Nhấn Enter/Chuột phải để kết thúc)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><circle cx="3" cy="17" r="1.5"/><circle cx="9" cy="11" r="1.5"/><circle cx="13" cy="15" r="1.5"/><circle cx="21" cy="7" r="1.5"/></svg>
+        <span class="text-[8px] mt-0.5">P-Line</span>
+      </button>
+
+      <button data-tool="RECT" class="tool-btn w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center text-slate-300 hover:bg-slate-700" title="Lệnh RECTANGLE (REC) - Vẽ hình chữ nhật / Tường / Cột">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1"/></svg>
+        <span class="text-[8px] mt-0.5">Rect</span>
+      </button>
+
+      <button data-tool="CIRCLE" class="tool-btn w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center text-slate-300 hover:bg-slate-700" title="Lệnh CIRCLE (C) - Vẽ đường tròn tâm và bán kính">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+        <span class="text-[8px] mt-0.5">Circle</span>
+      </button>
+
+      <button data-tool="ARC" class="tool-btn w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center text-slate-300 hover:bg-slate-700" title="Lệnh ARC (A) - Vẽ cung tròn (Tâm -> Điểm đầu -> Góc cuối)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 18a10 10 0 0116 0"/></svg>
+        <span class="text-[8px] mt-0.5">Arc</span>
+      </button>
+
+      <button data-tool="DIM" class="tool-btn w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center text-slate-300 hover:bg-slate-700" title="Lệnh DIMENSION (DIM) - Đo và ghi kích thước tự động">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 8V4m16 4V4M4 6h16M7 3L4 6l3 3m10-6l3 3-3 3"/></svg>
+        <span class="text-[8px] mt-0.5">Dim</span>
+      </button>
+
+      <button data-tool="TEXT" class="tool-btn w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center text-slate-300 hover:bg-slate-700" title="Lệnh TEXT (T) - Ghi chú văn bản kỹ thuật">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+        <span class="text-[8px] mt-0.5">Text</span>
+      </button>
+
+      <div class="w-7 border-t border-slate-800 my-0.5"></div>
+      <div class="text-[9px] font-bold uppercase tracking-wider text-cyan-400">Khối 3D</div>
+
+      <button data-tool="BOX3D" class="tool-btn w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center text-cyan-300 hover:bg-slate-700" title="Tạo khối hộp 3D (BOX) - Vẽ đáy 2D và tự động đẩy khối 3D">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span class="text-[8px] mt-0.5">3D Box</span>
+      </button>
+
+      <button data-tool="CYLINDER3D" class="tool-btn w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center text-cyan-300 hover:bg-slate-700" title="Tạo khối trụ tròn 3D (CYLINDER)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v14c0 1.66 3.13 3 7 3s7-1.34 7-3V5"/></svg>
+        <span class="text-[8px] mt-0.5">3D Cyl</span>
+      </button>
+    </aside>
+
+    <!-- CENTER VIEWPORTS (2D CANVAS & 3D WEBGL) -->
+    <main id="viewportWrapper" class="flex-1 flex relative bg-[#090d16] overflow-hidden">
+
+      <!-- Drag & Drop Overlay -->
+      <div id="dropZoneOverlay" class="hidden absolute inset-0 bg-blue-900/60 backdrop-blur-sm z-50 border-4 border-dashed border-blue-400 flex flex-col items-center justify-center pointer-events-none">
+        <div class="bg-slate-900/90 px-6 py-4 rounded-xl border border-blue-400 text-center shadow-2xl">
+          <div class="text-lg font-bold text-white">Thả file AutoCAD (.DXF / .DWG / .JSON) vào đây</div>
+          <div class="text-xs text-blue-300 mt-1">Tự động phân tích Entities, Layers, Blocks & tạo mô hình 2D/3D</div>
+        </div>
+      </div>
+
+      <!-- 2D CAD VIEWPORT -->
+      <div id="view2DContainer" class="flex-1 relative h-full overflow-hidden border-r border-slate-800">
+        <canvas id="cad2DCanvas" class="w-full h-full block viewport-canvas"></canvas>
+
+        <!-- Top-left 2D Viewport HUD Badge -->
+        <div class="absolute top-2.5 left-3 flex items-center gap-2 pointer-events-none">
+          <span class="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700 text-[11px] font-semibold text-amber-400 mono">
+            [TOP] 2D WIREFRAME
+          </span>
+          <span id="activeToolBadge" class="px-2 py-0.5 rounded bg-blue-950/90 border border-blue-700/70 text-[11px] text-blue-300 mono">
+            TOOL: SELECT
+          </span>
+        </div>
+
+        <!-- Floating Dynamic Input Box near cursor or top-right of 2D view -->
+        <div id="cadHintBanner" class="absolute top-2.5 right-3 px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700/80 text-[11px] text-slate-300 mono pointer-events-none hidden sm:block">
+          Click để chọn hoặc dùng thanh công cụ bên trái • Lăn chuột để Zoom
+        </div>
+      </div>
+
+      <!-- 3D WEBGL VIEWPORT -->
+      <div id="view3DContainer" class="hidden flex-1 relative h-full overflow-hidden bg-[#070a12]">
+        <div id="threeMount" class="w-full h-full"></div>
+
+        <!-- Top-left 3D Viewport Controls -->
+        <div class="absolute top-2.5 left-3 flex flex-wrap items-center gap-1.5 z-10">
+          <span class="px-2 py-0.5 rounded bg-slate-900/90 border border-cyan-800/70 text-[11px] font-semibold text-cyan-400 mono">
+            [3D] PERSPECTIVE ORBIT
+          </span>
+          <button data-cam="iso" class="cam3d-btn px-2 py-0.5 rounded bg-slate-800/90 hover:bg-slate-700 text-[11px] text-slate-200 border border-slate-700">Iso</button>
+          <button data-cam="top" class="cam3d-btn px-2 py-0.5 rounded bg-slate-800/90 hover:bg-slate-700 text-[11px] text-slate-200 border border-slate-700">Top</button>
+          <button data-cam="front" class="cam3d-btn px-2 py-0.5 rounded bg-slate-800/90 hover:bg-slate-700 text-[11px] text-slate-200 border border-slate-700">Front</button>
+          <button data-cam="side" class="cam3d-btn px-2 py-0.5 rounded bg-slate-800/90 hover:bg-slate-700 text-[11px] text-slate-200 border border-slate-700">Right</button>
+          <button id="btnToggle3DWireframe" class="px-2 py-0.5 rounded bg-slate-800/90 hover:bg-slate-700 text-[11px] text-emerald-400 border border-slate-700">
+            Shaded + Edges
+          </button>
+        </div>
+
+        <!-- Bottom-left 3D Orbit Hint -->
+        <div class="absolute bottom-2.5 left-3 px-2.5 py-1 rounded bg-slate-900/80 border border-slate-800 text-[11px] text-slate-400 mono pointer-events-none">
+          Chuột trái: Xoay 3D (Orbit) • Chuột phải: Pan • Lăn chuột: Zoom • Mọi nét vẽ 2D có Z-Extrude đều tự dựng thành 3D
+        </div>
+      </div>
+
+    </main>
+
+    <!-- RIGHT SIDEBAR: LAYERS & PROPERTIES INSPECTOR -->
+    <aside class="w-64 lg:w-72 bg-[#111827] border-l border-slate-800 flex flex-col shrink-0 z-10 overflow-y-auto">
+
+      <!-- PROPERTIES INSPECTOR -->
+      <div class="p-3 border-b border-slate-800">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            Thuộc tính (Properties)
+          </h2>
+          <span id="propTypeBadge" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 mono">Chưa chọn</span>
+        </div>
+
+        <!-- Default Drawing Settings (when nothing selected) -->
+        <div id="defaultPropsPanel" class="space-y-2 text-xs">
+          <div class="grid grid-cols-2 gap-2 items-center">
+            <label for="activeLayerSelect" class="text-slate-400">Layer hiện tại</label>
+            <select id="activeLayerSelect" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"></select>
+          </div>
+          <div class="grid grid-cols-2 gap-2 items-center">
+            <label for="defaultColorInput" class="text-slate-400">Màu nét vẽ</label>
+            <div class="flex items-center gap-1.5">
+              <input id="defaultColorInput" type="color" value="#38bdf8" class="w-6 h-6 rounded bg-transparent border-0 cursor-pointer" />
+              <span id="defaultColorHex" class="mono text-[11px] text-slate-300">#38bdf8</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 items-center">
+            <label for="defaultExtrudeInput" class="text-slate-400" title="Độ cao khối 3D tự động khi vẽ">Độ cao 3D (Z)</label>
+            <input id="defaultExtrudeInput" type="number" step="50" value="300" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-cyan-300 mono w-full" />
+          </div>
+          <div class="grid grid-cols-2 gap-2 items-center">
+            <label for="defaultElevationInput" class="text-slate-400" title="Cao độ đáy Z-Base">Cao độ đáy Z0</label>
+            <input id="defaultElevationInput" type="number" step="50" value="0" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 mono w-full" />
+          </div>
+        </div>
+
+        <!-- Selected Entity Inspector -->
+        <div id="selectedPropsPanel" class="hidden space-y-2 text-xs">
+          <div class="grid grid-cols-2 gap-2 items-center">
+            <label for="propLayer" class="text-slate-400">Layer</label>
+            <select id="propLayer" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white"></select>
+          </div>
+          <div class="grid grid-cols-2 gap-2 items-center">
+            <label for="propColor" class="text-slate-400">Màu sắc</label>
+            <input id="propColor" type="color" class="w-full h-6 rounded bg-slate-900 border border-slate-700 cursor-pointer" />
+          </div>
+          <div class="grid grid-cols-2 gap-2 items-center">
+            <label for="propExtrude" class="text-cyan-400 font-medium">Chiều cao 3D (Z)</label>
+            <input id="propExtrude" type="number" step="50" class="bg-slate-900 border border-cyan-800/80 rounded px-2 py-1 text-xs text-cyan-300 mono w-full" />
+          </div>
+          <div class="grid grid-cols-2 gap-2 items-center">
+            <label for="propElevation" class="text-slate-400">Cao độ Z-Base</label>
+            <input id="propElevation" type="number" step="50" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 mono w-full" />
+          </div>
+          <!-- Dynamic Geometry Fields -->
+          <div id="propGeometryFields" class="space-y-1.5 pt-1 border-t border-slate-800/80"></div>
+        </div>
+      </div>
+
+      <!-- LAYER MANAGER -->
+      <div class="p-3 border-b border-slate-800 flex-1 flex flex-col min-h-[180px]">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Quản lý Layer (Layers)
+          </h2>
+          <button id="btnAddLayer" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] text-emerald-400 border border-slate-700 font-medium">
+            + Thêm Layer
+          </button>
+        </div>
+
+        <!-- Add Layer Inline Form (Hidden by default) -->
+        <div id="newLayerForm" class="hidden mb-2 p-2 rounded bg-slate-900 border border-slate-700 space-y-2">
+          <input id="newLayerName" type="text" placeholder="Tên Layer (VD: DONG_CO)" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white mono" />
+          <div class="flex items-center justify-between gap-2">
+            <input id="newLayerColor" type="color" value="#f59e0b" class="w-7 h-6 bg-transparent border-0 cursor-pointer" />
+            <input id="newLayerHeight" type="number" value="250" placeholder="Cao 3D" class="w-20 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-cyan-300 mono" title="Chiều cao 3D mặc định" />
+            <button id="btnConfirmAddLayer" class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium">Tạo</button>
+          </div>
+        </div>
+
+        <div id="layersListContainer" class="space-y-1 overflow-y-auto flex-1 pr-0.5"></div>
+      </div>
+
+      <!-- CAD FILE STATISTICS / ENTITIES SUMMARY -->
+      <div class="p-3 bg-slate-950/60 text-[11px] space-y-1 shrink-0">
+        <div class="font-semibold text-slate-400 uppercase tracking-wider text-[10px]">Thống kê Bản vẽ</div>
+        <div class="flex justify-between text-slate-400">
+          <span>Tổng số đối tượng (Entities):</span>
+          <span id="statEntityCount" class="mono text-white font-semibold">0</span>
+        </div>
+        <div class="flex justify-between text-slate-400">
+          <span>Số Layer (Layers):</span>
+          <span id="statLayerCount" class="mono text-emerald-400 font-semibold">0</span>
+        </div>
+        <div class="flex justify-between text-slate-400">
+          <span>Kích thước bao (Extents):</span>
+          <span id="statExtents" class="mono text-amber-300">0 × 0</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- BOTTOM AUTOCAD COMMAND LINE & STATUS BAR -->
+  <footer class="bg-[#0f172a] border-t border-slate-800 shrink-0 z-20">
+    <!-- Command History & Input -->
+    <div class="px-3 py-1.5 flex items-center gap-2 border-b border-slate-800/80">
+      <span class="text-[11px] font-bold text-amber-400 mono shrink-0">COMMAND:</span>
+      <input
+        id="commandInput"
+        type="text"
+        placeholder="Nhập lệnh AutoCAD: L (Line), PL (Polyline), REC (Rect), C (Circle), A (Arc), DIM, BOX, 3D, ZOOM, hoặc tọa độ X,Y (VD: 500,300)..."
+        class="flex-1 bg-slate-950 border border-slate-700/80 focus:border-blue-500 rounded px-2.5 py-1 text-xs text-white mono focus:outline-none"
+      />
+      <span id="commandStatusText" class="text-[11px] text-slate-400 mono hidden md:inline truncate max-w-md">
+        Sẵn sàng. Hỗ trợ đọc & xuất file .DXF chuẩn AutoCAD.
+      </span>
+    </div>
+
+    <!-- Bottom Status Bar (Coordinates, Grid, Snap, Ortho, OSnap) -->
+    <div class="h-7 px-3 flex items-center justify-between text-[11px] mono bg-[#090d16] text-slate-400 overflow-x-auto">
+      <div class="flex items-center gap-4 shrink-0">
+        <div class="flex items-center gap-1.5">
+          <span class="text-rose-400 font-semibold">X:</span>
+          <span id="coordX" class="w-14 text-slate-200">0.00</span>
+          <span class="text-emerald-400 font-semibold">Y:</span>
+          <span id="coordY" class="w-14 text-slate-200">0.00</span>
+          <span class="text-cyan-400 font-semibold">Z:</span>
+          <span id="coordZ" class="w-12 text-slate-200">0.00</span>
+        </div>
+        <div id="snapIndicator" class="text-amber-400 hidden">● OSNAP: ENDPOINT</div>
+      </div>
+
+      <!-- CAD Toggles (GRID, SNAP, ORTHO, OSNAP, LW) -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="toggleGrid" class="px-2 py-0.5 rounded bg-blue-600/30 border border-blue-500/60 text-blue-300 text-[10px] font-semibold" title="Bật/Tắt lưới tọa độ (F7)">
+          GRID: ON
+        </button>
+        <button id="toggleSnap" class="px-2 py-0.5 rounded bg-blue-600/30 border border-blue-500/60 text-blue-300 text-[10px] font-semibold" title="Bắt điểm lưới (F9)">
+          SNAP: 10
+        </button>
+        <button id="toggleOrtho" class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-semibold" title="Khóa góc vuông 0°/90° (F8 hoặc giữ phím Shift)">
+          ORTHO: OFF
+        </button>
+        <button id="toggleOSnap" class="px-2 py-0.5 rounded bg-emerald-600/30 border border-emerald-500/60 text-emerald-300 text-[10px] font-semibold" title="Bắt điểm đầu/giữa/tâm đối tượng (F3)">
+          OSNAP: ON
+        </button>
+        <span id="zoomLevelText" class="pl-2 text-slate-400">Zoom: 100%</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL: TEXT INPUT FOR CAD TEXT TOOL -->
+  <div id="textInputModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-sm w-full p-4 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white">Chèn Văn bản Kỹ thuật (CAD TEXT)</h3>
+        <button id="btnCloseTextModal" class="text-slate-400 hover:text-white text-xs">✕</button>
+      </div>
+      <div class="space-y-2 text-xs">
+        <label for="cadTextValue" class="block text-slate-400">Nội dung chữ</label>
+        <input id="cadTextValue" type="text" value="PHÒNG KHÁCH 25m²" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-white mono" />
+        <label for="cadTextSize" class="block text-slate-400">Chiều cao chữ (Text Height)</label>
+        <input id="cadTextSize" type="number" value="24" min="4" max="500" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-white mono" />
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button id="btnCancelTextModal" class="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300">Hủy</button>
+        <button id="btnConfirmTextModal" class="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-xs text-white font-semibold">Chèn vào bản vẽ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: HELP & DXF/DWG INFO -->
+  <div id="helpModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-lg w-full p-5 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded bg-blue-600 text-white text-xs">CAD 2D/3D</span>
+          Hướng dẫn sử dụng & Hỗ trợ định dạng AutoCAD
+        </h3>
+        <button id="btnCloseHelpModal" class="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+      </div>
+      <div id="helpModalMessage" class="text-xs text-slate-300 space-y-2.5 leading-relaxed">
+        <p class="text-amber-300 font-medium">1. Đọc & Xuất File AutoCAD (.DXF / .DWG):</p>
+        <ul class="list-disc pl-5 space-y-1 text-slate-300">
+          <li><strong>Đọc trực tiếp .DXF:</strong> Hỗ trợ đầy đủ các đối tượng AutoCAD gồm <code class="text-cyan-300">LINE, LWPOLYLINE, POLYLINE, CIRCLE, ARC, ELLIPSE, TEXT, MTEXT, 3DFACE, SOLID, POINT</code>, tự động nhận diện Layer, màu chuẩn AutoCAD Color Index (ACI 1–255) và độ dày 3D (<code class="text-cyan-300">Thickness / Z-Elevation</code>).</li>
+          <li><strong>Về định dạng .DWG:</strong> Nếu bạn chọn một file <code class="text-amber-300">.dwg</code> nhị phân đóng, trình duyệt sẽ kiểm tra cấu trúc hoặc hướng dẫn bạn lưu sang <code class="text-emerald-300">AutoCAD .DXF</code> (Lệnh <code class="mono">SAVEAS</code> hoặc <code class="mono">DXFOUT</code> trong AutoCAD) để đọc 100% vector chính xác.</li>
+          <li><strong>Xuất File .DXF:</strong> Nhấn nút <strong>Xuất .DXF</strong> để tải về file chuẩn AutoCAD mở được ngay trên AutoCAD, BricsCAD, ZWCAD, FreeCAD, Rhino.</li>
+        </ul>
+        <p class="text-cyan-300 font-medium">2. Phím tắt & Lệnh Command Line:</p>
+        <div class="grid grid-cols-2 gap-1.5 mono text-[11px] bg-slate-950 p-2.5 rounded border border-slate-800">
+          <div><span class="text-amber-400">L</span> : Vẽ đoạn thẳng (Line)</div>
+          <div><span class="text-amber-400">PL</span> : Đường đa tuyến (Polyline)</div>
+          <div><span class="text-amber-400">REC</span> : Hình chữ nhật (Rect)</div>
+          <div><span class="text-amber-400">C</span> : Hình tròn (Circle)</div>
+          <div><span class="text-amber-400">A</span> : Cung tròn (Arc)</div>
+          <div><span class="text-amber-400">DIM</span> : Đo kích thước</div>
+          <div><span class="text-amber-400">BOX / CYL</span> : Khối 3D</div>
+          <div><span class="text-amber-400">ESC / Enter</span> : Kết thúc lệnh</div>
+        </div>
+      </div>
+      <div class="flex justify-end pt-2">
+        <button id="btnOkHelpModal" class="px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-xs text-white font-semibold">Đã hiểu</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================================
+    // AUTOCAD COLOR INDEX (ACI) STANDARD PALETTE MAP
+    // ============================================================================
+    const ACI_COLORS = {
+      1: '#ff3b30', // Red
+      2: '#facc15', // Yellow
+      3: '#22c55e', // Green
+      4: '#06b6d4', // Cyan
+      5: '#3b82f6', // Blue
+      6: '#d946ef', // Magenta
+      7: '#f8fafc', // White/Default
+      8: '#94a3b8', // Gray
+      9: '#cbd5e1', // Light Gray
+      10: '#ef4444',
+      11: '#fca5a5',
+      30: '#f97316', // Orange
+      40: '#eab308',
+      50: '#fde047',
+      90: '#10b981',
+      140: '#38bdf8',
+      170: '#6366f1',
+      250: '#64748b',
+      251: '#94a3b8',
+      252: '#cbd5e1',
+      253: '#e2e8f0',
+      254: '#f1f5f9'
+    };
+
+    function aciToHex(aci) {
+      const code = Math.abs(parseInt(aci, 10));
+      if (!code || isNaN(code)) return '#38bdf8';
+      if (ACI_COLORS[code]) return ACI_COLORS[code];
+      const hue = (code * 37) % 360;
+      return `hsl(${hue}, 80%, 62%)`;
+    }
+
+    // ============================================================================
+    // APPLICATION STATE
+    // ============================================================================
+    const state = {
+      fileName: 'villa_floorplan.dxf',
+      viewMode: '2D', // '2D' | 'SPLIT' | '3D'
+      activeTool: 'SELECT',
+      activeLayer: 'WALLS_3D',
+      defaultColor: '#38bdf8',
+      defaultExtrude: 300,
+      defaultElevation: 0,
+
+      // CAD Toggles
+      gridOn: true,
+      snapOn: true,
+      snapSize: 10,
+      orthoOn: false,
+      osnapOn: true,
+
+      // 2D Camera Transform
+      cam2D: {
+        x: 0,
+        y: 0,
+        zoom: 0.65
+      },
+
+      // Mouse & Drawing interaction
+      mouseScreen: { x: 0, y: 0 },
+      mouseWorld: { x: 0, y: 0 },
+      snappedWorld: { x: 0, y: 0 },
+      activeSnapInfo: null,
+      isPanning2D: false,
+      panStartScreen: { x: 0, y: 0 },
+      panStartCam: { x: 0, y: 0 },
+
+      // Dragging selected entity
+      isDraggingEntity: false,
+      dragStartWorld: { x: 0, y: 0 },
+
+      // Current in-progress drawing points
+      drawPoints: [],
+      pendingTextPos: null,
+
+      // Layers & Entities
+      layers: {},
+      entities: [],
+      selectedId: null,
+
+      // Undo / Redo Stacks
+      undoStack: [],
+      redoStack: [],
+
+      // 3D Rendering Mode
+      wireframe3D: false
+    };
+
+    let nextEntityId = 1;
+
+    function cloneData(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function pushUndoState() {
+      state.undoStack.push({
+        entities: cloneData(state.entities),
+        layers: cloneData(state.layers)
+      });
+      if (state.undoStack.length > 40) state.undoStack.shift();
+      state.redoStack = [];
+    }
+
+    // ============================================================================
+    // PRESET AUTOCAD DRAWINGS (ARCHITECTURAL VILLA, MECHANICAL GEAR, 3D STEEL FRAME)
+    // ============================================================================
+    function loadPresetDrawing(presetKey) {
+      state.selectedId = null;
+      state.drawPoints = [];
+      nextEntityId = 1;
+
+      if (presetKey === 'empty') {
+        state.fileName = 'untitled_drawing.dxf';
+        state.layers = {
+          '0': { name: '0', color: '#f8fafc', visible: true, locked: false, extrude: 0 },
+          'WALLS': { name: 'WALLS', color: '#38bdf8', visible: true, locked: false, extrude: 300 },
+          'DIMENSIONS': { name: 'DIMENSIONS', color: '#facc15', visible: true, locked: false, extrude: 0 }
+        };
+        state.activeLayer = 'WALLS';
+        state.entities = [];
+      } else if (presetKey === 'villa') {
+        state.fileName = 'villa_floorplan_2d_3d.dxf';
+        state.layers = {
+          'WALLS_3D': { name: 'WALLS_3D', color: '#38bdf8', visible: true, locked: false, extrude: 280 },
+          'COLUMNS_3D': { name: 'COLUMNS_3D', color: '#f97316', visible: true, locked: false, extrude: 310 },
+          'INTERIOR_3D': { name: 'INTERIOR_3D', color: '#22c55e', visible: true, locked: false, extrude: 75 },
+          'DOORS_WINDOWS': { name: 'DOORS_WINDOWS', color: '#a855f7', visible: true, locked: false, extrude: 210 },
+          'DIMENSIONS': { name: 'DIMENSIONS', color: '#facc15', visible: true, locked: false, extrude: 0 },
+          'ANNOTATIONS': { name: 'ANNOTATIONS', color: '#f8fafc', visible: true, locked: false, extrude: 0 }
+        };
+        state.activeLayer = 'WALLS_3D';
+        state.entities = [
+          // Outer Perimeter Walls (3D extruded 280)
+          { id: nextEntityId++, type: 'RECT', layer: 'WALLS_3D', color: '#38bdf8', x1: -500, y1: -350, x2: 500, y2: 350, elevation: 0, extrude: 280 },
+          // Inner Partition Walls
+          { id: nextEntityId++, type: 'LINE', layer: 'WALLS_3D', color: '#38bdf8', x1: -100, y1: -350, x2: -100, y2: 50, elevation: 0, extrude: 280 },
+          { id: nextEntityId++, type: 'LINE', layer: 'WALLS_3D', color: '#38bdf8', x1: -500, y1: 50, x2: 180, y2: 50, elevation: 0, extrude: 280 },
+          { id: nextEntityId++, type: 'LINE', layer: 'WALLS_3D', color: '#38bdf8', x1: 180, y1: -350, x2: 180, y2: 350, elevation: 0, extrude: 280 },
+          // Structural Columns (4 corners + center)
+          { id: nextEntityId++, type: 'RECT', layer: 'COLUMNS_3D', color: '#f97316', x1: -500, y1: -350, x2: -460, y2: -310, elevation: 0, extrude: 310, solid3D: true },
+          { id: nextEntityId++, type: 'RECT', layer: 'COLUMNS_3D', color: '#f97316', x1: 460, y1: -350, x2: 500, y2: -310, elevation: 0, extrude: 310, solid3D: true },
+          { id: nextEntityId++, type: 'RECT', layer: 'COLUMNS_3D', color: '#f97316', x1: -500, y1: 310, x2: -460, y2: 350, elevation: 0, extrude: 310, solid3D: true },
+          { id: nextEntityId++, type: 'RECT', layer: 'COLUMNS_3D', color: '#f97316', x1: 460, y1: 310, x2: 500, y2: 350, elevation: 0, extrude: 310, solid3D: true },
+          { id: nextEntityId++, type: 'CYLINDER3D', layer: 'COLUMNS_3D', color: '#f97316', cx: -100, cy: 50, r: 24, elevation: 0, extrude: 310 },
+          { id: nextEntityId++, type: 'CYLINDER3D', layer: 'COLUMNS_3D', color: '#f97316', cx: 180, cy: 50, r: 24, elevation: 0, extrude: 310 },
+          // Door Arcs
+          { id: nextEntityId++, type: 'ARC', layer: 'DOORS_WINDOWS', color: '#a855f7', cx: -100, cy: -120, r: 80, startAngle: 0, endAngle: Math.PI / 2, elevation: 0, extrude: 10 },
+          { id: nextEntityId++, type: 'ARC', layer: 'DOORS_WINDOWS', color: '#a855f7', cx: 180, cy: 140, r: 80, startAngle: 0, endAngle: Math.PI / 2, elevation: 0, extrude: 10 },
+          // Interior Furniture (Living room table, sofa, dining round table, master bed)
+          { id: nextEntityId++, type: 'RECT', layer: 'INTERIOR_3D', color: '#22c55e', x1: -420, y1: -260, x2: -220, y2: -170, elevation: 0, extrude: 75, solid3D: true },
+          { id: nextEntityId++, type: 'CIRCLE', layer: 'INTERIOR_3D', color: '#22c55e', cx: 40, cy: -160, r: 65, elevation: 0, extrude: 75 },
+          { id: nextEntityId++, type: 'BOX3D', layer: 'INTERIOR_3D', color: '#10b981', x1: 240, y1: 110, x2: 430, y2: 290, elevation: 0, extrude: 65, solid3D: true },
+          { id: nextEntityId++, type: 'RECT', layer: 'INTERIOR_3D', color: '#22c55e', x1: -390, y1: 120, x2: -180, y2: 280, elevation: 0, extrude: 80, solid3D: true },
+          // Dimensions
+          { id: nextEntityId++, type: 'DIM', layer: 'DIMENSIONS', color: '#facc15', x1: -500, y1: -410, x2: 500, y2: -410, elevation: 0, extrude: 0 },
+          { id: nextEntityId++, type: 'DIM', layer: 'DIMENSIONS', color: '#facc15', x1: -560, y1: -350, x2: -560, y2: 350, elevation: 0, extrude: 0 },
+          // Room Labels
+          { id: nextEntityId++, type: 'TEXT', layer: 'ANNOTATIONS', color: '#f8fafc', x: -380, y: -60, text: 'PHONG KHACH (LIVING)', size: 22, elevation: 0, extrude: 0 },
+          { id: nextEntityId++, type: 'TEXT', layer: 'ANNOTATIONS', color: '#f8fafc', x: -50, y: -260, text: 'BEP & AN (DINING)', size: 20, elevation: 0, extrude: 0 },
+          { id: nextEntityId++, type: 'TEXT', layer: 'ANNOTATIONS', color: '#f8fafc', x: 230, y: -150, text: 'GARAGE OTO', size: 22, elevation: 0, extrude: 0 },
+          { id: nextEntityId++, type: 'TEXT', layer: 'ANNOTATIONS', color: '#f8fafc', x: 230, y: 200, text: 'MASTER BEDROOM', size: 20, elevation: 0, extrude: 0 }
+        ];
+      } else if (presetKey === 'mechanical') {
+        state.fileName = 'flange_gear_assembly.dxf';
+        state.layers = {
+          'FLANGE_BODY': { name: 'FLANGE_BODY', color: '#06b6d4', visible: true, locked: false, extrude: 60 },
+          'BORE_HOLES': { name: 'BORE_HOLES', color: '#f43f5e', visible: true, locked: false, extrude: 90 },
+          'CENTER_HUB': { name: 'CENTER_HUB', color: '#3b82f6', visible: true, locked: false, extrude: 140 },
+          'CENTERLINES': { name: 'CENTERLINES', color: '#94a3b8', visible: true, locked: false, extrude: 0 },
+          'DIMENSIONS': { name: 'DIMENSIONS', color: '#facc15', visible: true, locked: false, extrude: 0 }
+        };
+        state.activeLayer = 'FLANGE_BODY';
+        state.entities = [
+          // Main Flange Outer & Pitch Circles
+          { id: nextEntityId++, type: 'CIRCLE', layer: 'FLANGE_BODY', color: '#06b6d4', cx: 0, cy: 0, r: 280, elevation: 0, extrude: 50 },
+          { id: nextEntityId++, type: 'CIRCLE', layer: 'CENTER_HUB', color: '#3b82f6', cx: 0, cy: 0, r: 130, elevation: 0, extrude: 140 },
+          { id: nextEntityId++, type: 'CIRCLE', layer: 'BORE_HOLES', color: '#f43f5e', cx: 0, cy: 0, r: 70, elevation: 0, extrude: 160 },
+          // Center Crosshair Lines
+          { id: nextEntityId++, type: 'LINE', layer: 'CENTERLINES', color: '#94a3b8', x1: -340, y1: 0, x2: 340, y2: 0, elevation: 0, extrude: 0 },
+          { id: nextEntityId++, type: 'LINE', layer: 'CENTERLINES', color: '#94a3b8', x1: 0, y1: -340, x2: 0, y2: 340, elevation: 0, extrude: 0 },
+          // Keyway slot
+          { id: nextEntityId++, type: 'RECT', layer: 'BORE_HOLES', color: '#f43f5e', x1: -18, y1: 62, x2: 18, y2: 92, elevation: 0, extrude: 155 },
+          // Dimensions & Label
+          { id: nextEntityId++, type: 'DIM', layer: 'DIMENSIONS', color: '#facc15', x1: -280, y1: -330, x2: 280, y2: -330, elevation: 0, extrude: 0 },
+          { id: nextEntityId++, type: 'TEXT', layer: 'DIMENSIONS', color: '#facc15', x: -135, y: 320, text: 'ISO FLANGE Ø560mm - 8 BOLTS', size: 22, elevation: 0, extrude: 0 }
+        ];
+        // 8 Radial Bolt Holes around r=205
+        for (let i = 0; i < 8; i++) {
+          const ang = (i * Math.PI) / 4;
+          const bx = Math.round(Math.cos(ang) * 205);
+          const by = Math.round(Math.sin(ang) * 205);
+          state.entities.push({
+            id: nextEntityId++,
+            type: 'CYLINDER3D',
+            layer: 'BORE_HOLES',
+            color: '#f43f5e',
+            cx: bx,
+            cy: by,
+            r: 26,
+            elevation: 0,
+            extrude: 75
+          });
+        }
+      } else if (presetKey === 'steel') {
+        state.fileName = 'steel_portal_frame_3d.dxf';
+        state.layers = {
+          'STEEL_COLS': { name: 'STEEL_COLS', color: '#ef4444', visible: true, locked: false, extrude: 420 },
+          'STEEL_BEAMS': { name: 'STEEL_BEAMS', color: '#38bdf8', visible: true, locked: false, extrude: 40 },
+          'FOUNDATION': { name: 'FOUNDATION', color: '#94a3b8', visible: true, locked: false, extrude: 50 },
+          'DIMENSIONS': { name: 'DIMENSIONS', color: '#facc15', visible: true, locked: false, extrude: 0 }
+        };
+        state.activeLayer = 'STEEL_COLS';
+        state.entities = [];
+        const xs = [-450, -150, 150, 450];
+        const ys = [-240, 240];
+        xs.forEach((x) => {
+          ys.forEach((y) => {
+            // Footing pad
+            state.entities.push({
+              id: nextEntityId++,
+              type: 'BOX3D',
+              layer: 'FOUNDATION',
+              color: '#94a3b8',
+              x1: x - 45,
+              y1: y - 45,
+              x2: x + 45,
+              y2: y + 45,
+              elevation: 0,
+              extrude: 45,
+              solid3D: true
+            });
+            // Steel H-Column
+            state.entities.push({
+              id: nextEntityId++,
+              type: 'BOX3D',
+              layer: 'STEEL_COLS',
+              color: '#ef4444',
+              x1: x - 18,
+              y1: y - 18,
+              x2: x + 18,
+              y2: y + 18,
+              elevation: 45,
+              extrude: 380,
+              solid3D: true
+            });
+          });
+          // Portal Cross Beam at elevation 400
+          state.entities.push({
+            id: nextEntityId++,
+            type: 'LINE',
+            layer: 'STEEL_BEAMS',
+            color: '#38bdf8',
+            x1: x,
+            y1: -240,
+            x2: x,
+            y2: 240,
+            elevation: 400,
+            extrude: 35
+          });
+        });
+        // Longitudinal Bracing Beams
+        state.entities.push(
+          { id: nextEntityId++, type: 'LINE', layer: 'STEEL_BEAMS', color: '#38bdf8', x1: -450, y1: -240, x2: 450, y2: -240, elevation: 400, extrude: 30 },
+          { id: nextEntityId++, type: 'LINE', layer: 'STEEL_BEAMS', color: '#38bdf8', x1: -450, y1: 240, x2: 450, y2: 240, elevation: 400, extrude: 30 },
+          { id: nextEntityId++, type: 'DIM', layer: 'DIMENSIONS', color: '#facc15', x1: -450, y1: -320, x2: 450, y2: -320, elevation: 0, extrude: 0 },
+          { id: nextEntityId++, type: 'TEXT', layer: 'DIMENSIONS', color: '#f8fafc', x: -180, y: 0, text: 'KHUNG NHA THEP TIEN CHE 3D (900x480)', size: 22, elevation: 0, extrude: 0 }
+        );
+      }
+
+      document.getElementById('currentFileName').textContent = state.fileName;
+      syncLayerUI();
+      syncInspectorUI();
+      zoomExtents2D();
+      rebuild3DScene();
+      render2D();
+    }
+
+    // ============================================================================
+    // REAL AUTOCAD DXF PARSER (SUPPORTS LINE, LWPOLYLINE, POLYLINE, CIRCLE, ARC,
+    // ELLIPSE, TEXT, MTEXT, SOLID, 3DFACE, POINT, LAYERS, ACI COLORS, EXTRUSION Z)
+    // ============================================================================
+    function parseAutoCADDXF(dxfText, uploadedName) {
+      const lines = dxfText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+      const pairs = [];
+      for (let i = 0; i + 1 < lines.length; i += 2) {
+        const code = parseInt(lines[i].trim(), 10);
+        const val = lines[i + 1].trim();
+        if (!isNaN(code)) {
+          pairs.push({ code, val });
+        }
+      }
+
+      if (pairs.length < 4) {
+        setCommandStatus('File không đúng cấu trúc DXF ASCII hợp lệ.', true);
+        return false;
+      }
+
+      pushUndoState();
+      const parsedLayers = {
+        '0': { name: '0', color: '#f8fafc', visible: true, locked: false, extrude: 0 }
+      };
+      const parsedEntities = [];
+
+      let section = '';
+      let inLayerTable = false;
+      let currentLayer = null;
+
+      // Parse TABLES -> LAYER
+      for (let i = 0; i < pairs.length; i++) {
+        const { code, val } = pairs[i];
+        if (code === 0 && val === 'SECTION') {
+          if (i + 1 < pairs.length && pairs[i + 1].code === 2) {
+            section = pairs[i + 1].val.toUpperCase();
+          }
+          continue;
+        }
+        if (code === 0 && val === 'ENDSEC') {
+          section = '';
+          inLayerTable = false;
+          continue;
+        }
+
+        if (section === 'TABLES') {
+          if (code === 0 && val === 'LAYER') {
+            if (currentLayer && currentLayer.name) {
+              parsedLayers[currentLayer.name] = currentLayer;
+            }
+            currentLayer = { name: '0', color: '#38bdf8', visible: true, locked: false, extrude: 0 };
+            inLayerTable = true;
+          } else if (code === 0 && val === 'ENDTAB') {
+            if (currentLayer && currentLayer.name) {
+              parsedLayers[currentLayer.name] = currentLayer;
+            }
+            currentLayer = null;
+            inLayerTable = false;
+          } else if (inLayerTable && currentLayer) {
+            if (code === 2) currentLayer.name = val || '0';
+            if (code === 62) {
+              const cNum = parseInt(val, 10);
+              if (cNum < 0) currentLayer.visible = false;
+              currentLayer.color = aciToHex(Math.abs(cNum));
+            }
+          }
+        }
+      }
+
+      // Helper to ensure layer exists
+      function ensureLayer(layerName, fallbackColor) {
+        const clean = layerName || '0';
+        if (!parsedLayers[clean]) {
+          parsedLayers[clean] = {
+            name: clean,
+            color: fallbackColor || '#38bdf8',
+            visible: true,
+            locked: false,
+            extrude: 0
+          };
+        }
+        return clean;
+      }
+
+      // Parse ENTITIES (and BLOCKS entities if any)
+      let i = 0;
+      let activeSec = '';
+      while (i < pairs.length) {
+        const { code, val } = pairs[i];
+        if (code === 0 && val === 'SECTION') {
+          if (i + 1 < pairs.length && pairs[i + 1].code === 2) {
+            activeSec = pairs[i + 1].val.toUpperCase();
+          }
+          i += 2;
+          continue;
+        }
+        if (code === 0 && val === 'ENDSEC') {
+          activeSec = '';
+          i++;
+          continue;
+        }
+
+        if (activeSec !== 'ENTITIES' && activeSec !== 'BLOCKS') {
+          i++;
+          continue;
+        }
+
+        if (code === 0) {
+          const entType = val.toUpperCase();
+          i++;
+
+          // Handle classic POLYLINE (followed by VERTEX ... SEQEND)
+          if (entType === 'POLYLINE') {
+            let layer = '0';
+            let color = null;
+            let flags = 0;
+            let elevation = 0;
+            let extrude = 0;
+            while (i < pairs.length && pairs[i].code !== 0) {
+              const c = pairs[i].code;
+              const v = pairs[i].val;
+              if (c === 8) layer = v;
+              if (c === 62) color = aciToHex(v);
+              if (c === 70) flags = parseInt(v, 10) || 0;
+              if (c === 30) elevation = parseFloat(v) || 0;
+              if (c === 39) extrude = parseFloat(v) || 0;
+              i++;
+            }
+            const pts = [];
+            while (i < pairs.length) {
+              if (pairs[i].code === 0 && pairs[i].val.toUpperCase() === 'VERTEX') {
+                i++;
+                let vx = 0, vy = 0;
+                while (i < pairs.length && pairs[i].code !== 0) {
+                  if (pairs[i].code === 10) vx = parseFloat(pairs[i].val) || 0;
+                  if (pairs[i].code === 20) vy = parseFloat(pairs[i].val) || 0;
+                  i++;
+                }
+                pts.push({ x: vx, y: vy });
+              } else if (pairs[i].code === 0 && pairs[i].val.toUpperCase() === 'SEQEND') {
+                i++;
+                while (i < pairs.length && pairs[i].code !== 0) i++;
+                break;
+              } else {
+                break;
+              }
+            }
+            if (pts.length >= 2) {
+              const lyr = ensureLayer(layer, color);
+              parsedEntities.push({
+                id: nextEntityId++,
+                type: 'POLYLINE',
+                layer: lyr,
+                color: color || parsedLayers[lyr].color,
+                points: pts,
+                closed: (flags & 1) === 1,
+                elevation,
+                extrude
+              });
+            }
+            continue;
+          }
+
+          // Collect all group codes for single entity
+          const props = [];
+          while (i < pairs.length && pairs[i].code !== 0) {
+            props.push(pairs[i]);
+            i++;
+          }
+
+          let layer = '0';
+          let color = null;
+          let elevation = 0;
+          let extrude = 0;
+          props.forEach((p) => {
+            if (p.code === 8) layer = p.val;
+            if (p.code === 62) color = aciToHex(p.val);
+            if (p.code === 38 || p.code === 30) elevation = parseFloat(p.val) || 0;
+            if (p.code === 39) extrude = Math.abs(parseFloat(p.val) || 0);
+          });
+          const lyr = ensureLayer(layer, color);
+          const finalColor = color || parsedLayers[lyr].color;
+
+          if (entType === 'LINE') {
+            let x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+            props.forEach((p) => {
+              if (p.code === 10) x1 = parseFloat(p.val) || 0;
+              if (p.code === 20) y1 = parseFloat(p.val) || 0;
+              if (p.code === 11) x2 = parseFloat(p.val) || 0;
+              if (p.code === 21) y2 = parseFloat(p.val) || 0;
+            });
+            parsedEntities.push({
+              id: nextEntityId++,
+              type: 'LINE',
+              layer: lyr,
+              color: finalColor,
+              x1, y1, x2, y2,
+              elevation, extrude
+            });
+          } else if (entType === 'LWPOLYLINE') {
+            const pts = [];
+            let curX = null;
+            let flags = 0;
+            props.forEach((p) => {
+              if (p.code === 70) flags = parseInt(p.val, 10) || 0;
+              if (p.code === 10) {
+                curX = parseFloat(p.val) || 0;
+              } else if (p.code === 20 && curX !== null) {
+                pts.push({ x: curX, y: parseFloat(p.val) || 0 });
+                curX = null;
+              }
+            });
+            if (pts.length >= 2) {
+              parsedEntities.push({
+                id: nextEntityId++,
+                type: 'POLYLINE',
+                layer: lyr,
+                color: finalColor,
+                points: pts,
+                closed: (flags & 1) === 1,
+                elevation,
+                extrude
+              });
+            }
+          } else if (entType === 'CIRCLE') {
+            let cx = 0, cy = 0, r = 10;
+            props.forEach((p) => {
+              if (p.code === 10) cx = parseFloat(p.val) || 0;
+              if (p.code === 20) cy = parseFloat(p.val) || 0;
+              if (p.code === 40) r = Math.abs(parseFloat(p.val) || 10);
+            });
+            parsedEntities.push({
+              id: nextEntityId++,
+              type: 'CIRCLE',
+              layer: lyr,
+              color: finalColor,
+              cx, cy, r,
+              elevation, extrude
+            });
+          } else if (entType === 'ARC') {
+            let cx = 0, cy = 0, r = 10, startDeg = 0, endDeg = 180;
+            props.forEach((p) => {
+              if (p.code === 10) cx = parseFloat(p.val) || 0;
+              if (p.code === 20) cy = parseFloat(p.val) || 0;
+              if (p.code === 40) r = Math.abs(parseFloat(p.val) || 10);
+              if (p.code === 50) startDeg = parseFloat(p.val) || 0;
+              if (p.code === 51) endDeg = parseFloat(p.val) || 180;
+            });
+            parsedEntities.push({
+              id: nextEntityId++,
+              type: 'ARC',
+              layer: lyr,
+              color: finalColor,
+              cx, cy, r,
+              startAngle: (startDeg * Math.PI) / 180,
+              endAngle: (endDeg * Math.PI) / 180,
+              elevation, extrude
+            });
+          } else if (entType === 'TEXT' || entType === 'MTEXT') {
+            let x = 0, y = 0, text = '', size = 16;
+            props.forEach((p) => {
+              if (p.code === 10) x = parseFloat(p.val) || 0;
+              if (p.code === 20) y = parseFloat(p.val) || 0;
+              if (p.code === 40) size = Math.max(4, parseFloat(p.val) || 16);
+              if (p.code === 1) text += p.val;
+            });
+            // Strip MTEXT formatting codes like {\fArial;...}
+            text = text.replace(/\\P/g, ' ').replace(/\{|\}/g, '').replace(/\\[A-Za-z][^;]*;/g, '').trim();
+            if (text) {
+              parsedEntities.push({
+                id: nextEntityId++,
+                type: 'TEXT',
+                layer: lyr,
+                color: finalColor,
+                x, y, text, size,
+                elevation, extrude: 0
+              });
+            }
+          } else if (entType === 'SOLID' || entType === '3DFACE') {
+            let x1 = 0, y1 = 0, x2 = 0, y2 = 0, x3 = 0, y3 = 0, x4 = 0, y4 = 0;
+            props.forEach((p) => {
+              if (p.code === 10) x1 = parseFloat(p.val) || 0;
+              if (p.code === 20) y1 = parseFloat(p.val) || 0;
+              if (p.code === 11) x2 = parseFloat(p.val) || 0;
+              if (p.code === 21) y2 = parseFloat(p.val) || 0;
+              if (p.code === 12) x3 = parseFloat(p.val) || 0;
+              if (p.code === 22) y3 = parseFloat(p.val) || 0;
+              if (p.code === 13) x4 = parseFloat(p.val) || 0;
+              if (p.code === 23) y4 = parseFloat(p.val) || 0;
+            });
+            parsedEntities.push({
+              id: nextEntityId++,
+              type: 'POLYLINE',
+              layer: lyr,
+              color: finalColor,
+              points: [{ x: x1, y: y1 }, { x: x2, y: y2 }, { x: x3, y: y3 }, { x: x4, y: y4 }],
+              closed: true,
+              elevation,
+              extrude: extrude || 25
+            });
+          }
+        } else {
+          i++;
+        }
+      }
+
+      if (parsedEntities.length === 0) {
+        setCommandStatus('File DXF không chứa đối tượng hình học nào trong ENTITIES.', true);
+        return false;
+      }
+
+      state.fileName = uploadedName || 'imported_cad.dxf';
+      state.layers = parsedLayers;
+      state.activeLayer = Object.keys(parsedLayers)[0] || '0';
+      state.entities = parsedEntities;
+      state.selectedId = null;
+
+      document.getElementById('currentFileName').textContent = state.fileName;
+      syncLayerUI();
+      syncInspectorUI();
+      zoomExtents2D();
+      rebuild3DScene();
+      render2D();
+      setCommandStatus(`Đã đọc thành công ${parsedEntities.length} đối tượng AutoCAD từ "${state.fileName}".`);
+      return true;
+    }
+
+    // ============================================================================
+    // EXPORT TO STANDARD AUTOCAD .DXF FILE
+    // ============================================================================
+    function exportToAutoCADDXF() {
+      const out = [];
+      const add = (code, val) => {
+        out.push(String(code));
+        out.push(String(val));
+      };
+
+      // HEADER
+      add(0, 'SECTION');
+      add(2, 'HEADER');
+      add(9, '$ACADVER');
+      add(1, 'AC1009');
+      add(0, 'ENDSEC');
+
+      // TABLES (LAYERS)
+      add(0, 'SECTION');
+      add(2, 'TABLES');
+      add(0, 'TABLE');
+      add(2, 'LAYER');
+      Object.values(state.layers).forEach((lyr, idx) => {
+        add(0, 'LAYER');
+        add(2, lyr.name);
+        add(70, 0);
+        add(62, (idx % 7) + 1);
+        add(6, 'CONTINUOUS');
+      });
+      add(0, 'ENDTAB');
+      add(0, 'ENDSEC');
+
+      // ENTITIES
+      add(0, 'SECTION');
+      add(2, 'ENTITIES');
+
+      state.entities.forEach((e) => {
+        if (e.type === 'LINE' || e.type === 'DIM') {
+          add(0, 'LINE');
+          add(8, e.layer || '0');
+          add(10, e.x1.toFixed(4));
+          add(20, e.y1.toFixed(4));
+          add(30, (e.elevation || 0).toFixed(4));
+          add(11, e.x2.toFixed(4));
+          add(21, e.y2.toFixed(4));
+          add(31, (e.elevation || 0).toFixed(4));
+          if (e.extrude) add(39, e.extrude.toFixed(4));
+        } else if (e.type === 'RECT' || e.type === 'BOX3D') {
+          const pts = [
+            { x: e.x1, y: e.y1 },
+            { x: e.x2, y: e.y1 },
+            { x: e.x2, y: e.y2 },
+            { x: e.x1, y: e.y2 }
+          ];
+          add(0, 'LWPOLYLINE');
+          add(8, e.layer || '0');
+          add(90, 4);
+          add(70, 1);
+          if (e.elevation) add(38, e.elevation.toFixed(4));
+          if (e.extrude) add(39, e.extrude.toFixed(4));
+          pts.forEach((pt) => {
+            add(10, pt.x.toFixed(4));
+            add(20, pt.y.toFixed(4));
+          });
+        } else if (e.type === 'POLYLINE' && e.points && e.points.length >= 2) {
+          add(0, 'LWPOLYLINE');
+          add(8, e.layer || '0');
+          add(90, e.points.length);
+          add(70, e.closed ? 1 : 0);
+          if (e.elevation) add(38, e.elevation.toFixed(4));
+          if (e.extrude) add(39, e.extrude.toFixed(4));
+          e.points.forEach((pt) => {
+            add(10, pt.x.toFixed(4));
+            add(20, pt.y.toFixed(4));
+          });
+        } else if (e.type === 'CIRCLE' || e.type === 'CYLINDER3D') {
+          add(0, 'CIRCLE');
+          add(8, e.layer || '0');
+          add(10, e.cx.toFixed(4));
+          add(20, e.cy.toFixed(4));
+          add(30, (e.elevation || 0).toFixed(4));
+          add(40, e.r.toFixed(4));
+          if (e.extrude) add(39, e.extrude.toFixed(4));
+        } else if (e.type === 'ARC') {
+          add(0, 'ARC');
+          add(8, e.layer || '0');
+          add(10, e.cx.toFixed(4));
+          add(20, e.cy.toFixed(4));
+          add(30, (e.elevation || 0).toFixed(4));
+          add(40, e.r.toFixed(4));
+          add(50, ((e.startAngle * 180) / Math.PI).toFixed(4));
+          add(51, ((e.endAngle * 180) / Math.PI).toFixed(4));
+          if (e.extrude) add(39, e.extrude.toFixed(4));
+        } else if (e.type === 'TEXT') {
+          add(0, 'TEXT');
+          add(8, e.layer || '0');
+          add(10, e.x.toFixed(4));
+          add(20, e.y.toFixed(4));
+          add(30, (e.elevation || 0).toFixed(4));
+          add(40, (e.size || 18).toFixed(4));
+          add(1, e.text || 'TEXT');
+        }
+      });
+
+      add(0, 'ENDSEC');
+      add(0, 'EOF');
+
+      const dxfBlob = new Blob([out.join('\n')], { type: 'application/dxf;charset=utf-8' });
+      const url = URL.createObjectURL(dxfBlob);
+      const a = document.createElement('a');
+      const exportName = state.fileName.replace(/\.(dxf|dwg|json)$/i, '') + '_export.dxf';
+      a.href = url;
+      a.download = exportName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setCommandStatus(`Đã xuất bản vẽ sang file AutoCAD "${exportName}".`);
+    }
+
+    // ============================================================================
+    // 2D COORDINATE TRANSFORMS & OBJECT SNAP (OSNAP)
+    // ============================================================================
+    const canvas2D = document.getElementById('cad2DCanvas');
+    const ctx2D = canvas2D.getContext('2d');
+
+    function worldToScreen(wx, wy) {
+      const cx = canvas2D.width / 2;
+      const cy = canvas2D.height / 2;
+      return {
+        x: cx + (wx - state.cam2D.x) * state.cam2D.zoom,
+        y: cy - (wy - state.cam2D.y) * state.cam2D.zoom
+      };
+    }
+
+    function screenToWorld(sx, sy) {
+      const cx = canvas2D.width / 2;
+      const cy = canvas2D.height / 2;
+      return {
+        x: state.cam2D.x + (sx - cx) / state.cam2D.zoom,
+        y: state.cam2D.y - (sy - cy) / state.cam2D.zoom
+      };
+    }
+
+    function computeSnappedPoint(rawWorld, shiftKey) {
+      let x = rawWorld.x;
+      let y = rawWorld.y;
+      state.activeSnapInfo = null;
+
+      // 1. Check Object Snap (OSNAP: Endpoint, Midpoint, Center)
+      if (state.osnapOn && state.activeTool !== 'PAN') {
+        const snapRadiusWorld = 12 / state.cam2D.zoom;
+        let bestDist = snapRadiusWorld;
+
+        state.entities.forEach((e) => {
+          const lyr = state.layers[e.layer];
+          if (lyr && !lyr.visible) return;
+
+          const candidates = [];
+          if (e.type === 'LINE' || e.type === 'DIM') {
+            candidates.push({ x: e.x1, y: e.y1, kind: 'ENDPOINT' });
+            candidates.push({ x: e.x2, y: e.y2, kind: 'ENDPOINT' });
+            candidates.push({ x: (e.x1 + e.x2) / 2, y: (e.y1 + e.y2) / 2, kind: 'MIDPOINT' });
+          } else if (e.type === 'RECT' || e.type === 'BOX3D') {
+            candidates.push(
+              { x: e.x1, y: e.y1, kind: 'ENDPOINT' },
+              { x: e.x2, y: e.y1, kind: 'ENDPOINT' },
+              { x: e.x2, y: e.y2, kind: 'ENDPOINT' },
+              { x: e.x1, y: e.y2, kind: 'ENDPOINT' },
+              { x: (e.x1 + e.x2) / 2, y: (e.y1 + e.y2) / 2, kind: 'CENTER' }
+            );
+          } else if (e.type === 'POLYLINE' && e.points) {
+            e.points.forEach((pt) => candidates.push({ x: pt.x, y: pt.y, kind: 'ENDPOINT' }));
+          } else if (e.type === 'CIRCLE' || e.type === 'CYLINDER3D' || e.type === 'ARC') {
+            candidates.push(
+              { x: e.cx, y: e.cy, kind: 'CENTER' },
+              { x: e.cx + e.r, y: e.cy, kind: 'QUADRANT' },
+              { x: e.cx - e.r, y: e.cy, kind: 'QUADRANT' },
+              { x: e.cx, y: e.cy + e.r, kind: 'QUADRANT' },
+              { x: e.cx, y: e.cy - e.r, kind: 'QUADRANT' }
+            );
+          }
+
+          candidates.forEach((c) => {
+            const d = Math.hypot(c.x - rawWorld.x, c.y - rawWorld.y);
+            if (d < bestDist) {
+              bestDist = d;
+              x = c.x;
+              y = c.y;
+              state.activeSnapInfo = { x: c.x, y: c.y, kind: c.kind };
+            }
+          });
+        });
+      }
+
+      // 2. Grid Snap if no OSNAP matched
+      if (!state.activeSnapInfo && state.snapOn) {
+        const s = state.snapSize;
+        x = Math.round(x / s) * s;
+        y = Math.round(y / s) * s;
+      }
+
+      // 3. Ortho Lock (0° / 90°) if drawing and ORTHO is on or Shift is held
+      if ((state.orthoOn || shiftKey) && state.drawPoints.length > 0) {
+        const last = state.drawPoints[state.drawPoints.length - 1];
+        if (Math.abs(x - last.x) > Math.abs(y - last.y)) {
+          y = last.y;
+        } else {
+          x = last.x;
+        }
+      }
+
+      return { x, y };
+    }
+
+    // ============================================================================
+    // HIT TESTING (SELECTING ENTITIES IN 2D VIEWPORT)
+    // ============================================================================
+    function distToSegment(px, py, x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const lenSq = dx * dx + dy * dy;
+      if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+      let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+    }
+
+    function findEntityAtPoint(wx, wy) {
+      const tol = 10 / state.cam2D.zoom;
+      for (let i = state.entities.length - 1; i >= 0; i--) {
+        const e = state.entities[i];
+        const lyr = state.layers[e.layer];
+        if (lyr && (!lyr.visible || lyr.locked)) continue;
+
+        if (e.type === 'LINE' || e.type === 'DIM') {
+          if (distToSegment(wx, wy, e.x1, e.y1, e.x2, e.y2) <= tol) return e;
+        } else if (e.type === 'RECT' || e.type === 'BOX3D') {
+          const minX = Math.min(e.x1, e.x2), maxX = Math.max(e.x1, e.x2);
+          const minY = Math.min(e.y1, e.y2), maxY = Math.max(e.y1, e.y2);
+          const nearEdge =
+            distToSegment(wx, wy, minX, minY, maxX, minY) <= tol ||
+            distToSegment(wx, wy, maxX, minY, maxX, maxY) <= tol ||
+            distToSegment(wx, wy, maxX, maxY, minX, maxY) <= tol ||
+            distToSegment(wx, wy, minX, maxY, minX, minY) <= tol ||
+            (e.solid3D && wx >= minX && wx <= maxX && wy >= minY && wy <= maxY);
+          if (nearEdge) return e;
+        } else if (e.type === 'POLYLINE' && e.points && e.points.length >= 2) {
+          for (let j = 0; j < e.points.length - 1; j++) {
+            if (distToSegment(wx, wy, e.points[j].x, e.points[j].y, e.points[j + 1].x, e.points[j + 1].y) <= tol) {
+              return e;
+            }
+          }
+          if (e.closed) {
+            const last = e.points[e.points.length - 1];
+            const first = e.points[0];
+            if (distToSegment(wx, wy, last.x, last.y, first.x, first.y) <= tol) return e;
+          }
+        } else if (e.type === 'CIRCLE' || e.type === 'CYLINDER3D' || e.type === 'ARC') {
+          const d = Math.hypot(wx - e.cx, wy - e.cy);
+          if (Math.abs(d - e.r) <= tol || d <= tol) return e;
+        } else if (e.type === 'TEXT') {
+          const w = (e.text ? e.text.length : 5) * (e.size || 18) * 0.6;
+          const h = e.size || 18;
+          if (wx >= e.x - tol && wx <= e.x + w + tol && wy >= e.y - tol && wy <= e.y + h + tol) return e;
+        }
+      }
+      return null;
+    }
+
+    // ============================================================================
+    // 2D AUTOCAD CANVAS RENDERER
+    // ============================================================================
+    function render2D() {
+      const w = canvas2D.width;
+      const h = canvas2D.height;
+      if (!w || !h) return;
+
+      ctx2D.fillStyle = '#090d16';
+      ctx2D.fillRect(0, 0, w, h);
+
+      // 1. Adaptive CAD Grid
+      if (state.gridOn) {
+        let baseStep = 50;
+        if (state.cam2D.zoom < 0.25) baseStep = 250;
+        else if (state.cam2D.zoom > 2.0) baseStep = 10;
+
+        const subStep = baseStep / 5;
+        const tl = screenToWorld(0, 0);
+        const br = screenToWorld(w, h);
+
+        // Minor Grid
+        if (subStep * state.cam2D.zoom >= 8) {
+          ctx2D.strokeStyle = '#111827';
+          ctx2D.lineWidth = 1;
+          ctx2D.beginPath();
+          const startX = Math.floor(tl.x / subStep) * subStep;
+          const endX = Math.ceil(br.x / subStep) * subStep;
+          for (let gx = startX; gx <= endX; gx += subStep) {
+            const sx = worldToScreen(gx, 0).x;
+            ctx2D.moveTo(sx, 0);
+            ctx2D.lineTo(sx, h);
+          }
+          const startY = Math.floor(br.y / subStep) * subStep;
+          const endY = Math.ceil(tl.y / subStep) * subStep;
+          for (let gy = startY; gy <= endY; gy += subStep) {
+            const sy = worldToScreen(0, gy).y;
+            ctx2D.moveTo(0, sy);
+            ctx2D.lineTo(w, sy);
+          }
+          ctx2D.stroke();
+        }
+
+        // Major Grid
+        ctx2D.strokeStyle = '#1e293b';
+        ctx2D.lineWidth = 1;
+        ctx2D.beginPath();
+        const startX = Math.floor(tl.x / baseStep) * baseStep;
+        const endX = Math.ceil(br.x / baseStep) * baseStep;
+        for (let gx = startX; gx <= endX; gx += baseStep) {
+          const sx = worldToScreen(gx, 0).x;
+          ctx2D.moveTo(sx, 0);
+          ctx2D.lineTo(sx, h);
+        }
+        const startY = Math.floor(br.y / baseStep) * baseStep;
+        const endY = Math.ceil(tl.y / baseStep) * baseStep;
+        for (let gy = startY; gy <= endY; gy += baseStep) {
+          const sy = worldToScreen(0, gy).y;
+          ctx2D.moveTo(0, sy);
+          ctx2D.lineTo(w, sy);
+        }
+        ctx2D.stroke();
+
+        // Origin X/Y Axes (Red X, Green Y like AutoCAD UCS)
+        const origin = worldToScreen(0, 0);
+        ctx2D.strokeStyle = 'rgba(239, 68, 68, 0.45)';
+        ctx2D.beginPath();
+        ctx2D.moveTo(0, origin.y);
+        ctx2D.lineTo(w, origin.y);
+        ctx2D.stroke();
+
+        ctx2D.strokeStyle = 'rgba(34, 197, 94, 0.45)';
+        ctx2D.beginPath();
+        ctx2D.moveTo(origin.x, 0);
+        ctx2D.lineTo(origin.x, h);
+        ctx2D.stroke();
+
+        // UCS Icon at Origin
+        ctx2D.lineWidth = 2;
+        ctx2D.strokeStyle = '#ef4444';
+        ctx2D.beginPath();
+        ctx2D.moveTo(origin.x, origin.y);
+        ctx2D.lineTo(origin.x + 28, origin.y);
+        ctx2D.stroke();
+        ctx2D.strokeStyle = '#22c55e';
+        ctx2D.beginPath();
+        ctx2D.moveTo(origin.x, origin.y);
+        ctx2D.lineTo(origin.x, origin.y - 28);
+        ctx2D.stroke();
+      }
+
+      // 2. Draw All Entities
+      state.entities.forEach((e) => {
+        const lyr = state.layers[e.layer];
+        if (lyr && !lyr.visible) return;
+        const isSelected = e.id === state.selectedId;
+        drawEntity2D(e, isSelected);
+      });
+
+      // 3. Draw In-Progress Interactive Preview
+      drawPreviewEntity2D();
+
+      // 4. Draw Object Snap Marker (Green AutoCAD OSNAP Square/Triangle/Circle)
+      if (state.activeSnapInfo) {
+        const sp = worldToScreen(state.activeSnapInfo.x, state.activeSnapInfo.y);
+        ctx2D.strokeStyle = '#10b981';
+        ctx2D.lineWidth = 2;
+        if (state.activeSnapInfo.kind === 'ENDPOINT') {
+          ctx2D.strokeRect(sp.x - 5, sp.y - 5, 10, 10);
+        } else if (state.activeSnapInfo.kind === 'MIDPOINT') {
+          ctx2D.beginPath();
+          ctx2D.moveTo(sp.x, sp.y - 6);
+          ctx2D.lineTo(sp.x - 6, sp.y + 5);
+          ctx2D.lineTo(sp.x + 6, sp.y + 5);
+          ctx2D.closePath();
+          ctx2D.stroke();
+        } else {
+          ctx2D.beginPath();
+          ctx2D.arc(sp.x, sp.y, 6, 0, Math.PI * 2);
+          ctx2D.stroke();
+        }
+      }
+
+      // 5. Draw AutoCAD Crosshair Cursor
+      if (state.activeTool !== 'PAN') {
+        const cs = worldToScreen(state.snappedWorld.x, state.snappedWorld.y);
+        ctx2D.strokeStyle = 'rgba(226, 232, 240, 0.7)';
+        ctx2D.lineWidth = 1;
+        ctx2D.beginPath();
+        ctx2D.moveTo(cs.x - 24, cs.y);
+        ctx2D.lineTo(cs.x + 24, cs.y);
+        ctx2D.moveTo(cs.x, cs.y - 24);
+        ctx2D.lineTo(cs.x, cs.y + 24);
+        ctx2D.stroke();
+        if (state.activeTool === 'SELECT') {
+          ctx2D.strokeRect(cs.x - 4, cs.y - 4, 8, 8);
+        }
+      }
+    }
+
+    function drawEntity2D(e, isSelected) {
+      const strokeColor = isSelected ? '#facc15' : (e.color || '#38bdf8');
+      ctx2D.strokeStyle = strokeColor;
+      ctx2D.fillStyle = strokeColor;
+      ctx2D.lineWidth = isSelected ? 2.5 : (e.extrude > 0 ? 1.8 : 1.3);
+
+      if (isSelected) {
+        ctx2D.setLineDash([5, 3]);
+      } else {
+        ctx2D.setLineDash([]);
+      }
+
+      if (e.type === 'LINE') {
+        const p1 = worldToScreen(e.x1, e.y1);
+        const p2 = worldToScreen(e.x2, e.y2);
+        ctx2D.beginPath();
+        ctx2D.moveTo(p1.x, p1.y);
+        ctx2D.lineTo(p2.x, p2.y);
+        ctx2D.stroke();
+        if (isSelected) drawGripHandles([p1, p2]);
+      } else if (e.type === 'RECT' || e.type === 'BOX3D') {
+        const p1 = worldToScreen(e.x1, e.y1);
+        const p2 = worldToScreen(e.x2, e.y2);
+        const rx = Math.min(p1.x, p2.x);
+        const ry = Math.min(p1.y, p2.y);
+        const rw = Math.abs(p2.x - p1.x);
+        const rh = Math.abs(p2.y - p1.y);
+        if (e.type === 'BOX3D' || e.solid3D) {
+          ctx2D.fillStyle = strokeColor + '26';
+          ctx2D.fillRect(rx, ry, rw, rh);
+        }
+        ctx2D.strokeRect(rx, ry, rw, rh);
+        if (isSelected) {
+          drawGripHandles([
+            { x: rx, y: ry },
+            { x: rx + rw, y: ry },
+            { x: rx + rw, y: ry + rh },
+            { x: rx, y: ry + rh }
+          ]);
+        }
+      } else if (e.type === 'POLYLINE' && e.points && e.points.length >= 2) {
+        ctx2D.beginPath();
+        const screenPts = e.points.map((pt) => worldToScreen(pt.x, pt.y));
+        ctx2D.moveTo(screenPts[0].x, screenPts[0].y);
+        for (let i = 1; i < screenPts.length; i++) {
+          ctx2D.lineTo(screenPts[i].x, screenPts[i].y);
+        }
+        if (e.closed) ctx2D.closePath();
+        ctx2D.stroke();
+        if (isSelected) drawGripHandles(screenPts);
+      } else if (e.type === 'CIRCLE' || e.type === 'CYLINDER3D') {
+        const c = worldToScreen(e.cx, e.cy);
+        const sr = e.r * state.cam2D.zoom;
+        ctx2D.beginPath();
+        ctx2D.arc(c.x, c.y, Math.max(1, sr), 0, Math.PI * 2);
+        if (e.type === 'CYLINDER3D') {
+          ctx2D.fillStyle = strokeColor + '26';
+          ctx2D.fill();
+        }
+        ctx2D.stroke();
+        // Center cross
+        ctx2D.beginPath();
+        ctx2D.moveTo(c.x - 4, c.y);
+        ctx2D.lineTo(c.x + 4, c.y);
+        ctx2D.moveTo(c.x, c.y - 4);
+        ctx2D.lineTo(c.x, c.y + 4);
+        ctx2D.stroke();
+        if (isSelected) drawGripHandles([c, { x: c.x + sr, y: c.y }]);
+      } else if (e.type === 'ARC') {
+        const c = worldToScreen(e.cx, e.cy);
+        const sr = e.r * state.cam2D.zoom;
+        ctx2D.beginPath();
+        // Note: screen Y is inverted compared to world Y
+        ctx2D.arc(c.x, c.y, Math.max(1, sr), -e.endAngle, -e.startAngle);
+        ctx2D.stroke();
+        if (isSelected) drawGripHandles([c]);
+      } else if (e.type === 'DIM') {
+        const p1 = worldToScreen(e.x1, e.y1);
+        const p2 = worldToScreen(e.x2, e.y2);
+        const dist = Math.hypot(e.x2 - e.x1, e.y2 - e.y1);
+        ctx2D.beginPath();
+        ctx2D.moveTo(p1.x, p1.y);
+        ctx2D.lineTo(p2.x, p2.y);
+        ctx2D.stroke();
+
+        // Dimension endpoint ticks
+        ctx2D.setLineDash([]);
+        ctx2D.beginPath();
+        ctx2D.arc(p1.x, p1.y, 3, 0, Math.PI * 2);
+        ctx2D.arc(p2.x, p2.y, 3, 0, Math.PI * 2);
+        ctx2D.fill();
+
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
+        const label = `${dist.toFixed(1)}`;
+        ctx2D.font = '600 11px "JetBrains Mono", monospace';
+        const tw = ctx2D.measureText(label).width;
+        ctx2D.fillStyle = '#090d16';
+        ctx2D.fillRect(midX - tw / 2 - 4, midY - 8, tw + 8, 16);
+        ctx2D.fillStyle = strokeColor;
+        ctx2D.textAlign = 'center';
+        ctx2D.textBaseline = 'middle';
+        ctx2D.fillText(label, midX, midY);
+      } else if (e.type === 'TEXT') {
+        const p = worldToScreen(e.x, e.y);
+        const fontPx = Math.max(9, Math.min(64, (e.size || 18) * state.cam2D.zoom));
+        ctx2D.setLineDash([]);
+        ctx2D.font = `600 ${fontPx}px "JetBrains Mono", monospace`;
+        ctx2D.fillStyle = strokeColor;
+        ctx2D.textAlign = 'left';
+        ctx2D.textBaseline = 'bottom';
+        ctx2D.fillText(e.text || '', p.x, p.y);
+        if (isSelected) drawGripHandles([p]);
+      }
+
+      ctx2D.setLineDash([]);
+    }
+
+    function drawGripHandles(points) {
+      ctx2D.setLineDash([]);
+      ctx2D.fillStyle = '#3b82f6';
+      ctx2D.strokeStyle = '#ffffff';
+      ctx2D.lineWidth = 1;
+      points.forEach((p) => {
+        ctx2D.fillRect(p.x - 4, p.y - 4, 8, 8);
+        ctx2D.strokeRect(p.x - 4, p.y - 4, 8, 8);
+      });
+    }
+
+    function drawPreviewEntity2D() {
+      if (state.drawPoints.length === 0) return;
+      const cur = state.snappedWorld;
+      const p0 = state.drawPoints[0];
+
+      ctx2D.strokeStyle = '#38bdf8';
+      ctx2D.fillStyle = 'rgba(56, 189, 248, 0.15)';
+      ctx2D.lineWidth = 1.5;
+      ctx2D.setLineDash([6, 4]);
+
+      if (state.activeTool === 'LINE' || state.activeTool === 'DIM') {
+        const s0 = worldToScreen(p0.x, p0.y);
+        const s1 = worldToScreen(cur.x, cur.y);
+        ctx2D.beginPath();
+        ctx2D.moveTo(s0.x, s0.y);
+        ctx2D.lineTo(s1.x, s1.y);
+        ctx2D.stroke();
+        drawLiveMeasurementBadge(p0, cur);
+      } else if (state.activeTool === 'POLYLINE') {
+        ctx2D.beginPath();
+        const first = worldToScreen(p0.x, p0.y);
+        ctx2D.moveTo(first.x, first.y);
+        for (let i = 1; i < state.drawPoints.length; i++) {
+          const sp = worldToScreen(state.drawPoints[i].x, state.drawPoints[i].y);
+          ctx2D.lineTo(sp.x, sp.y);
+        }
+        const sc = worldToScreen(cur.x, cur.y);
+        ctx2D.lineTo(sc.x, sc.y);
+        ctx2D.stroke();
+        drawLiveMeasurementBadge(state.drawPoints[state.drawPoints.length - 1], cur);
+      } else if (state.activeTool === 'RECT' || state.activeTool === 'BOX3D') {
+        const s0 = worldToScreen(p0.x, p0.y);
+        const s1 = worldToScreen(cur.x, cur.y);
+        const rx = Math.min(s0.x, s1.x);
+        const ry = Math.min(s0.y, s1.y);
+        const rw = Math.abs(s1.x - s0.x);
+        const rh = Math.abs(s1.y - s0.y);
+        ctx2D.fillRect(rx, ry, rw, rh);
+        ctx2D.strokeRect(rx, ry, rw, rh);
+        drawLiveMeasurementBadge(p0, cur);
+      } else if (state.activeTool === 'CIRCLE' || state.activeTool === 'CYLINDER3D') {
+        const s0 = worldToScreen(p0.x, p0.y);
+        const rWorld = Math.hypot(cur.x - p0.x, cur.y - p0.y);
+        const rScreen = rWorld * state.cam2D.zoom;
+        ctx2D.beginPath();
+        ctx2D.arc(s0.x, s0.y, Math.max(1, rScreen), 0, Math.PI * 2);
+        ctx2D.fill();
+        ctx2D.stroke();
+        drawLiveMeasurementBadge(p0, cur, `R = ${rWorld.toFixed(1)}`);
+      } else if (state.activeTool === 'ARC') {
+        const s0 = worldToScreen(p0.x, p0.y);
+        if (state.drawPoints.length === 1) {
+          const rWorld = Math.hypot(cur.x - p0.x, cur.y - p0.y);
+          ctx2D.beginPath();
+          ctx2D.arc(s0.x, s0.y, Math.max(1, rWorld * state.cam2D.zoom), 0, Math.PI * 2);
+          ctx2D.stroke();
+        } else if (state.drawPoints.length === 2) {
+          const p1 = state.drawPoints[1];
+          const rWorld = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+          const a1 = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+          const a2 = Math.atan2(cur.y - p0.y, cur.x - p0.x);
+          ctx2D.beginPath();
+          ctx2D.arc(s0.x, s0.y, Math.max(1, rWorld * state.cam2D.zoom), -a2, -a1);
+          ctx2D.stroke();
+        }
+      }
+
+      ctx2D.setLineDash([]);
+    }
+
+    function drawLiveMeasurementBadge(ptA, ptB, customText) {
+      const sB = worldToScreen(ptB.x, ptB.y);
+      const dist = Math.hypot(ptB.x - ptA.x, ptB.y - ptA.y);
+      const ang = ((Math.atan2(ptB.y - ptA.y, ptB.x - ptA.x) * 180) / Math.PI).toFixed(0);
+      const txt = customText || `L=${dist.toFixed(1)} ∠${ang}°`;
+      ctx2D.setLineDash([]);
+      ctx2D.font = '600 11px "JetBrains Mono", monospace';
+      const w = ctx2D.measureText(txt).width + 12;
+      ctx2D.fillStyle = 'rgba(15, 23, 42, 0.92)';
+      ctx2D.fillRect(sB.x + 14, sB.y + 12, w, 20);
+      ctx2D.strokeStyle = '#38bdf8';
+      ctx2D.strokeRect(sB.x + 14, sB.y + 12, w, 20);
+      ctx2D.fillStyle = '#38bdf8';
+      ctx2D.textAlign = 'left';
+      ctx2D.textBaseline = 'middle';
+      ctx2D.fillText(txt, sB.x + 20, sB.y + 22);
+    }
+
+    // ============================================================================
+    // ZOOM EXTENTS (FIT ALL ENTITIES IN 2D VIEWPORT)
+    // ============================================================================
+    function getDrawingBounds() {
+      if (state.entities.length === 0) {
+        return { minX: -500, maxX: 500, minY: -350, maxY: 350 };
+      }
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      const include = (x, y) => {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      };
+      state.entities.forEach((e) => {
+        if (e.type === 'LINE' || e.type === 'DIM' || e.type === 'RECT' || e.type === 'BOX3D') {
+          include(e.x1, e.y1);
+          include(e.x2, e.y2);
+        } else if (e.type === 'POLYLINE' && e.points) {
+          e.points.forEach((p) => include(p.x, p.y));
+        } else if (e.type === 'CIRCLE' || e.type === 'CYLINDER3D' || e.type === 'ARC') {
+          include(e.cx - e.r, e.cy - e.r);
+          include(e.cx + e.r, e.cy + e.r);
+        } else if (e.type === 'TEXT') {
+          include(e.x, e.y);
+          include(e.x + 120, e.y + 30);
+        }
+      });
+      if (!isFinite(minX)) return { minX: -500, maxX: 500, minY: -350, maxY: 350 };
+      return { minX, maxX, minY, maxY };
+    }
+
+    function zoomExtents2D() {
+      const b = getDrawingBounds();
+      const spanX = Math.max(100, b.maxX - b.minX);
+      const spanY = Math.max(100, b.maxY - b.minY);
+      state.cam2D.x = (b.minX + b.maxX) / 2;
+      state.cam2D.y = (b.minY + b.maxY) / 2;
+
+      const cw = canvas2D.width || 800;
+      const ch = canvas2D.height || 600;
+      const zoomX = (cw * 0.78) / spanX;
+      const zoomY = (ch * 0.78) / spanY;
+      state.cam2D.zoom = Math.max(0.02, Math.min(20, Math.min(zoomX, zoomY)));
+
+      updateZoomBadge();
+      updateDrawingStats(b);
+      render2D();
+    }
+
+    function updateZoomBadge() {
+      document.getElementById('zoomLevelText').textContent = `Zoom: ${Math.round(state.cam2D.zoom * 100)}%`;
+    }
+
+    function updateDrawingStats(bounds) {
+      const b = bounds || getDrawingBounds();
+      document.getElementById('statEntityCount').textContent = String(state.entities.length);
+      document.getElementById('statLayerCount').textContent = String(Object.keys(state.layers).length);
+      const w = Math.round(b.maxX - b.minX);
+      const h = Math.round(b.maxY - b.minY);
+      document.getElementById('statExtents').textContent = `${w} × ${h}`;
+    }
+
+    // ============================================================================
+    // 3D WEBGL ENGINE (THREE.JS REAL-TIME EXTRUSION & ORBIT VIEWPORT)
+    // ============================================================================
+    let scene3D, camera3D, renderer3D, cadGroup3D;
+    const orbitState = {
+      isRotating: false,
+      isPanning: false,
+      lastX: 0,
+      lastY: 0,
+      theta: Math.PI / 4,
+      phi: Math.PI / 3.1,
+      radius: 1450,
+      target: new THREE.Vector3(0, 0, 60)
+    };
+
+    function init3DEngine() {
+      const mount = document.getElementById('threeMount');
+      scene3D = new THREE.Scene();
+      scene3D.background = new THREE.Color(0x070a12);
+
+      camera3D = new THREE.PerspectiveCamera(45, 1, 1, 50000);
+      camera3D.up.set(0, 0, 1); // Z-up standard like AutoCAD!
+
+      renderer3D = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer3D.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      mount.appendChild(renderer3D.domElement);
+
+      // Lights
+      const ambient = new THREE.AmbientLight(0xffffff, 0.65);
+      scene3D.add(ambient);
+
+      const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.85);
+      dirLight1.position.set(900, -1100, 1400);
+      scene3D.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0x60a5fa, 0.35);
+      dirLight2.position.set(-900, 900, 700);
+      scene3D.add(dirLight2);
+
+      // Ground Grid on XY plane (Z=0)
+      const gridHelper = new THREE.GridHelper(2400, 48, 0x334155, 0x131c2e);
+      gridHelper.rotation.x = Math.PI / 2;
+      scene3D.add(gridHelper);
+
+      // AutoCAD UCS RGB Axes at Origin
+      const axesHelper = new THREE.AxesHelper(220);
+      axesHelper.position.set(0, 0, 1);
+      scene3D.add(axesHelper);
+
+      cadGroup3D = new THREE.Group();
+      scene3D.add(cadGroup3D);
+
+      // Mouse Orbit & Pan Controls
+      const dom = renderer3D.domElement;
+      dom.addEventListener('contextmenu', (ev) => ev.preventDefault());
+      dom.addEventListener('mousedown', (ev) => {
+        if (ev.button === 0) {
+          orbitState.isRotating = true;
+        } else if (ev.button === 1 || ev.button === 2) {
+          orbitState.isPanning = true;
+        }
+        orbitState.lastX = ev.clientX;
+        orbitState.lastY = ev.clientY;
+      });
+
+      window.addEventListener('mousemove', (ev) => {
+        if (!orbitState.isRotating && !orbitState.isPanning) return;
+        const dx = ev.clientX - orbitState.lastX;
+        const dy = ev.clientY - orbitState.lastY;
+        orbitState.lastX = ev.clientX;
+        orbitState.lastY = ev.clientY;
+
+        if (orbitState.isRotating) {
+          orbitState.theta -= dx * 0.0075;
+          orbitState.phi = Math.max(0.08, Math.min(Math.PI / 2 - 0.02, orbitState.phi - dy * 0.0075));
+          updateCamera3DFromOrbit();
+        } else if (orbitState.isPanning) {
+          const panScale = orbitState.radius * 0.0012;
+          const right = new THREE.Vector3(-Math.sin(orbitState.theta), Math.cos(orbitState.theta), 0);
+          const forward = new THREE.Vector3(-Math.cos(orbitState.theta), -Math.sin(orbitState.theta), 0);
+          orbitState.target.addScaledVector(right, -dx * panScale);
+          orbitState.target.addScaledVector(forward, dy * panScale);
+          updateCamera3DFromOrbit();
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        orbitState.isRotating = false;
+        orbitState.isPanning = false;
+      });
+
+      dom.addEventListener('wheel', (ev) => {
+        ev.preventDefault();
+        const factor = ev.deltaY > 0 ? 1.12 : 0.89;
+        orbitState.radius = Math.max(80, Math.min(25000, orbitState.radius * factor));
+        updateCamera3DFromOrbit();
+      }, { passive: false });
+
+      updateCamera3DFromOrbit();
+    }
+
+    function updateCamera3DFromOrbit() {
+      if (!camera3D) return;
+      const x = orbitState.target.x + orbitState.radius * Math.sin(orbitState.phi) * Math.cos(orbitState.theta);
+      const y = orbitState.target.y + orbitState.radius * Math.sin(orbitState.phi) * Math.sin(orbitState.theta);
+      const z = orbitState.target.z + orbitState.radius * Math.cos(orbitState.phi);
+      camera3D.position.set(x, y, z);
+      camera3D.lookAt(orbitState.target);
+      render3DScene();
+    }
+
+    function set3DCameraPreset(preset) {
+      if (preset === 'iso') {
+        orbitState.theta = -Math.PI / 3;
+        orbitState.phi = Math.PI / 3.1;
+      } else if (preset === 'top') {
+        orbitState.theta = -Math.PI / 2;
+        orbitState.phi = 0.05;
+      } else if (preset === 'front') {
+        orbitState.theta = -Math.PI / 2;
+        orbitState.phi = Math.PI / 2 - 0.05;
+      } else if (preset === 'side') {
+        orbitState.theta = 0;
+        orbitState.phi = Math.PI / 2 - 0.05;
+      }
+      updateCamera3DFromOrbit();
+    }
+
+    function rebuild3DScene() {
+      if (!cadGroup3D) return;
+      while (cadGroup3D.children.length > 0) {
+        const child = cadGroup3D.children.pop();
+        if (child.geometry) child.geometry.dispose();
+      }
+
+      state.entities.forEach((e) => {
+        const lyr = state.layers[e.layer];
+        if (lyr && !lyr.visible) return;
+
+        const isSelected = e.id === state.selectedId;
+        const hexStr = isSelected ? '#facc15' : (e.color || '#38bdf8');
+        const threeColor = new THREE.Color(hexStr);
+        const z0 = Number(e.elevation) || 0;
+        const h = Math.max(0, Number(e.extrude) || 0);
+
+        const meshMat = new THREE.MeshStandardMaterial({
+          color: threeColor,
+          roughness: 0.42,
+          metalness: 0.18,
+          wireframe: state.wireframe3D,
+          transparent: true,
+          opacity: isSelected ? 0.95 : 0.85,
+          side: THREE.DoubleSide
+        });
+        const lineMat = new THREE.LineBasicMaterial({ color: threeColor });
+
+        if (e.type === 'LINE') {
+          const dx = e.x2 - e.x1;
+          const dy = e.y2 - e.y1;
+          const len = Math.hypot(dx, dy);
+          if (len < 0.1) return;
+
+          if (h > 0) {
+            // Extruded Wall Segment
+            const wallThickness = 14;
+            const geom = new THREE.BoxGeometry(len, wallThickness, h);
+            const mesh = new THREE.Mesh(geom, meshMat);
+            mesh.position.set((e.x1 + e.x2) / 2, (e.y1 + e.y2) / 2, z0 + h / 2);
+            mesh.rotation.z = Math.atan2(dy, dx);
+            cadGroup3D.add(mesh);
+
+            const edges = new THREE.EdgesGeometry(geom);
+            const wire = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xe2e8f0 }));
+            mesh.add(wire);
+          } else {
+            const pts = [new THREE.Vector3(e.x1, e.y1, z0), new THREE.Vector3(e.x2, e.y2, z0)];
+            const geom = new THREE.BufferGeometry().setFromPoints(pts);
+            cadGroup3D.add(new THREE.Line(geom, lineMat));
+          }
+        } else if (e.type === 'RECT' || e.type === 'BOX3D') {
+          const w = Math.abs(e.x2 - e.x1);
+          const d = Math.abs(e.y2 - e.y1);
+          const cx = (e.x1 + e.x2) / 2;
+          const cy = (e.y1 + e.y2) / 2;
+          if (w < 0.1 || d < 0.1) return;
+
+          if (h > 0) {
+            if (e.type === 'BOX3D' || e.solid3D) {
+              const geom = new THREE.BoxGeometry(w, d, h);
+              const mesh = new THREE.Mesh(geom, meshMat);
+              mesh.position.set(cx, cy, z0 + h / 2);
+              const edges = new THREE.EdgesGeometry(geom);
+              mesh.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xe2e8f0 })));
+              cadGroup3D.add(mesh);
+            } else {
+              // 4 Hollow Perimeter Walls
+              const segs = [
+                [e.x1, e.y1, e.x2, e.y1],
+                [e.x2, e.y1, e.x2, e.y2],
+                [e.x2, e.y2, e.x1, e.y2],
+                [e.x1, e.y2, e.x1, e.y1]
+              ];
+              segs.forEach(([sx1, sy1, sx2, sy2]) => {
+                const slen = Math.hypot(sx2 - sx1, sy2 - sy1);
+                const geom = new THREE.BoxGeometry(slen, 16, h);
+                const mesh = new THREE.Mesh(geom, meshMat);
+                mesh.position.set((sx1 + sx2) / 2, (sy1 + sy2) / 2, z0 + h / 2);
+                mesh.rotation.z = Math.atan2(sy2 - sy1, sx2 - sx1);
+                const edges = new THREE.EdgesGeometry(geom);
+                mesh.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xe2e8f0 })));
+                cadGroup3D.add(mesh);
+              });
+            }
+          } else {
+            const pts = [
+              new THREE.Vector3(e.x1, e.y1, z0),
+              new THREE.Vector3(e.x2, e.y1, z0),
+              new THREE.Vector3(e.x2, e.y2, z0),
+              new THREE.Vector3(e.x1, e.y2, z0),
+              new THREE.Vector3(e.x1, e.y1, z0)
+            ];
+            cadGroup3D.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat));
+          }
+        } else if (e.type === 'POLYLINE' && e.points && e.points.length >= 2) {
+          for (let i = 0; i < e.points.length - 1; i++) {
+            const p1 = e.points[i];
+            const p2 = e.points[i + 1];
+            const len = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+            if (h > 0 && len > 0.1) {
+              const geom = new THREE.BoxGeometry(len, 12, h);
+              const mesh = new THREE.Mesh(geom, meshMat);
+              mesh.position.set((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, z0 + h / 2);
+              mesh.rotation.z = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+              cadGroup3D.add(mesh);
+            } else {
+              const pts = [new THREE.Vector3(p1.x, p1.y, z0), new THREE.Vector3(p2.x, p2.y, z0)];
+              cadGroup3D.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat));
+            }
+          }
+        } else if (e.type === 'CIRCLE' || e.type === 'CYLINDER3D') {
+          if (h > 0) {
+            const geom = new THREE.CylinderGeometry(e.r, e.r, h, 36);
+            geom.rotateX(Math.PI / 2); // Align cylinder along Z axis
+            const mesh = new THREE.Mesh(geom, meshMat);
+            mesh.position.set(e.cx, e.cy, z0 + h / 2);
+            const edges = new THREE.EdgesGeometry(geom);
+            mesh.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xe2e8f0 })));
+            cadGroup3D.add(mesh);
+          } else {
+            const curve = new THREE.EllipseCurve(e.cx, e.cy, e.r, e.r, 0, Math.PI * 2, false, 0);
+            const pts2d = curve.getPoints(48);
+            const pts3d = pts2d.map((p) => new THREE.Vector3(p.x, p.y, z0));
+            cadGroup3D.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts3d), lineMat));
+          }
+        } else if (e.type === 'ARC') {
+          const curve = new THREE.EllipseCurve(e.cx, e.cy, e.r, e.r, e.startAngle, e.endAngle, false, 0);
+          const pts2d = curve.getPoints(32);
+          const pts3d = pts2d.map((p) => new THREE.Vector3(p.x, p.y, z0));
+          cadGroup3D.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts3d), lineMat));
+        }
+      });
+
+      render3DScene();
+    }
+
+    function render3DScene() {
+      if (!renderer3D || !scene3D || !camera3D) return;
+      renderer3D.render(scene3D, camera3D);
+    }
+
+    // ============================================================================
+    // VIEWPORT RESIZING & LAYOUT MODES (2D / SPLIT / 3D)
+    // ============================================================================
+    function updateViewportLayout() {
+      const v2d = document.getElementById('view2DContainer');
+      const v3d = document.getElementById('view3DContainer');
+      const b2d = document.getElementById('mode2DBtn');
+      const bSplit = document.getElementById('modeSplitBtn');
+      const b3d = document.getElementById('mode3DBtn');
+
+      [b2d, bSplit, b3d].forEach((b) => {
+        b.className = 'px-2.5 py-1 rounded-md text-xs font-semibold transition text-slate-400 hover:text-white';
+      });
+
+      if (state.viewMode === '2D') {
+        v2d.classList.remove('hidden');
+        v3d.classList.add('hidden');
+        b2d.className = 'px-2.5 py-1 rounded-md text-xs font-semibold transition bg-blue-600 text-white';
+      } else if (state.viewMode === 'SPLIT') {
+        v2d.classList.remove('hidden');
+        v3d.classList.remove('hidden');
+        bSplit.className = 'px-2.5 py-1 rounded-md text-xs font-semibold transition bg-blue-600 text-white';
+      } else {
+        v2d.classList.add('hidden');
+        v3d.classList.remove('hidden');
+        b3d.className = 'px-2.5 py-1 rounded-md text-xs font-semibold transition bg-blue-600 text-white';
+      }
+
+      resizeCanvases();
+    }
+
+    function resizeCanvases() {
+      const v2d = document.getElementById('view2DContainer');
+      if (!v2d.classList.contains('hidden')) {
+        const rect2 = v2d.getBoundingClientRect();
+        canvas2D.width = Math.max(100, Math.floor(rect2.width));
+        canvas2D.height = Math.max(100, Math.floor(rect2.height));
+        render2D();
+      }
+
+      const v3d = document.getElementById('view3DContainer');
+      if (!v3d.classList.contains('hidden') && renderer3D && camera3D) {
+        const rect3 = v3d.getBoundingClientRect();
+        const w3 = Math.max(100, Math.floor(rect3.width));
+        const h3 = Math.max(100, Math.floor(rect3.height));
+        camera3D.aspect = w3 / h3;
+        camera3D.updateProjectionMatrix();
+        renderer3D.setSize(w3, h3);
+        render3DScene();
+      }
+    }
+
+    // ============================================================================
+    // LAYER MANAGER & OBJECT INSPECTOR UI SYNC
+    // ============================================================================
+    function syncLayerUI() {
+      const activeSelect = document.getElementById('activeLayerSelect');
+      const propLayerSelect = document.getElementById('propLayer');
+      const listContainer = document.getElementById('layersListContainer');
+
+      activeSelect.innerHTML = '';
+      propLayerSelect.innerHTML = '';
+      listContainer.innerHTML = '';
+
+      Object.values(state.layers).forEach((lyr) => {
+        const opt1 = document.createElement('option');
+        opt1.value = lyr.name;
+        opt1.textContent = lyr.name;
+        if (lyr.name === state.activeLayer) opt1.selected = true;
+        activeSelect.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = lyr.name;
+        opt2.textContent = lyr.name;
+        propLayerSelect.appendChild(opt2);
+
+        const row = document.createElement('div');
+        row.className = `flex items-center justify-between px-2 py-1 rounded text-xs border ${
+          lyr.name === state.activeLayer
+            ? 'bg-blue-950/50 border-blue-700/70 text-white'
+            : 'bg-slate-900/80 border-slate-800 text-slate-300'
+        }`;
+
+        const left = document.createElement('div');
+        left.className = 'flex items-center gap-2 cursor-pointer truncate flex-1';
+        left.addEventListener('click', () => {
+          state.activeLayer = lyr.name;
+          state.defaultColor = lyr.color;
+          state.defaultExtrude = lyr.extrude || 0;
+          document.getElementById('defaultColorInput').value = lyr.color;
+          document.getElementById('defaultColorHex').textContent = lyr.color;
+          document.getElementById('defaultExtrudeInput').value = lyr.extrude || 0;
+          syncLayerUI();
+        });
+
+        const swatch = document.createElement('span');
+        swatch.className = 'w-3 h-3 rounded-sm shrink-0 border border-white/20';
+        swatch.style.backgroundColor = lyr.color;
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'mono text-[11px] truncate';
+        nameSpan.textContent = lyr.name;
+
+        left.appendChild(swatch);
+        left.appendChild(nameSpan);
+
+        const right = document.createElement('div');
+        right.className = 'flex items-center gap-1 shrink-0';
+
+        // Visibility Eye Button
+        const visBtn = document.createElement('button');
+        visBtn.className = `px-1.5 py-0.5 rounded text-[10px] ${
+          lyr.visible ? 'text-emerald-400 bg-slate-800' : 'text-slate-600 bg-slate-950'
+        }`;
+        visBtn.textContent = lyr.visible ? '👁' : 'Ẩn';
+        visBtn.title = 'Bật/Tắt hiển thị Layer';
+        visBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          lyr.visible = !lyr.visible;
+          syncLayerUI();
+          rebuild3DScene();
+          render2D();
+        });
+
+        right.appendChild(visBtn);
+        row.appendChild(left);
+        row.appendChild(right);
+        listContainer.appendChild(row);
+      });
+
+      updateDrawingStats();
+    }
+
+    function syncInspectorUI() {
+      const defPanel = document.getElementById('defaultPropsPanel');
+      const selPanel = document.getElementById('selectedPropsPanel');
+      const badge = document.getElementById('propTypeBadge');
+      const geomContainer = document.getElementById('propGeometryFields');
+
+      const ent = state.entities.find((x) => x.id === state.selectedId);
+      if (!ent) {
+        defPanel.classList.remove('hidden');
+        selPanel.classList.add('hidden');
+        badge.textContent = 'Mặc định';
+        return;
+      }
+
+      defPanel.classList.add('hidden');
+      selPanel.classList.remove('hidden');
+      badge.textContent = `${ent.type} #${ent.id}`;
+
+      document.getElementById('propLayer').value = ent.layer || state.activeLayer;
+      document.getElementById('propColor').value = ent.color || '#38bdf8';
+      document.getElementById('propExtrude').value = ent.extrude || 0;
+      document.getElementById('propElevation').value = ent.elevation || 0;
+
+      geomContainer.innerHTML = '';
+
+      const addNumberField = (label, propKey, val) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'grid grid-cols-2 gap-2 items-center';
+        const lbl = document.createElement('label');
+        lbl.className = 'text-slate-400 text-[11px]';
+        lbl.textContent = label;
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.step = '5';
+        inp.value = Math.round(val * 100) / 100;
+        inp.className = 'bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white mono w-full';
+        inp.addEventListener('change', () => {
+          pushUndoState();
+          ent[propKey] = parseFloat(inp.value) || 0;
+          rebuild3DScene();
+          render2D();
+        });
+        wrap.appendChild(lbl);
+        wrap.appendChild(inp);
+        geomContainer.appendChild(wrap);
+      };
+
+      if (ent.type === 'LINE' || ent.type === 'DIM' || ent.type === 'RECT' || ent.type === 'BOX3D') {
+        addNumberField('Tọa độ X1', 'x1', ent.x1);
+        addNumberField('Tọa độ Y1', 'y1', ent.y1);
+        addNumberField('Tọa độ X2', 'x2', ent.x2);
+        addNumberField('Tọa độ Y2', 'y2', ent.y2);
+      } else if (ent.type === 'CIRCLE' || ent.type === 'CYLINDER3D' || ent.type === 'ARC') {
+        addNumberField('Tâm CX', 'cx', ent.cx);
+        addNumberField('Tâm CY', 'cy', ent.cy);
+        addNumberField('Bán kính R', 'r', ent.r);
+      } else if (ent.type === 'TEXT') {
+        addNumberField('Tọa độ X', 'x', ent.x);
+        addNumberField('Tọa độ Y', 'y', ent.y);
+        addNumberField('Cỡ chữ', 'size', ent.size || 18);
+        const wrap = document.createElement('div');
+        wrap.className = 'space-y-1 pt-1';
+        const lbl = document.createElement('label');
+        lbl.className = 'text-slate-400 text-[11px] block';
+        lbl.textContent = 'Nội dung Text';
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.value = ent.text || '';
+        inp.className = 'bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white mono w-full';
+        inp.addEventListener('input', () => {
+          ent.text = inp.value;
+          render2D();
+        });
+        wrap.appendChild(lbl);
+        wrap.appendChild(inp);
+        geomContainer.appendChild(wrap);
+      }
+    }
+
+    // ============================================================================
+    // TOOL SELECTION & INTERACTIVE DRAWING WORKFLOW
+    // ============================================================================
+    function setActiveTool(toolName) {
+      state.activeTool = toolName;
+      state.drawPoints = [];
+
+      document.querySelectorAll('.tool-btn').forEach((btn) => {
+        if (btn.dataset.tool === toolName) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+
+      if (toolName === 'PAN') {
+        canvas2D.classList.add('pan-cursor');
+      } else {
+        canvas2D.classList.remove('pan-cursor');
+      }
+
+      document.getElementById('activeToolBadge').textContent = `TOOL: ${toolName}`;
+
+      const prompts = {
+        SELECT: 'Click vào đối tượng để chọn/di chuyển, hoặc kéo chỉnh thuộc tính 2D/3D ở cột phải.',
+        PAN: 'Giữ chuột trái và kéo để di chuyển mặt phẳng bản vẽ 2D.',
+        LINE: 'Lệnh LINE: Chọn điểm đầu tiên trên bản vẽ hoặc nhập tọa độ X,Y vào Command Line.',
+        POLYLINE: 'Lệnh POLYLINE: Click các đỉnh liên tiếp. Nhấn Enter hoặc Chuột phải để hoàn tất.',
+        RECT: 'Lệnh RECTANGLE: Chọn góc thứ nhất của hình chữ nhật / tường.',
+        CIRCLE: 'Lệnh CIRCLE: Chọn tâm đường tròn, sau đó kéo hoặc nhập bán kính R.',
+        ARC: 'Lệnh ARC: Bước 1 chọn Tâm -> Bước 2 chọn Điểm bắt đầu -> Bước 3 chọn Góc kết thúc.',
+        DIM: 'Lệnh DIMENSION: Chọn 2 điểm cần đo và ghi kích thước kỹ thuật.',
+        TEXT: 'Lệnh TEXT: Click vào vị trí trên bản vẽ để đặt nhãn văn bản.',
+        BOX3D: 'Lệnh 3D BOX: Chọn 2 góc đối diện để dựng khối hộp 3D đặc.',
+        CYLINDER3D: 'Lệnh 3D CYLINDER: Chọn tâm và bán kính để dựng khối trụ 3D.'
+      };
+      setCommandStatus(prompts[toolName] || `Đã chọn công cụ ${toolName}`);
+      render2D();
+    }
+
+    function setCommandStatus(msg, isWarning = false) {
+      const el = document.getElementById('commandStatusText');
+      el.textContent = msg;
+      el.className = `text-[11px] mono hidden md:inline truncate max-w-md ${
+        isWarning ? 'text-rose-400 font-semibold' : 'text-slate-400'
+      }`;
+      const hint = document.getElementById('cadHintBanner');
+      if (hint) hint.textContent = msg;
+    }
+
+    function handle2DCanvasClick(pt) {
+      const tool = state.activeTool;
+      const lyrObj = state.layers[state.activeLayer];
+      const entColor = lyrObj ? lyrObj.color : state.defaultColor;
+      const entExtrude = Number(document.getElementById('defaultExtrudeInput').value) || 0;
+      const entElev = Number(document.getElementById('defaultElevationInput').value) || 0;
+
+      if (tool === 'SELECT') {
+        const hit = findEntityAtPoint(state.mouseWorld.x, state.mouseWorld.y);
+        state.selectedId = hit ? hit.id : null;
+        syncInspectorUI();
+        rebuild3DScene();
+        render2D();
+        return;
+      }
+
+      if (tool === 'TEXT') {
+        state.pendingTextPos = { x: pt.x, y: pt.y };
+        document.getElementById('textInputModal').classList.remove('hidden');
+        document.getElementById('cadTextValue').focus();
+        return;
+      }
+
+      if (tool === 'LINE' || tool === 'DIM' || tool === 'RECT' || tool === 'BOX3D' || tool === 'CIRCLE' || tool === 'CYLINDER3D') {
+        if (state.drawPoints.length === 0) {
+          state.drawPoints.push({ x: pt.x, y: pt.y });
+          setCommandStatus(`${tool}: Đã chọn điểm 1 (${pt.x.toFixed(0)}, ${pt.y.toFixed(0)}). Chọn điểm thứ 2 hoặc nhập khoảng cách.`);
+        } else {
+          const p0 = state.drawPoints[0];
+          createTwoPointEntity(tool, p0, pt, entColor, entElev, entExtrude);
+          state.drawPoints = [];
+        }
+      } else if (tool === 'POLYLINE') {
+        state.drawPoints.push({ x: pt.x, y: pt.y });
+        setCommandStatus(`POLYLINE: Đã thêm đỉnh #${state.drawPoints.length}. Nhấn Enter hoặc Chuột phải để hoàn tất.`);
+      } else if (tool === 'ARC') {
+        state.drawPoints.push({ x: pt.x, y: pt.y });
+        if (state.drawPoints.length === 1) {
+          setCommandStatus('ARC: Đã chọn tâm. Click điểm bắt đầu cung tròn.');
+        } else if (state.drawPoints.length === 2) {
+          setCommandStatus('ARC: Click điểm hướng kết thúc cung tròn.');
+        } else if (state.drawPoints.length === 3) {
+          const [c, p1, p2] = state.drawPoints;
+          const r = Math.hypot(p1.x - c.x, p1.y - c.y);
+          const a1 = Math.atan2(p1.y - c.y, p1.x - c.x);
+          const a2 = Math.atan2(p2.y - c.y, p2.x - c.x);
+          pushUndoState();
+          const newEnt = {
+            id: nextEntityId++,
+            type: 'ARC',
+            layer: state.activeLayer,
+            color: entColor,
+            cx: c.x,
+            cy: c.y,
+            r: Math.max(2, r),
+            startAngle: a1,
+            endAngle: a2,
+            elevation: entElev,
+            extrude: entExtrude
+          };
+          state.entities.push(newEnt);
+          state.selectedId = newEnt.id;
+          state.drawPoints = [];
+          syncInspectorUI();
+          updateDrawingStats();
+          rebuild3DScene();
+        }
+      }
+      render2D();
+    }
+
+    function createTwoPointEntity(tool, p0, p1, color, elevation, extrude) {
+      pushUndoState();
+      let newEnt = null;
+      if (tool === 'LINE' || tool === 'DIM') {
+        newEnt = {
+          id: nextEntityId++,
+          type: tool,
+          layer: state.activeLayer,
+          color: tool === 'DIM' ? '#facc15' : color,
+          x1: p0.x,
+          y1: p0.y,
+          x2: p1.x,
+          y2: p1.y,
+          elevation,
+          extrude: tool === 'DIM' ? 0 : extrude
+        };
+      } else if (tool === 'RECT' || tool === 'BOX3D') {
+        newEnt = {
+          id: nextEntityId++,
+          type: tool,
+          layer: state.activeLayer,
+          color,
+          x1: p0.x,
+          y1: p0.y,
+          x2: p1.x,
+          y2: p1.y,
+          elevation,
+          extrude: tool === 'BOX3D' ? Math.max(100, extrude) : extrude,
+          solid3D: tool === 'BOX3D'
+        };
+      } else if (tool === 'CIRCLE' || tool === 'CYLINDER3D') {
+        const r = Math.max(2, Math.hypot(p1.x - p0.x, p1.y - p0.y));
+        newEnt = {
+          id: nextEntityId++,
+          type: tool,
+          layer: state.activeLayer,
+          color,
+          cx: p0.x,
+          cy: p0.y,
+          r,
+          elevation,
+          extrude: tool === 'CYLINDER3D' ? Math.max(100, extrude) : extrude
+        };
+      }
+
+      if (newEnt) {
+        state.entities.push(newEnt);
+        state.selectedId = newEnt.id;
+        syncInspectorUI();
+        updateDrawingStats();
+        rebuild3DScene();
+        setCommandStatus(`Đã tạo ${newEnt.type} #${newEnt.id}.`);
+      }
+    }
+
+    function finishActivePolyline(closed = false) {
+      if (state.activeTool === 'POLYLINE' && state.drawPoints.length >= 2) {
+        pushUndoState();
+        const lyrObj = state.layers[state.activeLayer];
+        const newEnt = {
+          id: nextEntityId++,
+          type: 'POLYLINE',
+          layer: state.activeLayer,
+          color: lyrObj ? lyrObj.color : state.defaultColor,
+          points: cloneData(state.drawPoints),
+          closed,
+          elevation: Number(document.getElementById('defaultElevationInput').value) || 0,
+          extrude: Number(document.getElementById('defaultExtrudeInput').value) || 0
+        };
+        state.entities.push(newEnt);
+        state.selectedId = newEnt.id;
+        state.drawPoints = [];
+        syncInspectorUI();
+        updateDrawingStats();
+        rebuild3DScene();
+        render2D();
+        setCommandStatus(`Đã hoàn tất POLYLINE với ${newEnt.points.length} đỉnh.`);
+      } else {
+        state.drawPoints = [];
+        render2D();
+      }
+    }
+
+    function moveEntity(ent, dx, dy) {
+      if (ent.type === 'LINE' || ent.type === 'DIM' || ent.type === 'RECT' || ent.type === 'BOX3D') {
+        ent.x1 += dx;
+        ent.y1 += dy;
+        ent.x2 += dx;
+        ent.y2 += dy;
+      } else if (ent.type === 'CIRCLE' || ent.type === 'CYLINDER3D' || ent.type === 'ARC') {
+        ent.cx += dx;
+        ent.cy += dy;
+      } else if (ent.type === 'POLYLINE' && ent.points) {
+        ent.points.forEach((p) => {
+          p.x += dx;
+          p.y += dy;
+        });
+      } else if (ent.type === 'TEXT') {
+        ent.x += dx;
+        ent.y += dy;
+      }
+    }
+
+    // ============================================================================
+    // EVENT LISTENERS & UI BINDINGS
+    // ============================================================================
+    function bindAllEvents() {
+      // 1. Canvas 2D Mouse Events
+      canvas2D.addEventListener('contextmenu', (ev) => {
+        ev.preventDefault();
+        if (state.activeTool === 'POLYLINE' && state.drawPoints.length >= 2) {
+          finishActivePolyline(false);
+        } else {
+          state.drawPoints = [];
+          setActiveTool('SELECT');
+        }
+      });
+
+      canvas2D.addEventListener('mousedown', (ev) => {
+        const rect = canvas2D.getBoundingClientRect();
+        const sx = ev.clientX - rect.left;
+        const sy = ev.clientY - rect.top;
+
+        // Middle mouse or Pan tool -> Pan 2D
+        if (ev.button === 1 || (ev.button === 0 && state.activeTool === 'PAN')) {
+          state.isPanning2D = true;
+          state.panStartScreen = { x: sx, y: sy };
+          state.panStartCam = { x: state.cam2D.x, y: state.cam2D.y };
+          return;
+        }
+
+        if (ev.button === 0) {
+          if (state.activeTool === 'SELECT') {
+            const hit = findEntityAtPoint(state.mouseWorld.x, state.mouseWorld.y);
+            state.selectedId = hit ? hit.id : null;
+            if (hit) {
+              pushUndoState();
+              state.isDraggingEntity = true;
+              state.dragStartWorld = { x: state.snappedWorld.x, y: state.snappedWorld.y };
+            }
+            syncInspectorUI();
+            rebuild3DScene();
+            render2D();
+          } else {
+            handle2DCanvasClick(state.snappedWorld);
+          }
+        }
+      });
+
+      canvas2D.addEventListener('mousemove', (ev) => {
+        const rect = canvas2D.getBoundingClientRect();
+        const sx = ev.clientX - rect.left;
+        const sy = ev.clientY - rect.top;
+        state.mouseScreen = { x: sx, y: sy };
+
+        if (state.isPanning2D) {
+          const dx = (sx - state.panStartScreen.x) / state.cam2D.zoom;
+          const dy = (sy - state.panStartScreen.y) / state.cam2D.zoom;
+          state.cam2D.x = state.panStartCam.x - dx;
+          state.cam2D.y = state.panStartCam.y + dy;
+          render2D();
+          return;
+        }
+
+        state.mouseWorld = screenToWorld(sx, sy);
+        state.snappedWorld = computeSnappedPoint(state.mouseWorld, ev.shiftKey);
+
+        if (state.isDraggingEntity && state.selectedId) {
+          const ent = state.entities.find((x) => x.id === state.selectedId);
+          if (ent) {
+            const dx = state.snappedWorld.x - state.dragStartWorld.x;
+            const dy = state.snappedWorld.y - state.dragStartWorld.y;
+            if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
+              moveEntity(ent, dx, dy);
+              state.dragStartWorld = { x: state.snappedWorld.x, y: state.snappedWorld.y };
+              syncInspectorUI();
+              rebuild3DScene();
+            }
+          }
+        }
+
+        // Update Footer Coordinates & OSNAP Indicator
+        document.getElementById('coordX').textContent = state.snappedWorld.x.toFixed(1);
+        document.getElementById('coordY').textContent = state.snappedWorld.y.toFixed(1);
+        document.getElementById('coordZ').textContent = (Number(document.getElementById('defaultElevationInput').value) || 0).toFixed(1);
+
+        const snapInd = document.getElementById('snapIndicator');
+        if (state.activeSnapInfo) {
+          snapInd.classList.remove('hidden');
+          snapInd.textContent = `● OSNAP: ${state.activeSnapInfo.kind}`;
+        } else {
+          snapInd.classList.add('hidden');
+        }
+
+        render2D();
+      });
+
+      window.addEventListener('mouseup', () => {
+        state.isPanning2D = false;
+        state.isDraggingEntity = false;
+      });
+
+      canvas2D.addEventListener('wheel', (ev) => {
+        ev.preventDefault();
+        const rect = canvas2D.getBoundingClientRect();
+        const sx = ev.clientX - rect.left;
+        const sy = ev.clientY - rect.top;
+        const before = screenToWorld(sx, sy);
+
+        const factor = ev.deltaY < 0 ? 1.15 : 0.87;
+        state.cam2D.zoom = Math.max(0.02, Math.min(25, state.cam2D.zoom * factor));
+
+        const after = screenToWorld(sx, sy);
+        state.cam2D.x += before.x - after.x;
+        state.cam2D.y += before.y - after.y;
+
+        updateZoomBadge();
+        render2D();
+      }, { passive: false });
+
+      // 2. Left Toolbar Tool Buttons
+      document.querySelectorAll('.tool-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          setActiveTool(btn.dataset.tool);
+        });
+      });
+
+      // 3. Top Header Viewport Switchers
+      document.getElementById('mode2DBtn').addEventListener('click', () => {
+        state.viewMode = '2D';
+        updateViewportLayout();
+      });
+      document.getElementById('modeSplitBtn').addEventListener('click', () => {
+        state.viewMode = 'SPLIT';
+        updateViewportLayout();
+        rebuild3DScene();
+      });
+      document.getElementById('mode3DBtn').addEventListener('click', () => {
+        state.viewMode = '3D';
+        updateViewportLayout();
+        rebuild3DScene();
+      });
+
+      // 4. 3D Preset Camera Buttons & Wireframe Toggle
+      document.querySelectorAll('.cam3d-btn').forEach((btn) => {
+        btn.addEventListener('click', () => set3DCameraPreset(btn.dataset.cam));
+      });
+      document.getElementById('btnToggle3DWireframe').addEventListener('click', (ev) => {
+        state.wireframe3D = !state.wireframe3D;
+        ev.currentTarget.textContent = state.wireframe3D ? 'Wireframe 3D' : 'Shaded + Edges';
+        rebuild3DScene();
+      });
+
+      // 5. Undo / Redo / Delete / Zoom Fit
+      document.getElementById('btnUndo').addEventListener('click', performUndo);
+      document.getElementById('btnRedo').addEventListener('click', performRedo);
+      document.getElementById('btnZoomFit').addEventListener('click', zoomExtents2D);
+      document.getElementById('btnDeleteSelected').addEventListener('click', deleteSelectedEntity);
+
+      // 6. Preset Select & File Input (.DXF / .DWG / .JSON)
+      document.getElementById('presetSelect').addEventListener('change', (ev) => {
+        loadPresetDrawing(ev.target.value);
+      });
+
+      document.getElementById('dxfFileInput').addEventListener('change', (ev) => {
+        const file = ev.target.files && ev.target.files[0];
+        if (file) handleUploadedCADFile(file);
+        ev.target.value = '';
+      });
+
+      // Drag and drop CAD file anywhere on viewport
+      const vpWrap = document.getElementById('viewportWrapper');
+      const dropOverlay = document.getElementById('dropZoneOverlay');
+      vpWrap.addEventListener('dragover', (ev) => {
+        ev.preventDefault();
+        dropOverlay.classList.remove('hidden');
+      });
+      vpWrap.addEventListener('dragleave', () => {
+        dropOverlay.classList.add('hidden');
+      });
+      vpWrap.addEventListener('drop', (ev) => {
+        ev.preventDefault();
+        dropOverlay.classList.add('hidden');
+        const file = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+        if (file) handleUploadedCADFile(file);
+      });
+
+      // 7. Export DXF & PNG
+      document.getElementById('btnExportDXF').addEventListener('click', exportToAutoCADDXF);
+      document.getElementById('btnExportPNG').addEventListener('click', () => {
+        const targetCanvas = state.viewMode === '3D' && renderer3D ? renderer3D.domElement : canvas2D;
+        const url = targetCanvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = state.fileName.replace(/\.[^.]+$/, '') + '_snapshot.png';
+        a.click();
+      });
+
+      // 8. Inspector Property Changes
+      document.getElementById('activeLayerSelect').addEventListener('change', (ev) => {
+        state.activeLayer = ev.target.value;
+        const lyr = state.layers[state.activeLayer];
+        if (lyr) {
+          state.defaultColor = lyr.color;
+          document.getElementById('defaultColorInput').value = lyr.color;
+          document.getElementById('defaultColorHex').textContent = lyr.color;
+          document.getElementById('defaultExtrudeInput').value = lyr.extrude || 0;
+        }
+        syncLayerUI();
+      });
+
+      document.getElementById('defaultColorInput').addEventListener('input', (ev) => {
+        state.defaultColor = ev.target.value;
+        document.getElementById('defaultColorHex').textContent = ev.target.value;
+      });
+
+      document.getElementById('propLayer').addEventListener('change', (ev) => {
+        const ent = state.entities.find((x) => x.id === state.selectedId);
+        if (ent) {
+          pushUndoState();
+          ent.layer = ev.target.value;
+          const lyr = state.layers[ent.layer];
+          if (lyr) ent.color = lyr.color;
+          syncInspectorUI();
+          rebuild3DScene();
+          render2D();
+        }
+      });
+
+      document.getElementById('propColor').addEventListener('input', (ev) => {
+        const ent = state.entities.find((x) => x.id === state.selectedId);
+        if (ent) {
+          ent.color = ev.target.value;
+          rebuild3DScene();
+          render2D();
+        }
+      });
+
+      document.getElementById('propExtrude').addEventListener('change', (ev) => {
+        const ent = state.entities.find((x) => x.id === state.selectedId);
+        if (ent) {
+          pushUndoState();
+          ent.extrude = Math.max(0, parseFloat(ev.target.value) || 0);
+          rebuild3DScene();
+          render2D();
+        }
+      });
+
+      document.getElementById('propElevation').addEventListener('change', (ev) => {
+        const ent = state.entities.find((x) => x.id === state.selectedId);
+        if (ent) {
+          pushUndoState();
+          ent.elevation = parseFloat(ev.target.value) || 0;
+          rebuild3DScene();
+          render2D();
+        }
+      });
+
+      // 9. Add New Layer Form
+      document.getElementById('btnAddLayer').addEventListener('click', () => {
+        document.getElementById('newLayerForm').classList.toggle('hidden');
+      });
+      document.getElementById('btnConfirmAddLayer').addEventListener('click', () => {
+        const rawName = document.getElementById('newLayerName').value.trim().toUpperCase().replace(/\s+/g, '_');
+        const name = rawName || `LAYER_${Object.keys(state.layers).length + 1}`;
+        const color = document.getElementById('newLayerColor').value || '#f59e0b';
+        const extrude = parseFloat(document.getElementById('newLayerHeight').value) || 0;
+        state.layers[name] = { name, color, visible: true, locked: false, extrude };
+        state.activeLayer = name;
+        document.getElementById('newLayerName').value = '';
+        document.getElementById('newLayerForm').classList.add('hidden');
+        syncLayerUI();
+      });
+
+      // 10. Status Bar Toggles (GRID, SNAP, ORTHO, OSNAP)
+      document.getElementById('toggleGrid').addEventListener('click', (ev) => {
+        state.gridOn = !state.gridOn;
+        ev.currentTarget.textContent = `GRID: ${state.gridOn ? 'ON' : 'OFF'}`;
+        ev.currentTarget.className = state.gridOn
+          ? 'px-2 py-0.5 rounded bg-blue-600/30 border border-blue-500/60 text-blue-300 text-[10px] font-semibold'
+          : 'px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-semibold';
+        render2D();
+      });
+
+      document.getElementById('toggleSnap').addEventListener('click', (ev) => {
+        state.snapOn = !state.snapOn;
+        ev.currentTarget.textContent = `SNAP: ${state.snapOn ? state.snapSize : 'OFF'}`;
+        ev.currentTarget.className = state.snapOn
+          ? 'px-2 py-0.5 rounded bg-blue-600/30 border border-blue-500/60 text-blue-300 text-[10px] font-semibold'
+          : 'px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-semibold';
+      });
+
+      document.getElementById('toggleOrtho').addEventListener('click', (ev) => {
+        state.orthoOn = !state.orthoOn;
+        ev.currentTarget.textContent = `ORTHO: ${state.orthoOn ? 'ON' : 'OFF'}`;
+        ev.currentTarget.className = state.orthoOn
+          ? 'px-2 py-0.5 rounded bg-amber-600/30 border border-amber-500/60 text-amber-300 text-[10px] font-semibold'
+          : 'px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-semibold';
+      });
+
+      document.getElementById('toggleOSnap').addEventListener('click', (ev) => {
+        state.osnapOn = !state.osnapOn;
+        ev.currentTarget.textContent = `OSNAP: ${state.osnapOn ? 'ON' : 'OFF'}`;
+        ev.currentTarget.className = state.osnapOn
+          ? 'px-2 py-0.5 rounded bg-emerald-600/30 border border-emerald-500/60 text-emerald-300 text-[10px] font-semibold'
+          : 'px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-semibold';
+      });
+
+      // 11. Text Modal
+      const closeTextModal = () => document.getElementById('textInputModal').classList.add('hidden');
+      document.getElementById('btnCloseTextModal').addEventListener('click', closeTextModal);
+      document.getElementById('btnCancelTextModal').addEventListener('click', closeTextModal);
+      document.getElementById('btnConfirmTextModal').addEventListener('click', () => {
+        const val = document.getElementById('cadTextValue').value.trim();
+        const sz = Math.max(4, parseFloat(document.getElementById('cadTextSize').value) || 20);
+        if (val && state.pendingTextPos) {
+          pushUndoState();
+          const lyr = state.layers[state.activeLayer];
+          const newEnt = {
+            id: nextEntityId++,
+            type: 'TEXT',
+            layer: state.activeLayer,
+            color: lyr ? lyr.color : state.defaultColor,
+            x: state.pendingTextPos.x,
+            y: state.pendingTextPos.y,
+            text: val,
+            size: sz,
+            elevation: 0,
+            extrude: 0
+          };
+          state.entities.push(newEnt);
+          state.selectedId = newEnt.id;
+          syncInspectorUI();
+          updateDrawingStats();
+          render2D();
+        }
+        closeTextModal();
+      });
+
+      // 12. Help Modal
+      const closeHelp = () => document.getElementById('helpModal').classList.add('hidden');
+      document.getElementById('btnHelpModal').addEventListener('click', () => {
+        document.getElementById('helpModal').classList.remove('hidden');
+      });
+      document.getElementById('btnCloseHelpModal').addEventListener('click', closeHelp);
+      document.getElementById('btnOkHelpModal').addEventListener('click', closeHelp);
+
+      // 13. AutoCAD Command Line Input
+      const cmdInput = document.getElementById('commandInput');
+      cmdInput.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') {
+          ev.preventDefault();
+          executeCommandLine(cmdInput.value.trim());
+          cmdInput.value = '';
+        }
+      });
+
+      // 14. Global Keyboard Shortcuts
+      window.addEventListener('keydown', (ev) => {
+        if (ev.target && (ev.target.tagName === 'INPUT' || ev.target.tagName === 'SELECT' || ev.target.tagName === 'TEXTAREA')) {
+          if (ev.key === 'Escape') ev.target.blur();
+          return;
+        }
+        if (ev.key === 'Escape') {
+          state.drawPoints = [];
+          state.selectedId = null;
+          setActiveTool('SELECT');
+          syncInspectorUI();
+          render2D();
+        } else if (ev.key === 'Enter') {
+          if (state.activeTool === 'POLYLINE') finishActivePolyline(false);
+        } else if (ev.key === 'Delete' || ev.key === 'Backspace') {
+          deleteSelectedEntity();
+        } else if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z') {
+          ev.preventDefault();
+          performUndo();
+        } else if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'y') {
+          ev.preventDefault();
+          performRedo();
+        } else if (ev.key.toLowerCase() === 'l') {
+          setActiveTool('LINE');
+        } else if (ev.key.toLowerCase() === 'c') {
+          setActiveTool('CIRCLE');
+        } else if (ev.key.toLowerCase() === 'r') {
+          setActiveTool('RECT');
+        } else if (ev.key.toLowerCase() === 'a') {
+          setActiveTool('ARC');
+        } else if (ev.key.toLowerCase() === 'v') {
+          setActiveTool('SELECT');
+        } else if (ev.key.toLowerCase() === 'h') {
+          setActiveTool('PAN');
+        }
+      });
+
+      window.addEventListener('resize', resizeCanvases);
+    }
+
+    // ============================================================================
+    // COMMAND LINE INTERPRETER & FILE UPLOAD HANDLER
+    // ============================================================================
+    function executeCommandLine(rawCmd) {
+      if (!rawCmd) {
+        if (state.activeTool === 'POLYLINE') finishActivePolyline(false);
+        return;
+      }
+
+      // Check coordinate input X,Y or @dX,dY
+      if (/^@?-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(rawCmd)) {
+        const isRel = rawCmd.startsWith('@');
+        const parts = rawCmd.replace(/^@/, '').split(',').map((s) => parseFloat(s.trim()));
+        let tx = parts[0];
+        let ty = parts[1];
+        if (isRel && state.drawPoints.length > 0) {
+          const last = state.drawPoints[state.drawPoints.length - 1];
+          tx += last.x;
+          ty += last.y;
+        }
+        handle2DCanvasClick({ x: tx, y: ty });
+        return;
+      }
+
+      // Check numeric distance or radius input during drawing
+      if (/^\d+(\.\d+)?$/.test(rawCmd) && state.drawPoints.length > 0) {
+        const val = parseFloat(rawCmd);
+        const p0 = state.drawPoints[state.drawPoints.length - 1];
+        const ang = Math.atan2(state.snappedWorld.y - p0.y, state.snappedWorld.x - p0.x);
+        const target = {
+          x: p0.x + Math.cos(ang) * val,
+          y: p0.y + Math.sin(ang) * val
+        };
+        handle2DCanvasClick(target);
+        return;
+      }
+
+      const cmd = rawCmd.toUpperCase();
+      if (cmd === 'L' || cmd === 'LINE') setActiveTool('LINE');
+      else if (cmd === 'PL' || cmd === 'PLINE' || cmd === 'POLYLINE') setActiveTool('POLYLINE');
+      else if (cmd === 'REC' || cmd === 'RECT' || cmd === 'RECTANGLE') setActiveTool('RECT');
+      else if (cmd === 'C' || cmd === 'CIRCLE') setActiveTool('CIRCLE');
+      else if (cmd === 'A' || cmd === 'ARC') setActiveTool('ARC');
+      else if (cmd === 'DIM' || cmd === 'DIMENSION') setActiveTool('DIM');
+      else if (cmd === 'T' || cmd === 'TEXT') setActiveTool('TEXT');
+      else if (cmd === 'BOX' || cmd === 'BOX3D') setActiveTool('BOX3D');
+      else if (cmd === 'CYL' || cmd === 'CYLINDER') setActiveTool('CYLINDER3D');
+      else if (cmd === 'E' || cmd === 'ERASE' || cmd === 'DEL') deleteSelectedEntity();
+      else if (cmd === 'U' || cmd === 'UNDO') performUndo();
+      else if (cmd === 'REDO') performRedo();
+      else if (cmd === 'Z' || cmd === 'ZOOM') zoomExtents2D();
+      else if (cmd === '2D') { state.viewMode = '2D'; updateViewportLayout(); }
+      else if (cmd === '3D') { state.viewMode = '3D'; updateViewportLayout(); rebuild3DScene(); }
+      else if (cmd === 'SPLIT') { state.viewMode = 'SPLIT'; updateViewportLayout(); rebuild3DScene(); }
+      else if (cmd === 'CLEAR') { loadPresetDrawing('empty'); }
+      else if (cmd === 'CLOSE' && state.activeTool === 'POLYLINE') { finishActivePolyline(true); }
+      else {
+        setCommandStatus(`Không nhận diện được lệnh "${rawCmd}". Hãy thử: L, PL, REC, C, A, DIM, BOX, 3D, SPLIT, ZOOM.`, true);
+      }
+    }
+
+    function handleUploadedCADFile(file) {
+      const name = file.name;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const content = String(ev.target.result || '');
+
+        // Check if JSON CAD file
+        if (name.toLowerCase().endsWith('.json') || content.trim().startsWith('{')) {
+          try {
+            const data = JSON.parse(content);
+            if (Array.isArray(data.entities)) {
+              pushUndoState();
+              state.fileName = name;
+              state.layers = data.layers || state.layers;
+              state.entities = data.entities;
+              document.getElementById('currentFileName').textContent = name;
+              syncLayerUI();
+              syncInspectorUI();
+              zoomExtents2D();
+              rebuild3DScene();
+              setCommandStatus(`Đã tải dự án CAD JSON "${name}".`);
+              return;
+            }
+          } catch (err) {
+            // Fall through to DXF check
+          }
+        }
+
+        // Check if binary DWG header (starts with "AC1015", "AC1018", "AC1021", "AC1024", "AC1027", "AC1032")
+        if (/^AC10\d\d/.test(content.slice(0, 12)) && !content.includes('SECTION')) {
+          setCommandStatus(
+            `File "${name}" là định dạng DWG nhị phân đóng (Version ${content.slice(0, 6)}). Vui lòng dùng lệnh SAVEAS -> AutoCAD DXF (.dxf) để trình duyệt đọc 100% đối tượng 2D/3D.`,
+            true
+          );
+          document.getElementById('helpModal').classList.remove('hidden');
+          return;
+        }
+
+        parseAutoCADDXF(content, name);
+      };
+      reader.readAsText(file);
+    }
+
+    function performUndo() {
+      if (state.undoStack.length === 0) return;
+      state.redoStack.push({
+        entities: cloneData(state.entities),
+        layers: cloneData(state.layers)
+      });
+      const prev = state.undoStack.pop();
+      state.entities = prev.entities;
+      state.layers = prev.layers;
+      state.selectedId = null;
+      syncLayerUI();
+      syncInspectorUI();
+      updateDrawingStats();
+      rebuild3DScene();
+      render2D();
+      setCommandStatus('Đã hoàn tác (Undo).');
+    }
+
+    function performRedo() {
+      if (state.redoStack.length === 0) return;
+      state.undoStack.push({
+        entities: cloneData(state.entities),
+        layers: cloneData(state.layers)
+      });
+      const next = state.redoStack.pop();
+      state.entities = next.entities;
+      state.layers = next.layers;
+      state.selectedId = null;
+      syncLayerUI();
+      syncInspectorUI();
+      updateDrawingStats();
+      rebuild3DScene();
+      render2D();
+      setCommandStatus('Đã làm lại (Redo).');
+    }
+
+    function deleteSelectedEntity() {
+      if (!state.selectedId) return;
+      pushUndoState();
+      state.entities = state.entities.filter((x) => x.id !== state.selectedId);
+      state.selectedId = null;
+      syncInspectorUI();
+      updateDrawingStats();
+      rebuild3DScene();
+      render2D();
+      setCommandStatus('Đã xóa đối tượng.');
+    }
+
+    // ============================================================================
+    // BOOTSTRAP APPLICATION ON LOAD
+    // ============================================================================
+    window.addEventListener('load', () => {
+      init3DEngine();
+      bindAllEvents();
+      state.viewMode = 'SPLIT'; // Open in Side-by-Side 2D + 3D mode by default so user sees both 2D & 3D immediately!
+      updateViewportLayout();
+      loadPresetDrawing('villa');
+    });
+  </script>
+</body>
+</html>
