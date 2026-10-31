@@ -1,0 +1,2472 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zoom Web Meet Pro - GVATVSLD Admin Platform</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            zoom: {
+              blue: '#0E71EB',
+              hover: '#0B5ED7',
+              dark: '#12161A',
+              card: '#1B2228',
+              border: '#2A343D',
+              toolbar: '#161B21',
+              accent: '#2D8CFF',
+              red: '#E02828',
+              green: '#0E8046',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      user-select: none;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #161B21;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2A343D;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3B4856;
+    }
+    @keyframes floatUp {
+      0% {
+        transform: translateY(0) scale(0.6);
+        opacity: 0;
+      }
+      20% {
+        opacity: 1;
+        transform: translateY(-20px) scale(1.2);
+      }
+      80% {
+        opacity: 1;
+        transform: translateY(-80px) scale(1);
+      }
+      100% {
+        transform: translateY(-120px) scale(0.8);
+        opacity: 0;
+      }
+    }
+    .animate-float-reaction {
+      animation: floatUp 2.4s ease-out forwards;
+    }
+    @keyframes pulseWave {
+      0%, 100% { height: 4px; }
+      50% { height: 18px; }
+    }
+    .wave-bar:nth-child(1) { animation: pulseWave 0.7s infinite ease-in-out; }
+    .wave-bar:nth-child(2) { animation: pulseWave 0.5s infinite ease-in-out 0.1s; }
+    .wave-bar:nth-child(3) { animation: pulseWave 0.8s infinite ease-in-out 0.2s; }
+    .wave-bar:nth-child(4) { animation: pulseWave 0.6s infinite ease-in-out 0.15s; }
+  </style>
+</head>
+<body class="h-full bg-zoom-dark text-slate-100 flex flex-col overflow-hidden select-none">
+
+  <!-- TOP BAR -->
+  <header class="h-14 bg-zoom-toolbar border-b border-zoom-border px-4 flex items-center justify-between z-20 shrink-0">
+    <!-- Left: Branding & Meeting Info -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 bg-zoom-card/80 py-1.5 px-3 rounded-lg border border-zoom-border/70">
+        <div class="w-7 h-7 bg-zoom-blue rounded-md flex items-center justify-center text-white font-bold shadow-md shadow-zoom-blue/30">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path d="M4.5 5.5A2.5 2.5 0 002 8v8a2.5 2.5 0 002.5 2.5h9A2.5 2.5 0 0016 16v-2.172l3.414 3.414A1 1 0 0021 16.5v-9a1 1 0 00-1.586-.828L16 10.086V8a2.5 2.5 0 00-2.5-2.5h-9z"/>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xs font-semibold tracking-wider text-slate-200">ZOOM WEB MEET</span>
+          <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="room-id-display">Phòng: GVATVSLD-2026</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Encryption & Status Badges -->
+      <div class="hidden md:flex items-center gap-2">
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Mã hóa E2EE
+        </span>
+        <button id="firebase-sync-badge" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-950/60 text-amber-400 border border-amber-800/40 hover:bg-amber-900/60 transition" onclick="openFirebaseDriveModal('firebase')">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Firebase: Đồng bộ
+        </button>
+        <button id="drive-sync-badge" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-blue-950/60 text-blue-400 border border-blue-800/40 hover:bg-blue-900/60 transition" onclick="openFirebaseDriveModal('drive')">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+          Google Drive: Sẵn sàng
+        </button>
+      </div>
+    </div>
+
+    <!-- Center: Meeting Duration & Info -->
+    <div class="hidden sm:flex items-center gap-3">
+      <div class="flex items-center gap-2 bg-zoom-card px-3 py-1 rounded-md border border-zoom-border text-xs text-slate-300">
+        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span id="meeting-timer">00:15:42</span>
+      </div>
+    </div>
+
+    <!-- Right: View switch, Admin Badge & User Profile -->
+    <div class="flex items-center gap-2.5">
+      <!-- Layout Switcher Button -->
+      <button id="btn-toggle-view" onclick="toggleViewMode()" class="px-2.5 py-1.5 rounded-lg bg-zoom-card hover:bg-slate-700/60 border border-zoom-border text-xs flex items-center gap-1.5 transition text-slate-300 hover:text-white" title="Chuyển chế độ hiển thị">
+        <svg id="view-icon-grid" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        <span id="view-mode-label" class="hidden md:inline">Chế độ Lưới</span>
+      </button>
+
+      <!-- Google Account / Admin Profile Badge -->
+      <button id="btn-google-account" onclick="openAccountModal()" class="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full bg-zoom-card hover:bg-slate-700/50 border border-zoom-border text-xs transition">
+        <div id="user-avatar-circle" class="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-red-500 flex items-center justify-center text-white font-bold text-xs ring-2 ring-amber-400/50">
+          AD
+        </div>
+        <div class="flex flex-col text-left">
+          <div class="flex items-center gap-1.5">
+            <span id="current-user-name" class="font-medium text-slate-200 truncate max-w-[120px] sm:max-w-[150px]">Admin GVATVSLĐ</span>
+            <span id="admin-crown-icon" class="text-amber-400 text-xs" title="Super Admin">👑</span>
+          </div>
+          <span id="current-user-email" class="text-[10px] text-slate-400 truncate max-w-[120px] sm:max-w-[150px]">deptc.gvatvsld@gmail.com</span>
+        </div>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT (VIDEO STAGE & DRAWERS) -->
+  <main class="flex-1 flex overflow-hidden relative">
+
+    <!-- VIDEO STAGE & CANVAS -->
+    <div id="video-stage-container" class="flex-1 flex flex-col p-3 overflow-hidden relative bg-black/40">
+
+      <!-- SCREEN SHARING STAGE (Hidden by default, shown when sharing) -->
+      <div id="screen-share-stage" class="hidden flex-1 bg-slate-900/90 rounded-xl border border-zoom-border overflow-hidden flex flex-col mb-2 relative">
+        <div class="h-9 bg-zoom-card border-b border-zoom-border px-3 flex items-center justify-between text-xs text-slate-300">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="screenshare-user-label">Đang chia sẻ màn hình: Admin (deptc.gvatvsld@gmail.com)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="stopScreenShare()" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[11px] font-medium transition">
+              Dừng chia sẻ
+            </button>
+          </div>
+        </div>
+        <div class="flex-1 flex items-center justify-center p-4 relative bg-slate-950">
+          <canvas id="screen-share-canvas" class="max-w-full max-h-full rounded shadow-2xl border border-slate-800 bg-slate-900"></canvas>
+        </div>
+      </div>
+
+      <!-- WHITEBOARD STAGE (Hidden by default) -->
+      <div id="whiteboard-stage" class="hidden flex-1 bg-white rounded-xl border border-zoom-border overflow-hidden flex flex-col mb-2 relative text-slate-900">
+        <!-- Whiteboard Header & Tools -->
+        <div class="h-12 bg-slate-100 border-b border-slate-300 px-4 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-700 flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-zoom-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+              Bảng trắng tương tác nhóm (Zoom Whiteboard)
+            </span>
+          </div>
+          <!-- Drawing Toolbar -->
+          <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1 bg-white p-1 rounded border border-slate-300 shadow-sm">
+              <button onclick="setBoardColor('#000000')" class="w-5 h-5 rounded-full bg-black border border-slate-300" title="Đen"></button>
+              <button onclick="setBoardColor('#0E71EB')" class="w-5 h-5 rounded-full bg-blue-600 border border-slate-300" title="Xanh"></button>
+              <button onclick="setBoardColor('#E02828')" class="w-5 h-5 rounded-full bg-red-600 border border-slate-300" title="Đỏ"></button>
+              <button onclick="setBoardColor('#0E8046')" class="w-5 h-5 rounded-full bg-emerald-600 border border-slate-300" title="Lục"></button>
+              <button onclick="setBoardColor('#F59E0B')" class="w-5 h-5 rounded-full bg-amber-500 border border-slate-300" title="Cam"></button>
+            </div>
+            <div class="flex items-center gap-1 bg-white px-2 py-1 rounded border border-slate-300">
+              <span class="text-[11px] text-slate-500">Nét:</span>
+              <input type="range" id="board-line-width" min="1" max="15" value="3" class="w-16 h-1 accent-blue-600" onchange="changeBoardLineWidth(this.value)">
+            </div>
+            <button onclick="clearWhiteboard()" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded font-medium text-[11px]">
+              Xóa bảng
+            </button>
+            <button onclick="saveWhiteboardToDrive()" class="px-2.5 py-1 bg-zoom-blue hover:bg-zoom-hover text-white rounded font-medium text-[11px] flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+              Lưu lên Google Drive
+            </button>
+            <button onclick="toggleWhiteboard(false)" class="p-1 text-slate-500 hover:text-slate-800 rounded">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
+        <!-- Canvas area -->
+        <div class="flex-1 relative cursor-crosshair bg-white">
+          <canvas id="whiteboard-canvas" class="w-full h-full block"></canvas>
+        </div>
+      </div>
+
+      <!-- VIDEO TILES GRID -->
+      <div id="video-grid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto auto-rows-fr">
+        <!-- Video tiles rendered by JS -->
+      </div>
+    </div>
+
+    <!-- PARTICIPANTS DRAWER (Right sidebar) -->
+    <aside id="participants-drawer" class="hidden w-80 lg:w-96 bg-zoom-toolbar border-l border-zoom-border flex flex-col z-10 shrink-0">
+      <div class="h-12 border-b border-zoom-border px-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="font-semibold text-sm text-slate-200">Người tham gia</span>
+          <span id="drawer-participant-count" class="px-2 py-0.5 rounded-full text-xs font-bold bg-zoom-card text-zoom-accent border border-zoom-border">6</span>
+        </div>
+        <button onclick="toggleParticipantsDrawer(false)" class="text-slate-400 hover:text-white p-1 rounded-md">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Search participant -->
+      <div class="p-3 border-b border-zoom-border/60">
+        <div class="relative">
+          <input type="text" id="participant-search-input" placeholder="Tìm kiếm người tham gia..." oninput="filterParticipants(this.value)" class="w-full bg-zoom-card border border-zoom-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-zoom-accent">
+          <svg class="w-4 h-4 text-slate-500 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+      </div>
+
+      <!-- Participant List -->
+      <div id="participants-list-container" class="flex-1 overflow-y-auto p-2 space-y-1">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Drawer Footer (Admin Controls) -->
+      <div class="p-3 border-t border-zoom-border bg-zoom-card/60 flex flex-col gap-2">
+        <div class="flex gap-2">
+          <button onclick="copyInviteLink()" class="flex-1 py-2 bg-zoom-card hover:bg-slate-700/60 border border-zoom-border text-slate-200 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            Sao chép Link mời
+          </button>
+          <button id="btn-admin-mute-all" onclick="adminMuteAll()" class="flex-1 py-2 bg-red-950/60 hover:bg-red-900/60 border border-red-800/60 text-red-300 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+            Tắt tiếng tất cả
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CHAT DRAWER (Right sidebar) -->
+    <aside id="chat-drawer" class="hidden w-80 lg:w-96 bg-zoom-toolbar border-l border-zoom-border flex flex-col z-10 shrink-0">
+      <div class="h-12 border-b border-zoom-border px-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="font-semibold text-sm text-slate-200">Trò chuyện trong cuộc họp</span>
+        </div>
+        <button onclick="toggleChatDrawer(false)" class="text-slate-400 hover:text-white p-1 rounded-md">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Messages container -->
+      <div id="chat-messages-container" class="flex-1 overflow-y-auto p-3 space-y-3">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Chat input & Google Drive share bar -->
+      <div class="p-3 border-t border-zoom-border bg-zoom-card/60 flex flex-col gap-2">
+        <!-- Target recipient & Drive Quick Action -->
+        <div class="flex items-center justify-between text-[11px] text-slate-400">
+          <div class="flex items-center gap-1.5">
+            <span>Gửi tới:</span>
+            <select id="chat-recipient-select" class="bg-zoom-card border border-zoom-border text-slate-200 text-xs rounded px-1.5 py-0.5 focus:outline-none">
+              <option value="everyone">Mọi người trong phòng (Public)</option>
+              <option value="deptc.gvatvsld@gmail.com">Admin (Chỉ gửi riêng)</option>
+            </select>
+          </div>
+          <button onclick="openFirebaseDriveModal('drive')" class="text-zoom-accent hover:underline flex items-center gap-1 font-medium">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Tệp Drive
+          </button>
+        </div>
+
+        <!-- Text input area -->
+        <div class="flex items-center gap-2">
+          <input type="text" id="chat-text-input" placeholder="Nhập tin nhắn (Enter để gửi)..." onkeydown="handleChatKeyDown(event)" class="flex-1 bg-zoom-card border border-zoom-border rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-zoom-accent">
+          <button onclick="sendChatMessage()" class="p-2 bg-zoom-blue hover:bg-zoom-hover text-white rounded-lg transition shadow-md shadow-zoom-blue/20">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- BOTTOM CONTROL TOOLBAR (Zoom-style bottom bar) -->
+  <footer class="h-18 bg-zoom-toolbar border-t border-zoom-border px-3 py-2 flex items-center justify-between z-20 shrink-0">
+
+    <!-- Left Controls: Mic & Camera -->
+    <div class="flex items-center gap-1 sm:gap-2">
+      <!-- Mute/Unmute Mic -->
+      <div class="flex items-center bg-zoom-card rounded-lg border border-zoom-border p-0.5">
+        <button id="btn-toggle-mic" onclick="toggleMicrophone()" class="px-2.5 py-2 flex flex-col items-center gap-1 rounded-md text-slate-300 hover:text-white hover:bg-slate-700/50 transition">
+          <svg id="icon-mic-on" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+          <svg id="icon-mic-off" class="w-5 h-5 text-red-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+          <span id="label-mic" class="text-[10px] font-medium">Tắt tiếng</span>
+        </button>
+        <button onclick="openSettingsModal('audio')" class="px-1 py-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-md transition" title="Cài đặt Âm thanh">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+        </button>
+      </div>
+
+      <!-- Video On/Off -->
+      <div class="flex items-center bg-zoom-card rounded-lg border border-zoom-border p-0.5">
+        <button id="btn-toggle-video" onclick="toggleVideo()" class="px-2.5 py-2 flex flex-col items-center gap-1 rounded-md text-slate-300 hover:text-white hover:bg-slate-700/50 transition">
+          <svg id="icon-video-on" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          <svg id="icon-video-off" class="w-5 h-5 text-red-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+          <span id="label-video" class="text-[10px] font-medium">Dừng Video</span>
+        </button>
+        <button onclick="openSettingsModal('video')" class="px-1 py-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-md transition" title="Cài đặt Video">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+        </button>
+      </div>
+
+      <!-- Security (Admin only) -->
+      <button id="btn-security" onclick="openSecurityMenu()" class="hidden md:flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-zoom-card transition border border-transparent hover:border-zoom-border">
+        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <span class="text-[10px] font-medium">Bảo mật</span>
+      </button>
+    </div>
+
+    <!-- Center Controls: Meeting Features -->
+    <div class="flex items-center gap-1 sm:gap-2">
+      <!-- Participants -->
+      <button onclick="toggleParticipantsDrawer()" class="relative flex flex-col items-center gap-1 px-2.5 sm:px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-zoom-card transition border border-transparent hover:border-zoom-border">
+        <div class="relative">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <span id="badge-participants" class="absolute -top-1 -right-2 px-1 text-[9px] font-bold bg-zoom-accent text-white rounded-full">6</span>
+        </div>
+        <span class="text-[10px] font-medium">Người tham gia</span>
+      </button>
+
+      <!-- Chat -->
+      <button onclick="toggleChatDrawer()" class="relative flex flex-col items-center gap-1 px-2.5 sm:px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-zoom-card transition border border-transparent hover:border-zoom-border">
+        <div class="relative">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          <span id="badge-chat-unread" class="hidden absolute -top-1 -right-2 px-1 text-[9px] font-bold bg-red-500 text-white rounded-full">1</span>
+        </div>
+        <span class="text-[10px] font-medium">Trò chuyện</span>
+      </button>
+
+      <!-- Share Screen -->
+      <button id="btn-share-screen" onclick="toggleScreenShare()" class="flex flex-col items-center gap-1 px-2.5 sm:px-3 py-2 rounded-lg text-emerald-400 hover:text-emerald-300 hover:bg-zoom-card transition border border-transparent hover:border-zoom-border">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        <span class="text-[10px] font-medium text-emerald-400">Chia sẻ MH</span>
+      </button>
+
+      <!-- Google Drive & Firebase Data Storage -->
+      <button onclick="openFirebaseDriveModal('drive')" class="flex flex-col items-center gap-1 px-2.5 sm:px-3 py-2 rounded-lg text-blue-400 hover:text-blue-300 hover:bg-zoom-card transition border border-transparent hover:border-zoom-border">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+        <span class="text-[10px] font-medium text-blue-400">Google Drive</span>
+      </button>
+
+      <!-- Whiteboard -->
+      <button onclick="toggleWhiteboard()" class="hidden sm:flex flex-col items-center gap-1 px-2.5 sm:px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-zoom-card transition border border-transparent hover:border-zoom-border">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+        <span class="text-[10px] font-medium">Bảng trắng</span>
+      </button>
+
+      <!-- Reactions -->
+      <div class="relative">
+        <button id="btn-reactions" onclick="toggleReactionsPopup()" class="flex flex-col items-center gap-1 px-2.5 sm:px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-zoom-card transition border border-transparent hover:border-zoom-border">
+          <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="text-[10px] font-medium">Phản ứng</span>
+        </button>
+
+        <!-- Reactions Popup Menu -->
+        <div id="reactions-popup" class="hidden absolute bottom-16 left-1/2 -translate-x-1/2 bg-zoom-card border border-zoom-border rounded-xl p-2 shadow-2xl flex items-center gap-1 z-30">
+          <button onclick="sendReaction('👏')" class="p-2 hover:bg-slate-700/60 rounded-lg text-lg transition transform hover:scale-125">👏</button>
+          <button onclick="sendReaction('👍')" class="p-2 hover:bg-slate-700/60 rounded-lg text-lg transition transform hover:scale-125">👍</button>
+          <button onclick="sendReaction('❤️')" class="p-2 hover:bg-slate-700/60 rounded-lg text-lg transition transform hover:scale-125">❤️</button>
+          <button onclick="sendReaction('😂')" class="p-2 hover:bg-slate-700/60 rounded-lg text-lg transition transform hover:scale-125">😂</button>
+          <button onclick="sendReaction('😮')" class="p-2 hover:bg-slate-700/60 rounded-lg text-lg transition transform hover:scale-125">😮</button>
+          <button onclick="sendReaction('🎉')" class="p-2 hover:bg-slate-700/60 rounded-lg text-lg transition transform hover:scale-125">🎉</button>
+          <div class="w-px h-6 bg-zoom-border mx-1"></div>
+          <button onclick="toggleRaiseHand()" id="btn-raise-hand" class="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs text-white rounded-lg font-medium flex items-center gap-1 whitespace-nowrap">
+            ✋ Giơ tay
+          </button>
+        </div>
+      </div>
+
+      <!-- SUPER ADMIN DASHBOARD BUTTON (Highlighted for deptc.gvatvsld@gmail.com) -->
+      <button id="btn-super-admin" onclick="openAdminDashboard()" class="flex flex-col items-center gap-1 px-3 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/40 transition shadow-sm shadow-amber-500/10">
+        <div class="relative">
+          <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span class="absolute -top-1 -right-1 flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+          </span>
+        </div>
+        <span class="text-[10px] font-semibold text-amber-400">Admin Control</span>
+      </button>
+    </div>
+
+    <!-- Right Controls: Leave / End Meeting -->
+    <div class="flex items-center gap-2">
+      <button id="btn-leave-meeting" onclick="confirmLeaveMeeting()" class="px-3.5 py-2 bg-zoom-red hover:bg-red-700 text-white rounded-lg text-xs font-semibold transition shadow-md shadow-red-900/30">
+        <span id="label-leave-button">Rời khỏi phòng</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- ==================== MODALS & DIALOGS ==================== -->
+
+  <!-- 1. GOOGLE ACCOUNT SWITCHER & AUTH MODAL -->
+  <div id="modal-account" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-zoom-card border border-zoom-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="p-5 border-b border-zoom-border flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow">
+            <svg class="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Quản trị Tài khoản Google</h3>
+            <p class="text-xs text-slate-400">Đăng nhập Google Sign-In & Phân quyền Admin</p>
+          </div>
+        </div>
+        <button onclick="closeAccountModal()" class="text-slate-400 hover:text-white p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <!-- Current Login status -->
+        <div class="bg-zoom-toolbar p-3 rounded-xl border border-zoom-border flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div id="modal-current-avatar" class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-red-500 flex items-center justify-center font-bold text-sm text-white">
+              AD
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span id="modal-current-name" class="text-xs font-bold text-white">Admin GVATVSLĐ</span>
+                <span id="modal-current-role-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">SUPER ADMIN</span>
+              </div>
+              <p id="modal-current-email" class="text-[11px] text-slate-400">deptc.gvatvsld@gmail.com</p>
+            </div>
+          </div>
+          <span class="text-xs text-emerald-400 font-medium flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Đang kết nối
+          </span>
+        </div>
+
+        <!-- Quick Switch Identity for Testing & Administration -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-2">Chọn tài khoản Google để thao tác:</label>
+          <div class="space-y-2">
+            <!-- 1. Super Admin: deptc.gvatvsld@gmail.com -->
+            <button onclick="switchUserAccount('admin')" class="w-full text-left p-2.5 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 transition flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold text-xs">👑</div>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-white">Quản trị viên tối cao (Admin)</span>
+                    <span class="text-[10px] text-amber-400 font-bold">Toàn quyền</span>
+                  </div>
+                  <span class="text-[11px] text-slate-400 font-mono">deptc.gvatvsld@gmail.com</span>
+                </div>
+              </div>
+              <span class="text-xs text-amber-400 font-semibold">Kích hoạt</span>
+            </button>
+
+            <!-- 2. Giảng viên Co-Host -->
+            <button onclick="switchUserAccount('cohost')" class="w-full text-left p-2.5 rounded-xl border border-zoom-border bg-zoom-toolbar hover:bg-slate-700/40 transition flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">GV</div>
+                <div>
+                  <span class="text-xs font-bold text-white">ThS. Nguyễn Văn A (Đồng chủ phòng)</span>
+                  <p class="text-[11px] text-slate-400 font-mono">giangvien.atvsld@gmail.com</p>
+                </div>
+              </div>
+              <span class="text-xs text-slate-400 font-medium">Chuyển sang</span>
+            </button>
+
+            <!-- 3. Học viên / Khách -->
+            <button onclick="switchUserAccount('student')" class="w-full text-left p-2.5 rounded-xl border border-zoom-border bg-zoom-toolbar hover:bg-slate-700/40 transition flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-xs">HV</div>
+                <div>
+                  <span class="text-xs font-bold text-white">Học viên Lê Văn C (Thành viên)</span>
+                  <p class="text-[11px] text-slate-400 font-mono">hocvien.an-toan@gmail.com</p>
+                </div>
+              </div>
+              <span class="text-xs text-slate-400 font-medium">Chuyển sang</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Google Account input -->
+        <div class="pt-2 border-t border-zoom-border">
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Hoặc nhập email Google khác:</label>
+          <div class="flex gap-2">
+            <input type="email" id="custom-google-email" placeholder="email.cua.ban@gmail.com" class="flex-1 bg-zoom-toolbar border border-zoom-border rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-zoom-accent">
+            <button onclick="loginWithCustomGoogleEmail()" class="px-3 py-1.5 bg-zoom-blue hover:bg-zoom-hover text-white rounded-lg text-xs font-medium transition">
+              Đăng nhập
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-500 mt-1">Ghi chú: Nếu nhập đúng <span class="text-amber-400 font-mono">deptc.gvatvsld@gmail.com</span>, tài khoản sẽ tự động nhận quyền Super Admin.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. SUPER ADMIN CONTROL CENTER MODAL -->
+  <div id="modal-admin-dashboard" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6">
+    <div class="bg-zoom-card border border-amber-500/40 rounded-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+      <!-- Admin Header -->
+      <div class="p-4 bg-gradient-to-r from-slate-900 via-zoom-card to-amber-950/40 border-b border-zoom-border flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-amber-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-bold text-white">Bảng Quản Trị Tối Cao (Super Admin Dashboard)</h2>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-slate-950">deptc.gvatvsld@gmail.com</span>
+            </div>
+            <p class="text-xs text-slate-400">Hệ thống giám sát cuộc họp, cấu hình Firebase Realtime và phân quyền Google Drive</p>
+          </div>
+        </div>
+        <button onclick="closeAdminDashboard()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-700/50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex border-b border-zoom-border bg-zoom-toolbar px-4 gap-2 shrink-0">
+        <button onclick="switchAdminTab('room-control')" id="tab-btn-room-control" class="px-3.5 py-2.5 text-xs font-semibold border-b-2 border-amber-400 text-amber-400 transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          Điều khiển Phòng họp
+        </button>
+        <button onclick="switchAdminTab('user-mgmt')" id="tab-btn-user-mgmt" class="px-3.5 py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          Phân quyền Thành viên
+        </button>
+        <button onclick="switchAdminTab('firebase-config')" id="tab-btn-firebase-config" class="px-3.5 py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Cấu hình Firebase & Google API
+        </button>
+        <button onclick="switchAdminTab('audit-logs')" id="tab-btn-audit-logs" class="px-3.5 py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          Nhật ký Bảo mật (Audit Log)
+        </button>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="flex-1 overflow-y-auto p-5">
+
+        <!-- TAB 1: ROOM CONTROL -->
+        <div id="admin-panel-room-control" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Security Toggles -->
+            <div class="bg-zoom-toolbar p-4 rounded-xl border border-zoom-border space-y-3">
+              <h4 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Cài đặt an ninh phòng họp</h4>
+
+              <div class="flex items-center justify-between p-2.5 bg-zoom-card rounded-lg border border-zoom-border">
+                <div>
+                  <span class="text-xs font-semibold text-white block">Khóa phòng họp (Lock Meeting)</span>
+                  <span class="text-[11px] text-slate-400">Ngăn người mới tham gia cuộc họp</span>
+                </div>
+                <input type="checkbox" id="toggle-lock-meeting" onchange="adminToggleLockRoom(this.checked)" class="w-4 h-4 accent-amber-500 rounded cursor-pointer">
+              </div>
+
+              <div class="flex items-center justify-between p-2.5 bg-zoom-card rounded-lg border border-zoom-border">
+                <div>
+                  <span class="text-xs font-semibold text-white block">Bật phòng chờ (Waiting Room)</span>
+                  <span class="text-[11px] text-slate-400">Phải được Admin duyệt trước khi vào phòng</span>
+                </div>
+                <input type="checkbox" id="toggle-waiting-room" checked onchange="adminToggleWaitingRoom(this.checked)" class="w-4 h-4 accent-amber-500 rounded cursor-pointer">
+              </div>
+
+              <div class="flex items-center justify-between p-2.5 bg-zoom-card rounded-lg border border-zoom-border">
+                <div>
+                  <span class="text-xs font-semibold text-white block">Cho phép chia sẻ màn hình</span>
+                  <span class="text-[11px] text-slate-400">Cho phép học viên/khách chia sẻ màn hình</span>
+                </div>
+                <input type="checkbox" id="toggle-allow-screenshare" checked onchange="adminToggleAllowShare(this.checked)" class="w-4 h-4 accent-amber-500 rounded cursor-pointer">
+              </div>
+
+              <div class="flex items-center justify-between p-2.5 bg-zoom-card rounded-lg border border-zoom-border">
+                <div>
+                  <span class="text-xs font-semibold text-white block">Cho phép trò chuyện công khai</span>
+                  <span class="text-[11px] text-slate-400">Mọi người có thể gửi tin nhắn vào phòng</span>
+                </div>
+                <input type="checkbox" id="toggle-allow-chat" checked onchange="adminToggleAllowChat(this.checked)" class="w-4 h-4 accent-amber-500 rounded cursor-pointer">
+              </div>
+            </div>
+
+            <!-- Emergency Actions -->
+            <div class="bg-zoom-toolbar p-4 rounded-xl border border-zoom-border space-y-3">
+              <h4 class="text-xs font-bold text-red-400 uppercase tracking-wider">Hành động khẩn cấp của Chủ phòng</h4>
+
+              <div class="p-3 bg-red-950/20 border border-red-900/40 rounded-lg space-y-2">
+                <span class="text-xs font-medium text-red-300 block">Buộc tắt Micro toàn bộ người tham gia</span>
+                <button onclick="adminMuteAll()" class="w-full py-2 bg-red-800 hover:bg-red-700 text-white rounded-lg text-xs font-semibold transition">
+                  Tắt tiếng tất cả (Force Mute All)
+                </button>
+              </div>
+
+              <div class="p-3 bg-red-950/20 border border-red-900/40 rounded-lg space-y-2">
+                <span class="text-xs font-medium text-red-300 block">Dừng toàn bộ camera của học viên</span>
+                <button onclick="adminStopAllVideos()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition">
+                  Tắt tất cả Camera người tham gia
+                </button>
+              </div>
+
+              <div class="p-3 bg-red-950/30 border border-red-600/50 rounded-lg space-y-2">
+                <span class="text-xs font-bold text-red-300 block">Kết thúc cuộc họp cho tất cả mọi người</span>
+                <button onclick="adminEndMeetingForAll()" class="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-red-900/40">
+                  KẾT THÚC CUỘC HỌP CHO TẤT CẢ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: USER MANAGEMENT -->
+        <div id="admin-panel-user-mgmt" class="hidden space-y-4">
+          <div class="bg-zoom-toolbar p-4 rounded-xl border border-zoom-border">
+            <h4 class="text-xs font-bold text-slate-200 uppercase tracking-wider mb-3">Danh sách thành viên & Quyền hạn</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="border-b border-zoom-border text-slate-400">
+                    <th class="pb-2 font-semibold">Thành viên</th>
+                    <th class="pb-2 font-semibold">Email Google</th>
+                    <th class="pb-2 font-semibold">Vai trò</th>
+                    <th class="pb-2 font-semibold">Trạng thái</th>
+                    <th class="pb-2 font-semibold text-right">Thao tác Admin</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-users-table-body" class="divide-y divide-zoom-border/60">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: FIREBASE & GOOGLE DRIVE CONFIG -->
+        <div id="admin-panel-firebase-config" class="hidden space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Firebase Config Form -->
+            <div class="bg-zoom-toolbar p-4 rounded-xl border border-zoom-border space-y-3">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Cấu hình Firebase Realtime / Firestore</h4>
+                <span class="text-[10px] bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800">Đã kích hoạt</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Dùng để đồng bộ tín hiệu cuộc họp, danh sách phòng, tin nhắn và trạng thái giơ tay thời gian thực.</p>
+
+              <div>
+                <label class="block text-[11px] font-medium text-slate-300 mb-1">Firebase Project ID:</label>
+                <input type="text" id="cfg-firebase-project" value="zoom-gvatvsld-live" class="w-full bg-zoom-card border border-zoom-border rounded-lg px-2.5 py-1.5 text-xs text-slate-200">
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-medium text-slate-300 mb-1">Firebase Realtime Database URL:</label>
+                <input type="text" id="cfg-firebase-dburl" value="https://zoom-gvatvsld-live-default-rtdb.firebaseio.com" class="w-full bg-zoom-card border border-zoom-border rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono">
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-medium text-slate-300 mb-1">Firebase Web API Key:</label>
+                <input type="password" id="cfg-firebase-apikey" value="AIzaSyB_GVATVSLD_SecretLiveKey_2026" class="w-full bg-zoom-card border border-zoom-border rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono">
+              </div>
+
+              <div class="pt-2 flex gap-2">
+                <button onclick="saveFirebaseConfig()" class="flex-1 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-xs font-bold transition">
+                  Lưu cấu hình Firebase
+                </button>
+                <button onclick="testFirebaseConnection()" class="px-3 py-1.5 bg-zoom-card hover:bg-slate-700 border border-zoom-border text-slate-200 rounded-lg text-xs font-medium">
+                  Kiểm tra kết nối
+                </button>
+              </div>
+            </div>
+
+            <!-- Google Drive API Config Form -->
+            <div class="bg-zoom-toolbar p-4 rounded-xl border border-zoom-border space-y-3">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold text-blue-400 uppercase tracking-wider">Cấu hình Google Drive & OAuth 2.0</h4>
+                <span class="text-[10px] bg-blue-950 text-blue-400 px-2 py-0.5 rounded border border-blue-800">Tài khoản Admin liên kết</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Chia sẻ tài liệu đào tạo ATVSLĐ, lưu biên bản và bản ghi cuộc họp trực tiếp vào Google Drive của <span class="text-amber-400 font-mono">deptc.gvatvsld@gmail.com</span>.</p>
+
+              <div>
+                <label class="block text-[11px] font-medium text-slate-300 mb-1">Google OAuth Client ID:</label>
+                <input type="text" id="cfg-google-clientid" value="459812739182-gvatvsld.apps.googleusercontent.com" class="w-full bg-zoom-card border border-zoom-border rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono">
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-medium text-slate-300 mb-1">Google Drive Root Folder ID:</label>
+                <input type="text" id="cfg-google-drive-folder" value="1BxpZOOM_GVATVSLD_MEETINGS_2026" class="w-full bg-zoom-card border border-zoom-border rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono">
+              </div>
+
+              <div class="p-2.5 bg-blue-950/30 border border-blue-800/40 rounded-lg text-[11px] text-blue-200 space-y-1">
+                <span class="font-bold block">Quyền hạn Google Drive được cấp:</span>
+                <p>• <span class="font-mono">drive.file</span>: Tạo và quản lý tệp được chia sẻ qua Zoom.</p>
+                <p>• <span class="font-mono">drive.readonly</span>: Cho phép người tham gia xem tệp tài liệu.</p>
+              </div>
+
+              <div class="pt-2 flex gap-2">
+                <button onclick="saveGoogleDriveConfig()" class="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition">
+                  Lưu cấu hình Google Drive
+                </button>
+                <button onclick="testGoogleDriveSync()" class="px-3 py-1.5 bg-zoom-card hover:bg-slate-700 border border-zoom-border text-slate-200 rounded-lg text-xs font-medium">
+                  Kiểm tra Drive
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: AUDIT LOGS -->
+        <div id="admin-panel-audit-logs" class="hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Nhật ký sự kiện cuộc họp & Bảo mật</h4>
+            <button onclick="clearAuditLogs()" class="text-xs text-slate-400 hover:text-red-400">Xóa nhật ký</button>
+          </div>
+          <div id="admin-audit-logs-container" class="bg-zoom-toolbar rounded-xl border border-zoom-border p-3 font-mono text-[11px] space-y-2 max-h-96 overflow-y-auto">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. GOOGLE DRIVE & FIREBASE SHARING MODAL -->
+  <div id="modal-drive-sharing" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6">
+    <div class="bg-zoom-card border border-zoom-border rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+      <!-- Modal Header -->
+      <div class="p-4 border-b border-zoom-border flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Kho Lưu Trữ Dữ Liệu & Tài Liệu Cuộc Họp</h3>
+            <p class="text-xs text-slate-400">Google Drive (<span class="text-amber-400 font-mono">deptc.gvatvsld@gmail.com</span>) & Firebase Storage</p>
+          </div>
+        </div>
+        <button onclick="closeFirebaseDriveModal()" class="text-slate-400 hover:text-white p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Drive Modal Tabs -->
+      <div class="flex border-b border-zoom-border bg-zoom-toolbar px-4 gap-2 shrink-0">
+        <button onclick="switchDriveModalTab('drive-files')" id="tab-btn-drive-files" class="px-3.5 py-2 text-xs font-semibold border-b-2 border-blue-500 text-blue-400 transition">
+          Tệp trên Google Drive
+        </button>
+        <button onclick="switchDriveModalTab('upload-file')" id="tab-btn-upload-file" class="px-3.5 py-2 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">
+          Tải tệp mới lên
+        </button>
+        <button onclick="switchDriveModalTab('firebase-sync')" id="tab-btn-firebase-sync" class="px-3.5 py-2 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">
+          Trạng thái Firebase Realtime
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-4">
+
+        <!-- TAB A: DRIVE FILES LIST -->
+        <div id="drive-modal-panel-files" class="space-y-3">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-300 font-medium">Tài liệu đã chuẩn bị cho cuộc họp:</span>
+            <span class="text-[11px] text-slate-400">Thư mục: <span class="font-mono text-blue-400">/ATVSLD-Trainings-2026</span></span>
+          </div>
+
+          <div id="drive-file-list-container" class="space-y-2">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- TAB B: UPLOAD FILE -->
+        <div id="drive-modal-panel-upload" class="hidden space-y-4">
+          <div class="border-2 border-dashed border-zoom-border rounded-xl p-6 text-center hover:border-zoom-accent transition cursor-pointer bg-zoom-toolbar/50" onclick="triggerFileUploadInput()">
+            <svg class="w-10 h-10 text-slate-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            <p class="text-xs font-medium text-slate-200">Nhấp để chọn tệp hoặc kéo thả tệp vào đây</p>
+            <p class="text-[11px] text-slate-500 mt-1">Hỗ trợ PDF, PPTX, DOCX, XLSX, MP4 (tối đa 250MB)</p>
+            <input type="file" id="real-file-upload-input" class="hidden" onchange="handleRealFileUpload(this.files)">
+          </div>
+
+          <div class="bg-zoom-toolbar p-3 rounded-xl border border-zoom-border space-y-2">
+            <span class="text-xs font-semibold text-slate-300 block">Hoặc thêm tệp bằng liên kết Google Drive trực tiếp:</span>
+            <div class="flex gap-2">
+              <input type="text" id="input-drive-file-name" placeholder="Tên tài liệu..." class="w-1/3 bg-zoom-card border border-zoom-border rounded-lg px-3 py-1.5 text-xs text-slate-200">
+              <input type="url" id="input-drive-file-url" placeholder="https://drive.google.com/file/d/..." class="flex-1 bg-zoom-card border border-zoom-border rounded-lg px-3 py-1.5 text-xs text-slate-200 font-mono">
+              <button onclick="addManualDriveFile()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium">
+                Thêm tệp
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB C: FIREBASE REALTIME SYNC -->
+        <div id="drive-modal-panel-firebase" class="hidden space-y-3">
+          <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3">
+            <svg class="w-5 h-5 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <div>
+              <span class="text-xs font-bold text-amber-300 block">Cơ chế đồng bộ Firebase & P2P WebRTC Signaling:</span>
+              <p class="text-[11px] text-slate-300 mt-0.5">
+                Ứng dụng này sử dụng Firebase Realtime Database làm Server điều phối (Signaling Server) cho WebRTC, truyền tải dữ liệu SDP Offer/Answer, ICE Candidates, đồng thời lưu trữ kênh Chat và hàng đợi giơ tay của phòng họp.
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-zoom-toolbar p-3 rounded-xl border border-zoom-border space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-400">Trạng thái Firebase Channel:</span>
+              <span class="text-emerald-400 font-semibold flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sẵn sàng (Live Signaling)
+              </span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-400">Node cuộc họp:</span>
+              <span class="font-mono text-slate-300">/meetings/GVATVSLD-2026</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-400">Số lượng kết nối đồng thời:</span>
+              <span class="font-mono text-slate-300">6 Người dùng (Active Peers)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. AUDIO / VIDEO SETTINGS MODAL -->
+  <div id="modal-settings" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-zoom-card border border-zoom-border rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+      <div class="p-4 border-b border-zoom-border flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <svg class="w-4 h-4 text-zoom-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Cài đặt Thiết bị & Hình nền ảo
+        </h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs">
+        <!-- Audio settings -->
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1.5">Microphone (Thiết bị đầu vào):</label>
+          <select id="select-audio-input" class="w-full bg-zoom-toolbar border border-zoom-border rounded-lg p-2 text-slate-200">
+            <option>Microphone mặc định (Realtek High Definition Audio)</option>
+            <option>Tai nghe không dây Bluetooth (Hands-free AG Audio)</option>
+          </select>
+        </div>
+
+        <!-- Video settings -->
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1.5">Camera (Máy ảnh):</label>
+          <select id="select-video-input" class="w-full bg-zoom-toolbar border border-zoom-border rounded-lg p-2 text-slate-200">
+            <option>Integrated HD Webcam (1280x720)</option>
+            <option>Camera ngoài USB HD (1920x1080)</option>
+          </select>
+        </div>
+
+        <!-- Virtual Background -->
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1.5">Hình nền ảo (Virtual Background):</label>
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="setVirtualBackground('none')" class="p-2 border border-zoom-border rounded-lg text-center hover:border-zoom-accent focus:border-zoom-accent bg-zoom-toolbar">
+              <span class="block text-lg">🚫</span>
+              <span class="text-[10px] text-slate-400">Không có</span>
+            </button>
+            <button onclick="setVirtualBackground('blur')" class="p-2 border border-zoom-border rounded-lg text-center hover:border-zoom-accent focus:border-zoom-accent bg-zoom-toolbar">
+              <span class="block text-lg">🌫️</span>
+              <span class="text-[10px] text-slate-400">Làm mờ</span>
+            </button>
+            <button onclick="setVirtualBackground('office')" class="p-2 border border-zoom-border rounded-lg text-center hover:border-zoom-accent focus:border-zoom-accent bg-zoom-toolbar">
+              <span class="block text-lg">🏢</span>
+              <span class="text-[10px] text-slate-400">Văn phòng</span>
+            </button>
+            <button onclick="setVirtualBackground('conference')" class="p-2 border border-zoom-border rounded-lg text-center hover:border-zoom-accent focus:border-zoom-accent bg-zoom-toolbar">
+              <span class="block text-lg">🏛️</span>
+              <span class="text-[10px] text-slate-400">Hội trường</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-zoom-toolbar border-t border-zoom-border flex justify-end">
+        <button onclick="closeSettingsModal()" class="px-4 py-1.5 bg-zoom-blue hover:bg-zoom-hover text-white rounded-lg text-xs font-semibold">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. LEAVE / END MEETING CONFIRMATION MODAL -->
+  <div id="modal-leave-confirm" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-zoom-card border border-zoom-border rounded-2xl w-full max-w-sm p-5 text-center shadow-2xl">
+      <div class="w-12 h-12 bg-red-600/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      </div>
+      <h3 class="text-base font-bold text-white mb-1">Xác nhận rời khỏi phòng</h3>
+      <p class="text-xs text-slate-400 mb-5">Bạn có chắc chắn muốn rời khỏi cuộc họp an toàn vệ sinh lao động này không?</p>
+
+      <div class="flex flex-col gap-2">
+        <button id="modal-btn-end-all" onclick="executeEndMeetingAll()" class="hidden py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition">
+          Kết thúc cuộc họp cho tất cả
+        </button>
+        <button onclick="executeLeaveMeeting()" class="py-2 bg-zoom-toolbar hover:bg-slate-700 text-slate-200 border border-zoom-border rounded-lg text-xs font-semibold transition">
+          Chỉ rời khỏi cuộc họp
+        </button>
+        <button onclick="closeLeaveModal()" class="py-2 text-slate-400 hover:text-white text-xs transition">
+          Hủy bỏ (Ở lại phòng)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER (Top-right animated alerts) -->
+  <div id="toast-container" class="fixed top-16 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- JAVASCRIPT CORE LOGIC -->
+  <script>
+    // --- APP STATE ---
+    const ADMIN_EMAIL = "deptc.gvatvsld@gmail.com";
+
+    const state = {
+      meetingId: "GVATVSLD-2026",
+      currentUser: {
+        id: "usr_admin_root",
+        name: "Admin GVATVSLĐ",
+        email: ADMIN_EMAIL,
+        role: "admin",
+        avatarInitials: "AD",
+        isMuted: false,
+        isVideoOff: false,
+        hasRaisedHand: false,
+        virtualBg: "none"
+      },
+      isRoomLocked: false,
+      isWaitingRoomEnabled: true,
+      allowScreenShare: true,
+      allowChat: true,
+      viewMode: "grid",
+      isScreenSharing: false,
+      isWhiteboardOpen: false,
+      pinnedUserId: null,
+      activeSpeakerId: "usr_admin_root",
+      
+      // Participants in the room
+      participants: [
+        {
+          id: "usr_admin_root",
+          name: "Admin GVATVSLĐ",
+          email: "deptc.gvatvsld@gmail.com",
+          role: "admin",
+          isSelf: true,
+          isMuted: false,
+          isVideoOff: false,
+          hasRaisedHand: false,
+          avatarInitials: "AD",
+          color: "from-amber-500 to-red-500",
+          reaction: null
+        },
+        {
+          id: "usr_mai_tran",
+          name: "ThS. Trần Thị Mai",
+          email: "tranmai.giangvien@gmail.com",
+          role: "cohost",
+          isSelf: false,
+          isMuted: false,
+          isVideoOff: false,
+          hasRaisedHand: false,
+          avatarInitials: "TM",
+          color: "from-blue-600 to-cyan-500",
+          reaction: null
+        },
+        {
+          id: "usr_nguyen_an",
+          name: "KS. Nguyễn Văn An",
+          email: "vanan.kythuat@gmail.com",
+          role: "participant",
+          isSelf: false,
+          isMuted: true,
+          isVideoOff: false,
+          hasRaisedHand: false,
+          avatarInitials: "VA",
+          color: "from-emerald-600 to-teal-500",
+          reaction: null
+        },
+        {
+          id: "usr_le_hoang",
+          name: "Chuyên viên Lê Hoàng",
+          email: "lehoang.kiemdinh@gmail.com",
+          role: "participant",
+          isSelf: false,
+          isMuted: false,
+          isVideoOff: true,
+          hasRaisedHand: true,
+          avatarInitials: "LH",
+          color: "from-purple-600 to-pink-500",
+          reaction: null
+        },
+        {
+          id: "usr_pham_duc",
+          name: "Kỹ sư Phạm Đức",
+          email: "phamduc.atld@gmail.com",
+          role: "participant",
+          isSelf: false,
+          isMuted: true,
+          isVideoOff: false,
+          hasRaisedHand: false,
+          avatarInitials: "PD",
+          color: "from-orange-500 to-amber-600",
+          reaction: null
+        },
+        {
+          id: "usr_doan_dung",
+          name: "Học viên Đoàn Dũng",
+          email: "doandung.student@gmail.com",
+          role: "participant",
+          isSelf: false,
+          isMuted: true,
+          isVideoOff: false,
+          hasRaisedHand: false,
+          avatarInitials: "DD",
+          color: "from-indigo-600 to-blue-500",
+          reaction: null
+        }
+      ],
+
+      // In-Meeting Chat messages
+      messages: [
+        {
+          id: "msg_1",
+          senderId: "usr_admin_root",
+          senderName: "Admin GVATVSLĐ",
+          senderRole: "admin",
+          time: "12:08",
+          text: "Chào mừng toàn thể cán bộ và học viên tham gia lớp huấn luyện An toàn vệ sinh lao động trực tuyến!",
+          isDriveAttachment: false
+        },
+        {
+          id: "msg_2",
+          senderId: "usr_mai_tran",
+          senderName: "ThS. Trần Thị Mai",
+          senderRole: "cohost",
+          time: "12:09",
+          text: "Em đã chuẩn bị sẵn bộ Slide bài giảng về an toàn hóa chất trên Google Drive của Admin rồi ạ.",
+          isDriveAttachment: false
+        },
+        {
+          id: "msg_3",
+          senderId: "usr_admin_root",
+          senderName: "Admin GVATVSLĐ",
+          senderRole: "admin",
+          time: "12:10",
+          text: "Tôi vừa chia sẻ tệp tài liệu kiểm định vào cuộc họp. Mọi người có thể mở trực tiếp.",
+          isDriveAttachment: true,
+          fileName: "Quy trình ATVSLĐ - Báo cáo thường niên 2026.pdf",
+          fileSize: "2.4 MB",
+          driveUrl: "https://drive.google.com/file/d/1BxpZOOM_GVATVSLD_PDF/view"
+        }
+      ],
+
+      // Google Drive Files Repository
+      driveFiles: [
+        {
+          id: "drv_1",
+          name: "Quy trình ATVSLĐ - Báo cáo thường niên 2026.pdf",
+          type: "pdf",
+          size: "2.4 MB",
+          updated: "Hôm nay, 10:15",
+          shared: true,
+          url: "https://drive.google.com/file/d/1BxpZOOM_GVATVSLD_PDF/view"
+        },
+        {
+          id: "drv_2",
+          name: "Slide bài giảng - Kỹ thuật an toàn điện & hóa chất.pptx",
+          type: "pptx",
+          size: "15.8 MB",
+          updated: "Hôm qua",
+          shared: true,
+          url: "https://drive.google.com/file/d/1BxpZOOM_GVATVSLD_PPTX/view"
+        },
+        {
+          id: "drv_3",
+          name: "Danh sách kiểm tra & giám sát hiện trường.xlsx",
+          type: "xlsx",
+          size: "840 KB",
+          updated: "28/10/2026",
+          shared: false,
+          url: "https://drive.google.com/file/d/1BxpZOOM_GVATVSLD_XLSX/view"
+        },
+        {
+          id: "drv_4",
+          name: "Biên bản họp & Nghị quyết đào tạo cán bộ.docx",
+          type: "docx",
+          size: "1.2 MB",
+          updated: "27/10/2026",
+          shared: false,
+          url: "https://drive.google.com/file/d/1BxpZOOM_GVATVSLD_DOCX/view"
+        },
+        {
+          id: "drv_5",
+          name: "Video tình huống khẩn cấp - Huấn luyện PCCC.mp4",
+          type: "mp4",
+          size: "45.1 MB",
+          updated: "25/10/2026",
+          shared: true,
+          url: "https://drive.google.com/file/d/1BxpZOOM_GVATVSLD_MP4/view"
+        }
+      ],
+
+      // Audit Logs
+      auditLogs: [
+        { time: "12:07:32", type: "AUTH", text: "Admin deptc.gvatvsld@gmail.com đăng nhập với quyền SUPER ADMINISTRATOR" },
+        { time: "12:07:35", type: "SYNC", text: "Kết nối Firebase Realtime Database: /meetings/GVATVSLD-2026 hoàn tất" },
+        { time: "12:07:40", type: "DRIVE", text: "Liên kết Google Drive thư mục /ATVSLD-Trainings-2026 sẵn sàng" },
+        { time: "12:08:15", type: "ROOM", text: "Cuộc họp được mở cho 6 thành viên được cấp phép" }
+      ]
+    };
+
+    // --- BROADCAST CHANNEL FOR MULTI-TAB LIVE SYNC ---
+    let broadcastChannel;
+    try {
+      broadcastChannel = new BroadcastChannel("zoom_gvatvsld_channel");
+      broadcastChannel.onmessage = (event) => {
+        if (event.data && event.data.type) {
+          handleIncomingChannelMessage(event.data);
+        }
+      };
+    } catch (e) {
+      console.log("BroadcastChannel not supported in this environment");
+    }
+
+    function broadcastState(actionType, payload) {
+      if (broadcastChannel) {
+        try {
+          broadcastChannel.postMessage({ type: actionType, payload: payload, sender: state.currentUser.email });
+        } catch (e) {}
+      }
+    }
+
+    function handleIncomingChannelMessage(msg) {
+      if (msg.type === "CHAT_MESSAGE") {
+        state.messages.push(msg.payload);
+        renderChatMessages();
+        showToast("Tin nhắn mới từ " + msg.payload.senderName, "info");
+      } else if (msg.type === "REACTION") {
+        triggerParticipantReaction(msg.payload.userId, msg.payload.reaction);
+      } else if (msg.type === "MUTE_ALL" && state.currentUser.role !== "admin") {
+        state.currentUser.isMuted = true;
+        updateUserMuteVideoUi();
+        showToast("Admin đã tắt tiếng toàn bộ phòng họp", "warning");
+      }
+    }
+
+    // --- INITIALIZATION ---
+    window.addEventListener("DOMContentLoaded", () => {
+      initTimer();
+      renderVideoGrid();
+      renderParticipantsList();
+      renderChatMessages();
+      renderDriveFilesList();
+      renderAuditLogs();
+      updateAdminStatusUi();
+      initWhiteboardCanvas();
+      showToast("Chào mừng Admin deptc.gvatvsld@gmail.com! Quyền Super Admin đã kích hoạt.", "success");
+    });
+
+    // --- MEETING TIMER ---
+    let meetingSeconds = 15 * 60 + 42;
+    function initTimer() {
+      setInterval(() => {
+        meetingSeconds++;
+        const hrs = Math.floor(meetingSeconds / 3600);
+        const mins = Math.floor((meetingSeconds % 3600) / 60);
+        const secs = meetingSeconds % 60;
+        const formatted = (hrs > 0 ? String(hrs).padStart(2, '0') + ':' : '') +
+                          String(mins).padStart(2, '0') + ':' +
+                          String(secs).padStart(2, '0');
+        const timerEl = document.getElementById("meeting-timer");
+        if (timerEl) timerEl.textContent = formatted;
+      }, 1000);
+    }
+
+    // --- TOAST NOTIFICATIONS (No alert() used) ---
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toast-container");
+      if (!container) return;
+
+      const toast = document.createElement("div");
+      toast.className = "flex items-center gap-2.5 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-medium border pointer-events-auto transition-all duration-300 transform translate-x-10 opacity-0";
+      
+      let bgStyle = "bg-zoom-card border-zoom-border text-slate-100";
+      let icon = `<svg class="w-4 h-4 text-zoom-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+      
+      if (type === "success") {
+        bgStyle = "bg-emerald-950/90 border-emerald-700/60 text-emerald-100";
+        icon = `<svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
+      } else if (type === "warning") {
+        bgStyle = "bg-amber-950/90 border-amber-700/60 text-amber-100";
+        icon = `<svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+      } else if (type === "error") {
+        bgStyle = "bg-red-950/90 border-red-700/60 text-red-100";
+        icon = `<svg class="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>`;
+      }
+
+      toast.className += " " + bgStyle;
+      toast.innerHTML = icon + `<span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove("translate-x-10", "opacity-0");
+      });
+
+      setTimeout(() => {
+        toast.classList.add("translate-x-10", "opacity-0");
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function addAuditLog(type, text) {
+      const now = new Date();
+      const timeStr = String(now.getHours()).padStart(2, '0') + ':' +
+                      String(now.getMinutes()).padStart(2, '0') + ':' +
+                      String(now.getSeconds()).padStart(2, '0');
+      state.auditLogs.unshift({ time: timeStr, type: type, text: text });
+      renderAuditLogs();
+    }
+
+    function renderAuditLogs() {
+      const container = document.getElementById("admin-audit-logs-container");
+      if (!container) return;
+      container.innerHTML = state.auditLogs.map(log => `
+        <div class="flex items-start gap-2 border-b border-zoom-border/40 pb-1.5">
+          <span class="text-slate-500">${log.time}</span>
+          <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${
+            log.type === 'AUTH' ? 'bg-amber-950 text-amber-400' :
+            log.type === 'SYNC' ? 'bg-blue-950 text-blue-400' :
+            log.type === 'DRIVE' ? 'bg-emerald-950 text-emerald-400' :
+            'bg-slate-800 text-slate-300'
+          }">${log.type}</span>
+          <span class="text-slate-200 flex-1">${escapeHtml(log.text)}</span>
+        </div>
+      `).join("");
+    }
+
+    function clearAuditLogs() {
+      state.auditLogs = [];
+      renderAuditLogs();
+      showToast("Đã xóa nhật ký sự kiện", "info");
+    }
+
+    // --- VIDEO GRID RENDERING ---
+    function renderVideoGrid() {
+      const grid = document.getElementById("video-grid");
+      if (!grid) return;
+
+      grid.innerHTML = "";
+
+      if (state.viewMode === "speaker") {
+        grid.className = "flex-1 flex flex-col lg:flex-row gap-3 overflow-hidden";
+      } else {
+        grid.className = "flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto auto-rows-fr";
+      }
+
+      state.participants.forEach((p) => {
+        const isSpeakerActive = (p.id === state.activeSpeakerId && !p.isMuted);
+        const tile = document.createElement("div");
+        tile.id = "tile-" + p.id;
+        tile.className = `relative rounded-xl overflow-hidden bg-zoom-card border transition-all duration-300 flex flex-col justify-between group min-h-[170px] ${
+          isSpeakerActive ? 'border-emerald-500 ring-2 ring-emerald-500/40 shadow-lg shadow-emerald-950/50' : 'border-zoom-border hover:border-slate-600'
+        }`;
+
+        let reactionMarkup = "";
+        if (p.reaction) {
+          reactionMarkup = `
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+              <span class="text-5xl animate-float-reaction">${p.reaction}</span>
+            </div>
+          `;
+        }
+
+        let handMarkup = "";
+        if (p.hasRaisedHand) {
+          handMarkup = `
+            <div class="absolute top-3 left-3 bg-amber-500 text-slate-950 px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-md z-10 animate-bounce">
+              <span>✋</span> Giơ tay
+            </div>
+          `;
+        }
+
+        let roleBadge = "";
+        if (p.role === "admin") {
+          roleBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500 text-slate-950">HOST</span>`;
+        } else if (p.role === "cohost") {
+          roleBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-600 text-white">CO-HOST</span>`;
+        }
+
+        let videoInner = "";
+        if (p.isVideoOff) {
+          videoInner = `
+            <div class="flex-1 flex flex-col items-center justify-center relative bg-gradient-to-b from-slate-900 to-zoom-card">
+              <div class="w-20 h-20 rounded-full bg-gradient-to-tr ${p.color} flex items-center justify-center text-white font-bold text-2xl shadow-xl ring-4 ${isSpeakerActive ? 'ring-emerald-500 animate-pulse' : 'ring-zoom-border'}">
+                ${p.avatarInitials}
+              </div>
+              <span class="text-xs text-slate-400 mt-2">Camera đang tắt</span>
+            </div>
+          `;
+        } else {
+          videoInner = `
+            <div class="flex-1 flex flex-col items-center justify-center relative bg-slate-950 overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-tr ${p.color} opacity-20"></div>
+              <div class="w-16 h-16 rounded-full bg-gradient-to-tr ${p.color} flex items-center justify-center text-white font-bold text-xl shadow-lg ring-2 ring-white/20 z-10">
+                ${p.avatarInitials}
+              </div>
+              <div class="absolute bottom-10 flex items-center gap-1">
+                <span class="w-1 h-2 bg-emerald-500 rounded-full wave-bar ${p.isMuted ? 'hidden' : ''}"></span>
+                <span class="w-1 h-3 bg-emerald-500 rounded-full wave-bar ${p.isMuted ? 'hidden' : ''}"></span>
+                <span class="w-1 h-4 bg-emerald-500 rounded-full wave-bar ${p.isMuted ? 'hidden' : ''}"></span>
+                <span class="w-1 h-2 bg-emerald-500 rounded-full wave-bar ${p.isMuted ? 'hidden' : ''}"></span>
+              </div>
+            </div>
+          `;
+        }
+
+        tile.innerHTML = `
+          ${reactionMarkup}
+          ${handMarkup}
+          ${videoInner}
+
+          <div class="h-9 bg-black/60 backdrop-blur-md px-3 flex items-center justify-between text-xs z-10">
+            <div class="flex items-center gap-1.5 truncate">
+              ${p.isMuted ? `
+                <svg class="w-3.5 h-3.5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/></svg>
+              ` : `
+                <div class="flex items-center gap-0.5">
+                  <span class="w-0.5 h-2 bg-emerald-400 rounded wave-bar"></span>
+                  <span class="w-0.5 h-3 bg-emerald-400 rounded wave-bar"></span>
+                  <span class="w-0.5 h-1.5 bg-emerald-400 rounded wave-bar"></span>
+                </div>
+              `}
+              <span class="font-medium text-slate-200 truncate">${escapeHtml(p.name)} ${p.isSelf ? '(Bạn)' : ''}</span>
+              ${roleBadge}
+            </div>
+
+            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+              <button onclick="pinSpeaker('${p.id}')" class="p-1 text-slate-400 hover:text-white rounded" title="Ghim video">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+              </button>
+              ${state.currentUser.role === 'admin' && !p.isSelf ? `
+                <button onclick="adminToggleUserMute('${p.id}')" class="p-1 text-slate-400 hover:text-red-400 rounded" title="${p.isMuted ? 'Yêu cầu bật mic' : 'Tắt mic'}">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(tile);
+      });
+    }
+
+    // --- PARTICIPANTS DRAWER ---
+    function toggleParticipantsDrawer(forceOpen) {
+      const drawer = document.getElementById("participants-drawer");
+      const chatDrawer = document.getElementById("chat-drawer");
+      if (!drawer) return;
+
+      const isOpen = !drawer.classList.contains("hidden");
+      const targetState = forceOpen !== undefined ? forceOpen : !isOpen;
+
+      if (targetState) {
+        drawer.classList.remove("hidden");
+        if (window.innerWidth < 1024 && chatDrawer) chatDrawer.classList.add("hidden");
+      } else {
+        drawer.classList.add("hidden");
+      }
+    }
+
+    function renderParticipantsList(filtered = null) {
+      const container = document.getElementById("participants-list-container");
+      const badge = document.getElementById("badge-participants");
+      const drawerCount = document.getElementById("drawer-participant-count");
+      if (!container) return;
+
+      const list = filtered || state.participants;
+      if (badge) badge.textContent = state.participants.length;
+      if (drawerCount) drawerCount.textContent = state.participants.length;
+
+      container.innerHTML = list.map(p => `
+        <div class="p-2.5 rounded-xl hover:bg-zoom-card flex items-center justify-between group transition border border-transparent hover:border-zoom-border">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr ${p.color} flex items-center justify-center text-white font-bold text-xs">
+              ${p.avatarInitials}
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-semibold text-slate-200">${escapeHtml(p.name)}</span>
+                ${p.isSelf ? '<span class="text-[10px] text-slate-400">(Tôi)</span>' : ''}
+                ${p.role === 'admin' ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500 text-slate-950">Chủ phòng</span>' : ''}
+                ${p.role === 'cohost' ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-600 text-white">Phó phòng</span>' : ''}
+                ${p.hasRaisedHand ? '<span class="text-xs">✋</span>' : ''}
+              </div>
+              <span class="text-[10px] text-slate-400 font-mono block">${escapeHtml(p.email)}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <button onclick="adminToggleUserMute('${p.id}')" class="p-1 text-slate-400 hover:text-white rounded" title="${p.isMuted ? 'Đang tắt mic' : 'Đang bật mic'}">
+              ${p.isMuted ? `
+                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/></svg>
+              ` : `
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+              `}
+            </button>
+
+            <div class="p-1 text-slate-400">
+              ${p.isVideoOff ? `
+                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/></svg>
+              ` : `
+                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              `}
+            </div>
+
+            ${state.currentUser.role === 'admin' && !p.isSelf ? `
+              <button onclick="adminKickUser('${p.id}')" class="p-1 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition" title="Mời ra khỏi phòng">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function filterParticipants(query) {
+      if (!query || !query.trim()) {
+        renderParticipantsList();
+        return;
+      }
+      const q = query.toLowerCase();
+      const filtered = state.participants.filter(p => p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q));
+      renderParticipantsList(filtered);
+    }
+
+    // --- IN-MEETING CHAT ---
+    function toggleChatDrawer(forceOpen) {
+      const drawer = document.getElementById("chat-drawer");
+      const partDrawer = document.getElementById("participants-drawer");
+      const unreadBadge = document.getElementById("badge-chat-unread");
+      if (!drawer) return;
+
+      const isOpen = !drawer.classList.contains("hidden");
+      const targetState = forceOpen !== undefined ? forceOpen : !isOpen;
+
+      if (targetState) {
+        drawer.classList.remove("hidden");
+        if (unreadBadge) unreadBadge.classList.add("hidden");
+        if (window.innerWidth < 1024 && partDrawer) partDrawer.classList.add("hidden");
+      } else {
+        drawer.classList.add("hidden");
+      }
+    }
+
+    function renderChatMessages() {
+      const container = document.getElementById("chat-messages-container");
+      if (!container) return;
+
+      container.innerHTML = state.messages.map(m => {
+        let roleBadge = "";
+        if (m.senderRole === "admin") {
+          roleBadge = `<span class="px-1 py-0.5 rounded text-[9px] font-bold bg-amber-500 text-slate-950">ADMIN</span>`;
+        } else if (m.senderRole === "cohost") {
+          roleBadge = `<span class="px-1 py-0.5 rounded text-[9px] font-bold bg-blue-600 text-white">CO-HOST</span>`;
+        }
+
+        let driveAttachmentMarkup = "";
+        if (m.isDriveAttachment) {
+          driveAttachmentMarkup = `
+            <div class="mt-2 p-2.5 bg-blue-950/40 border border-blue-800/60 rounded-xl flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 truncate">
+                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                <div class="truncate">
+                  <span class="text-xs font-semibold text-blue-200 block truncate">${escapeHtml(m.fileName)}</span>
+                  <span class="text-[10px] text-blue-400">Google Drive • ${m.fileSize}</span>
+                </div>
+              </div>
+              <a href="${m.driveUrl}" target="_blank" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-medium shrink-0 flex items-center gap-1">
+                Xem tệp
+              </a>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="flex flex-col bg-zoom-card/60 p-2.5 rounded-xl border border-zoom-border/60">
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-slate-200">${escapeHtml(m.senderName)}</span>
+                ${roleBadge}
+              </div>
+              <span class="text-[10px] text-slate-500">${m.time}</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">${escapeHtml(m.text)}</p>
+            ${driveAttachmentMarkup}
+          </div>
+        `;
+      }).join("");
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function handleChatKeyDown(event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendChatMessage();
+      }
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById("chat-text-input");
+      if (!input || !input.value.trim()) return;
+
+      const now = new Date();
+      const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+      const newMsg = {
+        id: "msg_" + Date.now(),
+        senderId: state.currentUser.id,
+        senderName: state.currentUser.name,
+        senderRole: state.currentUser.role,
+        time: timeStr,
+        text: input.value.trim(),
+        isDriveAttachment: false
+      };
+
+      state.messages.push(newMsg);
+      input.value = "";
+      renderChatMessages();
+
+      broadcastState("CHAT_MESSAGE", newMsg);
+      addAuditLog("CHAT", state.currentUser.name + " đã gửi tin nhắn vào phòng họp");
+    }
+
+    // --- GOOGLE DRIVE FILES REPOSITORY ---
+    function renderDriveFilesList() {
+      const container = document.getElementById("drive-file-list-container");
+      if (!container) return;
+
+      container.innerHTML = state.driveFiles.map(f => `
+        <div class="p-3 bg-zoom-toolbar rounded-xl border border-zoom-border flex items-center justify-between gap-3 hover:border-blue-500/50 transition">
+          <div class="flex items-center gap-3 truncate">
+            <div class="w-10 h-10 rounded-lg ${
+              f.type === 'pdf' ? 'bg-red-600/20 text-red-400 border border-red-500/30' :
+              f.type === 'pptx' ? 'bg-orange-600/20 text-orange-400 border border-orange-500/30' :
+              f.type === 'xlsx' ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30' :
+              f.type === 'docx' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' :
+              'bg-purple-600/20 text-purple-400 border border-purple-500/30'
+            } flex items-center justify-center font-bold text-xs uppercase shrink-0">
+              ${f.type}
+            </div>
+            <div class="truncate">
+              <span class="text-xs font-semibold text-slate-200 block truncate">${escapeHtml(f.name)}</span>
+              <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                <span>${f.size}</span>
+                <span>•</span>
+                <span>Cập nhật: ${f.updated}</span>
+                <span>•</span>
+                <span class="${f.shared ? 'text-emerald-400' : 'text-slate-500'}">${f.shared ? 'Đã chia sẻ trong phòng' : 'Chưa chia sẻ'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="shareDriveFileToChat('${f.id}')" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition flex items-center gap-1 shadow-sm">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+              Chia sẻ vào Chat
+            </button>
+            <a href="${f.url}" target="_blank" class="p-1.5 bg-zoom-card hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-zoom-border transition" title="Mở trên Google Drive">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function shareDriveFileToChat(fileId) {
+      const file = state.driveFiles.find(f => f.id === fileId);
+      if (!file) return;
+
+      file.shared = true;
+      renderDriveFilesList();
+
+      const now = new Date();
+      const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+      const newMsg = {
+        id: "msg_" + Date.now(),
+        senderId: state.currentUser.id,
+        senderName: state.currentUser.name,
+        senderRole: state.currentUser.role,
+        time: timeStr,
+        text: `Đã chia sẻ tài liệu Google Drive: "${file.name}"`,
+        isDriveAttachment: true,
+        fileName: file.name,
+        fileSize: file.size,
+        driveUrl: file.url
+      };
+
+      state.messages.push(newMsg);
+      renderChatMessages();
+      broadcastState("CHAT_MESSAGE", newMsg);
+      closeFirebaseDriveModal();
+      toggleChatDrawer(true);
+      showToast(`Đã chia sẻ "${file.name}" vào cuộc họp`, "success");
+      addAuditLog("DRIVE", `${state.currentUser.name} đã chia sẻ tệp Drive: ${file.name}`);
+    }
+
+    function triggerFileUploadInput() {
+      const input = document.getElementById("real-file-upload-input");
+      if (input) input.click();
+    }
+
+    function handleRealFileUpload(files) {
+      if (!files || !files.length) return;
+      const file = files[0];
+      const ext = file.name.split('.').pop().toLowerCase();
+      const sizeStr = (file.size / (1024 * 1024)).toFixed(1) + " MB";
+
+      const newDriveItem = {
+        id: "drv_" + Date.now(),
+        name: file.name,
+        type: ext,
+        size: sizeStr,
+        updated: "Vừa xong",
+        shared: true,
+        url: "https://drive.google.com/file/d/uploaded_" + Date.now() + "/view"
+      };
+
+      state.driveFiles.unshift(newDriveItem);
+      renderDriveFilesList();
+      shareDriveFileToChat(newDriveItem.id);
+      showToast(`Đã tải tệp "${file.name}" lên Google Drive của Admin!`, "success");
+      addAuditLog("DRIVE", `Tải tệp mới lên Google Drive: ${file.name} (${sizeStr})`);
+    }
+
+    function addManualDriveFile() {
+      const nameInput = document.getElementById("input-drive-file-name");
+      const urlInput = document.getElementById("input-drive-file-url");
+      if (!nameInput || !urlInput || !nameInput.value.trim() || !urlInput.value.trim()) {
+        showToast("Vui lòng nhập tên tệp và link Google Drive hợp lệ", "warning");
+        return;
+      }
+
+      const newFile = {
+        id: "drv_" + Date.now(),
+        name: nameInput.value.trim(),
+        type: "pdf",
+        size: "1.5 MB",
+        updated: "Vừa xong",
+        shared: false,
+        url: urlInput.value.trim()
+      };
+
+      state.driveFiles.unshift(newFile);
+      nameInput.value = "";
+      urlInput.value = "";
+      renderDriveFilesList();
+      switchDriveModalTab('drive-files');
+      showToast("Đã liên kết tệp Google Drive mới thành công", "success");
+    }
+
+    // --- CONTROLS: MIC & VIDEO ---
+    function toggleMicrophone() {
+      state.currentUser.isMuted = !state.currentUser.isMuted;
+      const selfParticipant = state.participants.find(p => p.id === state.currentUser.id);
+      if (selfParticipant) selfParticipant.isMuted = state.currentUser.isMuted;
+
+      updateUserMuteVideoUi();
+      renderVideoGrid();
+      renderParticipantsList();
+      showToast(state.currentUser.isMuted ? "Đã tắt Micro của bạn" : "Đã bật Micro của bạn", "info");
+    }
+
+    function toggleVideo() {
+      state.currentUser.isVideoOff = !state.currentUser.isVideoOff;
+      const selfParticipant = state.participants.find(p => p.id === state.currentUser.id);
+      if (selfParticipant) selfParticipant.isVideoOff = state.currentUser.isVideoOff;
+
+      updateUserMuteVideoUi();
+      renderVideoGrid();
+      renderParticipantsList();
+      showToast(state.currentUser.isVideoOff ? "Đã dừng Camera của bạn" : "Đã bật Camera của bạn", "info");
+    }
+
+    function updateUserMuteVideoUi() {
+      const micOnIcon = document.getElementById("icon-mic-on");
+      const micOffIcon = document.getElementById("icon-mic-off");
+      const micLabel = document.getElementById("label-mic");
+
+      const videoOnIcon = document.getElementById("icon-video-on");
+      const videoOffIcon = document.getElementById("icon-video-off");
+      const videoLabel = document.getElementById("label-video");
+
+      if (state.currentUser.isMuted) {
+        if (micOnIcon) micOnIcon.classList.add("hidden");
+        if (micOffIcon) micOffIcon.classList.remove("hidden");
+        if (micLabel) micLabel.textContent = "Bật tiếng";
+      } else {
+        if (micOnIcon) micOnIcon.classList.remove("hidden");
+        if (micOffIcon) micOffIcon.classList.add("hidden");
+        if (micLabel) micLabel.textContent = "Tắt tiếng";
+      }
+
+      if (state.currentUser.isVideoOff) {
+        if (videoOnIcon) videoOnIcon.classList.add("hidden");
+        if (videoOffIcon) videoOffIcon.classList.remove("hidden");
+        if (videoLabel) videoLabel.textContent = "Bật Video";
+      } else {
+        if (videoOnIcon) videoOnIcon.classList.remove("hidden");
+        if (videoOffIcon) videoOffIcon.classList.add("hidden");
+        if (videoLabel) videoLabel.textContent = "Dừng Video";
+      }
+    }
+
+    // --- SCREEN SHARING ---
+    function toggleScreenShare() {
+      if (!state.allowScreenShare && state.currentUser.role !== "admin") {
+        showToast("Chủ phòng đã khóa quyền chia sẻ màn hình", "warning");
+        return;
+      }
+
+      state.isScreenSharing = !state.isScreenSharing;
+      const stage = document.getElementById("screen-share-stage");
+      const canvas = document.getElementById("screen-share-canvas");
+
+      if (state.isScreenSharing) {
+        if (stage) stage.classList.remove("hidden");
+        if (canvas) drawMockScreenShare(canvas);
+        showToast("Đang phát chia sẻ màn hình bài giảng ATVSLĐ", "success");
+        addAuditLog("SHARE", `${state.currentUser.name} bắt đầu chia sẻ màn hình`);
+      } else {
+        if (stage) stage.classList.add("hidden");
+        showToast("Đã dừng chia sẻ màn hình", "info");
+      }
+    }
+
+    function stopScreenShare() {
+      state.isScreenSharing = false;
+      const stage = document.getElementById("screen-share-stage");
+      if (stage) stage.classList.add("hidden");
+      showToast("Đã dừng chia sẻ màn hình", "info");
+    }
+
+    function drawMockScreenShare(canvas) {
+      canvas.width = 1200;
+      canvas.height = 675;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(0, 0, canvas.width, 70);
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 24px Inter, sans-serif";
+      ctx.fillText("BỘ LAO ĐỘNG - THƯƠNG BINH VÀ XÃ HỘI | CỤC AN TOÀN LAO ĐỘNG", 40, 44);
+
+      ctx.fillStyle = "#1e293b";
+      ctx.roundRect(40, 110, 530, 240, 16);
+      ctx.fill();
+      ctx.fillStyle = "#fbbf24";
+      ctx.font = "bold 20px Inter, sans-serif";
+      ctx.fillText("1. NGUY CƠ TAI NẠN LAO ĐỘNG", 70, 150);
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "16px Inter, sans-serif";
+      ctx.fillText("• Nguy cơ té ngã khi làm việc trên cao (>2 mét)", 70, 195);
+      ctx.fillText("• Rò rỉ điện và chạm chập trong điều kiện ẩm ướt", 70, 230);
+      ctx.fillText("• Thiết bị nâng hạ và vật liệu rơi tự do", 70, 265);
+      ctx.fillText("• Tiếp xúc khí độc hại trong không gian hạn chế", 70, 300);
+
+      ctx.fillStyle = "#1e293b";
+      ctx.roundRect(610, 110, 550, 240, 16);
+      ctx.fill();
+      ctx.fillStyle = "#34d399";
+      ctx.font = "bold 20px Inter, sans-serif";
+      ctx.fillText("2. BIỆN PHÁP KIỂM SOÁT BẮT BUỘC", 640, 150);
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "16px Inter, sans-serif";
+      ctx.fillText("✓ 100% trang bị phương tiện bảo vệ cá nhân (PPE)", 640, 195);
+      ctx.fillText("✓ Kiểm định định kỳ máy móc thiết bị có yêu cầu nghiêm ngặt", 640, 230);
+      ctx.fillText("✓ Đặt biển cảnh báo và rào chắn an toàn khu vực nguy hiểm", 640, 265);
+      ctx.fillText("✓ Huấn luyện ATVSLĐ định kỳ theo Nghị định 44/2016/NĐ-CP", 640, 300);
+
+      ctx.fillStyle = "#0369a1";
+      ctx.roundRect(40, 390, 1120, 230, 16);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 26px Inter, sans-serif";
+      ctx.fillText("KHÓA HUẤN LUYỆN ATVSLĐ TRỰC TUYẾN - NĂM 2026", 80, 450);
+      ctx.fillStyle = "#bae6fd";
+      ctx.font = "18px Inter, sans-serif";
+      ctx.fillText("Chủ trì & Giám sát hệ thống: Cục Quản lý GV & ATVSLĐ (deptc.gvatvsld@gmail.com)", 80, 500);
+      ctx.fillText("Đồng bộ dữ liệu thời gian thực: Firebase Realtime Database & Google Drive Storage", 80, 540);
+    }
+
+    // --- WHITEBOARD ---
+    let wbCanvas, wbCtx, isDrawing = false, wbColor = "#000000", wbLineWidth = 3;
+    function initWhiteboardCanvas() {
+      wbCanvas = document.getElementById("whiteboard-canvas");
+      if (!wbCanvas) return;
+      wbCtx = wbCanvas.getContext("2d");
+
+      function resize() {
+        const rect = wbCanvas.getBoundingClientRect();
+        wbCanvas.width = rect.width;
+        wbCanvas.height = rect.height;
+      }
+      window.addEventListener("resize", resize);
+      setTimeout(resize, 100);
+
+      wbCanvas.addEventListener("mousedown", (e) => {
+        isDrawing = true;
+        const rect = wbCanvas.getBoundingClientRect();
+        wbCtx.beginPath();
+        wbCtx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+      });
+
+      wbCanvas.addEventListener("mousemove", (e) => {
+        if (!isDrawing) return;
+        const rect = wbCanvas.getBoundingClientRect();
+        wbCtx.strokeStyle = wbColor;
+        wbCtx.lineWidth = wbLineWidth;
+        wbCtx.lineCap = "round";
+        wbCtx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        wbCtx.stroke();
+      });
+
+      window.addEventListener("mouseup", () => {
+        if (isDrawing) {
+          isDrawing = false;
+          wbCtx.closePath();
+        }
+      });
+    }
+
+    function toggleWhiteboard(forceOpen) {
+      state.isWhiteboardOpen = forceOpen !== undefined ? forceOpen : !state.isWhiteboardOpen;
+      const stage = document.getElementById("whiteboard-stage");
+      if (stage) {
+        if (state.isWhiteboardOpen) {
+          stage.classList.remove("hidden");
+          setTimeout(() => {
+            if (wbCanvas) {
+              const rect = wbCanvas.getBoundingClientRect();
+              wbCanvas.width = rect.width;
+              wbCanvas.height = rect.height;
+            }
+          }, 50);
+          showToast("Đã mở bảng trắng tương tác", "info");
+        } else {
+          stage.classList.add("hidden");
+        }
+      }
+    }
+
+    function setBoardColor(c) {
+      wbColor = c;
+    }
+
+    function changeBoardLineWidth(w) {
+      wbLineWidth = w;
+    }
+
+    function clearWhiteboard() {
+      if (!wbCanvas || !wbCtx) return;
+      wbCtx.clearRect(0, 0, wbCanvas.width, wbCanvas.height);
+      showToast("Đã xóa bảng trắng", "info");
+    }
+
+    function saveWhiteboardToDrive() {
+      showToast("Đang lưu hình ảnh bảng trắng lên Google Drive của Admin...", "info");
+      setTimeout(() => {
+        const newDriveFile = {
+          id: "drv_" + Date.now(),
+          name: `Whiteboard_Note_${Date.now()}.png`,
+          type: "png",
+          size: "620 KB",
+          updated: "Vừa xong",
+          shared: true,
+          url: "https://drive.google.com/file/d/wb_" + Date.now() + "/view"
+        };
+        state.driveFiles.unshift(newDriveFile);
+        renderDriveFilesList();
+        showToast("Đã lưu bảng trắng lên Google Drive thành công!", "success");
+        addAuditLog("DRIVE", `Bảng trắng đã được xuất và lưu vào Drive: ${newDriveFile.name}`);
+      }, 1000);
+    }
+
+    // --- REACTIONS & RAISE HAND ---
+    function toggleReactionsPopup() {
+      const popup = document.getElementById("reactions-popup");
+      if (popup) popup.classList.toggle("hidden");
+    }
+
+    function sendReaction(emoji) {
+      triggerParticipantReaction(state.currentUser.id, emoji);
+      broadcastState("REACTION", { userId: state.currentUser.id, reaction: emoji });
+      toggleReactionsPopup();
+    }
+
+    function triggerParticipantReaction(userId, emoji) {
+      const p = state.participants.find(part => part.id === userId);
+      if (!p) return;
+      p.reaction = emoji;
+      renderVideoGrid();
+
+      setTimeout(() => {
+        p.reaction = null;
+        renderVideoGrid();
+      }, 2500);
+    }
+
+    function toggleRaiseHand() {
+      state.currentUser.hasRaisedHand = !state.currentUser.hasRaisedHand;
+      const self = state.participants.find(p => p.id === state.currentUser.id);
+      if (self) self.hasRaisedHand = state.currentUser.hasRaisedHand;
+
+      const btn = document.getElementById("btn-raise-hand");
+      if (btn) {
+        btn.textContent = state.currentUser.hasRaisedHand ? "✋ Hạ tay xuống" : "✋ Giơ tay";
+      }
+
+      renderVideoGrid();
+      renderParticipantsList();
+      toggleReactionsPopup();
+      showToast(state.currentUser.hasRaisedHand ? "Bạn đã giơ tay phát biểu" : "Bạn đã hạ tay xuống", "info");
+      addAuditLog("ROOM", `${state.currentUser.name} ${state.currentUser.hasRaisedHand ? 'đã giơ tay phát biểu' : 'đã hạ tay'}`);
+    }
+
+    // --- SUPER ADMIN CONTROLS (deptc.gvatvsld@gmail.com) ---
+    function updateAdminStatusUi() {
+      const isAdmin = (state.currentUser.email === ADMIN_EMAIL);
+      const adminBtn = document.getElementById("btn-super-admin");
+      const secBtn = document.getElementById("btn-security");
+      const crown = document.getElementById("admin-crown-icon");
+      const muteAllBtn = document.getElementById("btn-admin-mute-all");
+
+      if (adminBtn) {
+        if (isAdmin) {
+          adminBtn.classList.remove("hidden");
+        } else {
+          adminBtn.classList.add("hidden");
+        }
+      }
+
+      if (secBtn) {
+        if (isAdmin) secBtn.classList.remove("hidden");
+        else secBtn.classList.add("hidden");
+      }
+
+      if (crown) {
+        if (isAdmin) crown.classList.remove("hidden");
+        else crown.classList.add("hidden");
+      }
+
+      if (muteAllBtn) {
+        if (isAdmin) muteAllBtn.classList.remove("hidden");
+        else muteAllBtn.classList.add("hidden");
+      }
+
+      const modalEndAllBtn = document.getElementById("modal-btn-end-all");
+      if (modalEndAllBtn) {
+        if (isAdmin) modalEndAllBtn.classList.remove("hidden");
+        else modalEndAllBtn.classList.add("hidden");
+      }
+    }
+
+    function openAdminDashboard() {
+      if (state.currentUser.email !== ADMIN_EMAIL) {
+        showToast("Chỉ tài khoản admin deptc.gvatvsld@gmail.com mới có quyền mở Bảng Quản Trị Tối Cao", "error");
+        return;
+      }
+      const modal = document.getElementById("modal-admin-dashboard");
+      if (modal) {
+        modal.classList.remove("hidden");
+        renderAdminUsersTable();
+      }
+    }
+
+    function closeAdminDashboard() {
+      const modal = document.getElementById("modal-admin-dashboard");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    function switchAdminTab(tabKey) {
+      const tabs = ["room-control", "user-mgmt", "firebase-config", "audit-logs"];
+      tabs.forEach(t => {
+        const btn = document.getElementById("tab-btn-" + t);
+        const panel = document.getElementById("admin-panel-" + t);
+        if (t === tabKey) {
+          if (btn) btn.className = "px-3.5 py-2.5 text-xs font-semibold border-b-2 border-amber-400 text-amber-400 transition flex items-center gap-1.5";
+          if (panel) panel.classList.remove("hidden");
+        } else {
+          if (btn) btn.className = "px-3.5 py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5";
+          if (panel) panel.classList.add("hidden");
+        }
+      });
+    }
+
+    function renderAdminUsersTable() {
+      const tbody = document.getElementById("admin-users-table-body");
+      if (!tbody) return;
+
+      tbody.innerHTML = state.participants.map(p => `
+        <tr class="hover:bg-zoom-card/60 transition">
+          <td class="py-2.5 font-medium text-slate-200 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-gradient-to-tr ${p.color} flex items-center justify-center text-white text-[10px] font-bold">${p.avatarInitials}</span>
+            <span>${escapeHtml(p.name)}</span>
+          </td>
+          <td class="py-2.5 font-mono text-slate-400 text-[11px]">${escapeHtml(p.email)}</td>
+          <td class="py-2.5">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+              p.role === 'admin' ? 'bg-amber-500 text-slate-950' :
+              p.role === 'cohost' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
+            }">${p.role.toUpperCase()}</span>
+          </td>
+          <td class="py-2.5">
+            <span class="text-[11px] ${p.isMuted ? 'text-red-400' : 'text-emerald-400'}">${p.isMuted ? 'Đang tắt mic' : 'Đang bật mic'}</span>
+          </td>
+          <td class="py-2.5 text-right space-x-1">
+            ${p.id !== state.currentUser.id ? `
+              <button onclick="adminToggleUserRole('${p.id}')" class="px-2 py-1 bg-zoom-card hover:bg-slate-700 rounded text-[10px] text-slate-300 border border-zoom-border">
+                ${p.role === 'cohost' ? 'Hạ quyền Co-Host' : 'Thăng cấp Co-Host'}
+              </button>
+              <button onclick="adminKickUser('${p.id}')" class="px-2 py-1 bg-red-950 hover:bg-red-900 text-red-300 border border-red-800 rounded text-[10px]">
+                Kích khỏi phòng
+              </button>
+            ` : '<span class="text-[10px] text-amber-400 font-semibold">Tài khoản này (Admin)</span>'}
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function adminToggleLockRoom(isLocked) {
+      state.isRoomLocked = isLocked;
+      showToast(isLocked ? "Admin đã khóa phòng họp. Không ai có thể vào thêm." : "Admin đã mở khóa phòng họp.", "warning");
+      addAuditLog("SECURITY", `Khóa phòng họp: ${isLocked ? 'BẬT' : 'TẮT'}`);
+    }
+
+    function adminToggleWaitingRoom(isEnabled) {
+      state.isWaitingRoomEnabled = isEnabled;
+      showToast(isEnabled ? "Đã bật chế độ phòng chờ" : "Đã tắt chế độ phòng chờ", "info");
+      addAuditLog("SECURITY", `Phòng chờ: ${isEnabled ? 'BẬT' : 'TẮT'}`);
+    }
+
+    function adminToggleAllowShare(isAllowed) {
+      state.allowScreenShare = isAllowed;
+      showToast(isAllowed ? "Cho phép học viên chia sẻ màn hình" : "Đã khóa tính năng chia sẻ màn hình của học viên", "info");
+      addAuditLog("SECURITY", `Quyền chia sẻ màn hình: ${isAllowed ? 'BẬT' : 'TẮT'}`);
+    }
+
+    function adminToggleAllowChat(isAllowed) {
+      state.allowChat = isAllowed;
+      showToast(isAllowed ? "Đã mở lại kênh chat tự do" : "Đã tạm khóa kênh chat công khai", "info");
+      addAuditLog("SECURITY", `Kênh Chat tự do: ${isAllowed ? 'BẬT' : 'TẮT'}`);
+    }
+
+    function adminMuteAll() {
+      state.participants.forEach(p => {
+        if (!p.isSelf && p.role !== "admin") p.isMuted = true;
+      });
+      renderVideoGrid();
+      renderParticipantsList();
+      broadcastState("MUTE_ALL", {});
+      showToast("Admin đã buộc tắt mic toàn bộ thành viên!", "warning");
+      addAuditLog("ADMIN", "Admin deptc.gvatvsld@gmail.com đã tắt tiếng toàn bộ phòng");
+    }
+
+    function adminStopAllVideos() {
+      state.participants.forEach(p => {
+        if (!p.isSelf && p.role !== "admin") p.isVideoOff = true;
+      });
+      renderVideoGrid();
+      renderParticipantsList();
+      showToast("Admin đã tắt Camera của toàn bộ học viên", "warning");
+      addAuditLog("ADMIN", "Admin đã tắt video toàn bộ thành viên");
+    }
+
+    function adminToggleUserMute(userId) {
+      const p = state.participants.find(part => part.id === userId);
+      if (!p) return;
+      p.isMuted = !p.isMuted;
+      renderVideoGrid();
+      renderParticipantsList();
+      showToast(`Đã ${p.isMuted ? 'tắt tiếng' : 'bật tiếng'} cho ${p.name}`, "info");
+    }
+
+    function adminToggleUserRole(userId) {
+      const p = state.participants.find(part => part.id === userId);
+      if (!p) return;
+      p.role = (p.role === "cohost") ? "participant" : "cohost";
+      renderVideoGrid();
+      renderParticipantsList();
+      renderAdminUsersTable();
+      showToast(`Đã thay đổi vai trò của ${p.name} thành ${p.role.toUpperCase()}`, "success");
+      addAuditLog("ADMIN", `Cập nhật vai trò của ${p.name} thành ${p.role}`);
+    }
+
+    function adminKickUser(userId) {
+      const idx = state.participants.findIndex(p => p.id === userId);
+      if (idx === -1) return;
+      const removed = state.participants.splice(idx, 1)[0];
+      renderVideoGrid();
+      renderParticipantsList();
+      renderAdminUsersTable();
+      showToast(`Đã mời ${removed.name} rời khỏi phòng họp`, "warning");
+      addAuditLog("ADMIN", `Admin đã mời ${removed.name} (${removed.email}) ra khỏi phòng`);
+    }
+
+    function adminEndMeetingForAll() {
+      closeAdminDashboard();
+      executeEndMeetingAll();
+    }
+
+    // --- GOOGLE ACCOUNT SWITCHER & QUICK AUTH ---
+    function openAccountModal() {
+      const modal = document.getElementById("modal-account");
+      if (!modal) return;
+
+      const curName = document.getElementById("modal-current-name");
+      const curEmail = document.getElementById("modal-current-email");
+      const curAvatar = document.getElementById("modal-current-avatar");
+      const roleBadge = document.getElementById("modal-current-role-badge");
+
+      if (curName) curName.textContent = state.currentUser.name;
+      if (curEmail) curEmail.textContent = state.currentUser.email;
+      if (curAvatar) curAvatar.textContent = state.currentUser.avatarInitials;
+      if (roleBadge) {
+        roleBadge.textContent = state.currentUser.role.toUpperCase();
+        if (state.currentUser.role === 'admin') {
+          roleBadge.className = "px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30";
+        } else {
+          roleBadge.className = "px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30";
+        }
+      }
+
+      modal.classList.remove("hidden");
+    }
+
+    function closeAccountModal() {
+      const modal = document.getElementById("modal-account");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    function switchUserAccount(type) {
+      if (type === "admin") {
+        state.currentUser = {
+          id: "usr_admin_root",
+          name: "Admin GVATVSLĐ",
+          email: ADMIN_EMAIL,
+          role: "admin",
+          avatarInitials: "AD",
+          isMuted: false,
+          isVideoOff: false,
+          hasRaisedHand: false
+        };
+      } else if (type === "cohost") {
+        state.currentUser = {
+          id: "usr_mai_tran",
+          name: "ThS. Trần Thị Mai",
+          email: "giangvien.atvsld@gmail.com",
+          role: "cohost",
+          avatarInitials: "TM",
+          isMuted: false,
+          isVideoOff: false,
+          hasRaisedHand: false
+        };
+      } else {
+        state.currentUser = {
+          id: "usr_student_demo",
+          name: "Học viên Lê Văn C",
+          email: "hocvien.an-toan@gmail.com",
+          role: "participant",
+          avatarInitials: "HV",
+          isMuted: true,
+          isVideoOff: false,
+          hasRaisedHand: false
+        };
+      }
+
+      state.participants.forEach(p => {
+        p.isSelf = (p.email === state.currentUser.email);
+      });
+
+      const nameEl = document.getElementById("current-user-name");
+      const emailEl = document.getElementById("current-user-email");
+      const avatarEl = document.getElementById("user-avatar-circle");
+
+      if (nameEl) nameEl.textContent = state.currentUser.name;
+      if (emailEl) emailEl.textContent = state.currentUser.email;
+      if (avatarEl) avatarEl.textContent = state.currentUser.avatarInitials;
+
+      updateAdminStatusUi();
+      renderVideoGrid();
+      renderParticipantsList();
+      closeAccountModal();
+      showToast(`Đã chuyển sang tài khoản: ${state.currentUser.email} (${state.currentUser.role.toUpperCase()})`, "success");
+      addAuditLog("AUTH", `Đổi người dùng đăng nhập: ${state.currentUser.email}`);
+    }
+
+    function loginWithCustomGoogleEmail() {
+      const input = document.getElementById("custom-google-email");
+      if (!input || !input.value.trim() || !input.value.includes("@")) {
+        showToast("Vui lòng nhập định dạng email Google hợp lệ", "warning");
+        return;
+      }
+      const email = input.value.trim();
+      const isAdmin = (email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+
+      state.currentUser = {
+        id: "usr_" + Date.now(),
+        name: email.split("@")[0].toUpperCase(),
+        email: email,
+        role: isAdmin ? "admin" : "participant",
+        avatarInitials: email.substring(0, 2).toUpperCase(),
+        isMuted: false,
+        isVideoOff: false,
+        hasRaisedHand: false
+      };
+
+      const nameEl = document.getElementById("current-user-name");
+      const emailEl = document.getElementById("current-user-email");
+      const avatarEl = document.getElementById("user-avatar-circle");
+
+      if (nameEl) nameEl.textContent = state.currentUser.name;
+      if (emailEl) emailEl.textContent = state.currentUser.email;
+      if (avatarEl) avatarEl.textContent = state.currentUser.avatarInitials;
+
+      updateAdminStatusUi();
+      renderVideoGrid();
+      renderParticipantsList();
+      closeAccountModal();
+
+      if (isAdmin) {
+        showToast(`Đã đăng nhập thành công với tư cách SUPER ADMIN (${email})!`, "success");
+      } else {
+        showToast(`Đăng nhập Google thành công: ${email}`, "info");
+      }
+      addAuditLog("AUTH", `Đăng nhập mới: ${email} (Vai trò: ${state.currentUser.role})`);
+    }
+
+    // --- FIREBASE & DRIVE MODAL MANAGEMENT ---
+    function openFirebaseDriveModal(defaultTab = 'drive') {
+      const modal = document.getElementById("modal-drive-sharing");
+      if (modal) {
+        modal.classList.remove("hidden");
+        if (defaultTab === 'firebase') {
+          switchDriveModalTab('firebase-sync');
+        } else {
+          switchDriveModalTab('drive-files');
+        }
+      }
+    }
+
+    function closeFirebaseDriveModal() {
+      const modal = document.getElementById("modal-drive-sharing");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    function switchDriveModalTab(tabKey) {
+      const tabs = ["drive-files", "upload-file", "firebase-sync"];
+      tabs.forEach(t => {
+        const btn = document.getElementById("tab-btn-" + t);
+        const panel = document.getElementById("drive-modal-panel-" + (t === 'drive-files' ? 'files' : t === 'upload-file' ? 'upload' : 'firebase'));
+        if (t === tabKey) {
+          if (btn) btn.className = "px-3.5 py-2 text-xs font-semibold border-b-2 border-blue-500 text-blue-400 transition";
+          if (panel) panel.classList.remove("hidden");
+        } else {
+          if (btn) btn.className = "px-3.5 py-2 text-xs font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
+          if (panel) panel.classList.add("hidden");
+        }
+      });
+    }
+
+    function saveFirebaseConfig() {
+      const proj = document.getElementById("cfg-firebase-project").value;
+      showToast("Cấu hình Firebase Realtime Database đã được lưu thành công!", "success");
+      addAuditLog("CONFIG", `Cập nhật cấu hình Firebase: ${proj}`);
+    }
+
+    function testFirebaseConnection() {
+      showToast("Đang kiểm tra kết nối tới Firebase Realtime Database...", "info");
+      setTimeout(() => {
+        showToast("Kết nối Firebase thành công! Độ trễ phản hồi: 28ms", "success");
+      }, 800);
+    }
+
+    function saveGoogleDriveConfig() {
+      showToast("Đã lưu cấu hình Google Drive & Google Identity Services!", "success");
+      addAuditLog("CONFIG", `Cập nhật cấu hình Google Drive`);
+    }
+
+    function testGoogleDriveSync() {
+      showToast("Đang xác thực quyền truy cập Google Drive của deptc.gvatvsld@gmail.com...", "info");
+      setTimeout(() => {
+        showToast("Xác thực Google Drive thành công! Thư mục /ATVSLD-Trainings-2026 sẵn sàng.", "success");
+      }, 900);
+    }
+
+    // --- SETTINGS MODAL ---
+    function openSettingsModal(tab = 'audio') {
+      const modal = document.getElementById("modal-settings");
+      if (modal) modal.classList.remove("hidden");
+    }
+
+    function closeSettingsModal() {
+      const modal = document.getElementById("modal-settings");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    function setVirtualBackground(bgType) {
+      state.currentUser.virtualBg = bgType;
+      showToast(`Đã áp dụng hình nền ảo: ${bgType.toUpperCase()}`, "info");
+      renderVideoGrid();
+    }
+
+    // --- LEAVE & END MEETING CONFIRMATION ---
+    function confirmLeaveMeeting() {
+      const modal = document.getElementById("modal-leave-confirm");
+      if (modal) modal.classList.remove("hidden");
+    }
+
+    function closeLeaveModal() {
+      const modal = document.getElementById("modal-leave-confirm");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    function executeLeaveMeeting() {
+      closeLeaveModal();
+      showToast("Bạn đã rời khỏi cuộc họp. Đang chuyển hướng...", "info");
+      setTimeout(() => {
+        document.body.innerHTML = `
+          <div class="h-full bg-zoom-dark flex flex-col items-center justify-center p-6 text-center select-none">
+            <div class="w-16 h-16 rounded-2xl bg-zoom-card border border-zoom-border flex items-center justify-center mb-4 text-zoom-blue shadow-xl">
+              <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24"><path d="M4.5 5.5A2.5 2.5 0 002 8v8a2.5 2.5 0 002.5 2.5h9A2.5 2.5 0 0016 16v-2.172l3.414 3.414A1 1 0 0021 16.5v-9a1 1 0 00-1.586-.828L16 10.086V8a2.5 2.5 0 00-2.5-2.5h-9z"/></svg>
+            </div>
+            <h1 class="text-xl font-bold text-white mb-2">Bạn đã rời khỏi cuộc họp an toàn vệ sinh lao động</h1>
+            <p class="text-xs text-slate-400 max-w-md mb-6">Cảm ơn bạn đã tham gia buổi làm việc trực tuyến. Mọi tài liệu trên Google Drive và ghi chép đã được đồng bộ.</p>
+            <button onclick="window.location.reload()" class="px-5 py-2.5 bg-zoom-blue hover:bg-zoom-hover text-white rounded-xl text-xs font-semibold shadow-lg shadow-zoom-blue/30 transition">
+              Tham gia lại cuộc họp
+            </button>
+          </div>
+        `;
+      }, 800);
+    }
+
+    function executeEndMeetingAll() {
+      closeLeaveModal();
+      showToast("Chủ phòng đã kết thúc cuộc họp cho tất cả mọi người", "warning");
+      broadcastState("END_MEETING", {});
+      setTimeout(() => {
+        document.body.innerHTML = `
+          <div class="h-full bg-zoom-dark flex flex-col items-center justify-center p-6 text-center select-none">
+            <div class="w-16 h-16 rounded-2xl bg-red-950/60 border border-red-700/60 flex items-center justify-center mb-4 text-red-500 shadow-xl">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <h1 class="text-xl font-bold text-white mb-2">Cuộc họp đã được kết thúc bởi Chủ phòng</h1>
+            <p class="text-xs text-slate-400 max-w-md mb-2">Quản trị viên: <span class="font-mono text-amber-400">deptc.gvatvsld@gmail.com</span></p>
+            <p class="text-xs text-slate-500 max-w-md mb-6">Biên bản họp và danh sách người tham gia đã được lưu trữ tự động vào Google Drive.</p>
+            <button onclick="window.location.reload()" class="px-5 py-2.5 bg-zoom-card hover:bg-slate-700 border border-zoom-border text-slate-200 rounded-xl text-xs font-semibold transition">
+              Khởi động lại phiên họp mới
+            </button>
+          </div>
+        `;
+      }, 800);
+    }
+
+    // --- VIEW TOGGLE & PINNING ---
+    function toggleViewMode() {
+      state.viewMode = (state.viewMode === "grid") ? "speaker" : "grid";
+      const label = document.getElementById("view-mode-label");
+      if (label) {
+        label.textContent = (state.viewMode === "grid") ? "Chế độ Lưới" : "Chế độ Diễn giả";
+      }
+      renderVideoGrid();
+    }
+
+    function pinSpeaker(userId) {
+      state.pinnedUserId = (state.pinnedUserId === userId) ? null : userId;
+      state.activeSpeakerId = userId;
+      renderVideoGrid();
+      showToast("Đã ghim video diễn giả", "info");
+    }
+
+    function copyInviteLink() {
+      const link = window.location.origin + window.location.pathname + "#room=" + state.meetingId;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link).then(() => {
+          showToast("Đã sao chép liên kết mời tham gia vào bộ nhớ tạm!", "success");
+        }).catch(() => {
+          fallbackCopyText(link);
+        });
+      } else {
+        fallbackCopyText(link);
+      }
+    }
+
+    function fallbackCopyText(text) {
+      try {
+        const dummy = document.createElement("textarea");
+        document.body.appendChild(dummy);
+        dummy.value = text;
+        dummy.select();
+        document.execCommand("copy");
+        document.body.removeChild(dummy);
+        showToast("Đã sao chép liên kết mời tham gia!", "success");
+      } catch (e) {
+        showToast("Link mời: " + text, "info");
+      }
+    }
+
+    function openSecurityMenu() {
+      openAdminDashboard();
+      switchAdminTab('room-control');
+    }
+
+    // Helper: Escape HTML
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>

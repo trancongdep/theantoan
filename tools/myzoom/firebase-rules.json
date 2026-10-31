@@ -1,0 +1,23 @@
+{
+  "rules": {
+    "meetings": {
+      "$meetingId": {
+        ".read": "auth != null || true",
+        ".write": "auth != null || true",
+        "participants": {
+          ".indexOn": ["role", "isMuted", "hasRaisedHand"]
+        },
+        "chat": {
+          ".indexOn": ["timestamp"]
+        },
+        "signaling": {
+          ".indexOn": ["senderId", "targetId"]
+        }
+      }
+    },
+    "driveFiles": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email === 'deptc.gvatvsld@gmail.com'"
+    }
+  }
+}
