@@ -1,31 +1,565 @@
-const WINDOW_DURATION_MS = 5000;
-let noiseMaxBuffer = [];  // Lưu { time, val } cho âm thanh
-let lightMaxBuffer = [];  // Lưu { time, val } cho ánh sáng
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đo Ánh Sáng & Độ Ồn Môi Trường (Max Hold 5s)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .gauge-circle {
+      transition: stroke-dashoffset 0.12s ease-out, stroke 0.25s ease;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
 
-/**
- * Lấy giá trị cực đại (Max) trong cửa sổ trượt 5 giây
- * @param {Array} buffer Mảng lưu trữ mẫu
- * @param {number} currentVal Giá trị đo tức thời
- * @returns {number} Giá trị đỉnh lớn nhất trong 5s vừa qua
- */
-function getMax5s(buffer, currentVal) {
-    const now = performance.now();
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur sticky top-0 z-50 py-3.5 px-4 md:px-8">
+    <div class="max-w-5xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+          <i class="fa-solid fa-gauge-high text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-base md:text-lg font-bold tracking-tight">EcoSensors Meter</h1>
+          <p class="text-xs text-slate-400">Chế độ giữ đỉnh 5 giây (5s Sliding Max Hold)</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Max 5s Mode
+        </span>
+      </div>
+    </div>
+  </header>
 
-    // 1. Ghi nhận mẫu tức thời mới nhất
-    buffer.push({ time: now, val: currentVal });
+  <!-- Main Grid -->
+  <main class="flex-grow p-4 md:p-8 max-w-5xl mx-auto w-full">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-    // 2. Xóa bỏ các mẫu đã cũ hơn 5 giây
-    while (buffer.length > 0 && (now - buffer[0].time) > WINDOW_DURATION_MS) {
+      <!-- ================= CARD 1: CƯỜNG ĐỘ ÁNH SÁNG ================= -->
+      <section class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-2xl flex flex-col justify-between relative overflow-hidden backdrop-blur-md">
+        <!-- Top row -->
+        <div class="flex justify-between items-start gap-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg border border-amber-500/20">
+              <i class="fa-solid fa-sun"></i>
+            </div>
+            <div>
+              <h2 class="font-semibold text-slate-100 text-sm md:text-base">Cường Độ Ánh Sáng</h2>
+              <span id="light-mode-badge" class="text-xs text-slate-400 flex items-center gap-1">
+                <i class="fa-solid fa-circle text-[7px] text-slate-500"></i> Chưa kích hoạt
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="reset-light-btn" title="Xóa bộ đệm 5s" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs transition-all flex items-center justify-center border border-slate-700/60">
+              <i class="fa-solid fa-rotate-left"></i>
+            </button>
+            <button id="toggle-light-btn" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-semibold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center gap-1.5">
+              <i class="fa-solid fa-play"></i> Bật
+            </button>
+          </div>
+        </div>
+
+        <!-- Gauge Visual -->
+        <div class="flex flex-col items-center justify-center my-6 relative">
+          <svg class="w-52 h-52 transform -rotate-90" viewBox="0 0 120 120">
+            <!-- Background circle -->
+            <circle cx="60" cy="60" r="50" class="text-slate-800" stroke-width="8" stroke="currentColor" fill="transparent" />
+            <!-- Progress circle -->
+            <circle id="light-gauge-bar" cx="60" cy="60" r="50" class="gauge-circle text-amber-400" stroke-width="8"
+                    stroke-dasharray="314.16" stroke-dashoffset="314.16" stroke-linecap="round"
+                    stroke="currentColor" fill="transparent" />
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+            <div class="text-[10px] tracking-wider uppercase text-amber-400/80 font-bold mb-0.5">ĐỈNH 5S (MAX)</div>
+            <span id="lux-max-value" class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">0</span>
+            <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase mt-0.5">LUX</span>
+            <div class="mt-2 text-[11px] text-slate-400 flex items-center gap-1">
+              <span>Tức thời:</span>
+              <span id="lux-instant-value" class="font-bold text-slate-200">0</span> lx
+            </div>
+            <span id="light-level-tag" class="text-[10px] font-semibold text-slate-300 mt-2 px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700">Tối</span>
+          </div>
+        </div>
+
+        <!-- Reference Scale -->
+        <div class="bg-slate-950/60 rounded-2xl p-3.5 border border-slate-800 text-xs">
+          <div class="flex justify-between items-center mb-1.5">
+            <span class="text-slate-400">Mức sáng khuyến nghị:</span>
+            <span id="light-advice" class="text-slate-200 font-medium">Chưa đo</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden flex">
+            <div class="w-1/4 bg-blue-500"></div>
+            <div class="w-1/2 bg-emerald-400"></div>
+            <div class="w-1/4 bg-amber-400"></div>
+          </div>
+          <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+            <span>< 100 lx (Tối)</span>
+            <span>300 - 500 lx (Văn phòng)</span>
+            <span>> 1000 lx (Ngoài trời)</span>
+          </div>
+        </div>
+
+        <!-- Hidden Video & Canvas for Camera Fallback -->
+        <video id="webcam-video" autoplay playsinline muted class="hidden"></video>
+        <canvas id="analysis-canvas" width="64" height="48" class="hidden"></canvas>
+      </section>
+
+      <!-- ================= CARD 2: ĐỘ ỒN MÔI TRƯỜNG ================= -->
+      <section class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-2xl flex flex-col justify-between relative overflow-hidden backdrop-blur-md">
+        <!-- Top row -->
+        <div class="flex justify-between items-start gap-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-lg border border-indigo-500/20">
+              <i class="fa-solid fa-microphone-lines"></i>
+            </div>
+            <div>
+              <h2 class="font-semibold text-slate-100 text-sm md:text-base">Độ Ồn Môi Trường</h2>
+              <span id="sound-status-badge" class="text-xs text-slate-400 flex items-center gap-1">
+                <i class="fa-solid fa-circle text-[7px] text-slate-500"></i> Chưa kích hoạt
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="reset-sound-btn" title="Xóa bộ đệm 5s" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs transition-all flex items-center justify-center border border-slate-700/60">
+              <i class="fa-solid fa-rotate-left"></i>
+            </button>
+            <button id="toggle-sound-btn" class="px-3.5 py-1.5 bg-indigo-500 hover:bg-indigo-400 active:scale-95 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-1.5">
+              <i class="fa-solid fa-play"></i> Bật
+            </button>
+          </div>
+        </div>
+
+        <!-- Gauge Visual -->
+        <div class="flex flex-col items-center justify-center my-6 relative">
+          <svg class="w-52 h-52 transform -rotate-90" viewBox="0 0 120 120">
+            <!-- Background circle -->
+            <circle cx="60" cy="60" r="50" class="text-slate-800" stroke-width="8" stroke="currentColor" fill="transparent" />
+            <!-- Progress circle -->
+            <circle id="sound-gauge-bar" cx="60" cy="60" r="50" class="gauge-circle text-indigo-400" stroke-width="8"
+                    stroke-dasharray="314.16" stroke-dashoffset="314.16" stroke-linecap="round"
+                    stroke="currentColor" fill="transparent" />
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+            <div class="text-[10px] tracking-wider uppercase text-indigo-400/80 font-bold mb-0.5">ĐỈNH 5S (MAX)</div>
+            <span id="decibel-max-value" class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">0</span>
+            <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase mt-0.5">dB SPL</span>
+            <div class="mt-2 text-[11px] text-slate-400 flex items-center gap-1">
+              <span>Tức thời:</span>
+              <span id="decibel-instant-value" class="font-bold text-slate-200">0</span> dB
+            </div>
+            <span id="sound-level-tag" class="text-[10px] font-semibold text-slate-300 mt-2 px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700">Yên tĩnh</span>
+          </div>
+        </div>
+
+        <!-- Reference Scale -->
+        <div class="bg-slate-950/60 rounded-2xl p-3.5 border border-slate-800 text-xs">
+          <div class="flex justify-between items-center mb-1.5">
+            <span class="text-slate-400">Mức ồn an toàn:</span>
+            <span id="sound-advice" class="text-slate-200 font-medium">Chưa đo</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden flex">
+            <div class="w-1/3 bg-emerald-400"></div>
+            <div class="w-1/3 bg-amber-400"></div>
+            <div class="w-1/3 bg-rose-500"></div>
+          </div>
+          <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+            <span>< 55 dB (An toàn)</span>
+            <span>60 - 75 dB (Ồn)</span>
+            <span>> 85 dB (Nguy hại)</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Alert / Notice Box -->
+    <div id="notice-box" class="hidden mt-6 bg-amber-950/40 border border-amber-800/60 text-amber-200 p-4 rounded-2xl text-xs flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-circle-exclamation text-base text-amber-400"></i>
+        <span id="notice-msg">Thông báo hệ thống</span>
+      </div>
+      <button onclick="document.getElementById('notice-box').classList.add('hidden')" class="hover:text-white p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-4 text-center text-xs text-slate-500 border-t border-slate-800/60">
+    Đo đạc sử dụng Web Audio API & Cảm biến quang học / Camera. Cửa sổ trượt tự làm mới sau 5 giây.
+  </footer>
+
+  <script>
+    // Constants
+    const WINDOW_DURATION_MS = 5000; // Cửa sổ trượt 5 giây
+    const CIRCUMFERENCE = 2 * Math.PI * 50; // Chu vi vòng r=50 (~314.16)
+
+    // State
+    let isSoundRunning = false;
+    let isLightRunning = false;
+
+    // Sliding Window Buffers
+    let soundBuffer = []; // Lưu { time: timestamp, val: number }
+    let lightBuffer = []; // Lưu { time: timestamp, val: number }
+
+    // Sound variables
+    let audioContext = null;
+    let analyserNode = null;
+    let microphoneStream = null;
+    let soundAnimationId = null;
+
+    // Light variables
+    let lightSensor = null;
+    let videoStream = null;
+    let lightIntervalId = null;
+
+    // Helper: Tính giá trị cực đại trong 5 giây gần nhất
+    function get5sMax(buffer, currentVal) {
+      const now = performance.now();
+      
+      // 1. Thêm mẫu mới
+      buffer.push({ time: now, val: currentVal });
+
+      // 2. Loại bỏ các mẫu cũ quá 5000ms
+      while (buffer.length > 0 && (now - buffer[0].time) > WINDOW_DURATION_MS) {
         buffer.shift();
-    }
+      }
 
-    // 3. Tìm giá trị lớn nhất trong 5 giây gần nhất
-    let max = -Infinity;
-    for (let i = 0; i < buffer.length; i++) {
+      // 3. Tìm giá trị lớn nhất trong cửa sổ
+      let max = -Infinity;
+      for (let i = 0; i < buffer.length; i++) {
         if (buffer[i].val > max) {
-            max = buffer[i].val;
+          max = buffer[i].val;
         }
+      }
+      return max !== -Infinity ? max : currentVal;
     }
 
-    return max !== -Infinity ? max : currentVal;
-}
+    function showNotice(msg) {
+      const box = document.getElementById('notice-box');
+      const text = document.getElementById('notice-msg');
+      text.innerText = msg;
+      box.classList.remove('hidden');
+    }
+
+    /* -----------------------------------------------------------------
+     * 1. XỬ LÝ ĐO ĐỘ ỒN (DECIBEL SPL - MAX 5 GIÂY)
+     * ---------------------------------------------------------------*/
+    const toggleSoundBtn = document.getElementById('toggle-sound-btn');
+    const resetSoundBtn = document.getElementById('reset-sound-btn');
+    const decibelMaxValueEl = document.getElementById('decibel-max-value');
+    const decibelInstantValueEl = document.getElementById('decibel-instant-value');
+    const soundGaugeBar = document.getElementById('sound-gauge-bar');
+    const soundStatusBadge = document.getElementById('sound-status-badge');
+    const soundLevelTag = document.getElementById('sound-level-tag');
+    const soundAdvice = document.getElementById('sound-advice');
+
+    toggleSoundBtn.addEventListener('click', async () => {
+      if (!isSoundRunning) {
+        await startSoundMeter();
+      } else {
+        stopSoundMeter();
+      }
+    });
+
+    resetSoundBtn.addEventListener('click', () => {
+      soundBuffer = [];
+      decibelMaxValueEl.innerText = decibelInstantValueEl.innerText;
+    });
+
+    async function startSoundMeter() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }, 
+          video: false 
+        });
+        microphoneStream = stream;
+
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContextClass();
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 512;
+        analyserNode.smoothingTimeConstant = 0.5;
+
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyserNode);
+
+        isSoundRunning = true;
+        soundBuffer = [];
+        toggleSoundBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Dừng';
+        toggleSoundBtn.className = "px-3.5 py-1.5 bg-rose-500 hover:bg-rose-400 active:scale-95 text-white font-semibold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5";
+        soundStatusBadge.innerHTML = '<i class="fa-solid fa-circle text-[7px] text-emerald-400 animate-pulse"></i> Đang đo Micro';
+        soundStatusBadge.className = "text-xs text-emerald-400 flex items-center gap-1";
+
+        renderSoundMeter();
+      } catch (err) {
+        console.error("Microphone error:", err);
+        showNotice("Không thể truy cập Microphone. Vui lòng cấp quyền truy cập trong cài đặt trình duyệt.");
+      }
+    }
+
+    function renderSoundMeter() {
+      if (!isSoundRunning) return;
+
+      const dataArray = new Uint8Array(analyserNode.frequencyBinCount);
+      analyserNode.getByteTimeDomainData(dataArray);
+
+      // Tính Root Mean Square (RMS)
+      let sumSquares = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        const normalized = (dataArray[i] - 128) / 128;
+        sumSquares += normalized * normalized;
+      }
+      const rms = Math.sqrt(sumSquares / dataArray.length);
+
+      // Ước lượng dB SPL tương đối
+      let dB = 20 * Math.log10(rms);
+      if (!isFinite(dB) || dB < -100) dB = -100;
+      let instantDb = Math.round(Math.max(30, Math.min(105, (dB + 100) * 1.15)));
+
+      // Lấy Max trong 5 giây gần nhất
+      const maxDb5s = get5sMax(soundBuffer, instantDb);
+
+      // Hiển thị giao diện
+      decibelInstantValueEl.innerText = instantDb;
+      decibelMaxValueEl.innerText = maxDb5s;
+
+      // Cập nhật Gauge theo giá trị Max 5s
+      const percent = Math.min(Math.max((maxDb5s - 30) / 75, 0), 1);
+      const offset = CIRCUMFERENCE - (percent * CIRCUMFERENCE);
+      soundGaugeBar.style.strokeDashoffset = offset;
+
+      // Đánh giá mức độ cảnh báo dựa trên Max 5s
+      if (maxDb5s < 55) {
+        soundGaugeBar.setAttribute('class', 'gauge-circle text-emerald-400');
+        soundLevelTag.innerText = "Yên tĩnh";
+        soundLevelTag.className = "text-[10px] font-semibold text-emerald-400 px-2.5 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-800/60";
+        soundAdvice.innerText = "Môi trường tĩnh lặng, lý tưởng";
+      } else if (maxDb5s < 75) {
+        soundGaugeBar.setAttribute('class', 'gauge-circle text-amber-400');
+        soundLevelTag.innerText = "Trung bình";
+        soundLevelTag.className = "text-[10px] font-semibold text-amber-400 px-2.5 py-0.5 rounded-full bg-amber-950/60 border border-amber-800/60";
+        soundAdvice.innerText = "Mức hội thoại / Văn phòng";
+      } else {
+        soundGaugeBar.setAttribute('class', 'gauge-circle text-rose-500');
+        soundLevelTag.innerText = "Ồn ào (Cảnh báo)";
+        soundLevelTag.className = "text-[10px] font-semibold text-rose-400 px-2.5 py-0.5 rounded-full bg-rose-950/60 border border-rose-800/60";
+        soundAdvice.innerText = "Tiếng ồn lớn, nguy cơ hại tai";
+      }
+
+      soundAnimationId = requestAnimationFrame(renderSoundMeter);
+    }
+
+    function stopSoundMeter() {
+      isSoundRunning = false;
+      if (soundAnimationId) cancelAnimationFrame(soundAnimationId);
+      if (microphoneStream) {
+        microphoneStream.getTracks().forEach(track => track.stop());
+        microphoneStream = null;
+      }
+      if (audioContext && audioContext.state !== 'closed') {
+        audioContext.close();
+      }
+
+      soundBuffer = [];
+      toggleSoundBtn.innerHTML = '<i class="fa-solid fa-play"></i> Bật';
+      toggleSoundBtn.className = "px-3.5 py-1.5 bg-indigo-500 hover:bg-indigo-400 active:scale-95 text-white font-semibold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5";
+      soundStatusBadge.innerHTML = '<i class="fa-solid fa-circle text-[7px] text-slate-500"></i> Đã dừng';
+      soundStatusBadge.className = "text-xs text-slate-400 flex items-center gap-1";
+      soundGaugeBar.style.strokeDashoffset = CIRCUMFERENCE;
+      decibelMaxValueEl.innerText = "0";
+      decibelInstantValueEl.innerText = "0";
+      soundLevelTag.innerText = "Đã tắt";
+      soundAdvice.innerText = "Đã dừng micro";
+    }
+
+    /* -----------------------------------------------------------------
+     * 2. XỬ LÝ ĐO ÁNH SÁNG (LUX METER - MAX 5 GIÂY)
+     * ---------------------------------------------------------------*/
+    const toggleLightBtn = document.getElementById('toggle-light-btn');
+    const resetLightBtn = document.getElementById('reset-light-btn');
+    const luxMaxValueEl = document.getElementById('lux-max-value');
+    const luxInstantValueEl = document.getElementById('lux-instant-value');
+    const lightGaugeBar = document.getElementById('light-gauge-bar');
+    const lightModeBadge = document.getElementById('light-mode-badge');
+    const lightLevelTag = document.getElementById('light-level-tag');
+    const lightAdvice = document.getElementById('light-advice');
+    const video = document.getElementById('webcam-video');
+    const canvas = document.getElementById('analysis-canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    toggleLightBtn.addEventListener('click', async () => {
+      if (!isLightRunning) {
+        await startLightMeter();
+      } else {
+        stopLightMeter();
+      }
+    });
+
+    resetLightBtn.addEventListener('click', () => {
+      lightBuffer = [];
+      luxMaxValueEl.innerText = luxInstantValueEl.innerText;
+    });
+
+    async function startLightMeter() {
+      lightBuffer = [];
+
+      // 1. Kiểm tra AmbientLightSensor API
+      if ('AmbientLightSensor' in window) {
+        try {
+          const sensor = new AmbientLightSensor({ frequency: 10 });
+          sensor.addEventListener('reading', () => {
+            updateLightUI(sensor.illuminance);
+          });
+          sensor.addEventListener('error', (event) => {
+            console.warn("AmbientLightSensor không truy cập được, chuyển sang Camera:", event.error);
+            fallbackToCamera();
+          });
+          sensor.start();
+          lightSensor = sensor;
+          isLightRunning = true;
+          setLightActiveUI("Cảm biến phần cứng");
+          return;
+        } catch (e) {
+          console.warn("Lỗi khởi động AmbientLightSensor, chuyển sang camera fallback:", e);
+        }
+      }
+
+      // 2. Fallback camera stream
+      await fallbackToCamera();
+    }
+
+    async function fallbackToCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 160 }, height: { ideal: 120 } },
+          audio: false
+        });
+        videoStream = stream;
+        video.srcObject = stream;
+        await video.play();
+
+        isLightRunning = true;
+        setLightActiveUI("Camera đo quang (Fallback)");
+
+        // Lấy mẫu định kỳ 100ms
+        lightIntervalId = setInterval(analyzeFrameBrightness, 100);
+      } catch (err) {
+        console.error("Camera fallback failed:", err);
+        showNotice("Không thể mở cảm biến hoặc Camera. Vui lòng cấp quyền trong trình duyệt.");
+      }
+    }
+
+    function analyzeFrameBrightness() {
+      if (!isLightRunning || video.readyState < 2) return;
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const frameData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+      let totalLuminance = 0;
+      const count = frameData.length / 4;
+
+      // Rec. 601 Luminance
+      for (let i = 0; i < frameData.length; i += 4) {
+        const r = frameData[i];
+        const g = frameData[i + 1];
+        const b = frameData[i + 2];
+        totalLuminance += 0.299 * r + 0.587 * g + 0.114 * b;
+      }
+
+      const avgLuminance = totalLuminance / count;
+      let instantLux = 0;
+      if (avgLuminance > 1) {
+        // Ánh xạ hàm mũ sang độ rọi Lux ước lượng
+        instantLux = Math.round(Math.pow(avgLuminance / 255, 2.2) * 1200);
+      }
+      updateLightUI(instantLux);
+    }
+
+    function updateLightUI(instantLux) {
+      instantLux = Math.round(instantLux);
+      
+      // Lấy Max 5 giây
+      const maxLux5s = get5sMax(lightBuffer, instantLux);
+
+      luxInstantValueEl.innerText = instantLux;
+      luxMaxValueEl.innerText = maxLux5s > 9999 ? '>10k' : maxLux5s;
+
+      // Gauge theo Max 5s (0 - 1000 Lux)
+      const percent = Math.min(Math.max(maxLux5s / 1000, 0), 1);
+      const offset = CIRCUMFERENCE - (percent * CIRCUMFERENCE);
+      lightGaugeBar.style.strokeDashoffset = offset;
+
+      if (maxLux5s < 80) {
+        lightGaugeBar.setAttribute('class', 'gauge-circle text-blue-400');
+        lightLevelTag.innerText = "Thiếu sáng";
+        lightLevelTag.className = "text-[10px] font-semibold text-blue-400 px-2.5 py-0.5 rounded-full bg-blue-950/60 border border-blue-800/60";
+        lightAdvice.innerText = "Phù hợp để ngủ, tránh làm việc lâu";
+      } else if (maxLux5s <= 650) {
+        lightGaugeBar.setAttribute('class', 'gauge-circle text-emerald-400');
+        lightLevelTag.innerText = "Tiêu chuẩn";
+        lightLevelTag.className = "text-[10px] font-semibold text-emerald-400 px-2.5 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-800/60";
+        lightAdvice.innerText = "Rất tốt cho đọc sách & văn phòng";
+      } else {
+        lightGaugeBar.setAttribute('class', 'gauge-circle text-amber-400');
+        lightLevelTag.innerText = "Cường độ cao";
+        lightLevelTag.className = "text-[10px] font-semibold text-amber-400 px-2.5 py-0.5 rounded-full bg-amber-950/60 border border-amber-800/60";
+        lightAdvice.innerText = "Ánh sáng tự nhiên / đèn công suất lớn";
+      }
+    }
+
+    function setLightActiveUI(modeText) {
+      toggleLightBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Dừng';
+      toggleLightBtn.className = "px-3.5 py-1.5 bg-rose-500 hover:bg-rose-400 active:scale-95 text-white font-semibold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5";
+      lightModeBadge.innerHTML = `<i class="fa-solid fa-circle text-[7px] text-amber-400 animate-pulse"></i> ${modeText}`;
+      lightModeBadge.className = "text-xs text-amber-400 flex items-center gap-1";
+    }
+
+    function stopLightMeter() {
+      isLightRunning = false;
+      if (lightSensor) {
+        try { lightSensor.stop(); } catch (e) {}
+        lightSensor = null;
+      }
+      if (lightIntervalId) {
+        clearInterval(lightIntervalId);
+        lightIntervalId = null;
+      }
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+      }
+
+      lightBuffer = [];
+      toggleLightBtn.innerHTML = '<i class="fa-solid fa-play"></i> Bật';
+      toggleLightBtn.className = "px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-semibold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5";
+      lightModeBadge.innerHTML = '<i class="fa-solid fa-circle text-[7px] text-slate-500"></i> Đã dừng';
+      lightModeBadge.className = "text-xs text-slate-400 flex items-center gap-1";
+      lightGaugeBar.style.strokeDashoffset = CIRCUMFERENCE;
+      luxMaxValueEl.innerText = "0";
+      luxInstantValueEl.innerText = "0";
+      lightLevelTag.innerText = "Đã tắt";
+      lightAdvice.innerText = "Đã dừng cảm biến";
+    }
+  </script>
+</body>
+</html>
