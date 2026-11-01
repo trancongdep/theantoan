@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đo Ánh Sáng & Độ Ồn Môi Trường (Max Hold 5s)</title>
+  <title>Đo Ánh Sáng & Độ Ồn Môi Trường (Max Hold 5s & Hiệu Chuẩn)</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font Awesome Icons -->
@@ -11,32 +11,31 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', sans-serif;\
     }
-    .gauge-circle {
+    .gauge-circle {A
       transition: stroke-dashoffset 0.12s ease-out, stroke 0.25s ease;
     }
-  </style>
+  </style>a
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
 
   <!-- Header -->
-  <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur sticky top-0 z-50 py-3.5 px-4 md:px-8">
+  <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur sticky top-0 z-40 py-3.5 px-4 md:px-8">
     <div class="max-w-5xl mx-auto flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
           <i class="fa-solid fa-gauge-high text-lg"></i>
         </div>
         <div>
-          <h1 class="text-base md:text-lg font-bold tracking-tight">EcoSensors Meter</h1>
-          <p class="text-xs text-slate-400">Chế độ giữ đỉnh 5 giây (5s Sliding Max Hold)</p>
+          <h1 class="text-base md:text-lg font-bold tracking-tight">EcoSensors Meter Pro</h1>
+          <p class="text-xs text-slate-400">Max Hold 5s • Hỗ trợ hiệu chuẩn thiết bị</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Max 5s Mode
-        </span>
+        <button onclick="openCalibrationModal('sound')" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+          <i class="fa-solid fa-sliders text-indigo-400"></i> Hiệu chuẩn
+        </button>
       </div>
     </div>
   </header>
@@ -61,6 +60,9 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
+            <button onclick="openCalibrationModal('light')" title="Hiệu chuẩn ánh sáng" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs transition-all flex items-center justify-center border border-slate-700/60">
+              <i class="fa-solid fa-gear"></i>
+            </button>
             <button id="reset-light-btn" title="Xóa bộ đệm 5s" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs transition-all flex items-center justify-center border border-slate-700/60">
               <i class="fa-solid fa-rotate-left"></i>
             </button>
@@ -70,12 +72,19 @@
           </div>
         </div>
 
+        <!-- Calibration status banner -->
+        <div class="mt-2.5 flex items-center justify-between text-[11px] px-2.5 py-1 bg-amber-500/5 border border-amber-500/10 rounded-lg text-amber-300">
+          <span class="flex items-center gap-1.5">
+            <i class="fa-solid fa-screwdriver-wrench text-[10px]"></i>
+            <span id="light-calib-summary">Hệ số: 1.0x | Bù: 0 lx</span>
+          </span>
+          <button onclick="openCalibrationModal('light')" class="underline hover:text-white">Chỉnh</button>
+        </div>
+
         <!-- Gauge Visual -->
-        <div class="flex flex-col items-center justify-center my-6 relative">
+        <div class="flex flex-col items-center justify-center my-5 relative">
           <svg class="w-52 h-52 transform -rotate-90" viewBox="0 0 120 120">
-            <!-- Background circle -->
             <circle cx="60" cy="60" r="50" class="text-slate-800" stroke-width="8" stroke="currentColor" fill="transparent" />
-            <!-- Progress circle -->
             <circle id="light-gauge-bar" cx="60" cy="60" r="50" class="gauge-circle text-amber-400" stroke-width="8"
                     stroke-dasharray="314.16" stroke-dashoffset="314.16" stroke-linecap="round"
                     stroke="currentColor" fill="transparent" />
@@ -87,6 +96,7 @@
             <div class="mt-2 text-[11px] text-slate-400 flex items-center gap-1">
               <span>Tức thời:</span>
               <span id="lux-instant-value" class="font-bold text-slate-200">0</span> lx
+              <span class="text-slate-500 text-[10px]">(thô: <span id="lux-raw-value">0</span>)</span>
             </div>
             <span id="light-level-tag" class="text-[10px] font-semibold text-slate-300 mt-2 px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700">Tối</span>
           </div>
@@ -110,7 +120,6 @@
           </div>
         </div>
 
-        <!-- Hidden Video & Canvas for Camera Fallback -->
         <video id="webcam-video" autoplay playsinline muted class="hidden"></video>
         <canvas id="analysis-canvas" width="64" height="48" class="hidden"></canvas>
       </section>
@@ -131,6 +140,9 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
+            <button onclick="openCalibrationModal('sound')" title="Hiệu chuẩn âm thanh" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-400 text-xs transition-all flex items-center justify-center border border-slate-700/60">
+              <i class="fa-solid fa-gear"></i>
+            </button>
             <button id="reset-sound-btn" title="Xóa bộ đệm 5s" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs transition-all flex items-center justify-center border border-slate-700/60">
               <i class="fa-solid fa-rotate-left"></i>
             </button>
@@ -140,12 +152,19 @@
           </div>
         </div>
 
+        <!-- Calibration status banner -->
+        <div class="mt-2.5 flex items-center justify-between text-[11px] px-2.5 py-1 bg-indigo-500/5 border border-indigo-500/10 rounded-lg text-indigo-300">
+          <span class="flex items-center gap-1.5">
+            <i class="fa-solid fa-screwdriver-wrench text-[10px]"></i>
+            <span id="sound-calib-summary">Offset: 0.0 dB</span>
+          </span>
+          <button onclick="openCalibrationModal('sound')" class="underline hover:text-white">Chỉnh</button>
+        </div>
+
         <!-- Gauge Visual -->
-        <div class="flex flex-col items-center justify-center my-6 relative">
+        <div class="flex flex-col items-center justify-center my-5 relative">
           <svg class="w-52 h-52 transform -rotate-90" viewBox="0 0 120 120">
-            <!-- Background circle -->
             <circle cx="60" cy="60" r="50" class="text-slate-800" stroke-width="8" stroke="currentColor" fill="transparent" />
-            <!-- Progress circle -->
             <circle id="sound-gauge-bar" cx="60" cy="60" r="50" class="gauge-circle text-indigo-400" stroke-width="8"
                     stroke-dasharray="314.16" stroke-dashoffset="314.16" stroke-linecap="round"
                     stroke="currentColor" fill="transparent" />
@@ -157,6 +176,7 @@
             <div class="mt-2 text-[11px] text-slate-400 flex items-center gap-1">
               <span>Tức thời:</span>
               <span id="decibel-instant-value" class="font-bold text-slate-200">0</span> dB
+              <span class="text-slate-500 text-[10px]">(thô: <span id="decibel-raw-value">0</span>)</span>
             </div>
             <span id="sound-level-tag" class="text-[10px] font-semibold text-slate-300 mt-2 px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700">Yên tĩnh</span>
           </div>
@@ -195,6 +215,124 @@
     </div>
   </main>
 
+  <!-- ================= CALIBRATION MODAL ================= -->
+  <div id="calibration-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-3xl p-5 md:p-6 shadow-2xl relative">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-sliders"></i>
+          </div>
+          <h3 class="font-bold text-base text-slate-100">Hiệu Chuẩn Cảm Biến</h3>
+        </div>
+        <button onclick="closeCalibrationModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex border-b border-slate-800 mt-4 text-xs">
+        <button id="tab-calib-sound-btn" onclick="switchCalibTab('sound')" class="flex-1 py-2 font-semibold text-center border-b-2 border-indigo-500 text-indigo-400 flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-microphone-lines"></i> Độ Ồn (dB)
+        </button>
+        <button id="tab-calib-light-btn" onclick="switchCalibTab('light')" class="flex-1 py-2 font-semibold text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-sun"></i> Ánh Sáng (Lux)
+        </button>
+      </div>
+
+      <!-- SOUND TAB CONTENT -->
+      <div id="tab-calib-sound" class="space-y-4 pt-4">
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Microphone trên các điện thoại/laptop có độ nhạy rất khác nhau. Công thức: <code class="text-indigo-300 font-mono">dB_hiển thị = dB_thô + Offset</code>.
+        </p>
+
+        <!-- Quick 1-Touch Calibration -->
+        <div class="p-3.5 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl">
+          <label class="block text-xs font-semibold text-indigo-300 mb-1">Hiệu chuẩn 1 chạm bằng máy đo chuẩn</label>
+          <div class="flex gap-2 items-center mt-2">
+            <input type="number" id="sound-ref-input" placeholder="Ví dụ: 65.0" step="0.5" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+            <button onclick="quickCalibrateSound()" class="whitespace-nowrap px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition">
+              Áp dụng ngay
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1.5">Nhập số dB đang đọc được trên máy đo chuẩn thực tế để tự động tính offset.</p>
+        </div>
+
+        <!-- Manual Offset Slider -->
+        <div class="space-y-2">
+          <div class="flex justify-between text-xs">
+            <span class="text-slate-300 font-medium">Bù trừ thủ công (Offset):</span>
+            <span id="sound-offset-val-text" class="font-mono text-indigo-400 font-bold">+0.0 dB</span>
+          </div>
+          <input type="range" id="sound-offset-slider" min="-30" max="30" step="0.5" value="0" class="w-full accent-indigo-500 cursor-pointer">
+          <div class="flex justify-between text-[10px] text-slate-500">
+            <span>-30 dB (Giảm)</span>
+            <span>0 dB</span>
+            <span>+30 dB (Tăng)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIGHT TAB CONTENT -->
+      <div id="tab-calib-light" class="space-y-4 pt-4 hidden">
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Camera hoặc cảm biến quang cần hệ số tỷ lệ ($k$) và bù trừ ($Offset$). Công thức: <code class="text-amber-300 font-mono">Lux_hiển thị = (Lux_thô × k) + Offset</code>.
+        </p>
+
+        <!-- Quick 1-Touch Calibration -->
+        <div class="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+          <label class="block text-xs font-semibold text-amber-300 mb-1">Hiệu chuẩn 1 chạm theo máy đo Lux chuẩn</label>
+          <div class="flex gap-2 items-center mt-2">
+            <input type="number" id="light-ref-input" placeholder="Ví dụ: 450" step="5" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+            <button onclick="quickCalibrateLight()" class="whitespace-nowrap px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-semibold transition">
+              Áp dụng ngay
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1.5">Hệ thống sẽ tự tính hệ số tỷ lệ $k$ phù hợp với giá trị chuẩn.</p>
+        </div>
+
+        <!-- Manual controls -->
+        <div class="space-y-3">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300 font-medium">Hệ số tỷ lệ ($k$):</span>
+              <span id="light-k-val-text" class="font-mono text-amber-400 font-bold">1.00x</span>
+            </div>
+            <input type="range" id="light-k-slider" min="0.1" max="5.0" step="0.05" value="1.0" class="w-full accent-amber-500 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-500">
+              <span>0.1x</span>
+              <span>1.0x (Mặc định)</span>
+              <span>5.0x</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300 font-medium">Bù trừ nền (Offset Lux):</span>
+              <span id="light-offset-val-text" class="font-mono text-amber-400 font-bold">+0 lx</span>
+            </div>
+            <input type="range" id="light-offset-slider" min="-200" max="200" step="5" value="0" class="w-full accent-amber-500 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-500">
+              <span>-200 lx</span>
+              <span>0 lx</span>
+              <span>+200 lx</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-800 mt-5">
+        <button onclick="resetCalibrationToDefault()" class="px-3 py-2 rounded-xl text-xs bg-slate-800 hover:bg-rose-500/20 text-rose-400 border border-slate-700 hover:border-rose-500/40 transition">
+          <i class="fa-solid fa-arrow-rotate-left"></i> Đặt lại mặc định
+        </button>
+        <button onclick="closeCalibrationModal()" class="px-5 py-2 rounded-xl text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-600/30 transition">
+          Lưu & Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="py-4 text-center text-xs text-slate-500 border-t border-slate-800/60">
     Đo đạc sử dụng Web Audio API & Cảm biến quang học / Camera. Cửa sổ trượt tự làm mới sau 5 giây.
@@ -202,16 +340,61 @@
 
   <script>
     // Constants
-    const WINDOW_DURATION_MS = 5000; // Cửa sổ trượt 5 giây
-    const CIRCUMFERENCE = 2 * Math.PI * 50; // Chu vi vòng r=50 (~314.16)
+    const WINDOW_DURATION_MS = 5000;
+    const CIRCUMFERENCE = 2 * Math.PI * 50;
+
+    // Calibration configuration (stored in LocalStorage)
+    let calibration = {
+      soundOffset: 0.0,    // dB added to raw dB
+      lightMultiplier: 1.0, // k factor
+      lightOffset: 0       // Lux offset
+    };
+
+    // Load calibration from localStorage
+    function loadSavedCalibration() {
+      try {
+        const saved = localStorage.getItem('ecosensors_calibration');
+        if (saved) {
+          calibration = Object.assign(calibration, JSON.parse(saved));
+        }
+      } catch (e) {
+        console.warn("Could not load saved calibration:", e);
+      }
+      updateCalibrationBadges();
+      syncModalInputs();
+    }
+
+    function saveCalibration() {
+      try {
+        localStorage.setItem('ecosensors_calibration', JSON.stringify(calibration));
+      } catch (e) {
+        console.warn("Could not save calibration:", e);
+      }
+      updateCalibrationBadges();
+    }
+
+    function updateCalibrationBadges() {
+      const soundSummary = document.getElementById('sound-calib-summary');
+      const lightSummary = document.getElementById('light-calib-summary');
+      
+      const soundSign = calibration.soundOffset >= 0 ? '+' : '';
+      soundSummary.innerText = `Bù trừ: ${soundSign}${calibration.soundOffset.toFixed(1)} dB`;
+
+      const lightSign = calibration.lightOffset >= 0 ? '+' : '';
+      lightSummary.innerText = `Hệ số: ${calibration.lightMultiplier.toFixed(2)}x | Bù: ${lightSign}${calibration.lightOffset} lx`;
+    }
 
     // State
     let isSoundRunning = false;
     let isLightRunning = false;
 
     // Sliding Window Buffers
-    let soundBuffer = []; // Lưu { time: timestamp, val: number }
-    let lightBuffer = []; // Lưu { time: timestamp, val: number }
+    let soundBuffer = [];
+    let lightBuffer = [];
+
+    // Latest Raw values
+    let latestRawSound = 30;
+    let latestRawLight = 0;
 
     // Sound variables
     let audioContext = null;
@@ -224,19 +407,14 @@
     let videoStream = null;
     let lightIntervalId = null;
 
-    // Helper: Tính giá trị cực đại trong 5 giây gần nhất
     function get5sMax(buffer, currentVal) {
       const now = performance.now();
-      
-      // 1. Thêm mẫu mới
       buffer.push({ time: now, val: currentVal });
 
-      // 2. Loại bỏ các mẫu cũ quá 5000ms
       while (buffer.length > 0 && (now - buffer[0].time) > WINDOW_DURATION_MS) {
         buffer.shift();
       }
 
-      // 3. Tìm giá trị lớn nhất trong cửa sổ
       let max = -Infinity;
       for (let i = 0; i < buffer.length; i++) {
         if (buffer[i].val > max) {
@@ -254,12 +432,13 @@
     }
 
     /* -----------------------------------------------------------------
-     * 1. XỬ LÝ ĐO ĐỘ ỒN (DECIBEL SPL - MAX 5 GIÂY)
+     * 1. XỬ LÝ ĐO ĐỘ ỒN
      * ---------------------------------------------------------------*/
     const toggleSoundBtn = document.getElementById('toggle-sound-btn');
     const resetSoundBtn = document.getElementById('reset-sound-btn');
     const decibelMaxValueEl = document.getElementById('decibel-max-value');
     const decibelInstantValueEl = document.getElementById('decibel-instant-value');
+    const decibelRawValueEl = document.getElementById('decibel-raw-value');
     const soundGaugeBar = document.getElementById('sound-gauge-bar');
     const soundStatusBadge = document.getElementById('sound-status-badge');
     const soundLevelTag = document.getElementById('sound-level-tag');
@@ -298,7 +477,7 @@
 
         analyserNode = audioContext.createAnalyser();
         analyserNode.fftSize = 512;
-        analyserNode.smoothingTimeConstant = 0.5;
+        analyserNode.smoothingTimeConstant = 0.4;
 
         const source = audioContext.createMediaStreamSource(stream);
         source.connect(analyserNode);
@@ -323,7 +502,6 @@
       const dataArray = new Uint8Array(analyserNode.frequencyBinCount);
       analyserNode.getByteTimeDomainData(dataArray);
 
-      // Tính Root Mean Square (RMS)
       let sumSquares = 0;
       for (let i = 0; i < dataArray.length; i++) {
         const normalized = (dataArray[i] - 128) / 128;
@@ -331,24 +509,26 @@
       }
       const rms = Math.sqrt(sumSquares / dataArray.length);
 
-      // Ước lượng dB SPL tương đối
-      let dB = 20 * Math.log10(rms);
-      if (!isFinite(dB) || dB < -100) dB = -100;
-      let instantDb = Math.round(Math.max(30, Math.min(105, (dB + 100) * 1.15)));
+      let rawDb = 20 * Math.log10(rms);
+      if (!isFinite(rawDb) || rawDb < -100) rawDb = -100;
+      let calculatedRaw = Math.round(Math.max(25, Math.min(105, (rawDb + 100) * 1.15)));
+      latestRawSound = calculatedRaw;
+
+      // Áp dụng HIỆU CHUẨN (Offset)
+      let calibratedDb = Math.round(Math.max(20, calculatedRaw + calibration.soundOffset));
 
       // Lấy Max trong 5 giây gần nhất
-      const maxDb5s = get5sMax(soundBuffer, instantDb);
+      const maxDb5s = get5sMax(soundBuffer, calibratedDb);
 
-      // Hiển thị giao diện
-      decibelInstantValueEl.innerText = instantDb;
+      // Hiển thị
+      decibelRawValueEl.innerText = calculatedRaw;
+      decibelInstantValueEl.innerText = calibratedDb;
       decibelMaxValueEl.innerText = maxDb5s;
 
-      // Cập nhật Gauge theo giá trị Max 5s
       const percent = Math.min(Math.max((maxDb5s - 30) / 75, 0), 1);
       const offset = CIRCUMFERENCE - (percent * CIRCUMFERENCE);
       soundGaugeBar.style.strokeDashoffset = offset;
 
-      // Đánh giá mức độ cảnh báo dựa trên Max 5s
       if (maxDb5s < 55) {
         soundGaugeBar.setAttribute('class', 'gauge-circle text-emerald-400');
         soundLevelTag.innerText = "Yên tĩnh";
@@ -388,17 +568,19 @@
       soundGaugeBar.style.strokeDashoffset = CIRCUMFERENCE;
       decibelMaxValueEl.innerText = "0";
       decibelInstantValueEl.innerText = "0";
+      decibelRawValueEl.innerText = "0";
       soundLevelTag.innerText = "Đã tắt";
       soundAdvice.innerText = "Đã dừng micro";
     }
 
     /* -----------------------------------------------------------------
-     * 2. XỬ LÝ ĐO ÁNH SÁNG (LUX METER - MAX 5 GIÂY)
+     * 2. XỬ LÝ ĐO ÁNH SÁNG
      * ---------------------------------------------------------------*/
     const toggleLightBtn = document.getElementById('toggle-light-btn');
     const resetLightBtn = document.getElementById('reset-light-btn');
     const luxMaxValueEl = document.getElementById('lux-max-value');
     const luxInstantValueEl = document.getElementById('lux-instant-value');
+    const luxRawValueEl = document.getElementById('lux-raw-value');
     const lightGaugeBar = document.getElementById('light-gauge-bar');
     const lightModeBadge = document.getElementById('light-mode-badge');
     const lightLevelTag = document.getElementById('light-level-tag');
@@ -423,7 +605,6 @@
     async function startLightMeter() {
       lightBuffer = [];
 
-      // 1. Kiểm tra AmbientLightSensor API
       if ('AmbientLightSensor' in window) {
         try {
           const sensor = new AmbientLightSensor({ frequency: 10 });
@@ -444,7 +625,6 @@
         }
       }
 
-      // 2. Fallback camera stream
       await fallbackToCamera();
     }
 
@@ -460,8 +640,6 @@
 
         isLightRunning = true;
         setLightActiveUI("Camera đo quang (Fallback)");
-
-        // Lấy mẫu định kỳ 100ms
         lightIntervalId = setInterval(analyzeFrameBrightness, 100);
       } catch (err) {
         console.error("Camera fallback failed:", err);
@@ -478,7 +656,6 @@
       let totalLuminance = 0;
       const count = frameData.length / 4;
 
-      // Rec. 601 Luminance
       for (let i = 0; i < frameData.length; i += 4) {
         const r = frameData[i];
         const g = frameData[i + 1];
@@ -487,24 +664,27 @@
       }
 
       const avgLuminance = totalLuminance / count;
-      let instantLux = 0;
+      let rawLux = 0;
       if (avgLuminance > 1) {
-        // Ánh xạ hàm mũ sang độ rọi Lux ước lượng
-        instantLux = Math.round(Math.pow(avgLuminance / 255, 2.2) * 1200);
+        rawLux = Math.round(Math.pow(avgLuminance / 255, 2.2) * 1200);
       }
-      updateLightUI(instantLux);
+      updateLightUI(rawLux);
     }
 
-    function updateLightUI(instantLux) {
-      instantLux = Math.round(instantLux);
-      
-      // Lấy Max 5 giây
-      const maxLux5s = get5sMax(lightBuffer, instantLux);
+    function updateLightUI(rawLux) {
+      rawLux = Math.round(rawLux);
+      latestRawLight = rawLux;
 
-      luxInstantValueEl.innerText = instantLux;
+      // Áp dụng HIỆU CHUẨN: (Lux_raw * k) + offset
+      let calibratedLux = Math.max(0, Math.round((rawLux * calibration.lightMultiplier) + calibration.lightOffset));
+
+      // Lấy Max 5 giây
+      const maxLux5s = get5sMax(lightBuffer, calibratedLux);
+
+      luxRawValueEl.innerText = rawLux;
+      luxInstantValueEl.innerText = calibratedLux;
       luxMaxValueEl.innerText = maxLux5s > 9999 ? '>10k' : maxLux5s;
 
-      // Gauge theo Max 5s (0 - 1000 Lux)
       const percent = Math.min(Math.max(maxLux5s / 1000, 0), 1);
       const offset = CIRCUMFERENCE - (percent * CIRCUMFERENCE);
       lightGaugeBar.style.strokeDashoffset = offset;
@@ -557,9 +737,133 @@
       lightGaugeBar.style.strokeDashoffset = CIRCUMFERENCE;
       luxMaxValueEl.innerText = "0";
       luxInstantValueEl.innerText = "0";
+      luxRawValueEl.innerText = "0";
       lightLevelTag.innerText = "Đã tắt";
       lightAdvice.innerText = "Đã dừng cảm biến";
     }
+
+    /* -----------------------------------------------------------------
+     * 3. XỬ LÝ MODAL & HIỆU CHUẨN (CALIBRATION)
+     * ---------------------------------------------------------------*/
+    const modal = document.getElementById('calibration-modal');
+    const soundOffsetSlider = document.getElementById('sound-offset-slider');
+    const soundOffsetValText = document.getElementById('sound-offset-val-text');
+    const lightKSlider = document.getElementById('light-k-slider');
+    const lightKValText = document.getElementById('light-k-val-text');
+    const lightOffsetSlider = document.getElementById('light-offset-slider');
+    const lightOffsetValText = document.getElementById('light-offset-val-text');
+
+    function openCalibrationModal(tab = 'sound') {
+      syncModalInputs();
+      switchCalibTab(tab);
+      modal.classList.remove('hidden');
+    }
+
+    function closeCalibrationModal() {
+      saveCalibration();
+      modal.classList.add('hidden');
+    }
+
+    function switchCalibTab(tab) {
+      const tabSound = document.getElementById('tab-calib-sound');
+      const tabLight = document.getElementById('tab-calib-light');
+      const btnSound = document.getElementById('tab-calib-sound-btn');
+      const btnLight = document.getElementById('tab-calib-light-btn');
+
+      if (tab === 'sound') {
+        tabSound.classList.remove('hidden');
+        tabLight.classList.add('hidden');
+        btnSound.className = "flex-1 py-2 font-semibold text-center border-b-2 border-indigo-500 text-indigo-400 flex items-center justify-center gap-1.5";
+        btnLight.className = "flex-1 py-2 font-semibold text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1.5";
+      } else {
+        tabSound.classList.add('hidden');
+        tabLight.classList.remove('hidden');
+        btnLight.className = "flex-1 py-2 font-semibold text-center border-b-2 border-amber-500 text-amber-400 flex items-center justify-center gap-1.5";
+        btnSound.className = "flex-1 py-2 font-semibold text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1.5";
+      }
+    }
+
+    function syncModalInputs() {
+      soundOffsetSlider.value = calibration.soundOffset;
+      const sSign = calibration.soundOffset >= 0 ? '+' : '';
+      soundOffsetValText.innerText = `${sSign}${calibration.soundOffset.toFixed(1)} dB`;
+
+      lightKSlider.value = calibration.lightMultiplier;
+      lightKValText.innerText = `${calibration.lightMultiplier.toFixed(2)}x`;
+
+      lightOffsetSlider.value = calibration.lightOffset;
+      const lSign = calibration.lightOffset >= 0 ? '+' : '';
+      lightOffsetValText.innerText = `${lSign}${calibration.lightOffset} lx`;
+    }
+
+    // Sliders event listeners
+    soundOffsetSlider.addEventListener('input', (e) => {
+      calibration.soundOffset = parseFloat(e.target.value);
+      const sSign = calibration.soundOffset >= 0 ? '+' : '';
+      soundOffsetValText.innerText = `${sSign}${calibration.soundOffset.toFixed(1)} dB`;
+      updateCalibrationBadges();
+    });
+
+    lightKSlider.addEventListener('input', (e) => {
+      calibration.lightMultiplier = parseFloat(e.target.value);
+      lightKValText.innerText = `${calibration.lightMultiplier.toFixed(2)}x`;
+      updateCalibrationBadges();
+    });
+
+    lightOffsetSlider.addEventListener('input', (e) => {
+      calibration.lightOffset = parseInt(e.target.value);
+      const lSign = calibration.lightOffset >= 0 ? '+' : '';
+      lightOffsetValText.innerText = `${lSign}${calibration.lightOffset} lx`;
+      updateCalibrationBadges();
+    });
+
+    // 1-Touch Quick Calibration
+    function quickCalibrateSound() {
+      const refVal = parseFloat(document.getElementById('sound-ref-input').value);
+      if (isNaN(refVal) || refVal < 20 || refVal > 130) {
+        showNotice("Vui lòng nhập giá trị dB chuẩn hợp lệ (từ 20 đến 130 dB)");
+        return;
+      }
+      // Calculate offset = refVal - latestRawSound
+      const calculatedOffset = Math.round((refVal - latestRawSound) * 2) / 2; // Làm tròn 0.5
+      calibration.soundOffset = Math.max(-30, Math.min(30, calculatedOffset));
+      syncModalInputs();
+      saveCalibration();
+      showNotice(`Đã hiệu chuẩn độ ồn! Offset được đặt thành ${calibration.soundOffset >= 0 ? '+' : ''}${calibration.soundOffset} dB`);
+    }
+
+    function quickCalibrateLight() {
+      const refVal = parseFloat(document.getElementById('light-ref-input').value);
+      if (isNaN(refVal) || refVal < 0 || refVal > 50000) {
+        showNotice("Vui lòng nhập giá trị Lux chuẩn hợp lệ (từ 0 đến 50000 Lux)");
+        return;
+      }
+      if (latestRawLight <= 5) {
+        showNotice("Độ sáng môi trường quá thấp hoặc cảm biến chưa đo để tính toán hệ số k.");
+        return;
+      }
+      // Calculate multiplier k = refVal / latestRawLight
+      const k = Math.round((refVal / latestRawLight) * 100) / 100;
+      calibration.lightMultiplier = Math.max(0.1, Math.min(5.0, k));
+      calibration.lightOffset = 0;
+      syncModalInputs();
+      saveCalibration();
+      showNotice(`Đã hiệu chuẩn ánh sáng! Hệ số k được đặt thành ${calibration.lightMultiplier}x`);
+    }
+
+    function resetCalibrationToDefault() {
+      calibration.soundOffset = 0.0;
+      calibration.lightMultiplier = 1.0;
+      calibration.lightOffset = 0;
+      syncModalInputs();
+      saveCalibration();
+      showNotice("Đã đặt lại tất cả thông số hiệu chuẩn về mặc định xuất xưởng.");
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedCalibration();
+    });
   </script>
 </body>
 </html>
