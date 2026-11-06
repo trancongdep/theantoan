@@ -4,17 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AnToanHub - Quản Lý & Điều Phối Huấn Luyện ATVSLĐ Miền Nam</title>
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <!-- Leaflet CSS & JS for Interactive Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     body { font-family: 'Inter', sans-serif; }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-    /* Leaflet map height styling */
-    #training-map { height: 540px; width: 100%; border-radius: 0.75rem; z-index: 10; }
+    #training-map { height: 530px; width: 100%; border-radius: 0.75rem; z-index: 10; }
     .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -23,10 +20,62 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
 
+  <!-- GOOGLE AUTH LOGIN MODAL OVERLAY (KHI CHƯA ĐĂNG NHẬP) -->
+  <div id="google-login-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden text-center p-8 space-y-6">
+      <div class="w-16 h-16 bg-gradient-to-tr from-amber-500 to-emerald-500 rounded-2xl mx-auto flex items-center justify-center text-white shadow-lg">
+        <svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black text-slate-900">AnToanHub Miền Nam</h2>
+        <p class="text-xs text-slate-500 mt-1">Hệ thống Điều phối Giảng viên & Quản lý Lịch ATVSLĐ</p>
+      </div>
+
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-left space-y-2">
+        <div class="text-xs font-bold text-slate-700 uppercase tracking-wide">Yêu cầu xác thực tài khoản Google:</div>
+        <p class="text-xs text-slate-600">Đăng nhập tài khoản Google của bạn để hệ thống tự động kiểm tra chức danh và phân quyền sử dụng:</p>
+        <div class="grid grid-cols-2 gap-1.5 text-[11px] pt-1 font-medium">
+          <span class="text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">👑 Admin (Quản trị)</span>
+          <span class="text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">💼 Sales (Kinh doanh)</span>
+          <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">👨‍🏫 Trainer (Giảng viên)</span>
+          <span class="text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">👤 Guest (Khách xem)</span>
+        </div>
+      </div>
+
+      <!-- Quick Role Selection Buttons for Simulation -->
+      <div class="space-y-2">
+        <button id="btn-login-google-admin" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-xl shadow transition flex items-center justify-center space-x-3 text-xs">
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#EA4335" d="M12 5c1.7 0 3 .6 4 1.5l3-3C17.2 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
+            <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"/>
+            <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/>
+            <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/>
+          </svg>
+          <span>Đăng nhập với Google: <strong>Admin (Ban Giám Đốc)</strong></span>
+        </button>
+
+        <div class="grid grid-cols-3 gap-2">
+          <button id="btn-login-google-sales" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-2 px-2 rounded-xl border border-blue-200 text-[11px] transition">
+            💼 Sales (Kinh doanh)
+          </button>
+          <button id="btn-login-google-trainer" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 px-2 rounded-xl border border-emerald-200 text-[11px] transition">
+            👨‍🏫 Trainer (Giảng viên)
+          </button>
+          <button id="btn-login-google-guest" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-2 rounded-xl border border-slate-300 text-[11px] transition">
+            👤 Guest (Khách xem)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOP HEADER -->
   <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md border-b border-slate-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
+        
         <!-- Logo & Brand -->
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-emerald-500 flex items-center justify-center text-white shadow-lg font-black text-xl">
@@ -43,15 +92,15 @@
           </div>
         </div>
 
-        <!-- Top Quick Stats -->
-        <div class="hidden md:flex items-center space-x-6 text-sm">
+        <!-- Top Date & Quick Stats -->
+        <div class="hidden lg:flex items-center space-x-6 text-sm">
           <div class="text-center">
-            <div class="text-xs text-slate-400">Tháng 11/2026</div>
-            <div class="font-semibold text-emerald-400" id="stat-total-courses">0 khóa</div>
+            <div class="text-xs text-slate-400">Hôm nay (Thực tế)</div>
+            <div class="font-bold text-emerald-400 text-xs" id="header-current-date-display">07/11/2026</div>
           </div>
           <div class="h-8 w-px bg-slate-800"></div>
           <div class="text-center">
-            <div class="text-xs text-slate-400">Chờ phân công GV</div>
+            <div class="text-xs text-slate-400">Chờ gán GV</div>
             <div class="font-semibold text-amber-400" id="stat-pending-courses">0 khóa</div>
           </div>
           <div class="h-8 w-px bg-slate-800"></div>
@@ -66,13 +115,30 @@
           </div>
         </div>
 
-        <!-- Action Quick Button -->
-        <div class="flex items-center space-x-2">
-          <button id="btn-quick-new" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-3.5 py-2 rounded-lg flex items-center space-x-2 shadow-sm transition">
+        <!-- User Profile & Google RBAC Badge & Logout -->
+        <div class="flex items-center space-x-3">
+          <!-- Role Badge -->
+          <div id="user-role-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center space-x-1">
+            <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+            <span id="user-role-name">Admin</span>
+          </div>
+
+          <!-- User Info & Avatar -->
+          <div class="flex items-center space-x-2 text-right">
+            <div class="hidden sm:block">
+              <div class="text-xs font-bold text-white" id="user-display-name">Lãnh Đạo VDC</div>
+              <div class="text-[10px] text-slate-400" id="user-email">admin@vdcsafety.com</div>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow border border-indigo-400" id="user-avatar">
+              AD
+            </div>
+          </div>
+
+          <!-- Switch Role / Logout -->
+          <button id="btn-switch-account" class="text-slate-400 hover:text-white p-1.5 rounded-lg border border-slate-800 hover:bg-slate-800 transition text-xs" title="Đổi tài khoản / Quyền">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
             </svg>
-            <span>Dán Tin Zalo Mới</span>
           </button>
         </div>
       </div>
@@ -83,7 +149,7 @@
           <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
           </svg>
-          <span>Tiếp Nhận & Bóc Tách Zalo</span>
+          <span>Tiếp Nhận & Ghi Lịch Zalo</span>
         </button>
 
         <button data-tab="tab-month" class="tab-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-md transition text-slate-400 hover:text-white hover:bg-slate-800/60">
@@ -105,7 +171,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
-          <span>Bản Đồ Huấn Luyện</span>
+          <span>Bản Đồ & Giao Thông</span>
         </button>
 
         <button data-tab="tab-instructors" class="tab-btn flex items-center space-x-2 px-3.5 py-1.5 rounded-md transition text-slate-400 hover:text-white hover:bg-slate-800/60">
@@ -127,14 +193,14 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
-          <span>Drive, Firebase & GitHub</span>
+          <span>Drive, Firebase & Cài Đặt</span>
         </button>
       </nav>
     </div>
   </header>
 
   <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+  <div id="toast-container" class="fixed top-20 right-4 z-[99] flex flex-col space-y-2 pointer-events-none"></div>
 
   <!-- MAIN CONTENT AREA -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -143,22 +209,26 @@
     <section id="tab-parser" class="tab-content space-y-6">
       
       <!-- Top banner guide -->
-      <div class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-2xl p-6 shadow-md relative overflow-hidden">
-        <div class="relative z-10 max-w-3xl">
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-400 text-slate-900 mb-2 font-semibold">
-            ⚡ AI & Regex Smart Parser
-          </span>
-          <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Tiếp Nhận Thông Tin & Tìm Kiếm Giảng Viên Tối Ưu</h2>
-          <p class="text-sm text-slate-300 mt-1">
-            Dán tin nhắn Zalo giao việc của văn phòng. Hệ thống tự động bóc tách ngày giờ, nhóm an toàn, địa điểm và đề xuất ngay các giảng viên <strong>trống lịch và gần công trình nhất</strong> để liên hệ nhận lớp.
+      <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-2xl p-6 shadow-md relative overflow-hidden">
+        <div class="relative z-10 max-w-4xl">
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-400 text-slate-900">
+              ⚡ Smart Zalo Parser & Workflow
+            </span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+              ✓ Lưu lịch trước hoặc Tìm GV tối ưu ngay
+            </span>
+          </div>
+          <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Tiếp Nhận Lịch Huấn Luyện & Điều Phối Giảng Viên</h2>
+          <p class="text-xs sm:text-sm text-slate-300 mt-1">
+            Dán tin nhắn Zalo phân công. Bạn có thể <strong>ghi nhận lịch vào hệ thống trước</strong> để giữ chỗ, sau đó hệ thống sẽ đối soát lịch trống và tính cự ly từ nhà từng giảng viên để đề xuất người nhận lớp tối ưu nhất.
           </p>
         </div>
-        <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-blue-700/30 rounded-full blur-2xl"></div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Left Column: Zalo Raw Input & Parser (5 cols) -->
+        <!-- Left Column: Zalo Raw Input & Parser Form (5 cols) -->
         <div class="lg:col-span-5 space-y-4">
           <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
             <div class="flex items-center justify-between mb-3">
@@ -178,24 +248,24 @@
               </div>
             </div>
 
-            <textarea id="zalo-raw-input" rows="8" placeholder="Dán nội dung tin nhắn Zalo vào đây...
+            <textarea id="zalo-raw-input" rows="7" placeholder="Dán nội dung tin nhắn Zalo vào đây...
 Ví dụ:
 Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
-1. Thời gian : 15h00 ngày 03/11/2026
+1. Thời gian : 15h00 ngày 07/11/2026
 2. Nhóm: 3 - Đơn vị sản xuất vật liệu
 3. Nội dung huấn luyện: Trạm bê tông nhựa
 4. Địa điểm huấn luyện: Vincons Hóc Môn
 5. Thiết bị đơn vị huấn luyện hỗ trợ: MÁY CHIẾU
-6. Liên hệ : MS ÁNH 0792.006.916" class="w-full text-sm font-mono p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"></textarea>
+6. Liên hệ : MS ÁNH 0792.006.916" class="w-full text-xs font-mono p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"></textarea>
 
             <div class="mt-3 flex items-center space-x-2">
-              <button id="btn-parse-zalo" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center justify-center space-x-2 transition">
+              <button id="btn-parse-zalo" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm flex items-center justify-center space-x-2 transition text-xs">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
                 <span>Bóc Tách Thông Tin Tự Động</span>
               </button>
-              <button id="btn-clear-input" class="text-slate-500 hover:text-slate-700 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-100 transition" title="Xóa nội dung">
+              <button id="btn-clear-input" class="text-slate-500 hover:text-slate-700 p-2 rounded-lg border border-slate-200 hover:bg-slate-100 transition" title="Xóa nội dung">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                 </svg>
@@ -208,32 +278,32 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
             <div class="flex items-center justify-between border-b pb-2">
               <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>Thông Tin Sau Khi Tách</span>
+                <span>Thông Tin Khóa Huấn Luyện</span>
               </h3>
               <span id="badge-parse-status" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">Chờ nhập liệu</span>
             </div>
 
             <div class="space-y-3 text-sm">
               <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Tên khóa / Khách hàng</label>
-                <input type="text" id="field-course-name" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-sm font-medium">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Tên khóa / Khách hàng *</label>
+                <input type="text" id="field-course-name" value="VINALPHA HÓC MÔN" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-sm font-bold text-slate-900">
               </div>
 
               <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 mb-1">Ngày dạy</label>
-                  <input type="date" id="field-date" value="2026-11-03" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-sm">
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Ngày dạy (Mặc định hôm nay)</label>
+                  <input type="date" id="field-date" value="2026-11-07" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-xs font-semibold">
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-slate-600 mb-1">Giờ bắt đầu</label>
-                  <input type="time" id="field-time" value="15:00" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-sm">
+                  <input type="time" id="field-time" value="15:00" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-xs">
                 </div>
               </div>
 
               <div class="grid grid-cols-3 gap-2">
                 <div class="col-span-1">
                   <label class="block text-xs font-semibold text-slate-600 mb-1">Nhóm ATVSLĐ</label>
-                  <select id="field-group" class="w-full px-2 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-sm font-medium bg-white">
+                  <select id="field-group" class="w-full px-2 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-xs font-bold bg-white">
                     <option value="1">Nhóm 1 (Quản lý)</option>
                     <option value="2">Nhóm 2 (Cán bộ AT)</option>
                     <option value="3" selected>Nhóm 3 (Nghiêm ngặt)</option>
@@ -244,33 +314,33 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
                 </div>
                 <div class="col-span-2">
                   <label class="block text-xs font-semibold text-slate-600 mb-1">Chi tiết Nhóm</label>
-                  <input type="text" id="field-group-desc" placeholder="Đơn vị sản xuất vật liệu..." class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-sm">
+                  <input type="text" id="field-group-desc" value="3 - Đơn vị sản xuất vật liệu" placeholder="Đơn vị sản xuất vật liệu..." class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-xs">
                 </div>
               </div>
 
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Nội dung huấn luyện</label>
-                <input type="text" id="field-content" placeholder="Trạm bê tông nhựa..." class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-sm">
+                <input type="text" id="field-content" value="Trạm bê tông nhựa" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-xs">
               </div>
 
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Địa điểm huấn luyện</label>
-                <input type="text" id="field-location" placeholder="Vincons Hóc Môn..." class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-sm">
+                <input type="text" id="field-location" value="Vincons Hóc Môn" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-xs font-medium text-slate-900">
               </div>
 
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Thiết bị hỗ trợ</label>
-                <input type="text" id="field-equipment" placeholder="MÁY CHIẾU (tại dự án không có)..." class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-sm">
+                <input type="text" id="field-equipment" value="MÁY CHIẾU (tại dự án không có thiết bị)" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-xs">
               </div>
 
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="block text-xs font-semibold text-slate-600 mb-1">Người liên hệ</label>
-                  <input type="text" id="field-contact-name" placeholder="MS ÁNH" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-sm">
+                  <input type="text" id="field-contact-name" value="MS ÁNH" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-xs">
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-slate-600 mb-1">Số điện thoại</label>
-                  <input type="text" id="field-contact-phone" placeholder="0792006916" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-sm">
+                  <input type="text" id="field-contact-phone" value="0792006916" class="w-full px-3 py-1.5 border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 outline-none text-xs font-mono font-bold text-blue-700">
                 </div>
               </div>
 
@@ -288,7 +358,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
                     </svg>
                     <span class="text-xs font-bold text-amber-900 uppercase tracking-wide">Dự Toán Chi Phí & Đi Lại (VDC 01.11.2026)</span>
                   </div>
-                  <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">Thông báo VDC</span>
+                  <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">Quy chế VDC</span>
                 </div>
 
                 <div class="space-y-2.5 text-xs">
@@ -296,9 +366,10 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
                   <div>
                     <label class="block font-semibold text-slate-700 mb-1">I. Hình thức buổi dạy & Thù lao GV *</label>
                     <select id="cost-shift-type" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-md bg-white font-medium text-slate-800 outline-none">
-                      <option value="1ca" selected>1 ca thông thường (2h - 3h) • 1.500.000 VNĐ</option>
-                      <option value="2ca">2 ca cùng 1 buổi (cùng địa điểm, mỗi ca 1.5-2h) • 2.250.000 VNĐ (1.500.000 + 50%)</option>
-                      <option value="custom">Thỏa thuận khác (Tự nhập)</option>
+                      <option value="1ca" selected>1 buổi thông thường (1 lớp, 2h - 3h) • 1.500.000 VNĐ</option>
+                      <option value="2ca">1 buổi 2 lớp/ca (cùng địa điểm, mỗi ca 1.5-2h) • 2.250.000 VNĐ (1.5tr + 50%)</option>
+                      <option value="1ngay">1 ngày huấn luyện (Cả ngày: 2 buổi sáng & chiều) • 3.000.000 VNĐ (1.5tr x 2)</option>
+                      <option value="custom">Thỏa thuận khác (Tự nhập số tiền)</option>
                     </select>
                     <div id="cost-custom-teaching-wrap" class="mt-1 hidden">
                       <input type="number" id="cost-custom-teaching" placeholder="Nhập thù lao VNĐ" class="w-full px-2.5 py-1 border border-slate-300 rounded text-xs">
@@ -380,12 +451,20 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
               </div>
             </div>
 
-            <div class="pt-2">
-              <button id="btn-save-and-match" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm flex items-center justify-center space-x-2 transition text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            <!-- TWO ACTIONS: SAVE FIRST vs SAVE & MATCH NOW -->
+            <div class="pt-2 space-y-2">
+              <button id="btn-save-pending-first" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-xl shadow-sm flex items-center justify-center space-x-2 transition text-xs">
+                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
                 </svg>
-                <span>Tìm Giảng Viên Phù Hợp & Lưu Khóa</span>
+                <span>1. Lưu Khóa Vào Lịch Trước (Chờ Tìm GV Sau)</span>
+              </button>
+
+              <button id="btn-save-and-match" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-sm flex items-center justify-center space-x-2 transition text-xs">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span>2. Lưu & Tìm Kiếm Giảng Viên Tối Ưu Ngay</span>
               </button>
             </div>
           </div>
@@ -400,10 +479,10 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
                   <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                   </svg>
-                  <span>Gợi Ý Giảng Viên Tối Ưu Cho Khóa Học</span>
+                  <span>Gợi Ý Giảng Viên Tối Ưu (Đo Từ Nhà GV)</span>
                 </h3>
                 <p class="text-xs text-slate-500 mt-0.5" id="matching-criteria-text">
-                  Tiêu chí: Giảng viên đủ điều kiện nhóm 3, không trùng giờ ngày 03/11/2026, khoảng cách gần địa điểm huấn luyện nhất.
+                  Tiêu chí: Giảng viên đủ điều kiện chuyên môn, không trùng giờ, cự ly từ nhà gần công trình nhất.
                 </p>
               </div>
               <div class="flex items-center space-x-2">
@@ -440,8 +519,8 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
               </button>
-              <button id="btn-today-month" class="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition">
-                Hôm Nay
+              <button id="btn-today-month" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition">
+                Hôm Nay (07/11/2026)
               </button>
             </div>
           </div>
@@ -489,8 +568,8 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div class="flex flex-wrap items-center gap-3">
-            <label class="text-sm font-semibold text-slate-700">Xem theo ngày:</label>
-            <input type="date" id="filter-agenda-date" value="2026-11-03" class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+            <label class="text-xs font-bold text-slate-700">Xem theo ngày:</label>
+            <input type="date" id="filter-agenda-date" value="2026-11-07" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 outline-none">
             <button id="btn-agenda-prev-day" class="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-600 transition" title="Ngày trước">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -501,8 +580,8 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </button>
-            <button id="btn-agenda-today" class="px-2.5 py-1.5 text-xs font-medium border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-700 transition">
-              Ngày 03/11/2026
+            <button id="btn-agenda-today" class="px-2.5 py-1.5 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition">
+              Hôm Nay (07/11)
             </button>
           </div>
 
@@ -533,9 +612,9 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
           <div class="flex items-center space-x-2">
             <span class="w-3 h-3 rounded-full bg-blue-600"></span>
-            <h3 class="font-bold text-slate-900" id="agenda-day-heading">Lịch Huấn Luyện Ngày 03/11/2026</h3>
+            <h3 class="font-bold text-slate-900" id="agenda-day-heading">Lịch Huấn Luyện Ngày 07/11/2026 (Hôm nay)</h3>
           </div>
-          <span class="text-xs text-slate-500" id="agenda-day-count">3 khóa học trong ngày</span>
+          <span class="text-xs text-slate-500" id="agenda-day-count">Đang tải...</span>
         </div>
 
         <div id="agenda-timeline-container" class="space-y-4">
@@ -550,8 +629,8 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
           <span class="text-xs text-slate-500" id="total-table-count">Tổng số: 0 khóa</span>
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="bg-slate-100 text-slate-600 text-xs uppercase font-semibold border-b">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 text-slate-600 uppercase font-semibold border-b">
               <tr>
                 <th class="py-3 px-4">Thời gian</th>
                 <th class="py-3 px-4">Khóa / Khách hàng</th>
@@ -571,8 +650,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       </div>
     </section>
 
-
-    <!-- ==================== TAB 4: INTERACTIVE MAP VIEW ==================== -->
+    <!-- ==================== TAB 4: INTERACTIVE MAP VIEW WITH TRAFFIC LAYER ==================== -->
     <section id="tab-map" class="tab-content hidden space-y-4">
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -581,13 +659,24 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
               <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
               </svg>
-              <span>Bản Đồ Phân Bổ Địa Điểm Huấn Luyện & Vị Trí Giảng Viên Miền Nam</span>
+              <span>Bản Đồ Huấn Luyện & Tình Trạng Giao Thông Trực Tiếp (Traffic Layer)</span>
             </h3>
-            <p class="text-xs text-slate-500">Xem trực quan các điểm dự án đào tạo và vị trí thường trực của các giảng viên để tối ưu quãng đường di chuyển.</p>
+            <p class="text-xs text-slate-500">Giám sát các điểm dự án đào tạo, vị trí nhà giảng viên và tình hình kẹt xe/lưu lượng giao thông thời gian thực.</p>
           </div>
 
-          <!-- Map Filters -->
-          <div class="flex items-center space-x-2 text-xs">
+          <!-- Map Controls & Traffic Layer Toggle -->
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <button id="btn-toggle-traffic" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse" id="traffic-status-indicator"></span>
+              <span id="traffic-btn-text">🚦 Lớp Giao Thông (Đang Bật)</span>
+            </button>
+
+            <select id="select-map-layer" class="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold bg-white outline-none">
+              <option value="traffic-roads" selected>🗺️ Giao Thông Google (Mặc định)</option>
+              <option value="osm">🌍 OpenStreetMap Chuẩn</option>
+              <option value="satellite">🛰️ Vệ Tinh + Giao Thông</option>
+            </select>
+
             <button id="btn-map-center-hocmon" class="bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-slate-700 font-medium transition">
               📍 Vincons Hóc Môn
             </button>
@@ -597,22 +686,69 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
           </div>
         </div>
 
+        <!-- Traffic Route & Distance Checker Bar -->
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="font-bold text-slate-800 flex items-center space-x-1">
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+              </svg>
+              <span>Kiểm tra lộ trình từ nhà GV đến lớp:</span>
+            </span>
+            <select id="route-select-course" class="px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white text-xs font-medium text-slate-800 outline-none max-w-[210px] truncate"></select>
+            <select id="route-select-instructor" class="px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white text-xs font-medium text-slate-800 outline-none max-w-[210px] truncate"></select>
+            <button id="btn-draw-route" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-xs transition flex items-center space-x-1">
+              <span>🚗 Đo Tuyến & Kẹt Xe</span>
+            </button>
+            <button id="btn-clear-route" class="px-2.5 py-1.5 text-slate-600 hover:bg-slate-200 rounded-lg transition hidden">
+              Xóa tuyến
+            </button>
+          </div>
+          <div id="route-info-badge" class="font-semibold text-xs text-indigo-900 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-lg hidden"></div>
+        </div>
+
         <!-- Leaflet Map Container -->
         <div id="training-map" class="shadow-inner border border-slate-200"></div>
 
-        <!-- Map Legend & Guide -->
-        <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
-          <div class="flex items-center space-x-2">
-            <span class="w-3.5 h-3.5 rounded-full bg-rose-500 border border-white shadow"></span>
-            <span class="text-slate-700"><strong>Điểm đào tạo:</strong> Khóa chưa có GV (Cần phân công)</span>
+        <!-- Map & Traffic Flow Legends -->
+        <div class="mt-4 space-y-2">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+            <div class="flex items-center space-x-2">
+              <span class="w-3.5 h-3.5 rounded-full bg-rose-500 border border-white shadow"></span>
+              <span class="text-slate-700"><strong>Điểm đào tạo:</strong> Khóa chưa có GV (Cần tìm GV)</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 border border-white shadow"></span>
+              <span class="text-slate-700"><strong>Điểm đào tạo:</strong> Đã chốt Giảng viên</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="w-3.5 h-3.5 rounded-full bg-indigo-600 border border-white shadow"></span>
+              <span class="text-slate-700"><strong>Vị trí Giảng viên:</strong> Xuất phát từ nhà</span>
+            </div>
           </div>
-          <div class="flex items-center space-x-2">
-            <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 border border-white shadow"></span>
-            <span class="text-slate-700"><strong>Điểm đào tạo:</strong> Đã chốt Giảng viên</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <span class="w-3.5 h-3.5 rounded-full bg-indigo-600 border border-white shadow"></span>
-            <span class="text-slate-700"><strong>Vị trí Giảng viên:</strong> Thường trực & sẵn sàng</span>
+
+          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-amber-50/70 rounded-lg border border-amber-200 text-xs text-slate-700">
+            <div class="font-bold text-amber-900 flex items-center space-x-1.5">
+              <span>🚦 Lớp giao thông thời gian thực (Traffic Flow):</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-3 text-[11px]">
+              <span class="flex items-center space-x-1">
+                <span class="w-4 h-1.5 rounded-full bg-emerald-500 inline-block shadow-xs"></span>
+                <span>Thông thoáng (Tốc độ chuẩn)</span>
+              </span>
+              <span class="flex items-center space-x-1">
+                <span class="w-4 h-1.5 rounded-full bg-amber-500 inline-block shadow-xs"></span>
+                <span>Đông xe (Chậm)</span>
+              </span>
+              <span class="flex items-center space-x-1">
+                <span class="w-4 h-1.5 rounded-full bg-rose-500 inline-block shadow-xs"></span>
+                <span>Ùn tắc / Kẹt xe (Nút giao cao điểm)</span>
+              </span>
+              <span class="flex items-center space-x-1">
+                <span class="w-4 h-1.5 rounded-full bg-rose-900 inline-block shadow-xs"></span>
+                <span>Tắc nghẽn nghiêm trọng</span>
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -625,7 +761,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
           <div>
             <h3 class="font-bold text-slate-900 text-lg">Đội Ngũ Giảng Viên An Toàn Lao Động (Khu Vực Miền Nam)</h3>
-            <p class="text-xs text-slate-500">Danh sách giảng viên cơ hữu và cộng tác viên đào tạo theo Nghị định 44/2016/NĐ-CP.</p>
+            <p class="text-xs text-slate-500">Danh sách giảng viên cơ hữu và cộng tác viên kèm địa chỉ xuất phát từ nhà riêng.</p>
           </div>
           <div class="flex items-center space-x-2">
             <input type="text" id="search-instructor-input" placeholder="Tìm theo tên, khu vực, nhóm..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs outline-none w-52">
@@ -638,7 +774,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
           </div>
         </div>
 
-        <!-- Instructor Cards Grid -->
         <div id="instructors-full-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
           <!-- Rendered via JS -->
         </div>
@@ -646,105 +781,8 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
     </section>
 
 
-    <!-- ==================== TAB 6: SETTINGS & DRIVE / FIREBASE / GITHUB ==================== -->
-    <section id="tab-settings" class="tab-content hidden space-y-6">
-      
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- GitHub Pages Guide (Col 1) -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
-          <div class="flex items-center space-x-2 text-slate-900 font-bold border-b pb-2">
-            <svg class="w-5 h-5 text-slate-800" fill="currentColor" viewBox="0 0 24 24">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-            </svg>
-            <h4 class="text-sm">Triển Khai Web Trên GitHub Pages</h4>
-          </div>
-          <p class="text-xs text-slate-600 leading-relaxed">
-            Ứng dụng này là dạng <strong>Single-page HTML thuần</strong>, không cần server backend phức tạp, có thể tải lên GitHub Pages miễn phí để toàn bộ văn phòng miền Nam truy cập trên điện thoại & máy tính.
-          </p>
-          <div class="bg-slate-50 p-3 rounded-lg text-xs font-mono text-slate-700 space-y-1.5 border border-slate-200">
-            <div>1. Tạo repo mới: <code class="text-blue-600 font-semibold">quan-ly-lich-atld</code></div>
-            <div>2. Đổi tên file này thành <code class="text-emerald-600 font-semibold">index.html</code> và push lên nhánh <code class="text-slate-800 font-semibold">main</code></div>
-            <div>3. Vào <strong>Settings > Pages</strong> > chọn nhánh <code class="text-slate-800 font-semibold">main / root</code> > Save</div>
-            <div class="text-amber-700 font-semibold pt-1">🚀 Link truy cập: https://&lt;user&gt;.github.io/quan-ly-lich-atld</div>
-          </div>
-        </div>
-
-        <!-- Google Drive Cloud Photos Guide (Col 2) -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
-          <div class="flex items-center space-x-2 text-slate-900 font-bold border-b pb-2">
-            <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12.01 1.99c-1.35 0-2.61.54-3.56 1.49L2.1 9.84a5.04 5.04 0 000 7.13l6.35 6.35c.95.95 2.21 1.49 3.56 1.49s2.61-.54 3.56-1.49l6.35-6.35a5.04 5.04 0 000-7.13L15.57 3.48c-.95-.95-2.21-1.49-3.56-1.49z"/>
-            </svg>
-            <h4 class="text-sm">Quản Lý Hình Ảnh Trên Google Drive</h4>
-          </div>
-          <p class="text-xs text-slate-600 leading-relaxed">
-            Mỗi khóa học có trường <strong>Link Google Drive</strong>. Nhân viên văn phòng hoặc giảng viên sau khi dạy xong có thể upload ảnh lớp học, bảng ký tên điểm danh và bài thi trắc nghiệm vào thư mục chung.
-          </p>
-          <div class="bg-blue-50/60 p-3 rounded-lg text-xs text-blue-900 space-y-1 border border-blue-200">
-            <p class="font-semibold">Cấu trúc thư mục Drive khuyến nghị:</p>
-            <p>📂 ATLD_MIEN_NAM / 2026 / T11_2026</p>
-            <p> └── 📁 2026-11-03_VINALPHA_HOCMON</p>
-            <p>     ├── 📷 Anh_Lop_Hoc/</p>
-            <p>     ├── 📝 Bang_Diem_Danh.pdf</p>
-            <p>     └── 📄 Bien_Ban_Nghiem_Thu.pdf</p>
-          </div>
-        </div>
-
-        <!-- Firebase Cloud Sync (Col 3) -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
-          <div class="flex items-center space-x-2 text-slate-900 font-bold border-b pb-2">
-            <svg class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M4.64 19.37L1.87 5.06a.8.8 0 011.39-.67l4.31 8.28-2.93 6.7zM11.53 2.15a.8.8 0 00-1.48 0L7.4 8.78l4.13-7.9v1.27zm7.83 2.91a.8.8 0 00-1.39-.67L4.92 18.25l7.08 4.09a1.6 1.6 0 001.6 0l5.76-17.28z"/>
-            </svg>
-            <h4 class="text-sm">Đồng Bộ Firebase Realtime</h4>
-          </div>
-          <p class="text-xs text-slate-600 leading-relaxed">
-            Hệ thống hiện tự động lưu trữ trên <strong>LocalStorage</strong> của trình duyệt (offline an toàn). Để đồng bộ real-time nhiều người cùng lúc, bạn có thể dán cấu hình Firebase:
-          </p>
-          <textarea id="firebase-config-input" rows="3" placeholder='{"apiKey": "...", "projectId": "...", "databaseURL": "..."}' class="w-full text-xs font-mono p-2 border border-slate-300 rounded bg-slate-50 outline-none"></textarea>
-          <div class="flex items-center space-x-2">
-            <button id="btn-save-firebase" class="w-full text-xs bg-amber-500 hover:bg-amber-600 text-white font-medium py-1.5 px-3 rounded transition">
-              Kích Hoạt Đồng Bộ Firebase
-            </button>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Backup / Restore / Reset Database Section -->
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-        <h4 class="font-bold text-sm text-slate-900 mb-2">Sao Lưu & Quản Trị Dữ Liệu</h4>
-        <p class="text-xs text-slate-600 mb-4">Bạn có thể xuất toàn bộ dữ liệu ra file JSON để lưu trữ hoặc nhập dữ liệu sang máy tính khác của văn phòng.</p>
-        
-        <div class="flex flex-wrap items-center gap-3">
-          <button id="btn-export-json" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium px-4 py-2 rounded-lg flex items-center space-x-2 transition shadow-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-            </svg>
-            <span>Xuất Dữ Liệu (Backup JSON)</span>
-          </button>
-
-          <label class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-medium px-4 py-2 rounded-lg flex items-center space-x-2 cursor-pointer transition shadow-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-            </svg>
-            <span>Nhập Dữ Liệu (Restore JSON)</span>
-            <input type="file" id="import-json-file" accept=".json" class="hidden">
-          </label>
-
-          <button id="btn-reset-default-data" class="text-rose-600 hover:bg-rose-50 text-xs font-medium px-4 py-2 rounded-lg border border-rose-200 transition">
-            Khôi Phục Dữ Liệu Mẫu Ban Đầu
-          </button>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- ==================== TAB 7: SETTLEMENT & BILLING (QUYẾT TOÁN CHI PHÍ) ==================== -->
+    <!-- ==================== TAB 6: SETTLEMENT & BILLING ==================== -->
     <section id="tab-settlement" class="tab-content hidden space-y-6">
-      
-      <!-- Top banner guide -->
       <div class="bg-gradient-to-r from-amber-700 via-amber-800 to-slate-900 text-white rounded-2xl p-6 shadow-md relative overflow-hidden">
         <div class="relative z-10 max-w-4xl">
           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-400 text-slate-900 mb-2">
@@ -752,15 +790,14 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
           </span>
           <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Dự Toán & Quyết Toán Chi Phí Giảng Viên Huấn Luyện</h2>
           <p class="text-xs sm:text-sm text-amber-100/90 mt-1">
-            Theo thông báo chính thức của BLĐ Công ty VDC ngày 01/11/2026: Quản lý thù lao giảng dạy (1.500.000đ/buổi hoặc 2.250.000đ/2 ca), phụ cấp đi lại theo cự ly từ trung tâm TP.HCM, lưu trú qua đêm (400.000đ/đêm) và chi phí thuê thiết bị.
+            Theo thông báo chính thức của BLĐ Công ty VDC ngày 01/11/2026: Quản lý thù lao giảng dạy (1.500.000đ/buổi, 2.250.000đ/2 ca, 3.000.000đ/ngày), phụ cấp đi lại đo từ nhà riêng giảng viên, lưu trú qua đêm (400.000đ/đêm) và chi phí thuê thiết bị.
           </p>
         </div>
       </div>
 
-      <!-- Filter Bar: Between 2 dates, Instructor, Status -->
+      <!-- Filter Bar -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <!-- Date Range Pickers -->
           <div class="flex flex-wrap items-center gap-3">
             <div class="flex items-center space-x-2">
               <label class="text-xs font-bold text-slate-700 whitespace-nowrap">Từ ngày:</label>
@@ -771,7 +808,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
               <input type="date" id="settle-to-date" value="2026-11-30" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none">
             </div>
 
-            <!-- Quick range buttons -->
             <div class="flex items-center space-x-1">
               <button id="btn-settle-preset-month" class="px-2.5 py-1 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">Tháng 11/2026</button>
               <button id="btn-settle-preset-half1" class="px-2.5 py-1 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">01 - 15/11</button>
@@ -779,7 +815,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
             </div>
           </div>
 
-          <!-- Secondary Filters -->
           <div class="flex flex-wrap items-center gap-2">
             <div class="flex items-center space-x-1.5">
               <label class="text-xs font-semibold text-slate-600">Giảng viên:</label>
@@ -802,42 +837,31 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
       <!-- KPI Financial Summary Cards -->
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <!-- 1. Total Courses -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tổng số lớp</div>
           <div class="text-xl font-black text-slate-900 mt-1" id="kpi-total-courses">0</div>
           <div class="text-[10px] text-slate-400 mt-0.5" id="kpi-sessions-sub">0 ca giảng dạy</div>
         </div>
-
-        <!-- 2. Teaching Fee (I) -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <div class="text-[11px] font-semibold text-blue-600 uppercase tracking-wider">(I) Thù lao dạy</div>
           <div class="text-lg font-black text-blue-700 mt-1" id="kpi-teaching-fee">0 đ</div>
-          <div class="text-[10px] text-slate-400 mt-0.5">1.5tr/buổi; 2.25tr/2ca</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">1.5tr/2.25tr/3tr</div>
         </div>
-
-        <!-- 3. Travel Allowance (II) -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <div class="text-[11px] font-semibold text-indigo-600 uppercase tracking-wider">(II) Đi lại</div>
           <div class="text-lg font-black text-indigo-700 mt-1" id="kpi-travel-fee">0 đ</div>
-          <div class="text-[10px] text-slate-400 mt-0.5">Theo cự ly TT TP.HCM</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Đo từ nhà riêng GV</div>
         </div>
-
-        <!-- 4. Lodging (III) -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <div class="text-[11px] font-semibold text-amber-600 uppercase tracking-wider">(III) Ăn ở lưu trú</div>
           <div class="text-lg font-black text-amber-700 mt-1" id="kpi-lodging-fee">0 đ</div>
           <div class="text-[10px] text-slate-400 mt-0.5">400.000 đ/đêm</div>
         </div>
-
-        <!-- 5. Equipment (IV) -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <div class="text-[11px] font-semibold text-purple-600 uppercase tracking-wider">(IV) Thuê thiết bị</div>
           <div class="text-lg font-black text-purple-700 mt-1" id="kpi-equipment-fee">0 đ</div>
           <div class="text-[10px] text-slate-400 mt-0.5">Máy chiếu/TB thực hành</div>
         </div>
-
-        <!-- 6. Total Payable -->
         <div class="bg-emerald-50/70 p-4 rounded-xl border border-emerald-300 shadow-xs">
           <div class="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">TỔNG THANH TOÁN</div>
           <div class="text-xl font-black text-emerald-700 mt-1" id="kpi-total-payable">0 đ</div>
@@ -845,9 +869,8 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         </div>
       </div>
 
-      <!-- Itemized Settlement Table & Action Bar -->
+      <!-- Itemized Table & Action Bar -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden space-y-0">
-        <!-- Table Action Bar -->
         <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center space-x-2">
             <h4 class="font-bold text-sm text-slate-900">Bảng Kê Chi Tiết Các Lớp Huấn Luyện Trong Kỳ Quyết Toán</h4>
@@ -861,14 +884,12 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
               </svg>
               <span>Đánh Dấu Đã Thanh Toán</span>
             </button>
-
             <button id="btn-settle-export-csv" class="px-3 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-900 text-white rounded-lg shadow-xs transition flex items-center space-x-1">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
               </svg>
               <span>Xuất Excel / CSV</span>
             </button>
-
             <button id="btn-settle-print-voucher" class="px-3.5 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-xs transition flex items-center space-x-1">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
@@ -878,7 +899,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
           </div>
         </div>
 
-        <!-- Table View -->
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
             <thead class="bg-slate-100 text-slate-600 uppercase font-bold border-b border-slate-200">
@@ -907,7 +927,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         </div>
       </div>
 
-      <!-- VDC Policy Accordion Reference Box -->
+      <!-- Policy Accordion -->
       <div class="bg-slate-50 border border-slate-300 rounded-xl p-5 space-y-3">
         <div class="flex items-center space-x-2 text-slate-800 font-bold border-b border-slate-200 pb-2">
           <svg class="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 24 24">
@@ -918,12 +938,11 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-700 leading-relaxed">
           <div class="space-y-1.5 bg-white p-3 rounded-lg border border-slate-200">
             <p class="font-bold text-blue-700">I. Chi phí giảng viên huấn luyện:</p>
-            <p>• Lớp huấn luyện 1 buổi (sáng/chiều, 2h-3h): <strong>1.500.000 vnđ/buổi</strong>.</p>
-            <p>• Chia 2 ca trong cùng 1 buổi (cùng địa điểm, mỗi ca 1.5-2h, chờ &le; 1h): <strong>1.500.000 + 50% = 2.250.000 vnđ</strong>.</p>
-            <p class="font-bold text-indigo-700 pt-2">II. Hỗ trợ chi phí đi lại (từ Trung tâm TP.HCM):</p>
-            <p>• Cự ly 25 - 50km: <strong>150.000 vnđ</strong></p>
-            <p>• Cự ly 51 - 100km: <strong>300.000 vnđ</strong></p>
-            <p>• Cự ly 101 - 200km: <strong>500.000 vnđ</strong> (Dưới 25km: 0 vnđ)</p>
+            <p>• Lớp huấn luyện 1 buổi (1 lớp, sáng hoặc chiều, 2h-3h): <strong>1.500.000 vnđ / buổi</strong>.</p>
+            <p>• Chia 2 ca trong cùng 1 buổi (1 buổi 2 lớp/ca tại cùng địa điểm, mỗi ca 1.5-2h, chờ &le; 1h): <strong>1.500.000 + 50% = 2.250.000 vnđ / buổi</strong>.</p>
+            <p>• Lớp huấn luyện 1 ngày (cả ngày: 2 buổi sáng & chiều): <strong>1.500.000 x 2 = 3.000.000 vnđ / ngày</strong>.</p>
+            <p class="font-bold text-indigo-700 pt-2">II. Hỗ trợ chi phí đi lại (Đo từ nhà riêng của Giảng viên):</p>
+            <p>• Cự ly 25 - 50km: <strong>150.000 vnđ</strong> &bull; 51 - 100km: <strong>300.000 vnđ</strong> &bull; 101 - 200km: <strong>500.000 vnđ</strong> (Dưới 25km: 0 vnđ)</p>
           </div>
           <div class="space-y-1.5 bg-white p-3 rounded-lg border border-slate-200">
             <p class="font-bold text-amber-700">III. Hỗ trợ ăn ở (lưu trú) qua đêm:</p>
@@ -931,12 +950,74 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
             <p class="font-bold text-purple-700 pt-2">IV. Chi phí thuê máy móc, thiết bị phục vụ huấn luyện:</p>
             <p>• Khi không có thiết bị, chi phí thuê thống nhất trước giữa VDC và giảng viên (có hóa đơn/chứng từ).</p>
             <p class="font-bold text-rose-700 pt-2">V. Thanh toán & Thuế TNCN:</p>
-            <p>• Tổng thanh toán = (I) + (II) + (III) + (IV).</p>
-            <p>• VDC đóng <strong>10% thuế TNCN</strong> trên chi phí giảng viên ở mục (I).</p>
+            <p>• Tổng thanh toán = (I) + (II) + (III) + (IV). VDC đóng <strong>10% thuế TNCN</strong> trên mục (I).</p>
           </div>
         </div>
       </div>
+    </section>
 
+
+    <!-- ==================== TAB 7: SETTINGS & CLOUD ==================== -->
+    <section id="tab-settings" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
+          <div class="flex items-center space-x-2 text-slate-900 font-bold border-b pb-2">
+            <h4 class="text-sm">Triển Khai Web Trên GitHub Pages</h4>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Ứng dụng dạng <strong>Single-page HTML thuần</strong>, không cần server backend phức tạp, có thể tải lên GitHub Pages miễn phí để toàn bộ văn phòng miền Nam truy cập.
+          </p>
+          <div class="bg-slate-50 p-3 rounded-lg text-xs font-mono text-slate-700 space-y-1 border border-slate-200">
+            <div>1. Đổi tên file thành <code class="text-emerald-600 font-bold">index.html</code></div>
+            <div>2. Push lên GitHub nhánh <code class="text-slate-800 font-bold">main</code></div>
+            <div>3. Vào <strong>Settings > Pages</strong> > chọn nhánh <code class="font-bold">main / root</code></div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
+          <div class="flex items-center space-x-2 text-slate-900 font-bold border-b pb-2">
+            <h4 class="text-sm">Quản Lý Hình Ảnh Trên Google Drive</h4>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Mỗi khóa học có trường <strong>Link Google Drive</strong> để upload ảnh lớp học, bảng ký tên điểm danh và bài thi sát hạch vào thư mục dùng chung.
+          </p>
+          <div class="bg-blue-50/60 p-3 rounded-lg text-xs text-blue-900 space-y-1 border border-blue-200">
+            <p class="font-semibold">Cấu trúc thư mục Drive:</p>
+            <p>📂 ATLD_MIEN_NAM / 2026 / T11_2026</p>
+            <p> └── 📁 2026-11-07_VINALPHA_HOCMON</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
+          <div class="flex items-center space-x-2 text-slate-900 font-bold border-b pb-2">
+            <h4 class="text-sm">Đồng Bộ Firebase Realtime</h4>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Dữ liệu tự động lưu trên <strong>LocalStorage</strong> an toàn. Bạn có thể dán cấu hình Firebase để đồng bộ tức thời:
+          </p>
+          <textarea id="firebase-config-input" rows="3" placeholder='{"apiKey": "...", "projectId": "..."}' class="w-full text-xs font-mono p-2 border border-slate-300 rounded bg-slate-50 outline-none"></textarea>
+          <button id="btn-save-firebase" class="w-full text-xs bg-amber-500 hover:bg-amber-600 text-white font-medium py-1.5 px-3 rounded transition">
+            Kích Hoạt Đồng Bộ Firebase
+          </button>
+        </div>
+      </div>
+
+      <!-- Backup / Restore -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <h4 class="font-bold text-sm text-slate-900 mb-2">Sao Lưu & Quản Trị Dữ Liệu</h4>
+        <div class="flex flex-wrap items-center gap-3">
+          <button id="btn-export-json" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium px-4 py-2 rounded-lg flex items-center space-x-2 transition shadow-sm">
+            <span>Xuất Dữ Liệu (Backup JSON)</span>
+          </button>
+          <label class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-medium px-4 py-2 rounded-lg flex items-center space-x-2 cursor-pointer transition shadow-sm">
+            <span>Nhập Dữ Liệu (Restore JSON)</span>
+            <input type="file" id="import-json-file" accept=".json" class="hidden">
+          </label>
+          <button id="btn-reset-default-data" class="text-rose-600 hover:bg-rose-50 text-xs font-medium px-4 py-2 rounded-lg border border-rose-200 transition">
+            Khôi Phục Dữ Liệu Mẫu Ban Đầu
+          </button>
+        </div>
+      </div>
     </section>
 
   </main>
@@ -1005,7 +1086,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">Chuyên môn sâu / Lĩnh vực thế mạnh</label>
-          <input type="text" id="new-inst-specialty" placeholder="Trạm bê tông, Thiết bị nâng, Làm việc trên cao, Hóa chất..." class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm outline-none">
+          <input type="text" id="new-inst-specialty" placeholder="Trạm bê tông, Thiết bị nâng, Làm việc trên cao..." class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm outline-none">
         </div>
         <div class="pt-3 flex justify-end space-x-2">
           <button id="btn-cancel-inst" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Hủy</button>
@@ -1016,7 +1097,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
   </div>
 
 
-    <!-- ==================== MODAL: PRINT SETTLEMENT VOUCHER ==================== -->
+  <!-- ==================== MODAL: PRINT SETTLEMENT VOUCHER ==================== -->
   <div id="settlement-print-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto shadow-2xl border border-slate-200 p-6 space-y-4">
       <div class="flex items-center justify-between border-b pb-3 no-print">
@@ -1040,7 +1121,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
       <!-- Printable Voucher Content -->
       <div id="printable-voucher-body" class="p-6 bg-white text-slate-900 space-y-4 font-sans text-xs border border-slate-200 rounded-xl">
-        <!-- Header -->
         <div class="flex justify-between items-start border-b-2 border-slate-800 pb-3">
           <div>
             <div class="font-bold text-sm text-slate-900">CÔNG TY TNHH HUẤN LUYỆN & TƯ VẤN VDC</div>
@@ -1054,14 +1134,12 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
           </div>
         </div>
 
-        <!-- Title -->
         <div class="text-center py-2">
           <h2 class="text-base font-extrabold uppercase tracking-wide text-slate-900">BẢNG KÊ QUYẾT TOÁN THÙ LAO & CHI PHÍ GIẢNG VIÊN HUẤN LUYỆN</h2>
           <p class="text-xs text-slate-600 mt-0.5" id="print-period-heading">Thời gian: Từ ngày ... đến ngày ...</p>
           <p class="text-xs font-semibold text-blue-800 mt-0.5" id="print-instructor-heading">Giảng viên: Tất cả giảng viên</p>
         </div>
 
-        <!-- Printable Table -->
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse border border-slate-300 text-[11px]">
             <thead class="bg-slate-100 font-bold">
@@ -1069,7 +1147,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
                 <th class="border border-slate-300 p-1.5 text-center w-8">STT</th>
                 <th class="border border-slate-300 p-1.5">Ngày</th>
                 <th class="border border-slate-300 p-1.5">Khóa học / Đơn vị</th>
-                <th class="border border-slate-300 p-1.5">Địa điểm</th>
+                <th class="border border-slate-300 p-1.5">Địa điểm & Nơi xuất phát</th>
                 <th class="border border-slate-300 p-1.5">Giảng viên</th>
                 <th class="border border-slate-300 p-1.5 text-right">Thù lao (I)</th>
                 <th class="border border-slate-300 p-1.5 text-right">Đi lại (II)</th>
@@ -1078,22 +1156,16 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
                 <th class="border border-slate-300 p-1.5 text-right font-bold">Tổng cộng</th>
               </tr>
             </thead>
-            <tbody id="print-table-tbody">
-              <!-- Rendered via JS -->
-            </tbody>
-            <tfoot id="print-table-tfoot" class="font-bold bg-slate-50">
-              <!-- Rendered via JS -->
-            </tfoot>
+            <tbody id="print-table-tbody"></tbody>
+            <tfoot id="print-table-tfoot" class="font-bold bg-slate-50"></tfoot>
           </table>
         </div>
 
-        <!-- In Words -->
         <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-xs">
           <p><strong>Tổng số tiền bằng chữ:</strong> <span class="italic font-semibold text-slate-900" id="print-amount-words">...</span></p>
           <p class="text-[11px] text-slate-500 mt-0.5"><em>Ghi chú: VDC chịu trách nhiệm kê khai và nộp 10% thuế TNCN trên mục (I) theo đúng quy định pháp luật.</em></p>
         </div>
 
-        <!-- Signatures -->
         <div class="grid grid-cols-4 gap-2 pt-6 text-center text-xs">
           <div>
             <div class="font-bold">Người lập bảng</div>
@@ -1120,7 +1192,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
     </div>
   </div>
 
-  <!-- ==================== FOOTER ==================== -->
+  <!-- FOOTER -->
   <footer class="bg-white border-t border-slate-200 mt-12 py-6 text-center text-xs text-slate-500">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
       <div class="flex items-center space-x-2">
@@ -1129,19 +1201,66 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         <span>Hệ thống Quản lý & Điều phối Lịch Huấn luyện An toàn Lao động</span>
       </div>
       <div>
-        <span>Nghị định 44/2016/NĐ-CP & NĐ 140/2018/NĐ-CP • Sẵn sàng GitHub Pages & Firebase</span>
+        <span>Nghị định 44/2016/NĐ-CP & NĐ 140/2018/NĐ-CP • Sẵn sàng Google Auth, GitHub Pages & Firebase</span>
       </div>
     </div>
   </footer>
 
-
   <!-- JAVASCRIPT APPLICATION CORE LOGIC -->
   <script>
-    // --- DATABASE & STATE MANAGEMENT ---
-    const STORAGE_KEY_COURSES = "antoanhub_courses_v1";
-    const STORAGE_KEY_INSTRUCTORS = "antoanhub_instructors_v1";
+    // --- REAL SYSTEM DATE (07/11/2026) & RBAC USERS ---
+    const CURRENT_SYSTEM_DATE = "2026-11-07"; // Đồng bộ ngày thực tế hiện tại
+    const STORAGE_KEY_COURSES = "antoanhub_courses_v2";
+    const STORAGE_KEY_INSTRUCTORS = "antoanhub_instructors_v2";
+    const STORAGE_KEY_USER = "antoanhub_current_user_v2";
 
-    // Known Coordinates for Locations in Southern Vietnam (Hóc Môn, TP.HCM, Bình Dương, Đồng Nai, Long An)
+    // Google RBAC Preset Accounts
+    const GOOGLE_ACCOUNTS = {
+      admin: {
+        name: "Lãnh Đạo VDC (Admin)",
+        email: "admin@vdcsafety.com",
+        role: "admin",
+        roleName: "Admin (Quản trị toàn quyền)",
+        avatarBg: "bg-purple-600",
+        avatar: "AD",
+        badgeClass: "bg-purple-500/20 text-purple-300 border-purple-500/40"
+      },
+      sales: {
+        name: "Nguyễn Thị Lan (Sales Miền Nam)",
+        email: "sales.lan@vdcsafety.com",
+        role: "sales",
+        roleName: "Sales (Kinh doanh / Chăm sóc KH)",
+        avatarBg: "bg-blue-600",
+        avatar: "SL",
+        badgeClass: "bg-blue-500/20 text-blue-300 border-blue-500/40"
+      },
+      trainer: {
+        name: "Thầy Trần Quốc Tuấn (Giảng viên)",
+        email: "gv.tuantran@vdcsafety.com",
+        role: "trainer",
+        instructorId: "gv-01",
+        roleName: "Trainer (Giảng viên cơ hữu)",
+        avatarBg: "bg-emerald-600",
+        avatar: "GV",
+        badgeClass: "bg-emerald-500/20 text-emerald-300 border-emerald-400/40"
+      },
+      guest: {
+        name: "Khách Xem Lịch (Guest)",
+        email: "guest@vdcsafety.com",
+        role: "guest",
+        roleName: "Guest (Chỉ xem lịch)",
+        avatarBg: "bg-slate-600",
+        avatar: "GT",
+        badgeClass: "bg-slate-500/20 text-slate-300 border-slate-500/40"
+      }
+    };
+
+    let currentUser = null;
+
+    // Center of Ho Chi Minh City (Quận 1 / Bưu điện Trung tâm TP)
+    const HCMC_CENTER = { lat: 10.7798, lng: 106.6990 };
+
+    // Known Coordinates for Locations in Southern Vietnam
     const KNOWN_COORDINATES = {
       "hoc mon": { lat: 10.8847, lng: 106.5921 },
       "vincons hoc mon": { lat: 10.8872, lng: 106.5955 },
@@ -1160,31 +1279,44 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       "default": { lat: 10.8847, lng: 106.5921 }
     };
 
-    // Center of Ho Chi Minh City (Quận 1 / Bưu điện Trung tâm TP)
-    const HCMC_CENTER = { lat: 10.7798, lng: 106.6990 };
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return (R * c).toFixed(1);
+    }
 
-    // Format Vietnamese Currency
     function formatCurrency(amount) {
       const num = Math.round(Number(amount) || 0);
       return num.toLocaleString('vi-VN') + ' đ';
     }
 
-    // VDC Policy 01.11.2026: Travel allowance based on distance from Center of HCMC
     function calculateTravelAllowance(distanceKm) {
       const km = parseFloat(distanceKm) || 0;
       if (km < 25) return 0;
       if (km <= 50) return 150000;
       if (km <= 100) return 300000;
       if (km <= 200) return 500000;
-      return 500000; // Over 200km
+      return 500000;
     }
 
-    // Distance from Center of HCMC in km
-    function getDistanceFromHcmcCenter(coords) {
-      return parseFloat(calculateDistance(HCMC_CENTER.lat, HCMC_CENTER.lng, coords.lat, coords.lng));
+    function getTeachingFeeByShiftType(shiftType) {
+      if (shiftType === "2ca") return 2250000;
+      if (shiftType === "1ngay") return 3000000;
+      return 1500000;
     }
 
-    // Convert number to Vietnamese text words
+    function getShiftLabel(shiftType) {
+      if (shiftType === "2ca") return "1 buổi 2 lớp/ca";
+      if (shiftType === "1ngay") return "1 ngày (2 buổi)";
+      return "1 buổi (1 lớp)";
+    }
+
     function numberToVietnameseWords(num) {
       if (!num || num <= 0) return "Không đồng";
       const n = Math.round(num);
@@ -1200,7 +1332,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         if (t === 0 && u !== 0 && h > 0) str += "lẻ ";
         else if (t === 1) str += "mười ";
         else if (t > 1) str += digits[t] + " mươi ";
-        
         if (u === 1 && t > 1) str += "mốt ";
         else if (u === 5 && t > 0) str += "lăm ";
         else if (u > 0 || (h === 0 && t === 0 && g === 0)) str += digits[u] + " ";
@@ -1210,35 +1341,26 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       let s = "";
       let temp = n;
       let groupIdx = 0;
-
       while (temp > 0) {
         const group = temp % 1000;
         if (group > 0) {
-          const gText = readGroup(group);
-          s = gText + " " + units[groupIdx] + " " + s;
+          s = readGroup(group) + " " + units[groupIdx] + " " + s;
         }
         temp = Math.floor(temp / 1000);
         groupIdx++;
       }
-
       s = s.trim() + " đồng chẵn";
       return s.charAt(0).toUpperCase() + s.slice(1);
     }
 
-    // Calculate Haversine Distance in Kilometers
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371; // Radius of the Earth in km
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return (R * c).toFixed(1);
+    function formatDateVN(dateStr) {
+      if (!dateStr) return "";
+      const parts = dateStr.split("-");
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return dateStr;
     }
 
-    // Default Seed Instructors with Home Departure Address
+    // Default Instructors with Departure Home Address
     const DEFAULT_INSTRUCTORS = [
       {
         id: "gv-01",
@@ -1326,12 +1448,12 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       }
     ];
 
-    // Default Seed Courses with VDC Financial Policy Fields (Calculated from each Instructor's Home)
+    // Default Seed Courses synchronized with Current Real Date (07/11/2026)
     const DEFAULT_COURSES = [
       {
         id: "course-user-01",
         name: "VINALPHA HÓC MÔN",
-        date: "2026-11-03",
+        date: "2026-11-07", // Hôm nay
         time: "15:00",
         endTime: "17:30",
         group: "3",
@@ -1343,12 +1465,12 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         equipment: "MÁY CHIẾU (tại dự án không có thiết bị)",
         contactName: "MS ÁNH",
         contactPhone: "0792006916",
-        status: "pending",
+        status: "pending", // Lưu trước, chờ tìm GV sau
         assignedInstructorId: null,
         assignedInstructorName: null,
         departureAddress: "Tính theo nhà GV được chọn",
         driveLink: "https://drive.google.com/drive/folders/sample-vinalpha-hocmon-photos",
-        notes: "Lớp học chiều ngày 03/11/2026, đơn vị sản xuất vật liệu yêu cầu mang máy chiếu.",
+        notes: "Lớp học chiều nay 07/11/2026, ghi nhận lịch trước, chờ chốt GV tối ưu sau.",
         shiftType: "1ca",
         costTeaching: 1500000,
         distanceCenterKm: 2.5,
@@ -1364,7 +1486,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       {
         id: "course-02",
         name: "DỰ ÁN LANDMARK BÌNH DƯƠNG",
-        date: "2026-11-03",
+        date: "2026-11-07", // Sáng nay
         time: "08:30",
         endTime: "11:30",
         group: "3",
@@ -1381,7 +1503,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         assignedInstructorName: "Thầy Đỗ Hoàng Nam",
         departureAddress: "78 Nguyễn Tri Phương, Dĩ An, Bình Dương",
         driveLink: "https://drive.google.com/drive/folders/sample-landmark-bd",
-        notes: "Đã chốt Thầy Nam dạy ca sáng, nhà ở Dĩ An cách Becamex 12 km (dưới 25km phụ cấp đi lại 0đ).",
+        notes: "Đã chốt Thầy Nam dạy ca sáng, nhà ở Dĩ An cách Becamex 12 km (dưới 25km đi lại 0đ).",
         shiftType: "1ca",
         costTeaching: 1500000,
         distanceCenterKm: 12,
@@ -1397,7 +1519,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       {
         id: "course-03",
         name: "CÔNG TY MAY NHÀ BÈ (CHI NHÁNH Q12)",
-        date: "2026-11-03",
+        date: "2026-11-05",
         time: "08:00",
         endTime: "11:00",
         group: "1",
@@ -1430,7 +1552,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       {
         id: "course-04",
         name: "TRẠM TRỘN BÊ TÔNG RẠCH CHIẾC",
-        date: "2026-11-06",
+        date: "2026-11-08", // Ngày mai
         time: "08:30",
         endTime: "11:30",
         group: "3",
@@ -1561,14 +1683,13 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       }
     ];
 
-    // Local App State
     let courses = [];
     let instructors = [];
     let activeTab = "tab-parser";
     let mapInstance = null;
     let mapMarkers = [];
+    let currentCalDate = new Date(2026, 10, 7); // Mặc định tháng 11/2026 ngày 7
 
-    // Helper: Toast Notifications
     function showToast(message, type = "success") {
       const container = document.getElementById("toast-container");
       const toast = document.createElement("div");
@@ -1576,33 +1697,87 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         ? "bg-emerald-600 text-white" 
         : type === "warning" ? "bg-amber-500 text-white" : "bg-rose-600 text-white";
       
-      toast.className = `${colors} px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium flex items-center space-x-2 transition-all duration-300 transform translate-x-10 opacity-0 pointer-events-auto`;
-      toast.innerHTML = `
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-        </svg>
-        <span>${message}</span>
-      `;
+      toast.className = `${colors} px-4 py-2.5 rounded-lg shadow-lg text-xs font-semibold flex items-center space-x-2 transition-all duration-300 transform translate-x-10 opacity-0 pointer-events-auto`;
+      toast.innerHTML = `<span>${message}</span>`;
       container.appendChild(toast);
 
-      requestAnimationFrame(() => {
-        toast.classList.remove("translate-x-10", "opacity-0");
-      });
-
+      requestAnimationFrame(() => toast.classList.remove("translate-x-10", "opacity-0"));
       setTimeout(() => {
         toast.classList.add("translate-x-10", "opacity-0");
         setTimeout(() => toast.remove(), 300);
       }, 3500);
     }
 
-    // Initialize State from LocalStorage or Defaults
+    // Google RBAC Auth Login function
+    function loginWithRole(roleKey) {
+      const acc = GOOGLE_ACCOUNTS[roleKey] || GOOGLE_ACCOUNTS.admin;
+      currentUser = acc;
+      try {
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
+      } catch (e) {}
+
+      document.getElementById("google-login-modal").classList.add("hidden");
+      applyRolePermissions();
+      showToast(`Đăng nhập Google thành công! Vai trò: ${currentUser.roleName}`);
+      renderAllViews();
+    }
+
+    function applyRolePermissions() {
+      if (!currentUser) currentUser = GOOGLE_ACCOUNTS.admin;
+
+      // Update Header Profile UI
+      document.getElementById("user-display-name").textContent = currentUser.name;
+      document.getElementById("user-email").textContent = currentUser.email;
+      document.getElementById("user-avatar").textContent = currentUser.avatar;
+      document.getElementById("user-avatar").className = `w-8 h-8 rounded-full ${currentUser.avatarBg} text-white font-bold flex items-center justify-center text-xs shadow border border-white/40`;
+      
+      const badge = document.getElementById("user-role-badge");
+      badge.className = `px-2.5 py-1 rounded-full text-xs font-bold border flex items-center space-x-1 ${currentUser.badgeClass}`;
+      document.getElementById("user-role-name").textContent = currentUser.role.toUpperCase();
+
+      // Enforce Permissions across tabs
+      const role = currentUser.role;
+
+      // Guest: Read-only
+      if (role === "guest") {
+        document.querySelectorAll("button[id^='btn-save'], button[id^='btn-parse'], #btn-add-instructor, #btn-settle-bulk-paid").forEach(el => {
+          el.disabled = true;
+          el.classList.add("opacity-50", "cursor-not-allowed");
+        });
+      } else {
+        document.querySelectorAll("button[id^='btn-save'], button[id^='btn-parse'], #btn-add-instructor, #btn-settle-bulk-paid").forEach(el => {
+          el.disabled = false;
+          el.classList.remove("opacity-50", "cursor-not-allowed");
+        });
+      }
+
+      // Sales: Cannot delete or approve accounting settlement
+      if (role === "sales") {
+        const btnBulk = document.getElementById("btn-settle-bulk-paid");
+        if (btnBulk) btnBulk.classList.add("hidden");
+      } else {
+        const btnBulk = document.getElementById("btn-settle-bulk-paid");
+        if (btnBulk) btnBulk.classList.remove("hidden");
+      }
+    }
+
+    function resolveLocationCoordinates(locationStr) {
+      const clean = (locationStr || "").toLowerCase();
+      for (const [key, coords] of Object.entries(KNOWN_COORDINATES)) {
+        if (clean.includes(key)) return { ...coords };
+      }
+      return { ...KNOWN_COORDINATES["default"] };
+    }
+
     function initState() {
       try {
         const storedCourses = localStorage.getItem(STORAGE_KEY_COURSES);
         const storedInstructors = localStorage.getItem(STORAGE_KEY_INSTRUCTORS);
+        const storedUser = localStorage.getItem(STORAGE_KEY_USER);
         
         courses = storedCourses ? JSON.parse(storedCourses) : JSON.parse(JSON.stringify(DEFAULT_COURSES));
         instructors = storedInstructors ? JSON.parse(storedInstructors) : JSON.parse(JSON.stringify(DEFAULT_INSTRUCTORS));
+        if (storedUser) currentUser = JSON.parse(storedUser);
       } catch (e) {
         courses = JSON.parse(JSON.stringify(DEFAULT_COURSES));
         instructors = JSON.parse(JSON.stringify(DEFAULT_INSTRUCTORS));
@@ -1615,9 +1790,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       try {
         localStorage.setItem(STORAGE_KEY_COURSES, JSON.stringify(courses));
         localStorage.setItem(STORAGE_KEY_INSTRUCTORS, JSON.stringify(instructors));
-      } catch (e) {
-        console.error("Storage error:", e);
-      }
+      } catch (e) {}
       updateTopStats();
     }
 
@@ -1625,29 +1798,19 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       const totalCourses = courses.length;
       const pendingCourses = courses.filter(c => c.status === "pending").length;
       
-      // Calculate total budget for November 2026 courses
       let novBudget = 0;
       courses.filter(c => c.date && c.date.startsWith("2026-11")).forEach(c => {
         novBudget += (Number(c.totalCost) || 0);
       });
 
-      document.getElementById("stat-total-courses").textContent = `${totalCourses} khóa`;
-      document.getElementById("stat-pending-courses").textContent = `${pendingCourses} khóa`;
-      document.getElementById("stat-total-instructors").textContent = `${instructors.length} GV`;
+      const statPending = document.getElementById("stat-pending-courses");
+      if (statPending) statPending.textContent = `${pendingCourses} khóa`;
+      const statInst = document.getElementById("stat-total-instructors");
+      if (statInst) statInst.textContent = `${instructors.length} GV`;
       const budgetEl = document.getElementById("stat-total-budget");
       if (budgetEl) budgetEl.textContent = formatCurrency(novBudget);
-      document.getElementById("total-table-count").textContent = `Tổng số: ${totalCourses} khóa`;
-    }
-
-    // Detect GPS Coordinates for text address
-    function resolveLocationCoordinates(locationStr) {
-      const clean = locationStr.toLowerCase();
-      for (const [key, coords] of Object.entries(KNOWN_COORDINATES)) {
-        if (clean.includes(key)) {
-          return { ...coords };
-        }
-      }
-      return { ...KNOWN_COORDINATES["default"] };
+      const totalTable = document.getElementById("total-table-count");
+      if (totalTable) totalTable.textContent = `Tổng số: ${totalCourses} khóa`;
     }
 
     // --- ZALO TEXT PARSER CORE ---
@@ -1656,7 +1819,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
       const result = {
         name: "",
-        date: "2026-11-03",
+        date: CURRENT_SYSTEM_DATE, // Ngày 07/11/2026
         time: "15:00",
         endTime: "17:30",
         group: "3",
@@ -1668,73 +1831,49 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         contactPhone: ""
       };
 
-      // 1. Tên khóa / huấn luyện
-      // Ví dụ: "Lịch khóa/huấn luyện: VINALPHA HÓC MÔN"
       const courseMatch = text.match(/(?:Lịch khóa\/huấn luyện|Lịch khóa|Khóa học|Khóa\/huấn luyện|Tên lớp|Lớp)\s*:\s*([^\n\r]+)/i);
       if (courseMatch) {
         result.name = courseMatch[1].trim();
       } else {
-        // Fallback: dòng đầu tiên
         const lines = text.split("\n").map(l => l.trim()).filter(l => l.length > 0);
         if (lines.length > 0) result.name = lines[0].replace(/^[\d\.\-\s]+/, "").trim();
       }
 
-      // 2. Thời gian: "1. Thời gian : 15h00 ngày 03/11/2026"
       const timeLineMatch = text.match(/(?:Thời gian|Thời gian\s*:)\s*([^\n\r]+)/i);
       if (timeLineMatch) {
         const timeLine = timeLineMatch[1];
-        
-        // Giờ: 15h00, 15:00, 8h30, 8:30
         const hourMatch = timeLine.match(/(\d{1,2})[h:](\d{2})?/i);
         if (hourMatch) {
           const h = hourMatch[1].padStart(2, '0');
           const m = hourMatch[2] ? hourMatch[2].padStart(2, '0') : "00";
           result.time = `${h}:${m}`;
-          // Estimate end time (+ 2.5 hours)
           const endH = String(Math.min(23, parseInt(h, 10) + 2)).padStart(2, '0');
           result.endTime = `${endH}:${m}`;
         }
-
-        // Ngày: 03/11/2026 hoặc 3/11/2026 hoặc 03-11-2026
         const dateMatch = timeLine.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/);
         if (dateMatch) {
-          const d = dateMatch[1].padStart(2, '0');
-          const mo = dateMatch[2].padStart(2, '0');
-          const y = dateMatch[3];
-          result.date = `${y}-${mo}-${d}`;
+          result.date = `${dateMatch[3]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[1].padStart(2, '0')}`;
         }
       }
 
-      // 3. Nhóm: "2. Nhóm:  3 - Đơn vị sản xuất vật liệu"
       const groupMatch = text.match(/(?:Nhóm|Nhóm\s*:)\s*(\d+)(?:\s*[\-\–]\s*([^\n\r]+))?/i);
       if (groupMatch) {
         result.group = groupMatch[1].trim();
         result.groupDesc = groupMatch[2] ? `${result.group} - ${groupMatch[2].trim()}` : `Nhóm ${result.group}`;
       }
 
-      // 4. Nội dung huấn luyện: "3. Nội dung huấn luyện: Trạm bê tông nhựa"
       const contentMatch = text.match(/(?:Nội dung huấn luyện|Nội dung)\s*:\s*([^\n\r]+)/i);
-      if (contentMatch) {
-        result.content = contentMatch[1].trim();
-      }
+      if (contentMatch) result.content = contentMatch[1].trim();
 
-      // 5. Địa điểm huấn luyện: "4. Địa điểm huấn luyện: Vincons Hóc Môn"
       const locMatch = text.match(/(?:Địa điểm huấn luyện|Địa điểm)\s*:\s*([^\n\r]+)/i);
-      if (locMatch) {
-        result.location = locMatch[1].trim();
-      }
+      if (locMatch) result.location = locMatch[1].trim();
 
-      // 6. Thiết bị đơn vị huấn luyện hỗ trợ: "5. Thiết bị đơn vị huấn luyện hỗ trợ:  MÁY CHIẾU (tại dự án không có thiết bị)"
       const equipMatch = text.match(/(?:Thiết bị đơn vị huấn luyện hỗ trợ|Thiết bị hỗ trợ|Thiết bị)\s*:\s*([^\n\r]+)/i);
-      if (equipMatch) {
-        result.equipment = equipMatch[1].trim();
-      }
+      if (equipMatch) result.equipment = equipMatch[1].trim();
 
-      // 7. Liên hệ : "6. Liên hệ : MS ÁNH 0792.006.916"
       const contactMatch = text.match(/(?:Liên hệ|Người liên hệ)\s*:\s*([^\n\r]+)/i);
       if (contactMatch) {
         const contactRaw = contactMatch[1].trim();
-        // Extract phone number (e.g. 0792.006.916 or 0792006916 or 0908 123 456)
         const phoneMatch = contactRaw.match(/(\+?84|0)[\d\.\s]{8,13}/);
         if (phoneMatch) {
           result.contactPhone = phoneMatch[0].replace(/[\.\s]/g, "");
@@ -1744,12 +1883,12 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         }
       }
 
-      // 8. Tự động tính toán chi phí theo Thông báo VDC 01.11.2026:
+      // VDC policy defaults
       const coords = resolveLocationCoordinates(result.location || "vincons hoc mon");
-      result.distanceCenterKm = Math.round(getDistanceFromHcmcCenter(coords));
       result.shiftType = "1ca";
       result.costTeaching = 1500000;
-      result.costTravel = calculateTravelAllowance(result.distanceCenterKm);
+      result.distanceCenterKm = 2.5;
+      result.costTravel = 0;
       result.lodgingNights = 0;
       result.costLodging = 0;
       
@@ -1769,17 +1908,14 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       return result;
     }
 
-    // Dynamic cost calculator in parser form
     function updateFormCostCalculation() {
       const shiftEl = document.getElementById("cost-shift-type");
-      if (!shiftEl) return { totalCost: 1750000, costTeaching: 1500000, costTravel: 0, costLodging: 0, costEquipment: 250000, taxTNCN: 150000 };
+      if (!shiftEl) return { totalCost: 1750000, costTeaching: 1500000, costTravel: 0, costLodging: 0, costEquipment: 250000, taxTNCN: 150000, shiftType: "1ca", distanceCenterKm: 2.5, lodgingNights: 0 };
+      
       const shiftType = shiftEl.value;
-      let costTeaching = 1500000;
+      let costTeaching = getTeachingFeeByShiftType(shiftType);
       const customWrap = document.getElementById("cost-custom-teaching-wrap");
-      if (shiftType === "2ca") {
-        costTeaching = 2250000;
-        if (customWrap) customWrap.classList.add("hidden");
-      } else if (shiftType === "custom") {
+      if (shiftType === "custom") {
         if (customWrap) customWrap.classList.remove("hidden");
         costTeaching = parseFloat(document.getElementById("cost-custom-teaching").value) || 1500000;
       } else {
@@ -1793,24 +1929,17 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
       const nights = parseInt(document.getElementById("cost-lodging-select").value, 10) || 0;
       const costLodging = nights * 400000;
-
       const costEquipment = parseFloat(document.getElementById("cost-equipment-fee").value) || 0;
 
       const total = costTeaching + costTravel + costLodging + costEquipment;
       const taxTNCN = Math.round(costTeaching * 0.1);
 
-      const sTeach = document.getElementById("summary-teaching-fee");
-      if (sTeach) sTeach.textContent = formatCurrency(costTeaching);
-      const sTravel = document.getElementById("summary-travel-fee");
-      if (sTravel) sTravel.textContent = formatCurrency(costTravel);
-      const sLodge = document.getElementById("summary-lodging-fee");
-      if (sLodge) sLodge.textContent = formatCurrency(costLodging);
-      const sEquip = document.getElementById("summary-equipment-fee");
-      if (sEquip) sEquip.textContent = formatCurrency(costEquipment);
-      const sTotal = document.getElementById("summary-total-fee");
-      if (sTotal) sTotal.textContent = formatCurrency(total);
-      const sTax = document.getElementById("summary-tax-fee");
-      if (sTax) sTax.textContent = formatCurrency(taxTNCN);
+      document.getElementById("summary-teaching-fee").textContent = formatCurrency(costTeaching);
+      document.getElementById("summary-travel-fee").textContent = formatCurrency(costTravel);
+      document.getElementById("summary-lodging-fee").textContent = formatCurrency(costLodging);
+      document.getElementById("summary-equipment-fee").textContent = formatCurrency(costEquipment);
+      document.getElementById("summary-total-fee").textContent = formatCurrency(total);
+      document.getElementById("summary-tax-fee").textContent = formatCurrency(taxTNCN);
 
       return {
         shiftType,
@@ -1825,11 +1954,10 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       };
     }
 
-    // Fill form with parsed result
     function populateFormWithParsedData(data) {
       if (!data) return;
       document.getElementById("field-course-name").value = data.name || "Khóa Huấn Luyện Mới";
-      document.getElementById("field-date").value = data.date || "2026-11-03";
+      document.getElementById("field-date").value = data.date || CURRENT_SYSTEM_DATE;
       document.getElementById("field-time").value = data.time || "15:00";
       document.getElementById("field-group").value = data.group || "3";
       document.getElementById("field-group-desc").value = data.groupDesc || `Nhóm ${data.group}`;
@@ -1838,15 +1966,12 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       document.getElementById("field-equipment").value = data.equipment || "";
       document.getElementById("field-contact-name").value = data.contactName || "";
       document.getElementById("field-contact-phone").value = data.contactPhone || "";
-      document.getElementById("field-drive-link").value = data.driveLink || "https://drive.google.com/drive/folders/vinalpha-hocmon-photos";
+      document.getElementById("field-drive-link").value = data.driveLink || "";
 
-      // Populate VDC cost estimation fields
       const shiftEl = document.getElementById("cost-shift-type");
       if (shiftEl) shiftEl.value = data.shiftType || "1ca";
       const kmEl = document.getElementById("cost-distance-km");
-      if (kmEl) kmEl.value = data.distanceCenterKm !== undefined ? data.distanceCenterKm : 21;
-      const noteEl = document.getElementById("cost-distance-note");
-      if (noteEl) noteEl.textContent = `${data.location || 'Địa điểm'}: ~${data.distanceCenterKm || 21} km từ TT TP.HCM`;
+      if (kmEl) kmEl.value = data.distanceCenterKm !== undefined ? data.distanceCenterKm : 2.5;
       const lodgeEl = document.getElementById("cost-lodging-select");
       if (lodgeEl) lodgeEl.value = String(data.lodgingNights || 0);
       const equipFeeEl = document.getElementById("cost-equipment-fee");
@@ -1865,49 +1990,31 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       container.innerHTML = "";
 
       const targetGroup = courseInfo.group || "3";
-      const targetDate = courseInfo.date || "2026-11-03";
+      const targetDate = courseInfo.date || CURRENT_SYSTEM_DATE;
       const targetTime = courseInfo.time || "15:00";
       const targetLocation = courseInfo.location || "Vincons Hóc Môn";
-
       const coords = resolveLocationCoordinates(targetLocation);
 
-      // Criteria header text
       document.getElementById("matching-criteria-text").innerHTML = 
         `Đang khớp cho khóa: <strong>${courseInfo.name}</strong> • ${targetTime} ngày ${formatDateVN(targetDate)} • Địa điểm: <strong>${targetLocation}</strong>`;
 
-      // Check each instructor
       const evaluated = instructors.map(inst => {
-        // 1. Qualified for Group?
         const canTeachGroup = inst.groups.includes(targetGroup);
-
-        // 2. Schedule conflict?
-        // Check if instructor already assigned to a course on same date & overlapping time
         const busyCourse = courses.find(c => 
           c.date === targetDate && 
           c.assignedInstructorId === inst.id &&
           c.status !== "cancelled"
         );
         const hasTimeConflict = !!busyCourse;
-
-        // 3. Distance calculation
         const distanceKm = parseFloat(calculateDistance(coords.lat, coords.lng, inst.lat, inst.lng));
 
-        // 4. Matching Score (Lower is better: distance + penalty)
         let score = distanceKm;
         if (!canTeachGroup) score += 500;
         if (hasTimeConflict) score += 200;
 
-        return {
-          instructor: inst,
-          canTeachGroup,
-          hasTimeConflict,
-          busyCourse,
-          distanceKm,
-          score
-        };
+        return { instructor: inst, canTeachGroup, hasTimeConflict, busyCourse, distanceKm, score };
       });
 
-      // Sort by score (Lowest distance & no conflict first)
       evaluated.sort((a, b) => a.score - b.score);
 
       const availableCount = evaluated.filter(e => e.canTeachGroup && !e.hasTimeConflict).length;
@@ -1919,14 +2026,9 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
         const card = document.createElement("div");
         card.className = `p-4 rounded-xl border transition-all ${
-          isBestMatch 
-            ? "border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-400" 
-            : item.hasTimeConflict 
-              ? "border-slate-200 bg-slate-50/60 opacity-80" 
-              : "border-slate-200 bg-white hover:border-slate-300"
+          isBestMatch ? "border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-400" : item.hasTimeConflict ? "border-slate-200 bg-slate-50/60 opacity-80" : "border-slate-200 bg-white hover:border-slate-300"
         }`;
 
-        // Conflict / Status Badge
         let statusBadge = "";
         if (item.hasTimeConflict) {
           statusBadge = `<span class="bg-rose-100 text-rose-800 text-xs px-2 py-0.5 rounded font-semibold">🔴 Bận lịch lúc ${item.busyCourse.time} (${item.busyCourse.name})</span>`;
@@ -1936,17 +2038,13 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
           statusBadge = `<span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded font-semibold">⚠️ Chưa đăng ký dạy Nhóm ${targetGroup}</span>`;
         }
 
-        // Distance Badge
         const distanceBadge = `<span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded font-medium">📍 Cách ${item.distanceKm} km</span>`;
         const bestTag = isBestMatch ? `<span class="bg-emerald-600 text-white text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm">⭐ Khuyên Dùng: Gần Nhất & Trống Lịch</span>` : "";
-
-        // Groups Tag list
         const groupsHtml = inst.groups.map(g => `<span class="inline-block px-1.5 py-0.5 text-[11px] rounded bg-slate-100 text-slate-700 font-medium">N${g}</span>`).join(" ");
-        
-        // Dynamic Fee & Travel calculation from THIS specific instructor's home!
-        const instDist = parseFloat(calculateDistance(coords.lat, coords.lng, inst.lat, inst.lng));
+
+        const instDist = item.distanceKm;
         const instTravelFee = calculateTravelAllowance(instDist);
-        const estTeaching = courseInfo.costTeaching || (courseInfo.shiftType === "2ca" ? 2250000 : 1500000);
+        const estTeaching = courseInfo.costTeaching || getTeachingFeeByShiftType(courseInfo.shiftType);
         const estEquip = courseInfo.costEquipment !== undefined ? courseInfo.costEquipment : 250000;
         const estLodging = (courseInfo.lodgingNights || 0) * 400000;
         const estTotal = estTeaching + instTravelFee + estLodging + estEquip;
@@ -1963,12 +2061,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
                   <h4 class="font-bold text-slate-900 text-sm">${inst.name}</h4>
                   ${bestTag}
                 </div>
-                <p class="text-xs text-slate-500 flex items-center space-x-1 mt-0.5">
-                  <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                  </svg>
-                  <span>Thường trú: <strong>${inst.area}</strong></span>
-                </p>
                 <p class="text-xs text-slate-600 mt-1">
                   <strong>Thế mạnh:</strong> ${inst.specialty}
                 </p>
@@ -1987,15 +2079,12 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
                 </div>
               </div>
             </div>
-
-            <!-- Badges -->
             <div class="flex sm:flex-col items-end gap-1.5 flex-shrink-0">
               ${distanceBadge}
               ${statusBadge}
             </div>
           </div>
 
-          <!-- Bottom Action Buttons: Call, Zalo, Assign -->
           <div class="mt-3 pt-3 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center space-x-2 text-xs">
               <span class="text-slate-500">Thẩm quyền:</span>
@@ -2005,38 +2094,25 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
             </div>
 
             <div class="flex items-center space-x-2">
-              <!-- Call Phone Button -->
               <a href="tel:${inst.phone.replace(/[\.\s]/g, '')}" class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-sm transition">
-                <svg class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-                </svg>
                 <span>Gọi ${inst.phone}</span>
               </a>
-
-              <!-- Zalo Chat Button -->
-              <a href="https://zalo.me/${inst.phone.replace(/[\.\s]/g, '')}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold shadow-sm transition">
+              <a href="https://zalo.me/${inst.phone.replace(/[\.\s]/g, '')}" target="_blank" class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold shadow-sm transition">
                 <span>Nhắn Zalo</span>
               </a>
-
-              <!-- Assign Button with Instructor Specific Distance and Travel Fee -->
               <button data-inst-id="${inst.id}" data-inst-name="${inst.name}" data-inst-dist="${instDist}" data-inst-travel="${instTravelFee}" data-inst-home="${inst.homeAddress || inst.area}" class="btn-assign-inst inline-flex items-center space-x-1 px-3.5 py-1.5 rounded-lg ${
                 isBestMatch ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-slate-800 hover:bg-slate-900 text-white"
               } text-xs font-semibold shadow-sm transition">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                <span>Chốt GV Này (Khoảng cách ${instDist} km)</span>
+                <span>Chốt GV Này (${instDist} km)</span>
               </button>
             </div>
           </div>
         `;
-
         container.appendChild(card);
       });
 
-      // Attach event listeners to "Chốt GV Này" buttons (with individual instructor's home distance)
       document.querySelectorAll(".btn-assign-inst").forEach(btn => {
-        btn.addEventListener("click", (e) => {
+        btn.addEventListener("click", () => {
           const instId = btn.getAttribute("data-inst-id");
           const instName = btn.getAttribute("data-inst-name");
           const instDist = parseFloat(btn.getAttribute("data-inst-dist")) || 0;
@@ -2051,13 +2127,11 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
     function assignInstructorToCurrentCourse(instId, instName, courseInfo, instDist, instTravel, instHome) {
       const inst = instructors.find(i => i.id === instId);
       const homeAddr = instHome || (inst ? (inst.homeAddress || inst.area) : "");
-      
       const coords = resolveLocationCoordinates(courseInfo.location || "vincons hoc mon");
       const actualDist = (instDist !== undefined) ? instDist : (inst ? parseFloat(calculateDistance(coords.lat, coords.lng, inst.lat, inst.lng)) : 0);
       const actualTravel = (instTravel !== undefined) ? instTravel : calculateTravelAllowance(actualDist);
-      // Find or create course
+
       let targetCourse = courses.find(c => c.name.toLowerCase() === courseInfo.name.toLowerCase() && c.date === courseInfo.date);
-      
       const costData = updateFormCostCalculation();
       const teachFee = costData.costTeaching;
       const lodgeFee = costData.costLodging;
@@ -2111,14 +2185,74 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
       saveState();
       renderAllViews();
-
       showToast(`Đã chốt thành công giảng viên ${instName} cho lớp "${targetCourse.name}"!`);
-      
-      // Refresh matching list with updated status
       performSmartInstructorMatching(targetCourse);
     }
 
-    // --- TAB SWITCHING ---
+    // Action 1: Save Course to Schedule First, match instructor later
+    function saveCoursePendingFirst() {
+      const name = document.getElementById("field-course-name").value.trim() || "Khóa Mới";
+      const date = document.getElementById("field-date").value || CURRENT_SYSTEM_DATE;
+      const time = document.getElementById("field-time").value || "15:00";
+      const group = document.getElementById("field-group").value || "3";
+      const groupDesc = document.getElementById("field-group-desc").value.trim();
+      const content = document.getElementById("field-content").value.trim();
+      const location = document.getElementById("field-location").value.trim() || "TP.HCM";
+      const equipment = document.getElementById("field-equipment").value.trim();
+      const contactName = document.getElementById("field-contact-name").value.trim();
+      const contactPhone = document.getElementById("field-contact-phone").value.trim();
+      const driveLink = document.getElementById("field-drive-link").value.trim();
+
+      const coords = resolveLocationCoordinates(location);
+      const costData = updateFormCostCalculation();
+
+      // Check if course already exists
+      let existing = courses.find(c => c.name.toLowerCase() === name.toLowerCase() && c.date === date);
+      if (existing) {
+        existing.time = time;
+        existing.group = group;
+        existing.groupDesc = groupDesc;
+        existing.content = content;
+        existing.location = location;
+        existing.equipment = equipment;
+        existing.contactName = contactName;
+        existing.contactPhone = contactPhone;
+        existing.driveLink = driveLink;
+        showToast(`Đã cập nhật khóa học "${name}" vào lịch (Trạng thái chờ tìm GV)!`);
+      } else {
+        const newCourse = {
+          id: "course-" + Date.now(),
+          name,
+          date,
+          time,
+          endTime: "17:30",
+          group,
+          groupDesc,
+          content,
+          location,
+          lat: coords.lat,
+          lng: coords.lng,
+          equipment,
+          contactName,
+          contactPhone,
+          driveLink,
+          status: "pending", // CHỜ TÌM GIẢNG VIÊN SAU
+          assignedInstructorId: null,
+          assignedInstructorName: null,
+          departureAddress: "Chưa gán GV",
+          ...costData,
+          paymentStatus: "unpaid",
+          notes: "Ghi nhận lịch trước, chờ điều phối giảng viên tối ưu sau."
+        };
+        courses.unshift(newCourse);
+        showToast(`Đã LƯU KHÓA "${name}" vào lịch thành công (Chờ tìm GV sau)!`, "success");
+      }
+
+      saveState();
+      renderAllViews();
+    }
+
+    // Tab Switching
     function switchTab(tabId) {
       activeTab = tabId;
       document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
@@ -2133,62 +2267,57 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         }
       });
 
-      // Special handling for Leaflet Map and Settlement View
       if (tabId === "tab-map") {
         setTimeout(() => {
           if (!mapInstance) initMap();
-          else mapInstance.invalidateSize();
+          else {
+            mapInstance.invalidateSize();
+            populateRouteSelectors();
+          }
         }, 150);
       } else if (tabId === "tab-settlement") {
         renderSettlementView();
       }
     }
 
-    // --- RENDER MONTH VIEW ---
-    let currentCalDate = new Date(2026, 10, 1); // November 2026
-
+    // Calendar Month View (Real System Date 07/11/2026 Highlighted)
     function renderMonthCalendar() {
       const year = currentCalDate.getFullYear();
-      const month = currentCalDate.getMonth(); // 10 is Nov
+      const month = currentCalDate.getMonth();
       
       document.getElementById("cal-month-title").textContent = `Tháng ${month + 1} Năm ${year}`;
-
       const container = document.getElementById("calendar-month-cells");
       container.innerHTML = "";
 
-      // Days in month
       const daysInMonth = new Date(year, month + 1, 0).getDate();
-      // First day of month (0 = Sun, 1 = Mon ... 6 = Sat)
       let firstDayIndex = new Date(year, month, 1).getDay();
-      // Adjust so Monday is 0 and Sunday is 6
       firstDayIndex = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
 
-      // Empty cells before start of month
       for (let i = 0; i < firstDayIndex; i++) {
         const emptyCell = document.createElement("div");
         emptyCell.className = "min-h-[100px] bg-slate-50/50 p-1 border-r border-b border-slate-200 text-slate-300";
         container.appendChild(emptyCell);
       }
 
-      // Day cells
       for (let d = 1; d <= daysInMonth; d++) {
         const cell = document.createElement("div");
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const isSelectedDate = dateStr === "2026-11-03";
+        const isToday = dateStr === CURRENT_SYSTEM_DATE;
 
         cell.className = `min-h-[110px] p-1.5 border-r border-b border-slate-200 bg-white relative transition hover:bg-slate-50 flex flex-col justify-between ${
-          isSelectedDate ? "ring-2 ring-blue-500 ring-inset bg-blue-50/20" : ""
+          isToday ? "ring-2 ring-emerald-500 ring-inset bg-emerald-50/20" : ""
         }`;
 
-        // Top date header
         const dateHeader = document.createElement("div");
         dateHeader.className = "flex items-center justify-between";
         dateHeader.innerHTML = `
-          <span class="font-bold text-xs ${isSelectedDate ? 'bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center' : 'text-slate-700'}">${d}</span>
+          <div class="flex items-center space-x-1">
+            <span class="font-bold text-xs ${isToday ? 'bg-emerald-600 text-white w-5 h-5 rounded-full flex items-center justify-center font-black' : 'text-slate-700'}">${d}</span>
+            ${isToday ? '<span class="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1 rounded">Hôm nay</span>' : ''}
+          </div>
         `;
         cell.appendChild(dateHeader);
 
-        // Courses on this day
         const dayCourses = courses.filter(c => c.date === dateStr);
         const coursesList = document.createElement("div");
         coursesList.className = "space-y-1 mt-1 flex-1 overflow-y-auto max-h-[85px] custom-scroll";
@@ -2202,10 +2331,10 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
               : "bg-blue-100 text-blue-900 border-blue-300";
 
           item.className = `text-[11px] font-medium px-1.5 py-1 rounded border leading-tight cursor-pointer shadow-2xs transition truncate ${bgClass}`;
-          item.title = `${c.time} - ${c.name} (${c.location})\nGV: ${c.assignedInstructorName || 'Chưa có GV'}`;
+          item.title = `${c.time} - ${c.name} (${c.location})\nGV: ${c.assignedInstructorName || '⚠️ Chờ gán GV'}`;
           item.innerHTML = `
             <div class="font-bold truncate">${c.time} ${c.name}</div>
-            <div class="text-[10px] opacity-80 truncate">${c.assignedInstructorName ? 'GV: ' + c.assignedInstructorName : '⚠️ Cần tìm GV'}</div>
+            <div class="text-[10px] opacity-80 truncate">${c.assignedInstructorName ? 'GV: ' + c.assignedInstructorName : '⚠️ Chờ gán GV'}</div>
           `;
           item.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -2219,10 +2348,11 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       }
     }
 
-    // --- RENDER DAY VIEW & TIMELINE ---
-    function renderDayView(selectedDate = "2026-11-03") {
+    // Day Agenda View
+    function renderDayView(selectedDate = CURRENT_SYSTEM_DATE) {
       const heading = document.getElementById("agenda-day-heading");
-      heading.textContent = `Lịch Huấn Luyện Ngày ${formatDateVN(selectedDate)}`;
+      const isToday = selectedDate === CURRENT_SYSTEM_DATE;
+      heading.textContent = `Lịch Huấn Luyện Ngày ${formatDateVN(selectedDate)} ${isToday ? '(Hôm nay)' : ''}`;
 
       const dayCourses = courses.filter(c => c.date === selectedDate);
       document.getElementById("agenda-day-count").textContent = `${dayCourses.length} khóa học trong ngày`;
@@ -2233,17 +2363,13 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       if (dayCourses.length === 0) {
         container.innerHTML = `
           <div class="text-center py-8 text-slate-400">
-            <svg class="w-12 h-12 mx-auto text-slate-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
             <p class="text-sm font-medium">Không có lịch huấn luyện nào trong ngày này.</p>
-            <p class="text-xs text-slate-400 mt-1">Chọn ngày 03/11/2026 hoặc bấm dán tin Zalo mới.</p>
+            <p class="text-xs text-slate-400 mt-1">Chọn ngày khác hoặc bấm dán tin Zalo mới.</p>
           </div>
         `;
         return;
       }
 
-      // Sort by time
       dayCourses.sort((a, b) => a.time.localeCompare(b.time));
 
       dayCourses.forEach(c => {
@@ -2251,12 +2377,12 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         const isAssigned = c.status === "assigned";
 
         item.className = `p-4 rounded-xl border ${
-          isAssigned ? "border-emerald-200 bg-white" : "border-amber-200 bg-amber-50/30"
+          isAssigned ? "border-emerald-200 bg-white" : "border-amber-300 bg-amber-50/50 ring-1 ring-amber-300/60"
         } shadow-sm space-y-3`;
 
         const statusTag = isAssigned 
           ? `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Đã chốt GV: ${c.assignedInstructorName}</span>`
-          : `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">⚠️ Đang tìm GV phụ trách</span>`;
+          : `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-bold">⚠️ Chưa có GV (Đã ghi lịch trước)</span>`;
 
         item.innerHTML = `
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
@@ -2285,8 +2411,9 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
           <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
             ${!isAssigned ? `
-              <button data-course-id="${c.id}" class="btn-quick-find-inst px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow-sm transition">
-                ⚡ Tìm & Gán Giảng Viên
+              <button data-course-id="${c.id}" class="btn-quick-find-inst px-3.5 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm transition flex items-center space-x-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <span>⚡ Tìm & Gợi Ý GV Tối Ưu</span>
               </button>
             ` : `
               <button data-course-id="${c.id}" class="btn-change-inst px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition">
@@ -2301,7 +2428,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         container.appendChild(item);
       });
 
-      // Attach button events
       container.querySelectorAll(".btn-quick-find-inst").forEach(btn => {
         btn.addEventListener("click", () => {
           const cid = btn.getAttribute("data-course-id");
@@ -2310,20 +2436,20 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
             populateFormWithParsedData(target);
             switchTab("tab-parser");
             performSmartInstructorMatching(target);
+            showToast(`Đang tìm kiếm giảng viên tối ưu cho khóa "${target.name}"!`);
           }
         });
       });
 
       container.querySelectorAll(".btn-change-inst, .btn-edit-course").forEach(btn => {
-        btn.addEventListener("click", () => {
-          openCourseModal(btn.getAttribute("data-course-id"));
-        });
+        btn.addEventListener("click", () => openCourseModal(btn.getAttribute("data-course-id")));
       });
     }
 
-    // --- RENDER FULL COURSES TABLE ---
+    // Full Courses Table
     function renderFullCoursesTable() {
       const tbody = document.getElementById("full-courses-table-body");
+      if (!tbody) return;
       tbody.innerHTML = "";
 
       const statusFilter = document.getElementById("filter-agenda-status").value;
@@ -2340,7 +2466,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         return true;
       });
 
-      // Sort newest date first
       filtered.sort((a, b) => b.date.localeCompare(a.date) || a.time.localeCompare(b.time));
 
       if (filtered.length === 0) {
@@ -2354,7 +2479,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
         const statusBadge = c.status === "assigned"
           ? `<span class="bg-emerald-100 text-emerald-800 text-[11px] px-2 py-0.5 rounded font-semibold">Đã chốt: ${c.assignedInstructorName}</span>`
-          : `<span class="bg-amber-100 text-amber-800 text-[11px] px-2 py-0.5 rounded font-semibold">Chờ gán GV</span>`;
+          : `<span class="bg-amber-100 text-amber-800 text-[11px] px-2 py-0.5 rounded font-bold">Chờ gán GV</span>`;
 
         tr.innerHTML = `
           <td class="py-3 px-4 font-mono text-xs whitespace-nowrap">
@@ -2370,7 +2495,8 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
             <div class="text-slate-700">${c.content}</div>
           </td>
           <td class="py-3 px-4 text-xs font-medium text-slate-800">
-            ${c.location}
+            <div>${c.location}</div>
+            ${c.departureAddress ? `<div class="text-[10px] text-indigo-700">🏠 Từ nhà: ${c.departureAddress}</div>` : ''}
           </td>
           <td class="py-3 px-4 whitespace-nowrap">
             ${statusBadge}
@@ -2387,7 +2513,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
             <button data-course-id="${c.id}" class="btn-table-del text-rose-600 hover:text-rose-800 font-medium px-2 py-1 rounded hover:bg-rose-50">Xóa</button>
           </td>
         `;
-
         tbody.appendChild(tr);
       });
 
@@ -2397,6 +2522,10 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
       tbody.querySelectorAll(".btn-table-del").forEach(btn => {
         btn.addEventListener("click", () => {
+          if (currentUser && currentUser.role === "guest") {
+            showToast("Tài khoản Guest không có quyền xóa!", "warning");
+            return;
+          }
           const cid = btn.getAttribute("data-course-id");
           courses = courses.filter(c => c.id !== cid);
           saveState();
@@ -2406,26 +2535,23 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       });
     }
 
-    // --- RENDER INSTRUCTOR DIRECTORY GRID ---
+    // Instructor Directory Grid
     function renderInstructorsGrid() {
       const container = document.getElementById("instructors-full-grid");
+      if (!container) return;
       container.innerHTML = "";
 
       const query = (document.getElementById("search-instructor-input").value || "").toLowerCase();
-
       const filtered = instructors.filter(inst => {
         if (!query) return true;
-        const haystack = `${inst.name} ${inst.area} ${inst.specialty} ${inst.groups.join(' ')}`.toLowerCase();
+        const haystack = `${inst.name} ${inst.area} ${inst.homeAddress || ''} ${inst.specialty} ${inst.groups.join(' ')}`.toLowerCase();
         return haystack.includes(query);
       });
 
       filtered.forEach(inst => {
         const card = document.createElement("div");
         card.className = "bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-300 transition";
-
-        // Count assigned courses
         const assignedCount = courses.filter(c => c.assignedInstructorId === inst.id).length;
-
         const groupsHtml = inst.groups.map(g => `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-800 font-semibold">Nhóm ${g}</span>`).join(" ");
 
         card.innerHTML = `
@@ -2471,82 +2597,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       });
     }
 
-    // --- LEAFLET MAP INTEGRATION ---
-    function initMap() {
-      const mapEl = document.getElementById("training-map");
-      if (!mapEl) return;
-
-      // Default center around Hóc Môn / TP.HCM
-      mapInstance = L.map("training-map").setView([10.8847, 106.6200], 11);
-
-      // OpenStreetMap Tiles
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 18
-      }).addTo(mapInstance);
-
-      updateMapMarkers();
-    }
-
-    function updateMapMarkers() {
-      if (!mapInstance) return;
-
-      // Clear existing markers
-      mapMarkers.forEach(m => mapInstance.removeLayer(m));
-      mapMarkers = [];
-
-      // 1. Add Instructor Markers (Indigo circle marker)
-      instructors.forEach(inst => {
-        const marker = L.circleMarker([inst.lat, inst.lng], {
-          radius: 8,
-          fillColor: "#4f46e5",
-          color: "#ffffff",
-          weight: 2,
-          opacity: 1,
-          fillOpacity: 0.9
-        }).addTo(mapInstance);
-
-        marker.bindPopup(`
-          <div class="text-xs space-y-1">
-            <div class="font-bold text-sm text-indigo-700">${inst.name}</div>
-            <div class="text-slate-600">Thường trực: ${inst.area}</div>
-            <div>Chuyên môn: ${inst.specialty}</div>
-            <div class="font-semibold text-emerald-600">SĐT: ${inst.phone}</div>
-          </div>
-        `);
-        mapMarkers.push(marker);
-      });
-
-      // 2. Add Training Course Locations Markers
-      courses.forEach(c => {
-        const isAssigned = c.status === "assigned";
-        const color = isAssigned ? "#10b981" : "#f43f5e"; // Emerald if assigned, Rose if pending
-
-        const marker = L.circleMarker([c.lat, c.lng], {
-          radius: 11,
-          fillColor: color,
-          color: "#ffffff",
-          weight: 3,
-          opacity: 1,
-          fillOpacity: 0.95
-        }).addTo(mapInstance);
-
-        marker.bindPopup(`
-          <div class="text-xs space-y-1.5 p-1">
-            <div class="font-bold text-sm text-slate-900">${c.name}</div>
-            <div class="text-blue-600 font-semibold">📅 ${c.time} ngày ${formatDateVN(c.date)}</div>
-            <div><strong>Nhóm:</strong> ${c.group} • ${c.content}</div>
-            <div><strong>Địa điểm:</strong> ${c.location}</div>
-            <div><strong>Thiết bị:</strong> ${c.equipment || 'Không'}</div>
-            <div><strong>Giảng viên:</strong> <span class="font-bold ${isAssigned ? 'text-emerald-700' : 'text-rose-600'}">${c.assignedInstructorName || '⚠️ Chưa có GV'}</span></div>
-            <div><strong>Liên hệ:</strong> ${c.contactName || ''} (${c.contactPhone || ''})</div>
-          </div>
-        `);
-        mapMarkers.push(marker);
-      });
-    }
-
-    // --- MODAL HANDLERS ---
+    // Modal Course Handlers
     function openCourseModal(courseId) {
       const course = courses.find(c => c.id === courseId);
       if (!course) return;
@@ -2555,11 +2606,10 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       const modalContent = document.getElementById("modal-content");
       document.getElementById("modal-title").textContent = `Chỉnh Sửa Lớp: ${course.name}`;
 
-      // Build options for instructor selection
       let instOptions = `<option value="">-- Chưa chọn giảng viên --</option>`;
       instructors.forEach(inst => {
         const sel = course.assignedInstructorId === inst.id ? "selected" : "";
-        instOptions += `<option value="${inst.id}" ${sel}>${inst.name} (${inst.area} - ĐT: ${inst.phone})</option>`;
+        instOptions += `<option value="${inst.id}" ${sel}>${inst.name} (Nhà: ${inst.homeAddress || inst.area})</option>`;
       });
 
       modalContent.innerHTML = `
@@ -2572,50 +2622,24 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Ngày diễn ra</label>
-              <input type="date" id="modal-field-date" value="${course.date}" class="w-full px-3 py-1.5 border rounded-lg text-sm">
+              <input type="date" id="modal-field-date" value="${course.date}" class="w-full px-3 py-1.5 border rounded-lg text-xs font-semibold">
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Giờ bắt đầu</label>
-              <input type="time" id="modal-field-time" value="${course.time}" class="w-full px-3 py-1.5 border rounded-lg text-sm">
+              <input type="time" id="modal-field-time" value="${course.time}" class="w-full px-3 py-1.5 border rounded-lg text-xs">
             </div>
           </div>
 
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Địa điểm huấn luyện</label>
-            <input type="text" id="modal-field-location" value="${course.location}" class="w-full px-3 py-1.5 border rounded-lg text-sm">
+            <input type="text" id="modal-field-location" value="${course.location}" class="w-full px-3 py-1.5 border rounded-lg text-xs">
           </div>
 
           <div class="bg-indigo-50/60 p-3 rounded-xl border border-indigo-200">
             <label class="block text-xs font-bold text-indigo-900 mb-1">Phân Công Giảng Viên Đảm Nhận</label>
-            <select id="modal-field-instructor" class="w-full px-3 py-2 border border-indigo-300 rounded-lg text-sm bg-white font-medium text-slate-800 outline-none">
+            <select id="modal-field-instructor" class="w-full px-3 py-2 border border-indigo-300 rounded-lg text-xs bg-white font-medium text-slate-800 outline-none">
               ${instOptions}
             </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Nội dung huấn luyện</label>
-            <input type="text" id="modal-field-content" value="${course.content || ''}" class="w-full px-3 py-1.5 border rounded-lg text-sm">
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Thiết bị hỗ trợ</label>
-            <input type="text" id="modal-field-equipment" value="${course.equipment || ''}" class="w-full px-3 py-1.5 border rounded-lg text-sm">
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Người liên hệ</label>
-              <input type="text" id="modal-field-contact" value="${course.contactName || ''}" class="w-full px-3 py-1.5 border rounded-lg text-sm">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Số điện thoại</label>
-              <input type="text" id="modal-field-phone" value="${course.contactPhone || ''}" class="w-full px-3 py-1.5 border rounded-lg text-sm">
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Link Thư Mục Google Drive (Hình ảnh / Bài thi)</label>
-            <input type="text" id="modal-field-drive" value="${course.driveLink || ''}" class="w-full px-3 py-1.5 border rounded-lg text-xs font-mono text-slate-600">
           </div>
 
           <!-- Chi phí & Quyết toán VDC -->
@@ -2627,9 +2651,10 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
             <div class="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <label class="block font-semibold text-slate-700 mb-0.5">Hình thức ca huấn luyện</label>
-                <select id="modal-field-shift-type" class="w-full px-2 py-1 border rounded bg-white">
-                  <option value="1ca" ${course.shiftType !== '2ca' ? 'selected' : ''}>1 ca (1.500.000 đ)</option>
-                  <option value="2ca" ${course.shiftType === '2ca' ? 'selected' : ''}>2 ca cùng buổi (2.250.000 đ)</option>
+                <select id="modal-field-shift-type" class="w-full px-2 py-1 border rounded bg-white font-medium">
+                  <option value="1ca" ${course.shiftType === '1ca' || !course.shiftType ? 'selected' : ''}>1 buổi (1 lớp • 1.500.000 đ)</option>
+                  <option value="2ca" ${course.shiftType === '2ca' ? 'selected' : ''}>1 buổi 2 lớp/ca (2.250.000 đ)</option>
+                  <option value="1ngay" ${course.shiftType === '1ngay' ? 'selected' : ''}>1 ngày (2 buổi • 3.000.000 đ)</option>
                 </select>
               </div>
               <div>
@@ -2662,6 +2687,11 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
             </div>
           </div>
 
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Link Thư Mục Google Drive</label>
+            <input type="text" id="modal-field-drive" value="${course.driveLink || ''}" class="w-full px-3 py-1.5 border rounded-lg text-xs font-mono text-slate-600">
+          </div>
+
           <div class="pt-3 flex items-center justify-between border-t">
             <button id="modal-btn-delete" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">Xóa Khóa Học</button>
             <div class="space-x-2">
@@ -2674,7 +2704,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
       modal.classList.remove("hidden");
 
-      // Auto re-calculate distance when instructor changes in modal
       const modalInstSelect = document.getElementById("modal-field-instructor");
       if (modalInstSelect) {
         modalInstSelect.onchange = () => {
@@ -2687,9 +2716,8 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
             document.getElementById("modal-field-km").value = dist;
             document.getElementById("modal-display-home-addr").textContent = inst.homeAddress || inst.area;
             
-            // Recalculate total display
             const shift = document.getElementById("modal-field-shift-type").value;
-            const tFee = shift === "2ca" ? 2250000 : 1500000;
+            const tFee = getTeachingFeeByShiftType(shift);
             const trFee = calculateTravelAllowance(dist);
             const lFee = (parseInt(document.getElementById("modal-field-lodging").value, 10) || 0) * 400000;
             const eqFee = parseFloat(document.getElementById("modal-field-equipment").value) || 0;
@@ -2706,16 +2734,11 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         course.date = document.getElementById("modal-field-date").value;
         course.time = document.getElementById("modal-field-time").value;
         course.location = document.getElementById("modal-field-location").value;
-        course.content = document.getElementById("modal-field-content").value;
-        course.equipment = document.getElementById("modal-field-equipment").value;
-        course.contactName = document.getElementById("modal-field-contact").value;
-        course.contactPhone = document.getElementById("modal-field-phone").value;
         course.driveLink = document.getElementById("modal-field-drive").value;
 
-        // Save financial fields
         const modalShift = document.getElementById("modal-field-shift-type").value;
         course.shiftType = modalShift;
-        course.costTeaching = modalShift === "2ca" ? 2250000 : 1500000;
+        course.costTeaching = getTeachingFeeByShiftType(modalShift);
         const modalKm = parseFloat(document.getElementById("modal-field-km").value) || 0;
         course.distanceCenterKm = modalKm;
         course.costTravel = calculateTravelAllowance(modalKm);
@@ -2755,15 +2778,307 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       };
     }
 
-    // Helper Date formatter (dd/mm/yyyy)
-    function formatDateVN(dateStr) {
-      if (!dateStr) return "";
-      const parts = dateStr.split("-");
-      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-      return dateStr;
+    // Leaflet Map with Realtime Traffic
+    let currentBaseTileLayer = null;
+    let trafficOverlayTileLayer = null;
+    let isTrafficLayerEnabled = true;
+    let activeRouteLayer = null;
+
+    const MAP_TILE_CONFIGS = {
+      "traffic-roads": {
+        url: "https://mt1.google.com/vt?lyrs=m,traffic&x={x}&y={y}&z={z}",
+        options: { maxZoom: 20, attribution: "&copy; Google Maps & Live Traffic" }
+      },
+      "osm": {
+        url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        options: { maxZoom: 19, attribution: "&copy; OpenStreetMap contributors" }
+      },
+      "satellite": {
+        url: "https://mt1.google.com/vt?lyrs=y,traffic&x={x}&y={y}&z={z}",
+        options: { maxZoom: 20, attribution: "&copy; Google Satellite & Traffic" }
+      }
+    };
+
+    function initMap() {
+      const mapEl = document.getElementById("training-map");
+      if (!mapEl) return;
+
+      mapInstance = L.map("training-map").setView([10.8847, 106.6200], 11);
+      setMapBaseLayer("traffic-roads");
+
+      trafficOverlayTileLayer = L.tileLayer("https://mt1.google.com/vt?lyrs=traffic&x={x}&y={y}&z={z}", {
+        maxZoom: 20,
+        opacity: 0.9,
+        zIndex: 10
+      });
+
+      updateMapMarkers();
+      populateRouteSelectors();
+      initMapControls();
     }
 
-    // --- RENDER SETTLEMENT & BILLING VIEW (QUYẾT TOÁN CHI PHÍ) ---
+    function setMapBaseLayer(layerKey) {
+      if (!mapInstance) return;
+      const config = MAP_TILE_CONFIGS[layerKey] || MAP_TILE_CONFIGS["traffic-roads"];
+
+      if (currentBaseTileLayer) mapInstance.removeLayer(currentBaseTileLayer);
+      currentBaseTileLayer = L.tileLayer(config.url, config.options).addTo(mapInstance);
+
+      if (layerKey === "osm") {
+        if (isTrafficLayerEnabled && trafficOverlayTileLayer) trafficOverlayTileLayer.addTo(mapInstance);
+      } else {
+        if (trafficOverlayTileLayer && mapInstance.hasLayer(trafficOverlayTileLayer)) {
+          mapInstance.removeLayer(trafficOverlayTileLayer);
+        }
+      }
+    }
+
+    function toggleTrafficFlowLayer() {
+      isTrafficLayerEnabled = !isTrafficLayerEnabled;
+      const btn = document.getElementById("btn-toggle-traffic");
+      const indicator = document.getElementById("traffic-status-indicator");
+      const text = document.getElementById("traffic-btn-text");
+      const selectLayer = document.getElementById("select-map-layer");
+      const currentLayer = selectLayer ? selectLayer.value : "traffic-roads";
+
+      if (isTrafficLayerEnabled) {
+        if (btn) btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs";
+        if (indicator) indicator.className = "w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse";
+        if (text) text.textContent = "🚦 Lớp Giao Thông (Đang Bật)";
+
+        if (currentLayer === "osm") {
+          if (trafficOverlayTileLayer && !mapInstance.hasLayer(trafficOverlayTileLayer)) {
+            trafficOverlayTileLayer.addTo(mapInstance);
+          }
+        } else {
+          setMapBaseLayer(currentLayer);
+        }
+        showToast("Đã BẬT lớp giao thông thời gian thực!");
+      } else {
+        if (btn) btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700";
+        if (indicator) indicator.className = "w-2.5 h-2.5 rounded-full bg-slate-400";
+        if (text) text.textContent = "🚦 Lớp Giao Thông (Đang Tắt)";
+
+        if (currentLayer === "osm") {
+          if (trafficOverlayTileLayer && mapInstance.hasLayer(trafficOverlayTileLayer)) {
+            mapInstance.removeLayer(trafficOverlayTileLayer);
+          }
+        } else {
+          if (currentBaseTileLayer) mapInstance.removeLayer(currentBaseTileLayer);
+          const noTrafficUrl = currentLayer === "satellite" 
+            ? "https://mt1.google.com/vt?lyrs=y&x={x}&y={y}&z={z}"
+            : "https://mt1.google.com/vt?lyrs=m&x={x}&y={y}&z={z}";
+          currentBaseTileLayer = L.tileLayer(noTrafficUrl, { maxZoom: 20 }).addTo(mapInstance);
+        }
+        showToast("Đã TẮT lớp giao thông!");
+      }
+    }
+
+    function initMapControls() {
+      const btnTraffic = document.getElementById("btn-toggle-traffic");
+      if (btnTraffic) btnTraffic.addEventListener("click", toggleTrafficFlowLayer);
+
+      const selectLayer = document.getElementById("select-map-layer");
+      if (selectLayer) {
+        selectLayer.addEventListener("change", (e) => {
+          setMapBaseLayer(e.target.value);
+          showToast(`Đã đổi chế độ bản đồ: ${e.target.options[e.target.selectedIndex].text}`);
+        });
+      }
+
+      const btnDraw = document.getElementById("btn-draw-route");
+      if (btnDraw) {
+        btnDraw.addEventListener("click", () => {
+          const cId = document.getElementById("route-select-course").value;
+          const iId = document.getElementById("route-select-instructor").value;
+          drawRouteBetweenCourseAndInstructor(cId, iId);
+        });
+      }
+
+      const btnClear = document.getElementById("btn-clear-route");
+      if (btnClear) btnClear.addEventListener("click", clearActiveRoute);
+
+      const btnHocMon = document.getElementById("btn-map-center-hocmon");
+      if (btnHocMon) {
+        btnHocMon.addEventListener("click", () => {
+          if (mapInstance) mapInstance.setView([10.8872, 106.5955], 14);
+        });
+      }
+
+      const btnFitAll = document.getElementById("btn-map-fit-all");
+      if (btnFitAll) {
+        btnFitAll.addEventListener("click", () => {
+          if (mapInstance) mapInstance.setView([10.8847, 106.6600], 11);
+        });
+      }
+    }
+
+    function populateRouteSelectors() {
+      const cSel = document.getElementById("route-select-course");
+      const iSel = document.getElementById("route-select-instructor");
+      if (!cSel || !iSel) return;
+
+      cSel.innerHTML = "";
+      courses.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = `${c.name} (${c.location})`;
+        cSel.appendChild(opt);
+      });
+
+      iSel.innerHTML = "";
+      instructors.forEach(i => {
+        const opt = document.createElement("option");
+        opt.value = i.id;
+        opt.textContent = `${i.name} - Nhà: ${i.area}`;
+        iSel.appendChild(opt);
+      });
+    }
+
+    function drawRouteBetweenCourseAndInstructor(courseId, instructorId) {
+      if (!mapInstance) return;
+      const course = courses.find(c => c.id === courseId);
+      const inst = instructors.find(i => i.id === instructorId);
+      if (!course || !inst) return;
+
+      clearActiveRoute();
+      const cCoords = [course.lat, course.lng];
+      const iCoords = [inst.lat, inst.lng];
+
+      const distKm = parseFloat(calculateDistance(inst.lat, inst.lng, course.lat, course.lng));
+      const travelFee = calculateTravelAllowance(distKm);
+      const normalMinutes = Math.max(10, Math.round(distKm * 1.6 + 5));
+      const peakMinutes = Math.max(15, Math.round(distKm * 2.6 + 12));
+
+      activeRouteLayer = L.polyline([iCoords, cCoords], {
+        color: "#4f46e5",
+        weight: 6,
+        opacity: 0.85,
+        dashArray: "10, 8"
+      }).addTo(mapInstance);
+
+      activeRouteLayer.bindPopup(`
+        <div class="text-xs space-y-1.5 p-1">
+          <div class="font-bold text-sm text-indigo-700">🚗 Tuyến đường di chuyển từ nhà GV</div>
+          <div><strong>Điểm xuất phát:</strong> ${inst.name} (${inst.homeAddress || inst.area})</div>
+          <div><strong>Điểm đến huấn luyện:</strong> ${course.name} (${course.location})</div>
+          <div class="text-blue-700 font-bold">📍 Cự ly: ${distKm} km &bull; Phụ cấp đi lại: ${formatCurrency(travelFee)}</div>
+          <div class="bg-amber-50 p-2 rounded border border-amber-200 text-amber-900 mt-1">
+            <strong>⏱️ Thời gian ước tính trên đường:</strong><br>
+            • Giờ thông thoáng: ~<strong>${normalMinutes} phút</strong><br>
+            • Giờ cao điểm (kẹt xe): ~<strong>${peakMinutes} phút</strong>
+          </div>
+        </div>
+      `).openPopup();
+
+      mapInstance.fitBounds(activeRouteLayer.getBounds(), { padding: [60, 60] });
+
+      const badge = document.getElementById("route-info-badge");
+      if (badge) {
+        badge.innerHTML = `🏠 <strong>${inst.name}</strong> &rarr; <strong>${course.name}</strong>: <span class="text-blue-700 font-bold">${distKm} km</span> &bull; Đi lại: <span class="text-emerald-700 font-bold">${formatCurrency(travelFee)}</span> &bull; Ước tính: ~${normalMinutes}–${peakMinutes}p`;
+        badge.classList.remove("hidden");
+      }
+
+      const btnClear = document.getElementById("btn-clear-route");
+      if (btnClear) btnClear.classList.remove("hidden");
+      showToast(`Đã vẽ tuyến đường: ${distKm} km (Ước tính ~${normalMinutes}–${peakMinutes} phút)`);
+    }
+
+    function clearActiveRoute() {
+      if (activeRouteLayer && mapInstance) {
+        mapInstance.removeLayer(activeRouteLayer);
+        activeRouteLayer = null;
+      }
+      const badge = document.getElementById("route-info-badge");
+      if (badge) badge.classList.add("hidden");
+      const btnClear = document.getElementById("btn-clear-route");
+      if (btnClear) btnClear.classList.add("hidden");
+    }
+
+    function quickRouteToCourse(courseId) {
+      const course = courses.find(c => c.id === courseId);
+      if (!course) return;
+
+      let instId = course.assignedInstructorId;
+      if (!instId && instructors.length > 0) {
+        let closest = instructors[0];
+        let minDist = 9999;
+        instructors.forEach(i => {
+          const d = parseFloat(calculateDistance(i.lat, i.lng, course.lat, course.lng));
+          if (d < minDist) { minDist = d; closest = i; }
+        });
+        instId = closest.id;
+      }
+
+      const cSel = document.getElementById("route-select-course");
+      if (cSel) cSel.value = courseId;
+      const iSel = document.getElementById("route-select-instructor");
+      if (iSel) iSel.value = instId;
+
+      drawRouteBetweenCourseAndInstructor(courseId, instId);
+    }
+
+    function updateMapMarkers() {
+      if (!mapInstance) return;
+      mapMarkers.forEach(m => mapInstance.removeLayer(m));
+      mapMarkers = [];
+
+      instructors.forEach(inst => {
+        const marker = L.circleMarker([inst.lat, inst.lng], {
+          radius: 9,
+          fillColor: "#4f46e5",
+          color: "#ffffff",
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.9
+        }).addTo(mapInstance);
+
+        marker.bindPopup(`
+          <div class="text-xs space-y-1.5 p-1">
+            <div class="font-bold text-sm text-indigo-700">${inst.name}</div>
+            <div class="text-slate-800">🏠 <strong>Nơi xuất phát (Nhà riêng):</strong> ${inst.homeAddress || inst.area}</div>
+            <div class="text-slate-600">Thế mạnh: ${inst.specialty}</div>
+            <div class="font-bold text-emerald-600">SĐT: ${inst.phone}</div>
+          </div>
+        `);
+        mapMarkers.push(marker);
+      });
+
+      courses.forEach(c => {
+        const isAssigned = c.status === "assigned";
+        const color = isAssigned ? "#10b981" : "#f43f5e";
+
+        const marker = L.circleMarker([c.lat, c.lng], {
+          radius: 12,
+          fillColor: color,
+          color: "#ffffff",
+          weight: 3,
+          opacity: 1,
+          fillOpacity: 0.95
+        }).addTo(mapInstance);
+
+        marker.bindPopup(`
+          <div class="text-xs space-y-1.5 p-1">
+            <div class="font-bold text-sm text-slate-900">${c.name}</div>
+            <div class="text-blue-600 font-semibold">📅 ${c.time} ngày ${formatDateVN(c.date)}</div>
+            <div><strong>Nhóm:</strong> ${c.group} &bull; ${c.content}</div>
+            <div><strong>Địa điểm:</strong> ${c.location}</div>
+            <div><strong>Thiết bị:</strong> ${c.equipment || 'Không'}</div>
+            <div><strong>Giảng viên:</strong> <span class="font-bold ${isAssigned ? 'text-emerald-700' : 'text-rose-600'}">${c.assignedInstructorName || '⚠️ Chưa có GV'}</span></div>
+            ${c.departureAddress ? `<div class="text-[11px] text-indigo-700">🏠 Xuất phát: ${c.departureAddress} (${c.distanceCenterKm||0} km)</div>` : ''}
+            <div><strong>Liên hệ:</strong> ${c.contactName || ''} (${c.contactPhone || ''})</div>
+            <div class="pt-1.5 border-t border-slate-200">
+              <button onclick="quickRouteToCourse('${c.id}')" class="w-full text-center px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-bold shadow-xs transition">
+                🚗 Xem lộ trình & tình trạng kẹt xe
+              </button>
+            </div>
+          </div>
+        `);
+        mapMarkers.push(marker);
+      });
+    }
+
+    // --- SETTLEMENT & BILLING LOGIC ---
     function renderSettlementView() {
       const fromInput = document.getElementById("settle-from-date");
       const toInput = document.getElementById("settle-to-date");
@@ -2776,7 +3091,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       const statusSelect = document.getElementById("settle-status-filter");
       const statusFilter = statusSelect ? statusSelect.value : "all";
 
-      // Refresh instructor select options
       if (instSelect) {
         instSelect.innerHTML = `<option value="all">Tất cả giảng viên</option>`;
         instructors.forEach(inst => {
@@ -2790,7 +3104,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
       const instFilter = instSelect ? instSelect.value : "all";
 
-      // Filter courses by date range, instructor and status
       let filtered = courses.filter(c => {
         if (!c.date) return false;
         if (c.date < fromDate || c.date > toDate) return false;
@@ -2800,10 +3113,8 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         return true;
       });
 
-      // Sort by date ascending
       filtered.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
 
-      // Calculate aggregates
       let totalCourses = filtered.length;
       let totalSessions = 0;
       let totalTeaching = 0;
@@ -2815,13 +3126,13 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       let totalUnpaid = 0;
 
       filtered.forEach(c => {
-        const teaching = Number(c.costTeaching) || (c.shiftType === "2ca" ? 2250000 : 1500000);
+        const teaching = Number(c.costTeaching) || getTeachingFeeByShiftType(c.shiftType);
         const travel = Number(c.costTravel) || 0;
         const lodging = Number(c.costLodging) || 0;
         const equipment = Number(c.costEquipment) || 0;
         const courseTotal = Number(c.totalCost) || (teaching + travel + lodging + equipment);
 
-        totalSessions += (c.shiftType === "2ca" ? 2 : 1);
+        totalSessions += (c.shiftType === "1ngay" ? 2 : (c.shiftType === "2ca" ? 2 : 1));
         totalTeaching += teaching;
         totalTravel += travel;
         totalLodging += lodging;
@@ -2832,27 +3143,16 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         else totalUnpaid += courseTotal;
       });
 
-      // Update KPI cards
-      const elTotalCourses = document.getElementById("kpi-total-courses");
-      if (elTotalCourses) elTotalCourses.textContent = `${totalCourses} lớp`;
-      const elSessionsSub = document.getElementById("kpi-sessions-sub");
-      if (elSessionsSub) elSessionsSub.textContent = `${totalSessions} ca huấn luyện`;
-      const elTeaching = document.getElementById("kpi-teaching-fee");
-      if (elTeaching) elTeaching.textContent = formatCurrency(totalTeaching);
-      const elTravel = document.getElementById("kpi-travel-fee");
-      if (elTravel) elTravel.textContent = formatCurrency(totalTravel);
-      const elLodging = document.getElementById("kpi-lodging-fee");
-      if (elLodging) elLodging.textContent = formatCurrency(totalLodging);
-      const elEquip = document.getElementById("kpi-equipment-fee");
-      if (elEquip) elEquip.textContent = formatCurrency(totalEquipment);
-      const elPayable = document.getElementById("kpi-total-payable");
-      if (elPayable) elPayable.textContent = formatCurrency(totalPayable);
-      const elSplit = document.getElementById("kpi-paid-unpaid-split");
-      if (elSplit) elSplit.innerHTML = `Đã chi: <span class="text-emerald-700 font-bold">${formatCurrency(totalPaid)}</span> | Còn nợ: <span class="text-rose-700 font-bold">${formatCurrency(totalUnpaid)}</span>`;
-      const elRowCount = document.getElementById("settle-table-row-count");
-      if (elRowCount) elRowCount.textContent = `${totalCourses} lớp trong kỳ`;
+      document.getElementById("kpi-total-courses").textContent = `${totalCourses} lớp`;
+      document.getElementById("kpi-sessions-sub").textContent = `${totalSessions} ca huấn luyện`;
+      document.getElementById("kpi-teaching-fee").textContent = formatCurrency(totalTeaching);
+      document.getElementById("kpi-travel-fee").textContent = formatCurrency(totalTravel);
+      document.getElementById("kpi-lodging-fee").textContent = formatCurrency(totalLodging);
+      document.getElementById("kpi-equipment-fee").textContent = formatCurrency(totalEquipment);
+      document.getElementById("kpi-total-payable").textContent = formatCurrency(totalPayable);
+      document.getElementById("kpi-paid-unpaid-split").innerHTML = `Đã chi: <span class="text-emerald-700 font-bold">${formatCurrency(totalPaid)}</span> | Còn nợ: <span class="text-rose-700 font-bold">${formatCurrency(totalUnpaid)}</span>`;
+      document.getElementById("settle-table-row-count").textContent = `${totalCourses} lớp trong kỳ`;
 
-      // Update Table Body
       const tbody = document.getElementById("settle-courses-table-body");
       if (!tbody) return;
       tbody.innerHTML = "";
@@ -2861,7 +3161,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         tbody.innerHTML = `<tr><td colspan="12" class="text-center py-8 text-slate-400">Không có khóa đào tạo nào trong khoảng thời gian từ ${formatDateVN(fromDate)} đến ${formatDateVN(toDate)} phù hợp bộ lọc.</td></tr>`;
       } else {
         filtered.forEach((c) => {
-          const teaching = Number(c.costTeaching) || (c.shiftType === "2ca" ? 2250000 : 1500000);
+          const teaching = Number(c.costTeaching) || getTeachingFeeByShiftType(c.shiftType);
           const travel = Number(c.costTravel) || 0;
           const lodging = Number(c.costLodging) || 0;
           const equipment = Number(c.costEquipment) || 0;
@@ -2877,7 +3177,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
             </td>
             <td class="py-2.5 px-3 whitespace-nowrap">
               <div class="font-bold text-slate-900">${formatDateVN(c.date)}</div>
-              <div class="text-[10px] text-slate-500">${c.time} • <span class="font-semibold text-blue-600">${c.shiftType === '2ca' ? '2 ca' : '1 ca'}</span></div>
+              <div class="text-[10px] text-slate-500">${c.time} • <span class="font-semibold text-blue-600">${getShiftLabel(c.shiftType)}</span></div>
             </td>
             <td class="py-2.5 px-3">
               <div class="font-bold text-slate-900">${c.name}</div>
@@ -2921,12 +3221,10 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
               <button data-course-id="${c.id}" class="btn-settle-edit-course text-blue-600 hover:text-blue-800 font-medium text-xs">Sửa</button>
             </td>
           `;
-
           tbody.appendChild(tr);
         });
       }
 
-      // Update Table Footer
       const tfoot = document.getElementById("settle-courses-table-footer");
       if (tfoot) {
         tfoot.innerHTML = `
@@ -2942,7 +3240,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         `;
       }
 
-      // Attach event listeners to toggle paid buttons
       tbody.querySelectorAll(".btn-toggle-paid").forEach(btn => {
         btn.addEventListener("click", () => {
           const cid = btn.getAttribute("data-course-id");
@@ -2963,7 +3260,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       });
     }
 
-    // Export Settlement Table as CSV (Excel compatible with UTF-8 BOM)
     function exportSettlementCSV() {
       const fromDate = document.getElementById("settle-from-date").value || "2026-11-01";
       const toDate = document.getElementById("settle-to-date").value || "2026-11-30";
@@ -2981,11 +3277,11 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
       filtered.sort((a, b) => a.date.localeCompare(b.date));
 
-      let csv = "\uFEFF"; // UTF-8 BOM
-      csv += "STT,Ngay,Gio,Khoa huan luyen,Noi dung,Dia diem,Cu ly tu TT TPHCM (km),Giang vien,Hinh thuc ca,Thu lao giang day (I),Phu cap di lai (II),Ho tro luu tru (III),Thue thiet bi (IV),Tong thanh toan,Thue TNCN (10%),Trang thai thanh toan\n";
+      let csv = "\uFEFF";
+      csv += "STT,Ngay,Gio,Khoa huan luyen,Noi dung,Dia diem,Xuat phat tu nha GV,Cu ly (km),Giang vien,Hinh thuc ca,Thu lao giang day (I),Phu cap di lai (II),Ho tro luu tru (III),Thue thiet bi (IV),Tong thanh toan,Thue TNCN (10%),Trang thai thanh toan\n";
 
       filtered.forEach((c, idx) => {
-        const teaching = Number(c.costTeaching) || (c.shiftType === "2ca" ? 2250000 : 1500000);
+        const teaching = Number(c.costTeaching) || getTeachingFeeByShiftType(c.shiftType);
         const travel = Number(c.costTravel) || 0;
         const lodging = Number(c.costLodging) || 0;
         const equipment = Number(c.costEquipment) || 0;
@@ -2993,7 +3289,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         const tax = Math.round(teaching * 0.1);
         const status = c.paymentStatus === "paid" ? "Da thanh toan" : "Chua thanh toan";
 
-        csv += `"${idx + 1}","${formatDateVN(c.date)}","${c.time}","${(c.name||'').replace(/"/g, '""')}","${(c.content||'').replace(/"/g, '""')}","${(c.location||'').replace(/"/g, '""')}","${c.distanceCenterKm||0}","${(c.assignedInstructorName||'Chua gan').replace(/"/g, '""')}","${c.shiftType==='2ca'?'2 ca':'1 ca'}","${teaching}","${travel}","${lodging}","${equipment}","${total}","${tax}","${status}"\n`;
+        csv += `"${idx + 1}","${formatDateVN(c.date)}","${c.time}","${(c.name||'').replace(/"/g, '""')}","${(c.content||'').replace(/"/g, '""')}","${(c.location||'').replace(/"/g, '""')}","${(c.departureAddress||'').replace(/"/g, '""')}","${c.distanceCenterKm||0}","${(c.assignedInstructorName||'Chua gan').replace(/"/g, '""')}","${getShiftLabel(c.shiftType)}","${teaching}","${travel}","${lodging}","${equipment}","${total}","${tax}","${status}"\n`;
       });
 
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -3006,7 +3302,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       showToast("Đã xuất bảng kê Excel/CSV thành công!");
     }
 
-    // Open Print Voucher Modal
     function openSettlementPrintModal() {
       const fromDate = document.getElementById("settle-from-date").value || "2026-11-01";
       const toDate = document.getElementById("settle-to-date").value || "2026-11-30";
@@ -3028,15 +3323,14 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       
       const selInst = instructors.find(i => i.id === instFilter);
       if (selInst) {
-        document.getElementById("print-instructor-heading").textContent = `Giảng viên: ${selInst.name} - ĐT: ${selInst.phone} (${selInst.area})`;
+        document.getElementById("print-instructor-heading").textContent = `Giảng viên: ${selInst.name} - ĐT: ${selInst.phone} (Nhà: ${selInst.homeAddress || selInst.area})`;
         document.getElementById("print-signature-inst-name").textContent = selInst.name;
       } else {
         document.getElementById("print-instructor-heading").textContent = `Tổng hợp tất cả giảng viên khu vực Miền Nam`;
         document.getElementById("print-signature-inst-name").textContent = "Đại diện Giảng viên";
       }
 
-      const today = new Date();
-      document.getElementById("print-current-date").textContent = `TP.HCM, ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
+      document.getElementById("print-current-date").textContent = `TP.HCM, ngày 07 tháng 11 năm 2026`;
 
       const tbody = document.getElementById("print-table-tbody");
       tbody.innerHTML = "";
@@ -3048,7 +3342,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       let grandTotal = 0;
 
       filtered.forEach((c, idx) => {
-        const teaching = Number(c.costTeaching) || (c.shiftType === "2ca" ? 2250000 : 1500000);
+        const teaching = Number(c.costTeaching) || getTeachingFeeByShiftType(c.shiftType);
         const travel = Number(c.costTravel) || 0;
         const lodging = Number(c.costLodging) || 0;
         const equipment = Number(c.costEquipment) || 0;
@@ -3097,7 +3391,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
     function renderAllViews() {
       renderMonthCalendar();
-      renderDayView(document.getElementById("filter-agenda-date").value || "2026-11-03");
+      renderDayView(document.getElementById("filter-agenda-date").value || CURRENT_SYSTEM_DATE);
       renderFullCoursesTable();
       renderInstructorsGrid();
       updateMapMarkers();
@@ -3105,43 +3399,49 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       updateTopStats();
     }
 
-    // --- INITIALIZE EVENT LISTENERS ---
+    // --- DOMContentLoaded Initialization ---
     document.addEventListener("DOMContentLoaded", () => {
       initState();
 
-      // Navigation Tabs
+      // Check user login status
+      if (!currentUser) {
+        document.getElementById("google-login-modal").classList.remove("hidden");
+      } else {
+        applyRolePermissions();
+      }
+
+      // Login buttons
+      document.getElementById("btn-login-google-admin").addEventListener("click", () => loginWithRole("admin"));
+      document.getElementById("btn-login-google-sales").addEventListener("click", () => loginWithRole("sales"));
+      document.getElementById("btn-login-google-trainer").addEventListener("click", () => loginWithRole("trainer"));
+      document.getElementById("btn-login-google-guest").addEventListener("click", () => loginWithRole("guest"));
+
+      document.getElementById("btn-switch-account").addEventListener("click", () => {
+        document.getElementById("google-login-modal").classList.remove("hidden");
+      });
+
+      // Navigation tabs
       document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          switchTab(btn.getAttribute("data-tab"));
-        });
+        btn.addEventListener("click", () => switchTab(btn.getAttribute("data-tab")));
       });
 
-      // Quick New Button in header
-      document.getElementById("btn-quick-new").addEventListener("click", () => {
-        switchTab("tab-parser");
-        document.getElementById("zalo-raw-input").focus();
-      });
-
-      // Load Sample 1 (Exact User Message)
+      // Sample buttons
       document.getElementById("btn-load-sample-1").addEventListener("click", () => {
-        const sample = `Lịch khóa/huấn luyện: VINALPHA HÓC MÔN\n1. Thời gian : 15h00 ngày 03/11/2026\n2. Nhóm:  3 - Đơn vị sản xuất vật liệu\n3. Nội dung huấn luyện: Trạm bê tông nhựa\n4. Địa điểm huấn luyện: Vincons Hóc Môn\n5. Thiết bị đơn vị huấn luyện hỗ trợ:  MÁY CHIẾU (tại dự án không có thiết bị)\n6. Liên hệ : MS ÁNH 0792.006.916`;
+        const sample = `Lịch khóa/huấn luyện: VINALPHA HÓC MÔN\n1. Thời gian : 15h00 ngày 07/11/2026\n2. Nhóm:  3 - Đơn vị sản xuất vật liệu\n3. Nội dung huấn luyện: Trạm bê tông nhựa\n4. Địa điểm huấn luyện: Vincons Hóc Môn\n5. Thiết bị đơn vị huấn luyện hỗ trợ:  MÁY CHIẾU (tại dự án không có thiết bị)\n6. Liên hệ : MS ÁNH 0792.006.916`;
         document.getElementById("zalo-raw-input").value = sample;
         showToast("Đã nạp mẫu tin Zalo VINALPHA HÓC MÔN!");
       });
 
-      // Load Sample 2 (Bình Dương)
       document.getElementById("btn-load-sample-2").addEventListener("click", () => {
         const sample = `Lịch khóa/huấn luyện: NHÀ MÁY THÉP POMINA BÌNH DƯƠNG\n1. Thời gian : 13h30 ngày 10/11/2026\n2. Nhóm: 3 - Luyện kim & cán thép\n3. Nội dung huấn luyện: An toàn nhiệt luyện, cầu trục và thiết bị nâng\n4. Địa điểm huấn luyện: KCN Sóng Thần 2, Dĩ An, Bình Dương\n5. Thiết bị đơn vị huấn luyện hỗ trợ: Đơn vị chuẩn bị đầy đủ\n6. Liên hệ : Kỹ sư Phúc 0988.776.655`;
         document.getElementById("zalo-raw-input").value = sample;
         showToast("Đã nạp mẫu tin Zalo Bình Dương!");
       });
 
-      // Clear input
       document.getElementById("btn-clear-input").addEventListener("click", () => {
         document.getElementById("zalo-raw-input").value = "";
       });
 
-      // Parse Zalo Button
       document.getElementById("btn-parse-zalo").addEventListener("click", () => {
         const raw = document.getElementById("zalo-raw-input").value;
         if (!raw.trim()) {
@@ -3156,12 +3456,17 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         }
       });
 
-      // Save & Match Button in Form
+      // ACTION 1: SAVE PENDING FIRST
+      document.getElementById("btn-save-pending-first").addEventListener("click", () => {
+        saveCoursePendingFirst();
+      });
+
+      // ACTION 2: SAVE AND MATCH NOW
       document.getElementById("btn-save-and-match").addEventListener("click", () => {
         const costData = updateFormCostCalculation();
         const courseData = {
           name: document.getElementById("field-course-name").value || "Khóa Mới",
-          date: document.getElementById("field-date").value || "2026-11-03",
+          date: document.getElementById("field-date").value || CURRENT_SYSTEM_DATE,
           time: document.getElementById("field-time").value || "15:00",
           endTime: "17:30",
           group: document.getElementById("field-group").value || "3",
@@ -3175,7 +3480,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
           ...costData
         };
         performSmartInstructorMatching(courseData);
-        showToast("Đã cập nhật danh sách giảng viên phù hợp nhất!");
+        showToast("Đã tìm kiếm các giảng viên tối ưu nhất!");
       });
 
       // Calendar month buttons
@@ -3188,11 +3493,11 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         renderMonthCalendar();
       });
       document.getElementById("btn-today-month").addEventListener("click", () => {
-        currentCalDate = new Date(2026, 10, 1);
+        currentCalDate = new Date(2026, 10, 7);
         renderMonthCalendar();
       });
 
-      // Agenda Day Filters
+      // Day filters
       document.getElementById("filter-agenda-date").addEventListener("change", (e) => {
         renderDayView(e.target.value);
       });
@@ -3212,19 +3517,16 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       });
       document.getElementById("btn-agenda-today").addEventListener("click", () => {
         const inp = document.getElementById("filter-agenda-date");
-        inp.value = "2026-11-03";
-        renderDayView("2026-11-03");
+        inp.value = CURRENT_SYSTEM_DATE;
+        renderDayView(CURRENT_SYSTEM_DATE);
       });
 
-      // Table filters
       document.getElementById("filter-agenda-status").addEventListener("change", renderFullCoursesTable);
       document.getElementById("filter-agenda-group").addEventListener("change", renderFullCoursesTable);
       document.getElementById("filter-agenda-search").addEventListener("input", renderFullCoursesTable);
-
-      // Search instructors
       document.getElementById("search-instructor-input").addEventListener("input", renderInstructorsGrid);
 
-      // Add instructor modal
+      // Add Instructor Modal
       document.getElementById("btn-add-instructor").addEventListener("click", () => {
         document.getElementById("instructor-modal").classList.remove("hidden");
       });
@@ -3235,7 +3537,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         document.getElementById("instructor-modal").classList.add("hidden");
       });
 
-      // Save new instructor
       document.getElementById("btn-save-inst").addEventListener("click", () => {
         const name = document.getElementById("new-inst-name").value.trim();
         const phone = document.getElementById("new-inst-phone").value.trim();
@@ -3250,8 +3551,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
         const checkedGroups = [];
         document.querySelectorAll(".inst-grp-check:checked").forEach(cb => checkedGroups.push(cb.value));
-
-        const coords = resolveLocationCoordinates(area);
+        const coords = resolveLocationCoordinates(homeAddress || area);
 
         const newInst = {
           id: "gv-" + Date.now(),
@@ -3275,15 +3575,120 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         showToast(`Đã thêm giảng viên ${name} vào hệ thống!`);
       });
 
-      // Map quick center buttons
-      document.getElementById("btn-map-center-hocmon").addEventListener("click", () => {
-        if (mapInstance) mapInstance.setView([10.8872, 106.5955], 14);
+      // Settlement Listeners
+      const sFrom = document.getElementById("settle-from-date");
+      if (sFrom) sFrom.addEventListener("change", renderSettlementView);
+      const sTo = document.getElementById("settle-to-date");
+      if (sTo) sTo.addEventListener("change", renderSettlementView);
+      const sInst = document.getElementById("settle-instructor-filter");
+      if (sInst) sInst.addEventListener("change", renderSettlementView);
+      const sStat = document.getElementById("settle-status-filter");
+      if (sStat) sStat.addEventListener("change", renderSettlementView);
+
+      document.getElementById("btn-settle-preset-month").addEventListener("click", () => {
+        document.getElementById("settle-from-date").value = "2026-11-01";
+        document.getElementById("settle-to-date").value = "2026-11-30";
+        renderSettlementView();
       });
-      document.getElementById("btn-map-fit-all").addEventListener("click", () => {
-        if (mapInstance) mapInstance.setView([10.8847, 106.6600], 11);
+      document.getElementById("btn-settle-preset-half1").addEventListener("click", () => {
+        document.getElementById("settle-from-date").value = "2026-11-01";
+        document.getElementById("settle-to-date").value = "2026-11-15";
+        renderSettlementView();
+      });
+      document.getElementById("btn-settle-preset-half2").addEventListener("click", () => {
+        document.getElementById("settle-from-date").value = "2026-11-16";
+        document.getElementById("settle-to-date").value = "2026-11-30";
+        renderSettlementView();
       });
 
-      // Backup & Restore
+      document.getElementById("btn-settle-bulk-paid").addEventListener("click", () => {
+        const checked = Array.from(document.querySelectorAll(".settle-row-checkbox:checked")).map(cb => cb.value);
+        if (checked.length === 0) {
+          showToast("Vui lòng tích chọn các lớp cần đánh dấu đã thanh toán!", "warning");
+          return;
+        }
+        courses.forEach(c => {
+          if (checked.includes(c.id)) c.paymentStatus = "paid";
+        });
+        saveState();
+        renderSettlementView();
+        showToast(`Đã cập nhật trạng thái "Đã thanh toán" cho ${checked.length} lớp học!`);
+      });
+
+      document.getElementById("settle-check-all").addEventListener("change", (e) => {
+        document.querySelectorAll(".settle-row-checkbox").forEach(cb => cb.checked = e.target.checked);
+      });
+
+      document.getElementById("btn-settle-export-csv").addEventListener("click", exportSettlementCSV);
+      document.getElementById("btn-settle-print-voucher").addEventListener("click", openSettlementPrintModal);
+      document.getElementById("btn-close-print-modal").addEventListener("click", () => {
+        document.getElementById("settlement-print-modal").classList.add("hidden");
+      });
+      document.getElementById("btn-print-action").addEventListener("click", () => window.print());
+
+      // Interactive Cost form listeners
+      function refreshCostPreviewInstructors() {
+        const sel = document.getElementById("cost-preview-instructor");
+        if (!sel) return;
+        sel.innerHTML = `<option value="">-- Tự động theo Giảng viên được chọn khi chốt --</option>`;
+        instructors.forEach(i => {
+          const opt = document.createElement("option");
+          opt.value = i.id;
+          opt.textContent = `${i.name} - Nhà: ${i.homeAddress || i.area}`;
+          sel.appendChild(opt);
+        });
+      }
+      refreshCostPreviewInstructors();
+
+      const costPreviewSel = document.getElementById("cost-preview-instructor");
+      if (costPreviewSel) {
+        costPreviewSel.addEventListener("change", (e) => {
+          const instId = e.target.value;
+          if (!instId) return;
+          const inst = instructors.find(i => i.id === instId);
+          if (inst) {
+            const locStr = document.getElementById("field-location").value || "Vincons Hóc Môn";
+            const cCoords = resolveLocationCoordinates(locStr);
+            const dist = parseFloat(calculateDistance(cCoords.lat, cCoords.lng, inst.lat, inst.lng));
+            document.getElementById("cost-distance-km").value = dist;
+            document.getElementById("cost-instructor-home-addr").textContent = `Nhà GV: ${inst.homeAddress || inst.area}`;
+            document.getElementById("cost-distance-note").textContent = `Từ nhà thầy/cô đến công trình: ~${dist} km`;
+            updateFormCostCalculation();
+            showToast(`Đã tính cự ly từ nhà ${inst.name}: ${dist} km`);
+          }
+        });
+      }
+
+      document.getElementById("cost-shift-type").addEventListener("change", updateFormCostCalculation);
+      const formCustomTeach = document.getElementById("cost-custom-teaching");
+      if (formCustomTeach) formCustomTeach.addEventListener("input", updateFormCostCalculation);
+      document.getElementById("cost-distance-km").addEventListener("input", updateFormCostCalculation);
+      document.getElementById("cost-lodging-select").addEventListener("change", updateFormCostCalculation);
+      document.getElementById("cost-equipment-fee").addEventListener("input", updateFormCostCalculation);
+
+      // Reset data
+      let resetPending = false;
+      document.getElementById("btn-reset-default-data").addEventListener("click", (e) => {
+        if (!resetPending) {
+          resetPending = true;
+          e.target.textContent = "⚠️ Bấm lần nữa để xác nhận";
+          showToast("Bấm nút lần nữa để xác nhận khôi phục dữ liệu mẫu!", "warning");
+          setTimeout(() => {
+            resetPending = false;
+            e.target.textContent = "Khôi Phục Dữ Liệu Mẫu Ban Đầu";
+          }, 4000);
+          return;
+        }
+        resetPending = false;
+        e.target.textContent = "Khôi Phục Dữ Liệu Mẫu Ban Đầu";
+        courses = JSON.parse(JSON.stringify(DEFAULT_COURSES));
+        instructors = JSON.parse(JSON.stringify(DEFAULT_INSTRUCTORS));
+        saveState();
+        renderAllViews();
+        showToast("Đã khôi phục dữ liệu mẫu ban đầu thành công!");
+      });
+
+      // Backup & restore
       document.getElementById("btn-export-json").addEventListener("click", () => {
         const data = { courses, instructors, exportedAt: new Date().toISOString() };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -3309,8 +3714,6 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
               saveState();
               renderAllViews();
               showToast("Đã phục hồi dữ liệu từ file JSON thành công!");
-            } else {
-              showToast("File JSON không đúng định dạng dữ liệu!", "error");
             }
           } catch (err) {
             showToast("Lỗi khi đọc file JSON!", "error");
@@ -3319,166 +3722,15 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         reader.readAsText(file);
       });
 
-      let resetPending = false;
-      document.getElementById("btn-reset-default-data").addEventListener("click", (e) => {
-        if (!resetPending) {
-          resetPending = true;
-          e.target.textContent = "⚠️ Xác nhận đặt lại? (Bấm lần nữa)";
-          showToast("Bấm nút lần nữa để xác nhận khôi phục dữ liệu mẫu!", "warning");
-          setTimeout(() => {
-            resetPending = false;
-            e.target.textContent = "Khôi Phục Dữ Liệu Mẫu Ban Đầu";
-          }, 4000);
-          return;
-        }
-        resetPending = false;
-        e.target.textContent = "Khôi Phục Dữ Liệu Mẫu Ban Đầu";
-        courses = JSON.parse(JSON.stringify(DEFAULT_COURSES));
-        instructors = JSON.parse(JSON.stringify(DEFAULT_INSTRUCTORS));
-        saveState();
-        renderAllViews();
-        showToast("Đã khôi phục dữ liệu mẫu ban đầu thành công!");
-      });
-
       document.getElementById("btn-save-firebase").addEventListener("click", () => {
         showToast("Đã lưu cấu hình Firebase! (Chế độ LocalStorage vẫn hoạt động song song)", "success");
       });
 
-      // Settlement View Filter Listeners
-      const sFrom = document.getElementById("settle-from-date");
-      if (sFrom) sFrom.addEventListener("change", renderSettlementView);
-      const sTo = document.getElementById("settle-to-date");
-      if (sTo) sTo.addEventListener("change", renderSettlementView);
-      const sInst = document.getElementById("settle-instructor-filter");
-      if (sInst) sInst.addEventListener("change", renderSettlementView);
-      const sStat = document.getElementById("settle-status-filter");
-      if (sStat) sStat.addEventListener("change", renderSettlementView);
-
-      // Settlement Date Presets
-      const btnPresetMonth = document.getElementById("btn-settle-preset-month");
-      if (btnPresetMonth) {
-        btnPresetMonth.addEventListener("click", () => {
-          document.getElementById("settle-from-date").value = "2026-11-01";
-          document.getElementById("settle-to-date").value = "2026-11-30";
-          renderSettlementView();
-        });
-      }
-      const btnPresetHalf1 = document.getElementById("btn-settle-preset-half1");
-      if (btnPresetHalf1) {
-        btnPresetHalf1.addEventListener("click", () => {
-          document.getElementById("settle-from-date").value = "2026-11-01";
-          document.getElementById("settle-to-date").value = "2026-11-15";
-          renderSettlementView();
-        });
-      }
-      const btnPresetHalf2 = document.getElementById("btn-settle-preset-half2");
-      if (btnPresetHalf2) {
-        btnPresetHalf2.addEventListener("click", () => {
-          document.getElementById("settle-from-date").value = "2026-11-16";
-          document.getElementById("settle-to-date").value = "2026-11-30";
-          renderSettlementView();
-        });
-      }
-
-      // Bulk Payment Mark Action
-      const btnBulkPaid = document.getElementById("btn-settle-bulk-paid");
-      if (btnBulkPaid) {
-        btnBulkPaid.addEventListener("click", () => {
-          const checked = Array.from(document.querySelectorAll(".settle-row-checkbox:checked")).map(cb => cb.value);
-          if (checked.length === 0) {
-            showToast("Vui lòng tích chọn các lớp cần đánh dấu đã thanh toán!", "warning");
-            return;
-          }
-          courses.forEach(c => {
-            if (checked.includes(c.id)) c.paymentStatus = "paid";
-          });
-          saveState();
-          renderSettlementView();
-          showToast(`Đã cập nhật trạng thái "Đã thanh toán" cho ${checked.length} lớp học!`);
-        });
-      }
-
-      // Check all in settlement table
-      const checkAll = document.getElementById("settle-check-all");
-      if (checkAll) {
-        checkAll.addEventListener("change", (e) => {
-          document.querySelectorAll(".settle-row-checkbox").forEach(cb => cb.checked = e.target.checked);
-        });
-      }
-
-      // Export CSV
-      const btnExportCSV = document.getElementById("btn-settle-export-csv");
-      if (btnExportCSV) btnExportCSV.addEventListener("click", exportSettlementCSV);
-
-      // Print Voucher Modal Triggers
-      const btnPrintVoucher = document.getElementById("btn-settle-print-voucher");
-      if (btnPrintVoucher) btnPrintVoucher.addEventListener("click", openSettlementPrintModal);
-
-      const btnClosePrint = document.getElementById("btn-close-print-modal");
-      if (btnClosePrint) {
-        btnClosePrint.addEventListener("click", () => {
-          document.getElementById("settlement-print-modal").classList.add("hidden");
-        });
-      }
-
-      const btnPrintAct = document.getElementById("btn-print-action");
-      if (btnPrintAct) {
-        btnPrintAct.addEventListener("click", () => {
-          window.print();
-        });
-      }
-
-      // Populate Cost Preview Instructor Dropdown
-      function refreshCostPreviewInstructors() {
-        const sel = document.getElementById("cost-preview-instructor");
-        if (!sel) return;
-        sel.innerHTML = `<option value="">-- Tự động theo Giảng viên được chọn khi chốt --</option>`;
-        instructors.forEach(i => {
-          const opt = document.createElement("option");
-          opt.value = i.id;
-          opt.textContent = `${i.name} - Nhà: ${i.homeAddress || i.area}`;
-          sel.appendChild(opt);
-        });
-      }
-      refreshCostPreviewInstructors();
-
-      // When cost-preview-instructor changes, calculate distance from that instructor's home!
-      const costPreviewSel = document.getElementById("cost-preview-instructor");
-      if (costPreviewSel) {
-        costPreviewSel.addEventListener("change", (e) => {
-          const instId = e.target.value;
-          if (!instId) return;
-          const inst = instructors.find(i => i.id === instId);
-          if (inst) {
-            const locStr = document.getElementById("field-location").value || "Vincons Hóc Môn";
-            const cCoords = resolveLocationCoordinates(locStr);
-            const dist = parseFloat(calculateDistance(cCoords.lat, cCoords.lng, inst.lat, inst.lng));
-            document.getElementById("cost-distance-km").value = dist;
-            document.getElementById("cost-instructor-home-addr").textContent = `Nhà GV: ${inst.homeAddress || inst.area}`;
-            document.getElementById("cost-distance-note").textContent = `Từ nhà thầy/cô đến công trình: ~${dist} km`;
-            updateFormCostCalculation();
-            showToast(`Đã tính cự ly từ nhà ${inst.name}: ${dist} km`);
-          }
-        });
-      }
-
-      // Form Cost Interactive Listeners
-      const formShift = document.getElementById("cost-shift-type");
-      if (formShift) formShift.addEventListener("change", updateFormCostCalculation);
-      const formCustomTeach = document.getElementById("cost-custom-teaching");
-      if (formCustomTeach) formCustomTeach.addEventListener("input", updateFormCostCalculation);
-      const formKm = document.getElementById("cost-distance-km");
-      if (formKm) formKm.addEventListener("input", updateFormCostCalculation);
-      const formLodge = document.getElementById("cost-lodging-select");
-      if (formLodge) formLodge.addEventListener("change", updateFormCostCalculation);
-      const formEquip = document.getElementById("cost-equipment-fee");
-      if (formEquip) formEquip.addEventListener("input", updateFormCostCalculation);
-
-      // Initial Render
+      // Initial Render with Current Real Date
       renderAllViews();
 
-      // Automatically load the user's sample and match right away!
-      const defaultSample = `Lịch khóa/huấn luyện: VINALPHA HÓC MÔN\n1. Thời gian : 15h00 ngày 03/11/2026\n2. Nhóm:  3 - Đơn vị sản xuất vật liệu\n3. Nội dung huấn luyện: Trạm bê tông nhựa\n4. Địa điểm huấn luyện: Vincons Hóc Môn\n5. Thiết bị đơn vị huấn luyện hỗ trợ:  MÁY CHIẾU (tại dự án không có thiết bị)\n6. Liên hệ : MS ÁNH 0792.006.916`;
+      // Initial Load of sample course
+      const defaultSample = `Lịch khóa/huấn luyện: VINALPHA HÓC MÔN\n1. Thời gian : 15h00 ngày 07/11/2026\n2. Nhóm:  3 - Đơn vị sản xuất vật liệu\n3. Nội dung huấn luyện: Trạm bê tông nhựa\n4. Địa điểm huấn luyện: Vincons Hóc Môn\n5. Thiết bị đơn vị huấn luyện hỗ trợ:  MÁY CHIẾU (tại dự án không có thiết bị)\n6. Liên hệ : MS ÁNH 0792.006.916`;
       document.getElementById("zalo-raw-input").value = defaultSample;
       const initialParsed = parseZaloMessage(defaultSample);
       if (initialParsed) {
