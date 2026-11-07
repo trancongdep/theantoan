@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AnToanHub - Quản Lý & Điều Phối Huấn Luyện ATVSLĐ Miền Nam</title>
+  <title>VDC Hub - Quản Lý & Điều Phối Huấn Luyện ATVSLĐ Miền Nam</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -29,7 +29,7 @@
         </svg>
       </div>
       <div>
-        <h2 class="text-2xl font-black text-slate-900">AnToanHub Miền Nam</h2>
+        <h2 class="text-2xl font-black text-slate-900">VDC Hub Miền Nam</h2>
         <p class="text-xs text-slate-500 mt-1">Hệ thống Điều phối Giảng viên & Quản lý Lịch ATVSLĐ</p>
       </div>
 
@@ -85,7 +85,7 @@
           </div>
           <div>
             <div class="flex items-center space-x-2">
-              <span class="font-bold text-lg tracking-tight text-white">AnToanHub</span>
+              <span class="font-bold text-lg tracking-tight text-white">VDC Hub</span>
               <span class="bg-amber-500/20 text-amber-400 text-xs px-2 py-0.5 rounded-full font-medium border border-amber-500/30">Văn Phòng Miền Nam</span>
             </div>
             <p class="text-xs text-slate-400">Điều phối giảng viên & Quản lý lịch huấn luyện ATVSLĐ</p>
@@ -1055,6 +1055,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       </div>
 
       <div class="space-y-3 text-sm">
+        <input type="hidden" id="edit-inst-id" value="">
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">Họ và tên Giảng viên *</label>
           <input type="text" id="new-inst-name" placeholder="Thầy Nguyễn Văn A..." class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm outline-none">
@@ -1088,9 +1089,15 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
           <label class="block text-xs font-semibold text-slate-700 mb-1">Chuyên môn sâu / Lĩnh vực thế mạnh</label>
           <input type="text" id="new-inst-specialty" placeholder="Trạm bê tông, Thiết bị nâng, Làm việc trên cao..." class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm outline-none">
         </div>
-        <div class="pt-3 flex justify-end space-x-2">
-          <button id="btn-cancel-inst" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Hủy</button>
-          <button id="btn-save-inst" class="px-4 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm">Lưu Giảng Viên</button>
+        <div class="pt-3 flex items-center justify-between border-t border-slate-100">
+          <button id="btn-modal-delete-inst" class="text-rose-600 hover:text-rose-800 text-xs font-semibold hidden flex items-center space-x-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            <span>Xóa Giảng Viên Này</span>
+          </button>
+          <div class="flex items-center space-x-2 ml-auto">
+            <button id="btn-cancel-inst" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">Hủy</button>
+            <button id="btn-save-inst" class="px-4 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm">Lưu Giảng Viên</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1196,7 +1203,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
   <footer class="bg-white border-t border-slate-200 mt-12 py-6 text-center text-xs text-slate-500">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
       <div class="flex items-center space-x-2">
-        <span class="font-bold text-slate-800">AnToanHub Miền Nam</span>
+        <span class="font-bold text-slate-800">VDC Hub Miền Nam</span>
         <span>•</span>
         <span>Hệ thống Quản lý & Điều phối Lịch Huấn luyện An toàn Lao động</span>
       </div>
@@ -2584,17 +2591,102 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
             </div>
           </div>
 
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-            <a href="tel:${inst.phone.replace(/[\.\s]/g, '')}" class="flex-1 text-center py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-lg text-xs transition">
-              📞 ${inst.phone}
-            </a>
-            <a href="https://zalo.me/${inst.phone.replace(/[\.\s]/g, '')}" target="_blank" class="flex-1 text-center py-2 bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold rounded-lg text-xs transition">
-              Zalo Chat
-            </a>
+          <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+            <!-- Call & Zalo -->
+            <div class="flex items-center justify-between gap-2">
+              <a href="tel:${inst.phone.replace(/[\.\s]/g, '')}" class="flex-1 text-center py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-lg text-xs transition flex items-center justify-center space-x-1">
+                <span>📞 ${inst.phone}</span>
+              </a>
+              <a href="https://zalo.me/${inst.phone.replace(/[\.\s]/g, '')}" target="_blank" class="flex-1 text-center py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold rounded-lg text-xs transition">
+                <span>Nhắn Zalo</span>
+              </a>
+            </div>
+            <!-- Edit & Delete buttons -->
+            <div class="flex items-center justify-end space-x-1.5 pt-1 border-t border-slate-100 text-xs">
+              <button data-inst-id="${inst.id}" class="btn-edit-inst px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition flex items-center space-x-1">
+                <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                <span>Sửa Thông Tin</span>
+              </button>
+              <button data-inst-id="${inst.id}" data-inst-name="${inst.name}" class="btn-delete-inst px-2.5 py-1 text-xs font-semibold rounded-lg border border-rose-200 hover:bg-rose-50 text-rose-600 transition flex items-center space-x-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <span>Xóa GV</span>
+              </button>
+            </div>
           </div>
         `;
         container.appendChild(card);
       });
+
+      // Attach Edit and Delete listeners
+      container.querySelectorAll(".btn-edit-inst").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const instId = btn.getAttribute("data-inst-id");
+          openEditInstructorModal(instId);
+        });
+      });
+
+      container.querySelectorAll(".btn-delete-inst").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const instId = btn.getAttribute("data-inst-id");
+          const instName = btn.getAttribute("data-inst-name");
+          deleteInstructor(instId, instName);
+        });
+      });
+    }
+
+    // Open Instructor Modal for Editing
+    function openEditInstructorModal(instId) {
+      const inst = instructors.find(i => i.id === instId);
+      if (!inst) return;
+
+      document.getElementById("inst-modal-title").textContent = `Chỉnh Sửa Thông Tin: ${inst.name}`;
+      document.getElementById("edit-inst-id").value = inst.id;
+      document.getElementById("new-inst-name").value = inst.name || "";
+      document.getElementById("new-inst-phone").value = inst.phone || "";
+      document.getElementById("new-inst-home-address").value = inst.homeAddress || "";
+      document.getElementById("new-inst-area").value = inst.area || "";
+      document.getElementById("new-inst-specialty").value = inst.specialty || "";
+      document.getElementById("btn-save-inst").textContent = "Cập Nhật Thông Tin";
+
+      // Groups checkboxes
+      document.querySelectorAll(".inst-grp-check").forEach(cb => {
+        cb.checked = (inst.groups || []).includes(cb.value);
+      });
+
+      const btnDel = document.getElementById("btn-modal-delete-inst");
+      if (btnDel) {
+        btnDel.classList.remove("hidden");
+        btnDel.onclick = () => deleteInstructor(inst.id, inst.name);
+      }
+
+      document.getElementById("instructor-modal").classList.remove("hidden");
+    }
+
+    // Delete Instructor function
+    function deleteInstructor(instId, instName) {
+      if (currentUser && (currentUser.role === "guest" || currentUser.role === "sales")) {
+        showToast("Tài khoản của bạn không có quyền xóa giảng viên!", "warning");
+        return;
+      }
+
+      // Check how many courses are assigned
+      const assigned = courses.filter(c => c.assignedInstructorId === instId);
+      let msg = `Đã xóa giảng viên ${instName} khỏi hệ thống!`;
+      if (assigned.length > 0) {
+        assigned.forEach(c => {
+          c.assignedInstructorId = null;
+          c.assignedInstructorName = null;
+          c.departureAddress = "Chưa gán GV";
+          c.status = "pending";
+        });
+        msg = `Đã xóa GV ${instName} và chuyển ${assigned.length} lớp học sang trạng thái Chờ gán GV!`;
+      }
+
+      instructors = instructors.filter(i => i.id !== instId);
+      saveState();
+      renderAllViews();
+      document.getElementById("instructor-modal").classList.add("hidden");
+      showToast(msg, "success");
     }
 
     // Modal Course Handlers
@@ -3537,7 +3629,22 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         document.getElementById("instructor-modal").classList.add("hidden");
       });
 
+      document.getElementById("btn-add-instructor").addEventListener("click", () => {
+        document.getElementById("inst-modal-title").textContent = "Thêm Giảng Viên Mới";
+        document.getElementById("edit-inst-id").value = "";
+        document.getElementById("new-inst-name").value = "";
+        document.getElementById("new-inst-phone").value = "";
+        document.getElementById("new-inst-home-address").value = "";
+        document.getElementById("new-inst-area").value = "";
+        document.getElementById("new-inst-specialty").value = "";
+        document.getElementById("btn-save-inst").textContent = "Lưu Giảng Viên";
+        document.getElementById("btn-modal-delete-inst").classList.add("hidden");
+        document.querySelectorAll(".inst-grp-check").forEach(cb => cb.checked = ["1", "2", "3", "4"].includes(cb.value));
+        document.getElementById("instructor-modal").classList.remove("hidden");
+      });
+
       document.getElementById("btn-save-inst").addEventListener("click", () => {
+        const editId = document.getElementById("edit-inst-id").value;
         const name = document.getElementById("new-inst-name").value.trim();
         const phone = document.getElementById("new-inst-phone").value.trim();
         const homeAddress = document.getElementById("new-inst-home-address").value.trim();
@@ -3553,6 +3660,38 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         document.querySelectorAll(".inst-grp-check:checked").forEach(cb => checkedGroups.push(cb.value));
         const coords = resolveLocationCoordinates(homeAddress || area);
 
+        if (editId) {
+          // UPDATE EXISTING INSTRUCTOR
+          const target = instructors.find(i => i.id === editId);
+          if (target) {
+            target.name = name;
+            target.phone = phone;
+            target.homeAddress = homeAddress || area || "TP.HCM";
+            target.area = area || "TP.HCM";
+            target.lat = coords.lat;
+            target.lng = coords.lng;
+            target.groups = checkedGroups.length > 0 ? checkedGroups : ["1", "2", "3", "4"];
+            target.specialty = specialty || "Huấn luyện ATVSLĐ";
+
+            // Update assigned courses with new name & home address
+            courses.filter(c => c.assignedInstructorId === editId).forEach(c => {
+              c.assignedInstructorName = name;
+              c.departureAddress = target.homeAddress;
+              const cCoords = resolveLocationCoordinates(c.location);
+              c.distanceCenterKm = parseFloat(calculateDistance(cCoords.lat, cCoords.lng, target.lat, target.lng));
+              c.costTravel = calculateTravelAllowance(c.distanceCenterKm);
+              c.totalCost = (c.costTeaching || 1500000) + c.costTravel + (c.costLodging || 0) + (c.costEquipment || 0);
+            });
+
+            saveState();
+            renderAllViews();
+            document.getElementById("instructor-modal").classList.add("hidden");
+            showToast(`Đã cập nhật thông tin giảng viên ${name} thành công!`);
+            return;
+          }
+        }
+
+        // ADD NEW INSTRUCTOR
         const newInst = {
           id: "gv-" + Date.now(),
           name,
@@ -3695,7 +3834,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `AnToanHub_Backup_${new Date().toISOString().split("T")[0]}.json`;
+        a.download = `VDC_Hub_Backup_${new Date().toISOString().split("T")[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
         showToast("Đã xuất file sao lưu JSON thành công!");
