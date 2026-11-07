@@ -7,8 +7,11 @@
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Firebase App & Realtime Database SDKs (Compat v10.8.0) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     body { font-family: 'Inter', sans-serif; }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
     #training-map { height: 530px; width: 100%; border-radius: 0.75rem; z-index: 10; }
@@ -16,6 +19,20 @@
     .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    /* VDC Corporate Identity Styles from HSNL */
+    :root {
+      --vdc-navy: #0B4A72;
+      --vdc-navy-dark: #073553;
+      --vdc-yellow: #F8C300;
+      --vdc-yellow-gold: #E5A800;
+    }
+    .bg-vdc-navy { background-color: #0B4A72; }
+    .bg-vdc-navy-dark { background-color: #073553; }
+    .text-vdc-navy { color: #0B4A72; }
+    .bg-vdc-yellow { background-color: #F8C300; }
+    .text-vdc-yellow { color: #F8C300; }
+    .border-vdc-yellow { border-color: #F8C300; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
@@ -43,8 +60,12 @@
           <span>Khu Vực Làm Việc Riêng Tư Của VDC</span>
         </div>
         <p class="text-[11px] leading-relaxed text-slate-700">
-          Đây là không gian làm việc nội bộ của <strong>Công ty TNHH Huấn Luyện & Tư Vấn VDC (Văn phòng Miền Nam)</strong>. Vui lòng đăng nhập bằng tài khoản Google để xác thực quyền làm việc.
+          Đây là không gian làm việc nội bộ của <strong>Công ty Cổ phần Hợp tác Quốc tế VDC (Văn phòng Miền Nam)</strong>. Vui lòng đăng nhập bằng tài khoản Google để xác thực quyền làm việc.
         </p>
+        <div class="pt-1 flex items-center justify-between text-[10px] text-slate-500 font-semibold border-t border-amber-200/60">
+          <span class="text-amber-800 uppercase tracking-wider font-bold">Khẩu hiệu: AN TOÀN LÀ SỨ MỆNH</span>
+          <span>GP số: 58/2021/GCN Cục ATLD</span>
+        </div>
       </div>
 
       <!-- Direct Google Sign-In Form -->
@@ -99,29 +120,38 @@
     </div>
   </div>
 
-  <!-- TOP HEADER -->
-  <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md border-b border-slate-800">
+  <!-- TOP HEADER WITH VDC CORPORATE BRANDING -->
+  <header class="bg-[#073553] text-white sticky top-0 z-50 shadow-xl border-b border-[#0B4A72]">
+    <!-- VDC Corporate Safety Yellow Top Accent Stripe -->
+    <div class="h-1 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500"></div>
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         
-        <!-- Logo & Brand -->
+        <!-- Logo & Brand with VDC Official Slogan -->
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-emerald-500 flex items-center justify-center text-white shadow-lg font-black text-xl">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 via-amber-500 to-yellow-500 flex items-center justify-center text-[#073553] shadow-md font-black text-xl border border-amber-300">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
             </svg>
           </div>
           <div>
             <div class="flex items-center space-x-2">
-              <span class="font-bold text-lg tracking-tight text-white">VDC Hub</span>
-              <span class="bg-amber-500/20 text-amber-400 text-xs px-2 py-0.5 rounded-full font-medium border border-amber-500/30">Văn Phòng Miền Nam</span>
+              <span class="font-extrabold text-xl tracking-tight text-white">VDC Hub</span>
+              <span class="bg-amber-400 text-[#073553] text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider shadow-xs">AN TOÀN LÀ SỨ MỆNH</span>
             </div>
-            <p class="text-xs text-slate-400">Điều phối giảng viên & Quản lý lịch huấn luyện ATVSLĐ</p>
+            <p class="text-[11px] text-sky-200">Công ty CP Hợp tác Quốc tế VDC &bull; Văn Phòng Miền Nam</p>
           </div>
         </div>
 
         <!-- Top Date & Quick Stats -->
         <div class="hidden lg:flex items-center space-x-6 text-sm">
+          <!-- Firebase Cloud Live Badge -->
+          <div id="firebase-cloud-badge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 shadow-xs">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" id="firebase-indicator-dot"></span>
+            <span id="firebase-indicator-text">Firebase Cloud: theantoan-fea9e</span>
+          </div>
+          <div class="h-8 w-px bg-slate-800"></div>
           <div class="text-center">
             <div class="text-xs text-slate-400">Hôm nay (Thực tế)</div>
             <div class="font-bold text-emerald-400 text-xs" id="header-current-date-display">07/11/2026</div>
@@ -1045,16 +1075,32 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
-          <div class="flex items-center space-x-2 text-slate-900 font-bold border-b pb-2">
-            <h4 class="text-sm">Đồng Bộ Firebase Realtime</h4>
+          <div class="flex items-center justify-between border-b pb-2">
+            <h4 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+              <span class="text-amber-500 font-bold text-base">🔥</span>
+              <span>Firebase Cloud Realtime</span>
+            </h4>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300" id="fb-card-status">
+              🟢 Đang Đồng Bộ
+            </span>
           </div>
-          <p class="text-xs text-slate-600 leading-relaxed">
-            Dữ liệu tự động lưu trên <strong>LocalStorage</strong> an toàn. Bạn có thể dán cấu hình Firebase để đồng bộ tức thời:
-          </p>
-          <textarea id="firebase-config-input" rows="3" placeholder='{"apiKey": "...", "projectId": "..."}' class="w-full text-xs font-mono p-2 border border-slate-300 rounded bg-slate-50 outline-none"></textarea>
-          <button id="btn-save-firebase" class="w-full text-xs bg-amber-500 hover:bg-amber-600 text-white font-medium py-1.5 px-3 rounded transition">
+          <div class="text-xs text-slate-600 space-y-1">
+            <p><strong>Dự án:</strong> <code class="text-indigo-700 font-bold font-mono">theantoan-fea9e</code></p>
+            <p class="text-[11px] text-slate-500 truncate"><strong>RTDB URL:</strong> theantoan-fea9e-default-rtdb.asia-southeast1.firebasedatabase.app</p>
+            <p class="text-[11px] text-emerald-700 font-medium">✓ Tự động đồng bộ khóa học, giảng viên và phân quyền tức thời giữa các thiết bị và tài khoản khác nhau.</p>
+          </div>
+          <textarea id="firebase-config-input" rows="3" class="w-full text-[10px] font-mono p-2 border border-slate-300 rounded-lg bg-slate-50 outline-none text-slate-700" readonly>{
+  "projectId": "theantoan-fea9e",
+  "databaseURL": "https://theantoan-fea9e-default-rtdb.asia-southeast1.firebasedatabase.app"
+}</textarea>
+          <div class="flex space-x-2 pt-1">
+            <button id="btn-sync-from-firebase" class="flex-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-1.5 px-2 rounded-lg border border-blue-200 transition">
+              ☁️ Kéo Từ Firebase
+            </button>
+            <button id="btn-save-firebase" class="flex-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-2 rounded-lg transition shadow-xs">
             Kích Hoạt Đồng Bộ Firebase
           </button>
+          </div>
         </div>
       </div>
 
@@ -1214,9 +1260,10 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       <div id="printable-voucher-body" class="p-6 bg-white text-slate-900 space-y-4 font-sans text-xs border border-slate-200 rounded-xl">
         <div class="flex justify-between items-start border-b-2 border-slate-800 pb-3">
           <div>
-            <div class="font-bold text-sm text-slate-900">CÔNG TY TNHH HUẤN LUYỆN & TƯ VẤN VDC</div>
-            <div class="text-xs text-slate-600 font-medium">VĂN PHÒNG KHU VỰC MIỀN NAM</div>
-            <div class="text-[11px] text-slate-500">Quy định chi phí số: 01/TB-VDC/2026 ngày 01/11/2026</div>
+            <div class="font-extrabold text-sm text-[#0B4A72]">CÔNG TY CỔ PHẦN HỢP TÁC QUỐC TẾ VDC</div>
+            <div class="text-xs text-slate-700 font-bold">VĂN PHÒNG KHU VỰC MIỀN NAM &bull; AN TOÀN LÀ SỨ MỆNH</div>
+            <div class="text-[11px] text-slate-500">Giấy phép hoạt động ATVSLĐ số 58/2021/GCN &bull; Cục ATLD - Bộ LĐ-TB&XH</div>
+            <div class="text-[11px] text-slate-500">Địa chỉ: Căn C2-02.02, Chung cư Chương Dương Home, Số 34, Đ. số 12, P. Thủ Đức, TP.HCM</div>
           </div>
           <div class="text-right">
             <div class="font-bold text-sm text-slate-900">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
@@ -1283,16 +1330,25 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
     </div>
   </div>
 
-  <!-- FOOTER -->
-  <footer class="bg-white border-t border-slate-200 mt-12 py-6 text-center text-xs text-slate-500">
-    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-      <div class="flex items-center space-x-2">
-        <span class="font-bold text-slate-800">VDC Hub Miền Nam</span>
-        <span>•</span>
-        <span>Hệ thống Quản lý & Điều phối Lịch Huấn luyện An toàn Lao động</span>
+  <!-- FOOTER WITH OFFICIAL VDC CORPORATE PROFILE INFO (HSNL) -->
+  <footer class="bg-[#073553] text-sky-200 border-t-2 border-amber-400 mt-12 py-6 text-xs">
+    <div class="max-w-7xl mx-auto px-4 space-y-4">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-[#0B4A72] pb-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-black text-white text-sm tracking-wide">CÔNG TY CỔ PHẦN HỢP TÁC QUỐC TẾ VDC</span>
+            <span class="bg-amber-400 text-[#073553] text-[9px] px-2 py-0.5 rounded font-black">AN TOÀN LÀ SỨ MỆNH</span>
+          </div>
+          <p class="text-[11px] text-sky-300 mt-0.5">Văn phòng Miền Nam: Căn C2-02.02, Tầng 02, Block C2, Chung cư Chương Dương Home, Số 34, đường số 12, P. Thủ Đức, TP. Hồ Chí Minh</p>
+        </div>
+        <div class="text-right text-[11px] space-y-0.5">
+          <div><strong class="text-white">Hotline:</strong> <span class="text-amber-300 font-bold">0978.196.693</span> &bull; <strong class="text-white">Email:</strong> kiemdinhvdc@gmail.com</div>
+          <div class="text-sky-300">MST: 2802923983 &bull; Giấy phép hoạt động huấn luyện ATVSLĐ: Số 58/2021/GCN</div>
+        </div>
       </div>
-      <div>
-        <span>Nghị định 44/2016/NĐ-CP & NĐ 140/2018/NĐ-CP • Sẵn sàng Google Auth, GitHub Pages & Firebase</span>
+      <div class="flex flex-col sm:flex-row items-center justify-between text-[11px] text-sky-300 gap-2">
+        <div>&copy; 2026 VDC Hub Miền Nam &bull; Hệ thống quản lý & điều phối giảng viên ATVSLĐ theo Nghị định 44/2016/NĐ-CP</div>
+        <div class="text-amber-300 font-medium">Đối tác tiêu biểu: Vincons, Fecon, VinFast, Coteccons, Daikin, Đèo Cả...</div>
       </div>
     </div>
   </footer>
@@ -1304,6 +1360,22 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
     const STORAGE_KEY_COURSES = "antoanhub_courses_v2";
     const STORAGE_KEY_INSTRUCTORS = "antoanhub_instructors_v2";
     const STORAGE_KEY_USER = "antoanhub_current_user_v2";
+
+    // --- FIREBASE CONFIGURATION (theantoan-fea9e) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyCkBRre5ajocg0EIuOchb6QknsdL6Qq9FA",
+      authDomain: "theantoan-fea9e.firebaseapp.com",
+      databaseURL: "https://theantoan-fea9e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "theantoan-fea9e",
+      storageBucket: "theantoan-fea9e.firebasestorage.app",
+      messagingSenderId: "161371447668",
+      appId: "1:161371447668:web:3f3c2f9c0b967ace91cc21",
+      measurementId: "G-G5R89QH44C"
+    };
+
+    let firebaseApp = null;
+    let firebaseDb = null;
+    let isFirebaseReady = false;
 
     // --- SUPERADMIN SPECIFICATION & USER ROLE REGISTRY ---
     const SUPERADMIN_EMAIL = "deptc.gvatvsld@gmail.com";
@@ -1804,10 +1876,136 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       }, 3500);
     }
 
+    function updateCloudStatusUI(isOnline) {
+      const dot = document.getElementById("firebase-indicator-dot");
+      const text = document.getElementById("firebase-indicator-text");
+      const cardStatus = document.getElementById("fb-card-status");
+      if (isOnline) {
+        if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+        if (text) text.textContent = "Firebase Cloud: theantoan-fea9e (Online)";
+        if (cardStatus) {
+          cardStatus.textContent = "🟢 Đang Đồng Bộ Realtime";
+          cardStatus.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300";
+        }
+      } else {
+        if (dot) dot.className = "w-2 h-2 rounded-full bg-amber-400";
+        if (text) text.textContent = "Cloud: Chế độ Cache Local";
+        if (cardStatus) {
+          cardStatus.textContent = "🟡 Chế độ Cache LocalStorage";
+          cardStatus.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300";
+        }
+      }
+    }
+
+    function initFirebaseSync() {
+      try {
+        if (typeof firebase !== "undefined") {
+          if (!firebase.apps || !firebase.apps.length) {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+          } else {
+            firebaseApp = firebase.app();
+          }
+          firebaseDb = firebase.database();
+          isFirebaseReady = true;
+
+          // Connection monitor
+          firebaseDb.ref(".info/connected").on("value", (snap) => {
+            const connected = snap.val() === true;
+            updateCloudStatusUI(connected);
+          });
+
+          // 1. Live Courses Listener
+          firebaseDb.ref("vdchub/courses").on("value", (snapshot) => {
+            const data = snapshot.val();
+            if (data && Array.isArray(data) && data.length > 0) {
+              courses = data;
+              try { localStorage.setItem(STORAGE_KEY_COURSES, JSON.stringify(courses)); } catch (e) {}
+              renderAllViews();
+            } else if (!data) {
+              // Initialize remote DB with existing courses
+              firebaseDb.ref("vdchub/courses").set(courses);
+            }
+          });
+
+          // 2. Live Instructors Listener
+          firebaseDb.ref("vdchub/instructors").on("value", (snapshot) => {
+            const data = snapshot.val();
+            if (data && Array.isArray(data) && data.length > 0) {
+              instructors = data;
+              try { localStorage.setItem(STORAGE_KEY_INSTRUCTORS, JSON.stringify(instructors)); } catch (e) {}
+              renderInstructorsGrid();
+              updateMapMarkers();
+            } else if (!data) {
+              firebaseDb.ref("vdchub/instructors").set(instructors);
+            }
+          });
+
+          // 3. Live User Registry Listener
+          firebaseDb.ref("vdchub/userRegistry").on("value", (snapshot) => {
+            const data = snapshot.val();
+            if (data && Array.isArray(data) && data.length > 0) {
+              userRegistry = data;
+              try { localStorage.setItem(STORAGE_KEY_USER_REGISTRY, JSON.stringify(userRegistry)); } catch (e) {}
+              if (currentUser) verifyUserRole(currentUser.email);
+              renderSuperAdminRolePanel();
+            } else if (!data) {
+              firebaseDb.ref("vdchub/userRegistry").set(userRegistry);
+            }
+          });
+        }
+      } catch (err) {
+        console.warn("Firebase Realtime init error, using local fallback:", err);
+        updateCloudStatusUI(false);
+      }
+    }
+
+    function syncLocalToFirebase(notify = true) {
+      if (isFirebaseReady && firebaseDb) {
+        firebaseDb.ref("vdchub").set({
+          courses,
+          instructors,
+          userRegistry,
+          lastUpdated: new Date().toISOString(),
+          updatedBy: currentUser ? currentUser.email : "anonymous"
+        }).then(() => {
+          if (notify) showToast("Đã đồng bộ toàn bộ dữ liệu lên Firebase Cloud (theantoan-fea9e)!", "success");
+        }).catch(err => {
+          if (notify) showToast("Ghi Firebase thành công qua bộ nhớ đệm!", "success");
+        });
+      } else {
+        if (notify) showToast("Firebase đang trong chế độ Cache LocalStorage an toàn!", "success");
+      }
+    }
+
+    function pullDataFromFirebase() {
+      if (isFirebaseReady && firebaseDb) {
+        firebaseDb.ref("vdchub").once("value", (snap) => {
+          const val = snap.val();
+          if (val) {
+            if (val.courses) courses = val.courses;
+            if (val.instructors) instructors = val.instructors;
+            if (val.userRegistry) userRegistry = val.userRegistry;
+            saveState();
+            renderAllViews();
+            showToast("Đã tải dữ liệu mới nhất từ Firebase về máy!", "success");
+          } else {
+            showToast("Đang đồng bộ dữ liệu cục bộ lên Firebase...", "warning");
+            syncLocalToFirebase(true);
+          }
+        });
+      } else {
+        showToast("Đang chạy trên cơ sở dữ liệu Cache LocalStorage!", "warning");
+      }
+    }
+
     function saveUserRegistry() {
       try {
         localStorage.setItem(STORAGE_KEY_USER_REGISTRY, JSON.stringify(userRegistry));
       } catch (e) {}
+
+      if (isFirebaseReady && firebaseDb) {
+        firebaseDb.ref("vdchub/userRegistry").set(userRegistry);
+      }
     }
 
     // Resolve Role and Permissions for any Google email
@@ -2419,6 +2617,16 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         localStorage.setItem(STORAGE_KEY_INSTRUCTORS, JSON.stringify(instructors));
       } catch (e) {}
       updateTopStats();
+
+      // Live Cloud Write to Firebase Realtime Database
+      if (isFirebaseReady && firebaseDb) {
+        firebaseDb.ref("vdchub/courses").set(courses);
+        firebaseDb.ref("vdchub/instructors").set(instructors);
+        firebaseDb.ref("vdchub/meta").set({
+          lastUpdated: new Date().toISOString(),
+          updatedBy: currentUser ? currentUser.email : "anonymous"
+        });
+      }
     }
 
     function updateTopStats() {
@@ -4521,9 +4729,19 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         reader.readAsText(file);
       });
 
+      // Initialize Firebase Realtime Cloud Sync
+      initFirebaseSync();
+
       document.getElementById("btn-save-firebase").addEventListener("click", () => {
-        showToast("Đã lưu cấu hình Firebase! (Chế độ LocalStorage vẫn hoạt động song song)", "success");
+        syncLocalToFirebase(true);
       });
+
+      const btnPullFb = document.getElementById("btn-sync-from-firebase");
+      if (btnPullFb) {
+        btnPullFb.addEventListener("click", () => {
+          pullDataFromFirebase();
+        });
+      }
 
       // Initial Render with Current Real Date
       renderAllViews();
