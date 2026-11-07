@@ -23,51 +23,79 @@
   <!-- GOOGLE AUTH LOGIN MODAL OVERLAY (KHI CHƯA ĐĂNG NHẬP) -->
   <div id="google-login-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden text-center p-8 space-y-6">
+      
+      <!-- Brand Logo -->
       <div class="w-16 h-16 bg-gradient-to-tr from-amber-500 to-emerald-500 rounded-2xl mx-auto flex items-center justify-center text-white shadow-lg">
         <svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
         </svg>
       </div>
+
       <div>
         <h2 class="text-2xl font-black text-slate-900">VDC Hub Miền Nam</h2>
-        <p class="text-xs text-slate-500 mt-1">Hệ thống Điều phối Giảng viên & Quản lý Lịch ATVSLĐ</p>
+        <p class="text-xs text-slate-500 mt-1">Hệ Thống Điều Phối & Quản Lý Huấn Luyện ATVSLĐ</p>
       </div>
 
-      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-left space-y-2">
-        <div class="text-xs font-bold text-slate-700 uppercase tracking-wide">Yêu cầu xác thực tài khoản Google:</div>
-        <p class="text-xs text-slate-600">Đăng nhập tài khoản Google của bạn để hệ thống tự động kiểm tra chức danh và phân quyền sử dụng:</p>
-        <div class="grid grid-cols-2 gap-1.5 text-[11px] pt-1 font-medium">
-          <span class="text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">👑 Admin (Quản trị)</span>
-          <span class="text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">💼 Sales (Kinh doanh)</span>
-          <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">👨‍🏫 Trainer (Giảng viên)</span>
-          <span class="text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">👤 Guest (Khách xem)</span>
+      <!-- Private Workspace Notice -->
+      <div class="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-4 text-left space-y-1.5 text-xs text-amber-950 shadow-xs">
+        <div class="font-bold flex items-center space-x-1.5 text-amber-900 text-sm">
+          <svg class="w-4 h-4 text-amber-700 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+          <span>Khu Vực Làm Việc Riêng Tư Của VDC</span>
         </div>
+        <p class="text-[11px] leading-relaxed text-slate-700">
+          Đây là không gian làm việc nội bộ của <strong>Công ty TNHH Huấn Luyện & Tư Vấn VDC (Văn phòng Miền Nam)</strong>. Vui lòng đăng nhập bằng tài khoản Google để xác thực quyền làm việc.
+        </p>
       </div>
 
-      <!-- Quick Role Selection Buttons for Simulation -->
-      <div class="space-y-2">
-        <button id="btn-login-google-admin" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-xl shadow transition flex items-center justify-center space-x-3 text-xs">
-          <svg class="w-4 h-4" viewBox="0 0 24 24">
-            <path fill="#EA4335" d="M12 5c1.7 0 3 .6 4 1.5l3-3C17.2 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
-            <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"/>
-            <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/>
-            <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/>
-          </svg>
-          <span>Đăng nhập với Google: <strong>Admin (Ban Giám Đốc)</strong></span>
-        </button>
+      <!-- Direct Google Sign-In Form -->
+      <div class="space-y-3 text-left">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tài khoản Google của bạn:</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#EA4335" d="M12 5c1.7 0 3 .6 4 1.5l3-3C17.2 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
+                <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"/>
+                <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/>
+                <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/>
+              </svg>
+            </div>
+            <input type="email" id="login-google-custom-email" value="deptc.gvatvsld@gmail.com" placeholder="name@gmail.com..." class="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+          </div>
+        </div>
 
-        <div class="grid grid-cols-3 gap-2">
-          <button id="btn-login-google-sales" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-2 px-2 rounded-xl border border-blue-200 text-[11px] transition">
-            💼 Sales (Kinh doanh)
+        <button id="btn-login-custom-email" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl shadow transition flex items-center justify-center space-x-2 text-xs">
+          <span>Đăng Nhập</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </button>
+      </div>
+
+      <!-- Collapsed Internal Shortcut Buttons -->
+      <details class="text-left text-xs pt-1">
+        <summary class="text-slate-400 text-[11px] cursor-pointer hover:text-slate-600 font-medium text-center">
+          ⚡ Phím tắt nhanh dành cho nhân viên nội bộ
+        </summary>
+        <div class="mt-2 space-y-1.5 pt-2 border-t border-slate-100">
+          <button id="btn-login-superadmin" class="w-full text-left px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-lg text-[11px] font-bold border border-amber-200 flex justify-between">
+            <span>🌟 SuperAdmin (deptc.gvatvsld@gmail.com)</span>
+            <span class="text-amber-700">Tối cao</span>
           </button>
-          <button id="btn-login-google-trainer" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 px-2 rounded-xl border border-emerald-200 text-[11px] transition">
-            👨‍🏫 Trainer (Giảng viên)
-          </button>
-          <button id="btn-login-google-guest" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-2 rounded-xl border border-slate-300 text-[11px] transition">
+          <div class="grid grid-cols-3 gap-1.5 text-[10px]">
+            <button id="btn-login-google-admin" class="p-1.5 bg-purple-50 text-purple-700 rounded border border-purple-200 font-bold hover:bg-purple-100">
+              👑 Admin (admin.vdc@gmail.com)
+            </button>
+            <button id="btn-login-google-sales" class="p-1.5 bg-blue-50 text-blue-700 rounded border border-blue-200 font-bold hover:bg-blue-100">
+              💼 Sales (Kinh doanh)
+            </button>
+            <button id="btn-login-google-trainer" class="p-1.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-200 font-bold hover:bg-emerald-100">
+              👨‍🏫 Trainer (Giảng viên)
+            </button>
+          </div>
+          <button id="btn-login-google-guest" class="w-full text-left px-2 py-1 bg-slate-100 text-slate-600 rounded text-[10px] hover:bg-slate-200">
             👤 Guest (Khách xem)
           </button>
         </div>
-      </div>
+      </details>
     </div>
   </div>
 
@@ -122,6 +150,11 @@
             <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
             <span id="user-role-name">Admin</span>
           </div>
+
+          <!-- Link to Isolated SuperAdmin Portal (supperadmin.html) -->
+          <button id="header-link-supperadmin" onclick="openSupperAdminPortal()" class="hidden items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-lg text-xs shadow-xs transition border border-amber-300">
+            <span>🛡️ Cổng SuperAdmin (supperadmin.html)</span>
+          </button>
 
           <!-- User Info & Avatar -->
           <div class="flex items-center space-x-2 text-right">
@@ -959,6 +992,29 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
 
     <!-- ==================== TAB 7: SETTINGS & CLOUD ==================== -->
     <section id="tab-settings" class="tab-content hidden space-y-6">
+      
+      <!-- ISOLATED SUPERADMIN PORTAL BANNER (TRANG RIÊNG BIỆT SUPPERADMIN.HTML) -->
+      <div id="superadmin-rbac-panel" class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl p-6 shadow-sm border border-slate-800 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span class="bg-amber-400 text-slate-950 text-xs px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">Bảo Mật Tối Cao</span>
+              <span class="text-xs text-slate-400">Trang độc lập: <code class="text-amber-300 font-mono font-bold">supperadmin.html</code></span>
+            </div>
+            <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+              <span>🛡️ Cổng Điều Khiển SuperAdmin Đã Được Tách Riêng Biệt</span>
+            </h3>
+            <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+              Theo quy chuẩn an ninh, toàn bộ chức năng bổ nhiệm vai trò và quản trị người dùng tối cao đã được tách độc lập sang file <strong>supperadmin.html</strong> để ngăn chặn nguy cơ xâm nhập hoặc chỉnh sửa trái phép từ giao diện người dùng thông thường.
+            </p>
+          </div>
+          <div>
+            <button id="btn-go-to-supperadmin" onclick="openSupperAdminPortal()" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow transition">
+              <span>Mở Cổng SuperAdmin (supperadmin.html) &rarr;</span>
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
           <div class="flex items-center space-x-2 text-slate-900 font-bold border-b pb-2">
@@ -1104,6 +1160,34 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
   </div>
 
 
+    <!-- ==================== MODAL: SUPPERADMIN SEPARATE CONSOLE ==================== -->
+  <div id="supperadmin-view-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 text-white rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-amber-500/40 p-6 space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-2xl">🌟</span>
+          <div>
+            <h3 class="font-extrabold text-base text-amber-300">Cổng Quản Trị Tối Cao SuperAdmin (supperadmin.html)</h3>
+            <p class="text-[11px] text-slate-400">Không gian độc lập & bảo mật dành riêng cho <strong>deptc.gvatvsld@gmail.com</strong></p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="btn-download-supperadmin-file" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-lg transition shadow-xs flex items-center space-x-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>Tải File supperadmin.html</span>
+          </button>
+          <button id="btn-close-supperadmin-modal" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="supperadmin-modal-body" class="space-y-4">
+        <!-- Rendered via renderSuperAdminStandaloneUI() -->
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== MODAL: PRINT SETTLEMENT VOUCHER ==================== -->
   <div id="settlement-print-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto shadow-2xl border border-slate-200 p-6 space-y-4">
@@ -1221,47 +1305,52 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
     const STORAGE_KEY_INSTRUCTORS = "antoanhub_instructors_v2";
     const STORAGE_KEY_USER = "antoanhub_current_user_v2";
 
-    // Google RBAC Preset Accounts
-    const GOOGLE_ACCOUNTS = {
-      admin: {
-        name: "Lãnh Đạo VDC (Admin)",
-        email: "admin@vdcsafety.com",
-        role: "admin",
-        roleName: "Admin (Quản trị toàn quyền)",
-        avatarBg: "bg-purple-600",
-        avatar: "AD",
-        badgeClass: "bg-purple-500/20 text-purple-300 border-purple-500/40"
+    // --- SUPERADMIN SPECIFICATION & USER ROLE REGISTRY ---
+    const SUPERADMIN_EMAIL = "deptc.gvatvsld@gmail.com";
+    const STORAGE_KEY_USER_REGISTRY = "vdchub_user_registry_v3";
+
+    // Default Authorized Registry (SuperAdmin and previously appointed accounts)
+    const DEFAULT_USER_REGISTRY = [
+      {
+        email: "deptc.gvatvsld@gmail.com",
+        name: "SuperAdmin Tổng Phụ Trách",
+        role: "superadmin",
+        roleName: "SuperAdmin (Toàn quyền tối cao)",
+        assignedBy: "Hệ thống gốc",
+        assignedAt: "01/11/2026",
+        isRoot: true
       },
-      sales: {
-        name: "Nguyễn Thị Lan (Sales Miền Nam)",
-        email: "sales.lan@vdcsafety.com",
+      {
+        email: "admin.vdc@gmail.com",
+        name: "Nguyễn Văn Quản Trị",
+        role: "admin",
+        roleName: "Admin (Quản trị điều hành)",
+        assignedBy: "deptc.gvatvsld@gmail.com",
+        assignedAt: "02/11/2026",
+        isRoot: false
+      },
+      {
+        email: "sales.lan@gmail.com",
+        name: "Trần Thị Lan",
         role: "sales",
         roleName: "Sales (Kinh doanh / Chăm sóc KH)",
-        avatarBg: "bg-blue-600",
-        avatar: "SL",
-        badgeClass: "bg-blue-500/20 text-blue-300 border-blue-500/40"
+        assignedBy: "deptc.gvatvsld@gmail.com",
+        assignedAt: "03/11/2026",
+        isRoot: false
       },
-      trainer: {
-        name: "Thầy Trần Quốc Tuấn (Giảng viên)",
-        email: "gv.tuantran@vdcsafety.com",
+      {
+        email: "gv.tuantran@gmail.com",
+        name: "Thầy Trần Quốc Tuấn",
         role: "trainer",
         instructorId: "gv-01",
         roleName: "Trainer (Giảng viên cơ hữu)",
-        avatarBg: "bg-emerald-600",
-        avatar: "GV",
-        badgeClass: "bg-emerald-500/20 text-emerald-300 border-emerald-400/40"
-      },
-      guest: {
-        name: "Khách Xem Lịch (Guest)",
-        email: "guest@vdcsafety.com",
-        role: "guest",
-        roleName: "Guest (Chỉ xem lịch)",
-        avatarBg: "bg-slate-600",
-        avatar: "GT",
-        badgeClass: "bg-slate-500/20 text-slate-300 border-slate-500/40"
+        assignedBy: "deptc.gvatvsld@gmail.com",
+        assignedAt: "04/11/2026",
+        isRoot: false
       }
-    };
+    ];
 
+    let userRegistry = [];
     let currentUser = null;
 
     // Center of Ho Chi Minh City (Quận 1 / Bưu điện Trung tâm TP)
@@ -1715,22 +1804,123 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       }, 3500);
     }
 
-    // Google RBAC Auth Login function
-    function loginWithRole(roleKey) {
-      const acc = GOOGLE_ACCOUNTS[roleKey] || GOOGLE_ACCOUNTS.admin;
-      currentUser = acc;
+    function saveUserRegistry() {
       try {
-        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
+        localStorage.setItem(STORAGE_KEY_USER_REGISTRY, JSON.stringify(userRegistry));
+      } catch (e) {}
+    }
+
+    // Resolve Role and Permissions for any Google email
+    function verifyUserRole(emailInput) {
+      const email = (emailInput || "").trim().toLowerCase();
+
+      // 1. DUY NHẤT deptc.gvatvsld@gmail.com LÀ SUPERADMIN
+      if (email === SUPERADMIN_EMAIL.toLowerCase()) {
+        currentUser = {
+          email: SUPERADMIN_EMAIL,
+          name: "SuperAdmin Tổng Phụ Trách",
+          role: "superadmin",
+          roleName: "SuperAdmin (Toàn quyền tối cao)",
+          avatarBg: "bg-gradient-to-tr from-amber-500 to-amber-700",
+          avatar: "SA",
+          badgeClass: "bg-gradient-to-r from-amber-500/30 to-amber-600/30 text-amber-300 border-amber-400 font-extrabold shadow-sm"
+        };
+        return currentUser;
+      }
+
+      // 2. Tra cứu trong bảng phân quyền do SuperAdmin đã thiết lập
+      const record = userRegistry.find(u => u.email.toLowerCase() === email);
+      if (record) {
+        let badgeClass = "bg-purple-500/20 text-purple-300 border-purple-500/40";
+        let avatarBg = "bg-purple-600";
+        let avatar = "AD";
+
+        if (record.role === "sales") {
+          badgeClass = "bg-blue-500/20 text-blue-300 border-blue-500/40";
+          avatarBg = "bg-blue-600";
+          avatar = "SL";
+        } else if (record.role === "trainer") {
+          badgeClass = "bg-emerald-500/20 text-emerald-300 border-emerald-400/40";
+          avatarBg = "bg-emerald-600";
+          avatar = "GV";
+        } else if (record.role === "guest") {
+          badgeClass = "bg-slate-500/20 text-slate-300 border-slate-500/40";
+          avatarBg = "bg-slate-600";
+          avatar = "GT";
+        }
+
+        currentUser = {
+          email: record.email,
+          name: record.name,
+          role: record.role,
+          roleName: record.roleName || (record.role.toUpperCase()),
+          avatarBg,
+          avatar,
+          badgeClass,
+          instructorId: record.instructorId || null
+        };
+        return currentUser;
+      }
+
+      // 3. Email lạ chưa được SuperAdmin thiết lập vai trò -> TỰ ĐỘNG LÀ GUEST (KHÁCH)
+      const nameGuess = email.split("@")[0] || "Khách Xem";
+      currentUser = {
+        email: email,
+        name: nameGuess + " (Khách vãng lai)",
+        role: "guest",
+        roleName: "Guest (Chỉ xem lịch)",
+        avatarBg: "bg-slate-600",
+        avatar: "GT",
+        badgeClass: "bg-slate-500/20 text-slate-300 border-slate-500/40",
+        isUnregistered: true
+      };
+      return currentUser;
+    }
+
+    function loginWithGoogleEmail(emailInput) {
+      const email = (emailInput || "").trim().toLowerCase();
+      if (!email) {
+        showToast("Vui lòng nhập địa chỉ email Google hợp lệ!", "warning");
+        return;
+      }
+
+      const user = verifyUserRole(email);
+      try {
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
       } catch (e) {}
 
       document.getElementById("google-login-modal").classList.add("hidden");
       applyRolePermissions();
-      showToast(`Đăng nhập Google thành công! Vai trò: ${currentUser.roleName}`);
+
+      if (user.role === "superadmin") {
+        showToast(`Chào mừng SuperAdmin tối cao (${SUPERADMIN_EMAIL})! Toàn quyền quản trị & bổ nhiệm vai trò.`, "success");
+      } else if (user.isUnregistered) {
+        showToast(`Email ${email} chưa được SuperAdmin phân quyền. Bạn đang ở vai trò Khách (Guest - Chỉ xem)!`, "warning");
+      } else {
+        showToast(`Đăng nhập Google thành công! Vai trò: ${user.roleName}`);
+      }
+
       renderAllViews();
     }
 
-    function applyRolePermissions() {
-      if (!currentUser) currentUser = GOOGLE_ACCOUNTS.admin;
+    // Open SuperAdmin Portal (Seamless between Canvas in-page view and standalone supperadmin.html)
+    function openSupperAdminPortal() {
+      if (!currentUser || currentUser.email.toLowerCase() !== SUPERADMIN_EMAIL.toLowerCase()) {
+        showToast("Chỉ duy nhất SuperAdmin (deptc.gvatvsld@gmail.com) mới có quyền truy cập!", "error");
+        return;
+      }
+      // In standalone environment, redirect to supperadmin.html; in Canvas sandbox, show SuperAdmin panel modal
+      const modal = document.getElementById("supperadmin-view-modal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        renderSuperAdminStandaloneUI();
+      } else {
+        window.location.href = "supperadmin.html";
+      }
+    }
+
+        function applyRolePermissions() {
+      if (!currentUser) verifyUserRole(SUPERADMIN_EMAIL);
 
       // Update Header Profile UI
       document.getElementById("user-display-name").textContent = currentUser.name;
@@ -1742,30 +1932,452 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       badge.className = `px-2.5 py-1 rounded-full text-xs font-bold border flex items-center space-x-1 ${currentUser.badgeClass}`;
       document.getElementById("user-role-name").textContent = currentUser.role.toUpperCase();
 
-      // Enforce Permissions across tabs
       const role = currentUser.role;
 
-      // Guest: Read-only
+      // Guest: Read-only on mutative buttons
       if (role === "guest") {
-        document.querySelectorAll("button[id^='btn-save'], button[id^='btn-parse'], #btn-add-instructor, #btn-settle-bulk-paid").forEach(el => {
+        document.querySelectorAll("button[id^='btn-save'], button[id^='btn-parse'], #btn-add-instructor, #btn-settle-bulk-paid, .btn-table-del, .btn-delete-inst, .btn-assign-inst").forEach(el => {
           el.disabled = true;
           el.classList.add("opacity-50", "cursor-not-allowed");
         });
       } else {
-        document.querySelectorAll("button[id^='btn-save'], button[id^='btn-parse'], #btn-add-instructor, #btn-settle-bulk-paid").forEach(el => {
+        document.querySelectorAll("button[id^='btn-save'], button[id^='btn-parse'], #btn-add-instructor, #btn-settle-bulk-paid, .btn-table-del, .btn-delete-inst, .btn-assign-inst").forEach(el => {
           el.disabled = false;
           el.classList.remove("opacity-50", "cursor-not-allowed");
         });
       }
 
-      // Sales: Cannot delete or approve accounting settlement
+      // Sales: cannot bulk-approve payments or delete instructors
       if (role === "sales") {
         const btnBulk = document.getElementById("btn-settle-bulk-paid");
         if (btnBulk) btnBulk.classList.add("hidden");
+        document.querySelectorAll(".btn-delete-inst, .btn-table-del").forEach(el => el.classList.add("hidden"));
       } else {
         const btnBulk = document.getElementById("btn-settle-bulk-paid");
         if (btnBulk) btnBulk.classList.remove("hidden");
+        if (role === "admin" || role === "superadmin") {
+          document.querySelectorAll(".btn-delete-inst, .btn-table-del").forEach(el => el.classList.remove("hidden"));
+        }
       }
+
+      renderSuperAdminRolePanel();
+    }
+
+    function renderSuperAdminStandaloneUI() {
+      const container = document.getElementById("supperadmin-modal-body");
+      if (!container) return;
+
+      let rowsHtml = "";
+      userRegistry.forEach((u) => {
+        const isRoot = u.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
+        let badge = `<span class="bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[11px] px-2 py-0.5 rounded font-bold">Admin</span>`;
+        if (isRoot) badge = `<span class="bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 text-[11px] px-2.5 py-0.5 rounded-full font-black shadow-xs">🌟 SuperAdmin Gốc</span>`;
+        else if (u.role === "sales") badge = `<span class="bg-blue-500/20 text-blue-300 border border-blue-500/40 text-[11px] px-2 py-0.5 rounded font-bold">Sales</span>`;
+        else if (u.role === "trainer") badge = `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[11px] px-2 py-0.5 rounded font-bold">Trainer</span>`;
+        else if (u.role === "guest") badge = `<span class="bg-slate-500/20 text-slate-300 border border-slate-500/40 text-[11px] px-2 py-0.5 rounded font-bold">Guest</span>`;
+
+        rowsHtml += `
+          <tr class="hover:bg-slate-800/50 transition border-b border-slate-800">
+            <td class="py-2.5 px-3 font-mono font-medium text-slate-200">${u.email}</td>
+            <td class="py-2.5 px-3 font-semibold text-slate-300">${u.name}</td>
+            <td class="py-2.5 px-3">${badge}</td>
+            <td class="py-2.5 px-3 text-[11px] text-slate-400">${u.assignedBy || 'SuperAdmin'}</td>
+            <td class="py-2.5 px-3 text-[11px] text-slate-400 whitespace-nowrap">${u.assignedAt || '07/11/2026'}</td>
+            <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-1">
+              ${isRoot ? `
+                <span class="text-[11px] text-amber-400 font-bold italic">Khóa bảo vệ tối cao</span>
+              ` : `
+                <select onchange="updateAccountRole('${u.email}', this.value); renderSuperAdminStandaloneUI();" class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700 outline-none">
+                  <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                  <option value="sales" ${u.role === 'sales' ? 'selected' : ''}>Sales</option>
+                  <option value="trainer" ${u.role === 'trainer' ? 'selected' : ''}>Trainer</option>
+                  <option value="guest" ${u.role === 'guest' ? 'selected' : ''}>Guest</option>
+                </select>
+                <button onclick="revokeAccountRole('${u.email}'); renderSuperAdminStandaloneUI();" class="text-rose-400 hover:text-rose-300 font-semibold text-xs px-2 py-0.5 rounded hover:bg-rose-500/20">Thu hồi</button>
+              `}
+            </td>
+          </tr>
+        `;
+      });
+
+      let trainerOptions = `<option value="">-- Không liên kết Giảng viên --</option>`;
+      instructors.forEach(i => {
+        trainerOptions += `<option value="${i.id}">${i.name} (${i.area})</option>`;
+      });
+
+      container.innerHTML = `
+        <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 space-y-3">
+          <div class="font-bold text-xs text-amber-400 uppercase tracking-wide">Bổ Nhiệm Vai Trò Mới Cho Tài Khoản Google:</div>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-2 text-xs">
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Email Google cấp quyền *</label>
+              <input type="email" id="modal-rbac-email" placeholder="ví dụ: nhanvien@gmail.com..." class="w-full px-3 py-1.5 border border-slate-700 rounded-lg outline-none font-mono text-xs bg-slate-900 text-white">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Họ và tên *</label>
+              <input type="text" id="modal-rbac-name" placeholder="ví dụ: Nguyễn Văn A..." class="w-full px-3 py-1.5 border border-slate-700 rounded-lg outline-none text-xs bg-slate-900 text-white">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Vai trò bổ nhiệm *</label>
+              <select id="modal-rbac-role" class="w-full px-2.5 py-1.5 border border-slate-700 rounded-lg outline-none text-xs font-semibold bg-slate-900 text-white">
+                <option value="admin">👑 Admin (Quản trị điều hành)</option>
+                <option value="sales" selected>💼 Sales (Kinh doanh / Tạo khóa)</option>
+                <option value="trainer">👨‍🏫 Trainer (Giảng viên đào tạo)</option>
+                <option value="guest">👤 Guest (Khách chỉ xem)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Liên kết Giảng viên</label>
+              <select id="modal-rbac-trainer" class="w-full px-2 py-1.5 border border-slate-700 rounded-lg outline-none text-xs bg-slate-900 text-slate-300">
+                ${trainerOptions}
+              </select>
+            </div>
+          </div>
+          <div class="flex justify-end pt-1">
+            <button onclick="appointUserRoleFromModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center space-x-1.5">
+              <span>➕ Bổ Nhiệm Vai Trò</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-800 rounded-2xl">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-800/90 font-bold text-slate-300 border-b border-slate-800 uppercase">
+              <tr>
+                <th class="py-2.5 px-3">Email Google</th>
+                <th class="py-2.5 px-3">Họ và tên</th>
+                <th class="py-2.5 px-3">Vai trò</th>
+                <th class="py-2.5 px-3">Người bổ nhiệm</th>
+                <th class="py-2.5 px-3">Ngày cấp</th>
+                <th class="py-2.5 px-3 text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function appointUserRoleFromModal() {
+      const emailInput = document.getElementById("modal-rbac-email");
+      const nameInput = document.getElementById("modal-rbac-name");
+      const roleInput = document.getElementById("modal-rbac-role");
+      const trainerInput = document.getElementById("modal-rbac-trainer");
+
+      const email = (emailInput.value || "").trim().toLowerCase();
+      const name = (nameInput.value || "").trim();
+      const role = roleInput.value;
+      const instructorId = trainerInput.value || null;
+
+      if (!email || !email.includes("@")) {
+        showToast("Vui lòng nhập địa chỉ email Google hợp lệ!", "warning");
+        return;
+      }
+      if (!name) {
+        showToast("Vui lòng nhập họ và tên!", "warning");
+        return;
+      }
+
+      let roleName = "Admin";
+      if (role === "sales") roleName = "Sales (Kinh doanh)";
+      else if (role === "trainer") roleName = "Trainer (Giảng viên)";
+      else if (role === "guest") roleName = "Guest (Khách xem)";
+
+      const existingIndex = userRegistry.findIndex(u => u.email.toLowerCase() === email);
+      if (existingIndex >= 0) {
+        userRegistry[existingIndex].name = name;
+        userRegistry[existingIndex].role = role;
+        userRegistry[existingIndex].roleName = roleName;
+        userRegistry[existingIndex].instructorId = instructorId;
+      } else {
+        userRegistry.push({
+          email,
+          name,
+          role,
+          roleName,
+          instructorId,
+          assignedBy: SUPERADMIN_EMAIL,
+          assignedAt: "07/11/2026",
+          isRoot: false
+        });
+      }
+
+      saveUserRegistry();
+      renderSuperAdminStandaloneUI();
+      showToast(`Đã bổ nhiệm vai trò ${roleName} cho ${email}!`, "success");
+      emailInput.value = "";
+      nameInput.value = "";
+    }
+
+        // --- SUPERADMIN USER ROLE MANAGEMENT PANEL (TAB SETTINGS) ---
+    function renderSuperAdminRolePanel() {
+      const isSuperAdmin = currentUser && currentUser.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
+
+      // Show / hide direct header link to supperadmin.html
+      const headerLink = document.getElementById("header-link-supperadmin");
+      if (headerLink) {
+        if (isSuperAdmin) {
+          headerLink.classList.remove("hidden");
+          headerLink.classList.add("inline-flex");
+        } else {
+          headerLink.classList.add("hidden");
+          headerLink.classList.remove("inline-flex");
+        }
+      }
+
+      const panel = document.getElementById("superadmin-rbac-panel");
+      if (!panel) return;
+
+      if (!isSuperAdmin) {
+        panel.innerHTML = `
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span class="bg-slate-700 text-slate-300 text-xs px-2.5 py-0.5 rounded-full font-bold">Khóa An Ninh</span>
+              <span class="text-xs text-slate-400">Trang độc lập: <code class="text-slate-300 font-mono">supperadmin.html</code></span>
+            </div>
+            <h3 class="text-base font-bold text-white flex items-center space-x-2">
+              <span>🔒 Cổng Điều Khiển SuperAdmin Được Tách Riêng & Bảo Mật</span>
+            </h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Bạn đang đăng nhập với tài khoản <strong>${currentUser.email}</strong>. Chỉ duy nhất email <strong>${SUPERADMIN_EMAIL}</strong> mới có thẩm quyền truy cập trang quản trị <strong>supperadmin.html</strong> để bổ nhiệm vai trò cho nhân viên.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      panel.innerHTML = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span class="bg-amber-400 text-slate-950 text-xs px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">SuperAdmin Tối Cao</span>
+              <span class="text-xs text-slate-400">File độc lập: <code class="text-amber-300 font-mono font-bold">supperadmin.html</code></span>
+            </div>
+            <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+              <span>🛡️ Chào mừng SuperAdmin (${SUPERADMIN_EMAIL})</span>
+            </h3>
+            <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+              Toàn bộ tính năng bổ nhiệm người dùng, phân quyền Admin/Sales/Trainer/Guest và quản trị bảo mật đã được tách sang file <strong>supperadmin.html</strong> để chống hack.
+            </p>
+          </div>
+          <div>
+            <button id="btn-go-to-supperadmin" onclick="openSupperAdminPortal()" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow transition">
+              <span>Truy Cập supperadmin.html &rarr;</span>
+            </a>
+          </div>
+        </div>
+      `;
+      return;
+
+      // Active SuperAdmin Management Panel
+      let rowsHtml = "";
+      userRegistry.forEach((u, idx) => {
+        const isRoot = u.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
+
+        let badge = `<span class="bg-purple-100 text-purple-800 text-[11px] px-2 py-0.5 rounded font-bold">Admin</span>`;
+        if (isRoot) badge = `<span class="bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 text-[11px] px-2.5 py-0.5 rounded-full font-black shadow-xs">🌟 SuperAdmin Gốc</span>`;
+        else if (u.role === "sales") badge = `<span class="bg-blue-100 text-blue-800 text-[11px] px-2 py-0.5 rounded font-bold">Sales</span>`;
+        else if (u.role === "trainer") badge = `<span class="bg-emerald-100 text-emerald-800 text-[11px] px-2 py-0.5 rounded font-bold">Trainer</span>`;
+        else if (u.role === "guest") badge = `<span class="bg-slate-100 text-slate-700 text-[11px] px-2 py-0.5 rounded font-bold">Guest</span>`;
+
+        rowsHtml += `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-2.5 px-3 font-mono font-medium text-slate-900">${u.email}</td>
+            <td class="py-2.5 px-3 font-semibold text-slate-800">${u.name}</td>
+            <td class="py-2.5 px-3">${badge}</td>
+            <td class="py-2.5 px-3 text-[11px] text-slate-500">${u.assignedBy || 'SuperAdmin'}</td>
+            <td class="py-2.5 px-3 text-[11px] text-slate-500 whitespace-nowrap">${u.assignedAt || '07/11/2026'}</td>
+            <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-1">
+              ${isRoot ? `
+                <span class="text-[11px] text-amber-700 font-bold italic">Khóa bảo vệ tối cao</span>
+              ` : `
+                <select onchange="updateAccountRole('${u.email}', this.value)" class="text-xs px-2 py-0.5 border rounded bg-white text-slate-700 outline-none">
+                  <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                  <option value="sales" ${u.role === 'sales' ? 'selected' : ''}>Sales</option>
+                  <option value="trainer" ${u.role === 'trainer' ? 'selected' : ''}>Trainer</option>
+                  <option value="guest" ${u.role === 'guest' ? 'selected' : ''}>Guest (Khách)</option>
+                </select>
+                <button onclick="revokeAccountRole('${u.email}')" class="text-rose-600 hover:text-rose-800 font-semibold text-xs px-2 py-0.5 rounded hover:bg-rose-50">Thu hồi</button>
+              `}
+            </td>
+          </tr>
+        `;
+      });
+
+      // Trainer selection options
+      let trainerOptions = `<option value="">-- Không liên kết Giảng viên --</option>`;
+      instructors.forEach(i => {
+        trainerOptions += `<option value="${i.id}">${i.name} (${i.area})</option>`;
+      });
+
+      panel.innerHTML = `
+        <div class="border-b border-slate-200 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-base flex items-center space-x-2">
+              <span class="text-amber-500 text-lg">🌟</span>
+              <span>Bảng Điều Khiển SuperAdmin: Quản Trị & Bổ Nhiệm Vai Trò Người Dùng</span>
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Duy nhất SuperAdmin (${SUPERADMIN_EMAIL}) có quyền bổ nhiệm các vai trò này. Các email chưa được bổ nhiệm khi đăng nhập sẽ chỉ có quyền Khách (Guest).
+            </p>
+          </div>
+          <span class="text-xs bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-full border border-amber-300">
+            ${userRegistry.length} Tài khoản đã phân quyền
+          </span>
+        </div>
+
+        <!-- Form Add / Appoint New Role -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+          <div class="font-bold text-xs text-slate-800 uppercase tracking-wide">Bổ Nhiệm Vai Trò Mới Cho Tài Khoản Google:</div>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-2 text-xs">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Email Google cần cấp quyền *</label>
+              <input type="email" id="rbac-input-email" placeholder="ví dụ: tranvanb@gmail.com..." class="w-full px-3 py-1.5 border border-slate-300 rounded-lg outline-none font-mono text-xs bg-white">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Họ và tên người dùng *</label>
+              <input type="text" id="rbac-input-name" placeholder="ví dụ: Trần Văn B..." class="w-full px-3 py-1.5 border border-slate-300 rounded-lg outline-none text-xs bg-white">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Vai trò bổ nhiệm *</label>
+              <select id="rbac-input-role" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg outline-none text-xs font-semibold bg-white text-slate-800">
+                <option value="admin">👑 Admin (Quản trị điều hành)</option>
+                <option value="sales" selected>💼 Sales (Kinh doanh / Tạo khóa)</option>
+                <option value="trainer">👨‍🏫 Trainer (Giảng viên đào tạo)</option>
+                <option value="guest">👤 Guest (Khách chỉ xem)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Liên kết GV (nếu là Trainer)</label>
+              <select id="rbac-input-trainer" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg outline-none text-xs bg-white text-slate-700">
+                ${trainerOptions}
+              </select>
+            </div>
+          </div>
+          <div class="flex justify-end pt-1">
+            <button onclick="appointUserRole()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-xs transition flex items-center space-x-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              <span>Bổ Nhiệm Vai Trò Tài Khoản Này</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Registry Table -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 font-bold text-slate-700 border-b border-slate-200 uppercase">
+              <tr>
+                <th class="py-2.5 px-3">Email Google</th>
+                <th class="py-2.5 px-3">Họ và tên</th>
+                <th class="py-2.5 px-3">Vai trò</th>
+                <th class="py-2.5 px-3">Người phân quyền</th>
+                <th class="py-2.5 px-3">Ngày cấp</th>
+                <th class="py-2.5 px-3 text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 bg-white">
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // Appoint a new role to an email
+    function appointUserRole() {
+      const emailInput = document.getElementById("rbac-input-email");
+      const nameInput = document.getElementById("rbac-input-name");
+      const roleInput = document.getElementById("rbac-input-role");
+      const trainerInput = document.getElementById("rbac-input-trainer");
+
+      const email = (emailInput.value || "").trim().toLowerCase();
+      const name = (nameInput.value || "").trim();
+      const role = roleInput.value;
+      const instructorId = trainerInput.value || null;
+
+      if (!email || !email.includes("@")) {
+        showToast("Vui lòng nhập địa chỉ email Google hợp lệ!", "warning");
+        return;
+      }
+      if (!name) {
+        showToast("Vui lòng nhập họ và tên người dùng!", "warning");
+        return;
+      }
+      if (email === SUPERADMIN_EMAIL.toLowerCase()) {
+        showToast("Email này là SuperAdmin gốc, không cần bổ nhiệm lại!", "warning");
+        return;
+      }
+
+      let roleName = "Admin";
+      if (role === "sales") roleName = "Sales (Kinh doanh)";
+      else if (role === "trainer") roleName = "Trainer (Giảng viên)";
+      else if (role === "guest") roleName = "Guest (Khách xem)";
+
+      const existingIndex = userRegistry.findIndex(u => u.email.toLowerCase() === email);
+      if (existingIndex >= 0) {
+        userRegistry[existingIndex].name = name;
+        userRegistry[existingIndex].role = role;
+        userRegistry[existingIndex].roleName = roleName;
+        userRegistry[existingIndex].instructorId = instructorId;
+        userRegistry[existingIndex].assignedBy = SUPERADMIN_EMAIL;
+        userRegistry[existingIndex].assignedAt = "07/11/2026";
+        showToast(`Đã cập nhật vai trò ${roleName} cho email ${email}!`, "success");
+      } else {
+        userRegistry.push({
+          email,
+          name,
+          role,
+          roleName,
+          instructorId,
+          assignedBy: SUPERADMIN_EMAIL,
+          assignedAt: "07/11/2026",
+          isRoot: false
+        });
+        showToast(`Đã bổ nhiệm thành công vai trò ${roleName} cho email ${email}!`, "success");
+      }
+
+      saveUserRegistry();
+      renderSuperAdminRolePanel();
+
+      // Clear input
+      emailInput.value = "";
+      nameInput.value = "";
+    }
+
+    function updateAccountRole(email, newRole) {
+      if (email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase()) {
+        showToast("Không thể thay đổi vai trò của SuperAdmin gốc!", "warning");
+        return;
+      }
+
+      const target = userRegistry.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (target) {
+        target.role = newRole;
+        let roleName = "Admin";
+        if (newRole === "sales") roleName = "Sales";
+        else if (newRole === "trainer") roleName = "Trainer";
+        else if (newRole === "guest") roleName = "Guest";
+        target.roleName = roleName;
+        target.assignedBy = SUPERADMIN_EMAIL;
+        target.assignedAt = "07/11/2026";
+        saveUserRegistry();
+        renderSuperAdminRolePanel();
+        showToast(`Đã đổi vai trò của ${email} sang ${roleName}!`);
+      }
+    }
+
+    function revokeAccountRole(email) {
+      if (email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase()) {
+        showToast("Không thể thu hồi quyền của SuperAdmin gốc!", "warning");
+        return;
+      }
+
+      userRegistry = userRegistry.filter(u => u.email.toLowerCase() !== email.toLowerCase());
+      saveUserRegistry();
+      renderSuperAdminRolePanel();
+      showToast(`Đã thu hồi quyền của ${email}. Tài khoản này khi đăng nhập sẽ chỉ có quyền Khách (Guest)!`, "success");
     }
 
     function resolveLocationCoordinates(locationStr) {
@@ -1784,7 +2396,15 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         
         courses = storedCourses ? JSON.parse(storedCourses) : JSON.parse(JSON.stringify(DEFAULT_COURSES));
         instructors = storedInstructors ? JSON.parse(storedInstructors) : JSON.parse(JSON.stringify(DEFAULT_INSTRUCTORS));
-        if (storedUser) currentUser = JSON.parse(storedUser);
+        
+        const storedRegistry = localStorage.getItem(STORAGE_KEY_USER_REGISTRY);
+        userRegistry = storedRegistry ? JSON.parse(storedRegistry) : JSON.parse(JSON.stringify(DEFAULT_USER_REGISTRY));
+
+        if (storedUser) {
+          currentUser = JSON.parse(storedUser);
+          // Re-verify current user role against registry or superadmin email
+          verifyUserRole(currentUser.email);
+        }
       } catch (e) {
         courses = JSON.parse(JSON.stringify(DEFAULT_COURSES));
         instructors = JSON.parse(JSON.stringify(DEFAULT_INSTRUCTORS));
@@ -3488,6 +4108,7 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
       renderInstructorsGrid();
       updateMapMarkers();
       renderSettlementView();
+      renderSuperAdminRolePanel();
       updateTopStats();
     }
 
@@ -3502,11 +4123,31 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         applyRolePermissions();
       }
 
-      // Login buttons
-      document.getElementById("btn-login-google-admin").addEventListener("click", () => loginWithRole("admin"));
-      document.getElementById("btn-login-google-sales").addEventListener("click", () => loginWithRole("sales"));
-      document.getElementById("btn-login-google-trainer").addEventListener("click", () => loginWithRole("trainer"));
-      document.getElementById("btn-login-google-guest").addEventListener("click", () => loginWithRole("guest"));
+      // Login buttons with SuperAdmin Specification
+      document.getElementById("btn-login-custom-email").addEventListener("click", () => {
+        const email = document.getElementById("login-google-custom-email").value;
+        loginWithGoogleEmail(email);
+      });
+
+      document.getElementById("btn-login-superadmin").addEventListener("click", () => {
+        loginWithGoogleEmail(SUPERADMIN_EMAIL);
+      });
+
+      document.getElementById("btn-login-google-admin").addEventListener("click", () => {
+        loginWithGoogleEmail("admin.vdc@gmail.com");
+      });
+
+      document.getElementById("btn-login-google-sales").addEventListener("click", () => {
+        loginWithGoogleEmail("sales.lan@gmail.com");
+      });
+
+      document.getElementById("btn-login-google-trainer").addEventListener("click", () => {
+        loginWithGoogleEmail("gv.tuantran@gmail.com");
+      });
+
+      document.getElementById("btn-login-google-guest").addEventListener("click", () => {
+        loginWithGoogleEmail("khach.moi99@gmail.com");
+      });
 
       document.getElementById("btn-switch-account").addEventListener("click", () => {
         document.getElementById("google-login-modal").classList.remove("hidden");
@@ -3713,6 +4354,25 @@ Lịch khóa/huấn luyện: VINALPHA HÓC MÔN
         document.getElementById("instructor-modal").classList.add("hidden");
         showToast(`Đã thêm giảng viên ${name} vào hệ thống!`);
       });
+
+      // SuperAdmin Portal Modal Close & Download
+      const btnCloseSuperModal = document.getElementById("btn-close-supperadmin-modal");
+      if (btnCloseSuperModal) {
+        btnCloseSuperModal.addEventListener("click", () => {
+          document.getElementById("supperadmin-view-modal").classList.add("hidden");
+        });
+      }
+
+      const btnDlSuper = document.getElementById("btn-download-supperadmin-file");
+      if (btnDlSuper) {
+        btnDlSuper.addEventListener("click", () => {
+          const a = document.createElement("a");
+          a.href = "supperadmin.html";
+          a.download = "supperadmin.html";
+          a.click();
+          showToast("Đang tải file supperadmin.html độc lập về máy!");
+        });
+      }
 
       // Settlement Listeners
       const sFrom = document.getElementById("settle-from-date");
