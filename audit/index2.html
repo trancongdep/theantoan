@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Đánh Giá An Toàn Điện - Chuyên Đề 2.1</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef8ff',
+                            100: '#d9f0ff',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            800: '#0c4a6e',
+                            900: '#0a3656',
+                        },
+                        evn: {
+                            navy: '#0b2545',
+                            blue: '#134074',
+                            light: '#8da9c4',
+                            bg: '#eeefed',
+                            accent: '#e28743'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 h-full flex flex-col antialiased">
+
+    <!-- Top Navbar -->
+    <header class="bg-evn-navy text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 p-2.5 rounded-lg shadow-inner">
+                    <i class="fa-solid fa-bolt-lightning text-amber-300 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold tracking-wide">AUDIT AN TOÀN ĐIỆN (2.1)</h1>
+                    <p class="text-xs text-sky-200">Tiêu chuẩn Luật Điện lực 2024 & QCVN 25:2025/BCT</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2 mt-2 sm:mt-0">
+                <button onclick="openSyncModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs md:text-sm font-semibold px-3.5 py-2 rounded-lg shadow flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>Đồng Bộ Google Drive</span>
+                </button>
+                <button onclick="exportDataJSON()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs md:text-sm px-3 py-2 rounded-lg shadow flex items-center space-x-1 transition" title="Sao lưu dữ liệu JSON">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden md:inline">Backup</span>
+                </button>
+                <button onclick="resetDataModal()" class="bg-rose-700 hover:bg-rose-600 text-white text-xs md:text-sm px-3 py-2 rounded-lg shadow flex items-center space-x-1 transition" title="Đặt lại dữ liệu">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 overflow-y-auto space-y-6">
+
+        <!-- Thông tin chung & Dashboard Thống kê -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-100">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-user text-evn-blue"></i> THÔNG TIN ĐỢT ĐÁNH GIÁ HIỆN TRƯỜNG
+                    </h2>
+                    <p class="text-xs text-slate-500">Cập nhật thông tin nhà máy và thời gian audit thực tế.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="saveGeneralInfo()" class="bg-evn-navy hover:bg-slate-800 text-white text-xs font-medium px-4 py-2 rounded-lg shadow transition">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Lưu thông tin chung
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form thông tin chung -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Tên Nhà máy / Doanh nghiệp</label>
+                    <input type="text" id="gen_company" value="Nhà máy Sản xuất Công nghiệp Miền Nam" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Địa điểm / Phân xưởng Audit</label>
+                    <input type="text" id="gen_location" value="Khu vực Trạm biến áp & Xưởng Cơ điện" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Đánh giá viên (Auditor)</label>
+                    <input type="text" id="gen_auditor" value="Trần Công Đẹp" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Ngày đánh giá</label>
+                    <input type="date" id="gen_date" value="2026-11-12" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Dashboard Tổng hợp chỉ số -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t border-slate-100">
+                <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-slate-500 font-medium">Tổng Tiêu Chí</p>
+                        <h3 id="stat_total" class="text-xl font-bold text-slate-800">0</h3>
+                    </div>
+                    <div class="bg-blue-100 text-blue-600 p-2.5 rounded-lg"><i class="fa-solid fa-list-check"></i></div>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-emerald-600 font-medium">Đạt (Pass)</p>
+                        <h3 id="stat_pass" class="text-xl font-bold text-emerald-700">0</h3>
+                    </div>
+                    <div class="bg-emerald-200 text-emerald-800 p-2.5 rounded-lg"><i class="fa-solid fa-check"></i></div>
+                </div>
+                <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-rose-600 font-medium">Không Đạt (Fail)</p>
+                        <h3 id="stat_fail" class="text-xl font-bold text-rose-700">0</h3>
+                    </div>
+                    <div class="bg-rose-200 text-rose-800 p-2.5 rounded-lg"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                </div>
+                <div class="bg-sky-50 border border-sky-200 p-3 rounded-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-sky-600 font-medium">Tỷ Lệ Tuân Thủ</p>
+                        <h3 id="stat_rate" class="text-xl font-bold text-sky-700">0%</h3>
+                    </div>
+                    <div class="bg-sky-200 text-sky-800 p-2.5 rounded-lg"><i class="fa-solid fa-chart-pie"></i></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs for Categories -->
+        <div class="flex overflow-x-auto space-x-2 pb-1 border-b border-slate-200 no-scrollbar">
+            <button onclick="switchTab('cat211')" id="btn_cat211" class="tab-btn whitespace-nowrap px-4 py-2.5 rounded-t-xl font-semibold text-xs sm:text-sm bg-white text-evn-navy border-t-4 border-evn-navy shadow-sm transition">
+                2.1.1. Bảo Vệ Thiết Bị & Công Trình Điện
+            </button>
+            <button onclick="switchTab('cat212')" id="btn_cat212" class="tab-btn whitespace-nowrap px-4 py-2.5 rounded-t-xl font-medium text-xs sm:text-sm bg-slate-200 text-slate-600 hover:bg-white transition">
+                2.1.2. An Toàn Sử Dụng Điện Sản Xuất
+            </button>
+            <button onclick="switchTab('cat213')" id="btn_cat213" class="tab-btn whitespace-nowrap px-4 py-2.5 rounded-t-xl font-medium text-xs sm:text-sm bg-slate-200 text-slate-600 hover:bg-white transition">
+                2.1.3. An Toàn Dụng Cụ Điện Cầm Tay
+            </button>
+            <button onclick="switchTab('cat214')" id="btn_cat214" class="tab-btn whitespace-nowrap px-4 py-2.5 rounded-t-xl font-medium text-xs sm:text-sm bg-slate-200 text-slate-600 hover:bg-white transition">
+                2.1.4. An Toàn Hàn Điện
+            </button>
+        </div>
+
+        <!-- Tab Contents Container -->
+        <div class="bg-white rounded-b-xl rounded-tr-xl shadow-sm border border-slate-200 p-4 sm:p-6 min-h-[500px]">
+            
+            <!-- Category 2.1.1 -->
+            <div id="cat211" class="tab-content active space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-slate-200 gap-2">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">2.1.1. Bảo Vệ Thiết Bị Điện, Công Trình Điện và An Toàn Điện</h3>
+                        <p class="text-xs text-slate-500">Căn cứ: Nghị định 62/2025/NĐ-CP, Thông tư 02/2025/TT-BCT, QCVN 25:2025/BCT, TCVN 4756:1989</p>
+                    </div>
+                    <span class="bg-sky-100 text-sky-800 text-xs px-2.5 py-1 rounded-full font-medium">Nhóm: Hành lang & Kiểm định</span>
+                </div>
+                <div id="container_211" class="space-y-6">
+                    <!-- Rendered via JS -->
+                </div>
+            </div>
+
+            <!-- Category 2.1.2 -->
+            <div id="cat212" class="tab-content space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-slate-200 gap-2">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">2.1.2. An Toàn Trong Sử Dụng Điện Sản Xuất</h3>
+                        <p class="text-xs text-slate-500">Căn cứ: Luật Điện lực 2024, Luật ATVSLĐ 2015, Thông tư 02/2025/TT-BCT, QCVN 25:2025/BCT</p>
+                    </div>
+                    <span class="bg-sky-100 text-sky-800 text-xs px-2.5 py-1 rounded-full font-medium">Nhóm: Vận hành & LOTO</span>
+                </div>
+                <div id="container_212" class="space-y-6">
+                    <!-- Rendered via JS -->
+                </div>
+            </div>
+
+            <!-- Category 2.1.3 -->
+            <div id="cat213" class="tab-content space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-slate-200 gap-2">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">2.1.3. An Toàn Dụng Cụ Điện Cầm Tay</h3>
+                        <p class="text-xs text-slate-500">Căn cứ: QCVN 25:2025/BCT, QCVN 9:2012/BKHCN, TCVN 7996-1:2009 (IEC 60745-1)</p>
+                    </div>
+                    <span class="bg-sky-100 text-sky-800 text-xs px-2.5 py-1 rounded-full font-medium">Nhóm: Thiết bị di động</span>
+                </div>
+                <div id="container_213" class="space-y-6">
+                    <!-- Rendered via JS -->
+                </div>
+            </div>
+
+            <!-- Category 2.1.4 -->
+            <div id="cat214" class="tab-content space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-slate-200 gap-2">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">2.1.4. An Toàn Hàn Điện</h3>
+                        <p class="text-xs text-slate-500">Căn cứ: QCVN 03:2011/BLĐTBXH, TCVN 3146:1986, TCVN 8524:2010 (IEC 60974-1)</p>
+                    </div>
+                    <span class="bg-sky-100 text-sky-800 text-xs px-2.5 py-1 rounded-full font-medium">Nhóm: Hàn cắt & VRD</span>
+                </div>
+                <div id="container_214" class="space-y-6">
+                    <!-- Rendered via JS -->
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer Action Bar -->
+    <footer class="bg-white border-t border-slate-200 py-3 px-4 shadow-lg sticky bottom-0 z-40">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            <div class="text-xs text-slate-500">
+                <span id="save_status" class="font-medium text-emerald-600"><i class="fa-solid fa-circle-check mr-1"></i> Dữ liệu đã lưu tự động trên thiết bị</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="printReportPDF()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs px-4 py-2 rounded-lg font-medium shadow flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-print"></i>
+                    <span>In / Xuất PDF</span>
+                </button>
+                <button onclick="openSyncModal()" class="bg-evn-navy hover:bg-sky-700 text-white text-xs px-4 py-2 rounded-lg font-medium shadow flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>Đồng Bộ Google Sheets</span>
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Cấu hình Sync Google Apps Script -->
+    <div id="syncModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                    <i class="fa-brands fa-google-drive text-emerald-600"></i> Cấu Hình Đồng Bộ Google Drive & Sheets
+                </h3>
+                <button onclick="closeSyncModal()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                Nhập Google Apps Script Web App URL của bạn để hệ thống tự động đẩy toàn bộ kết quả đánh giá, thống kê và hình ảnh hiện trường (dạng Base64) trực tiếp lên Google Sheets và lưu thư mục Drive.
+            </p>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Google Apps Script Web App URL</label>
+                <input type="text" id="gas_url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+            </div>
+            <div class="bg-sky-50 border border-sky-100 rounded-xl p-3 text-xs text-sky-900 space-y-1">
+                <p class="font-semibold"><i class="fa-solid fa-circle-info mr-1"></i> Hướng dẫn nhanh:</p>
+                <p>1. Tạo Google Sheet mới và gắn đoạn Code Google Apps Script nhận JSON.</p>
+                <p>2. Deploy dưới dạng Web App (Anyone can access).</p>
+                <p>3. Dán URL vào ô trên và bấm nút "Tiến hành Đồng bộ ngay".</p>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeSyncModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg">Đóng</button>
+                <button onclick="startSyncData()" id="sync_submit_btn" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Đồng Bộ Ngay
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for custom photo gallery trigger if needed -->
+    <input type="file" id="global_file_picker" accept="image/*" class="hidden" onchange="handleFilePicked(event)">
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Dữ liệu danh mục checklist được chia nhỏ cụ thể, tránh chung chung
+        const auditDataMaster = {
+            "cat211": [
+                {
+                    id: "2.1.1.01",
+                    title: "Hành lang bảo vệ đường dây dẫn điện trên không",
+                    desc: "Kiểm tra khoảng cách an toàn phóng điện theo cấp điện áp; không có công trình vi phạm, cây xanh không vi phạm hành lang, không chứa chất dễ cháy dưới tuyến.",
+                    ref: "Nghị định 62/2025/NĐ-CP; QCVN 25:2025/BCT",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.1.02",
+                    title: "Cọc mốc và bảo vệ tuyến cáp điện ngầm",
+                    desc: "Tuyến cáp ngầm có cọc mốc báo hiệu đầy đủ, không bị đào bới trái phép, không chất tải nặng hoặc đổ hóa chất ăn mòn phía trên.",
+                    ref: "Nghị định 62/2025/NĐ-CP; QCVN 25:2025/BCT",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.1.03",
+                    title: "Hàng rào, cửa khóa và chống chuột tại Trạm biến áp (TBA)",
+                    desc: "TBA ngoài trời có hàng rào cao ≥ 2m; phòng máy có cửa mở ra ngoài, khóa an toàn, lưới chắn chuột bọ tại ô thông gió, hố thu dầu sự cố sạch sẽ.",
+                    ref: "Nghị định 62/2025/NĐ-CP; QCVN 25:2025/BCT",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.1.04",
+                    title: "Kiểm định thiết bị điện cố định (≥ 1kV)",
+                    desc: "Chống sét van, máy biến áp, máy cắt, cáp trung thế có giấy chứng nhận kiểm định định kỳ còn hiệu lực và dán tem kiểm định.",
+                    ref: "Thông tư 02/2025/TT-BCT; QCVN 25:2025/BCT",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.1.05",
+                    title: "Kiểm định dụng cụ an toàn điện (Sào, găng, ủng, thảm)",
+                    desc: "Găng tay, ủng cách điện (chu kỳ 6 tháng), sào cách điện, thảm cách điện, bút thử điện có kiểm định định kỳ đúng hạn.",
+                    ref: "Thông tư 02/2025/TT-BCT; QCVN 25:2025/BCT",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.1.06",
+                    title: "Hệ thống nối đất an toàn thiết bị (Tiếp địa)",
+                    desc: "Vỏ tủ điện, khung máy, thang máng cáp nối đất chắc chắn; có dây đồng bện nối cánh tủ; điện trở tiếp địa đạt yêu cầu (≤ 4 Ω).",
+                    ref: "QCVN 25:2025/BCT; TCVN 4756:1989",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.1.07",
+                    title: "Hệ thống chống sét đánh thẳng và cắt lọc sét (SPD)",
+                    desc: "Kim thu sét, hộp kiểm tra tiếp địa nguyên vẹn; thiết bị cắt lọc sét lan truyền (SPD) tại tủ MSB hoạt động bình thường, cờ báo xanh.",
+                    ref: "TCVN 9385:2012; Nghị định 50/2024/NĐ-CP",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.1.08",
+                    title: "Thiết bị bảo vệ quá dòng và chống dòng rò tổng",
+                    desc: "ACB, MCCB, MCB có dòng định mức phù hợp tiết diện dây; trang bị ELCB/RCD cho các mạch điện nhánh có nguy cơ rò điện.",
+                    ref: "QCVN 25:2025/BCT; TCVN 7447-4-41",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.1.09",
+                    title: "Che chắn phần mang điện trong tủ (IP2X)",
+                    desc: "Tủ điện có tấm chắn mica (Dead front panel) che kín thanh cái; lỗ luồn cáp có đệm cao su kín khít, không để hở.",
+                    ref: "QCVN 25:2025/BCT; TCVN 7447",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.1.10",
+                    title: "Hệ thống biển báo an toàn điện tiêu chuẩn",
+                    desc: "Gắn đầy đủ biển báo cấm, cảnh báo điện áp cao tại cửa TBA, vỏ tủ điện, cột điện theo đúng quy chuẩn hiện hành.",
+                    ref: "Nghị định 62/2025/NĐ-CP; Thông tư 02/2025/TT-BCT",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                }
+            ],
+            "cat212": [
+                {
+                    id: "2.1.2.01",
+                    title: "Thẻ an toàn điện cho nhân sự vận hành/sửa chữa",
+                    desc: "Nhân sự làm việc với điện được huấn luyện, sát hạch, xếp bậc và cấp Thẻ an toàn điện phù hợp với cấp điện áp.",
+                    ref: "Luật Điện lực 2024; Thông tư 02/2025/TT-BCT",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.2.02",
+                    title: "Huấn luyện ATVSLĐ Nhóm 3 (An toàn điện & Trên cao)",
+                    desc: "Nhân viên bảo trì điện có thẻ an toàn lao động Nhóm 3 còn hiệu lực định kỳ 2 năm/lần.",
+                    ref: "Luật ATVSLĐ 2015; Nghị định 44/2016/NĐ-CP",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.2.03",
+                    title: "Thực hiện chế độ Phiếu công tác / Lệnh công tác",
+                    desc: "Mọi công việc sửa chữa, bảo dưỡng điện phải lập Phiếu công tác hoặc Lệnh công tác và phê duyệt đúng chức danh.",
+                    ref: "Thông tư 02/2025/TT-BCT; QCVN 25:2025/BCT",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.2.04",
+                    title: "Áp dụng 5 bước kỹ thuật & Khóa LOTO",
+                    desc: "Thực hiện cắt điện, khóa LOTO, thử không còn điện, đặt tiếp địa di động, treo biển báo trước khi sửa chữa.",
+                    ref: "QCVN 25:2025/BCT; Thông tư 02/2025/TT-BCT",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.2.05",
+                    title: "Đi dây cấp nguồn máy sản xuất an toàn trong xưởng",
+                    desc: "Dây cáp nguồn đi trên thang máng cáp hoặc luồn ống bảo vệ chắc chắn, không vắt bừa bãi trên sàn nhà xưởng.",
+                    ref: "QCVN 25:2025/BCT; TCVN 7447-5-52",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.2.06",
+                    title: "Ổ cắm, phích cắm công nghiệp và nhãn điện áp",
+                    desc: "Sử dụng ổ cắm/phích cắm công nghiệp chuẩn IP; dán nhãn định danh 220V/380V rõ ràng trên thiết bị và tủ nhánh.",
+                    ref: "QCVN 25:2025/BCT; TCVN 7447",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.2.07",
+                    title: "Hành lang thao tác tủ điện và thảm cách điện",
+                    desc: "Khu vực trước tủ điện thông thoáng ≥ 0.8m, có vạch kẻ sàn cảnh báo, trang bị thảm cách điện hạ thế đầy đủ.",
+                    ref: "QCVN 25:2025/BCT; TCVN 7447",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.2.08",
+                    title: "Nút dừng khẩn cấp (E-Stop) & Liên động an toàn máy",
+                    desc: "Máy móc sản xuất có nút E-Stop màu đỏ hoạt động tốt; cửa che chắn có công tắc hành trình ngắt điện khi mở.",
+                    ref: "QCVN 25:2025/BCT; TCVN 6719:2008",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.2.09",
+                    title: "An toàn điện khu vực ẩm ướt & Không gian hạn chế",
+                    desc: "Thiết bị điện khu vực ẩm ướt có cấp IP54+ qua RCD ≤ 30mA; dùng đèn 12V-24V khi bảo trì bên trong bồn bể.",
+                    ref: "QCVN 25:2025/BCT; QCVN 34:2018",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.2.10",
+                    title: "Thiết bị điện phòng nổ (Ex) & Kiểm soát tĩnh điện",
+                    desc: "Khu vực có nguy cơ cháy nổ (kho hóa chất, dung môi) dùng thiết bị chuẩn Ex; có kẹp tiếp địa chống tĩnh điện khi chiết rót.",
+                    ref: "QCVN 25:2025/BCT; TCVN 10888",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                }
+            ],
+            "cat213": [
+                {
+                    id: "2.1.3.01",
+                    title: "Quản lý danh mục và kiểm định định kỳ dụng cụ cầm tay",
+                    desc: "Dụng cụ điện cầm tay có mã ID, sổ theo dõi và đo điện trở cách điện định kỳ (≥ 2 MΩ) kèm tem kiểm tra an toàn.",
+                    ref: "QCVN 25:2025/BCT; TCVN 7996-1",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.3.02",
+                    title: "Phân cấp bảo vệ thiết bị và chống dòng rò (RCD)",
+                    desc: "Thiết bị Cấp I có nối đất; thiết bị Cấp II cách điện kép; bắt buộc cắm qua tủ điện di động có gắn RCBO ≤ 30mA.",
+                    ref: "QCVN 25:2025/BCT; TCVN 7996-1",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.3.03",
+                    title: "Tình trạng dây nguồn, phích cắm và ống bảo vệ chống gập",
+                    desc: "Dây nguồn bọc cao su mềm không có mối nối dọc thân; có ống cao su chống gập tại đầu vào tay cầm; phích cắm nguyên vẹn.",
+                    ref: "QCVN 25:2025/BCT; TCVN 7996-1",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.3.04",
+                    title: "Cơ cấu công tắc an toàn và chụp bảo vệ máy mài",
+                    desc: "Công tắc nhạy, không bị chèn giữ cố định trái quy định; máy mài góc có chụp bảo vệ ≥ 180° và tay cầm phụ chắc chắn.",
+                    ref: "QCVN 25:2025/BCT; TCVN 7996-1",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.3.05",
+                    title: "Trang bị phương tiện bảo vệ cá nhân (PPE) khi thao tác",
+                    desc: "Công nhân sử dụng kính chống văng bắn, mặt nạ, giày bảo hộ và găng tay phù hợp khi vận hành dụng cụ cầm tay.",
+                    ref: "Nghị định 44/2016/NĐ-CP; QCVN 25:2025/BCT",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                }
+            ],
+            "cat214": [
+                {
+                    id: "2.1.4.01",
+                    title: "Nguồn cấp độc lập & Thiết bị hạ áp không tải (VRD)",
+                    desc: "Máy hàn có CB nguồn riêng; cáp sơ cấp ≤ 15m; trang bị bộ VRD giảm điện áp không tải ≤ 12V khi không hàn ở môi trường nguy hiểm.",
+                    ref: "QCVN 03:2011/BLĐTBXH; TCVN 8524",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.4.02",
+                    title: "Nối đất bảo vệ vỏ máy hàn và kẹp mát vật hàn",
+                    desc: "Vỏ máy hàn nối đất PE chắc chắn; cáp mát kẹp trực tiếp vào vật hàn bằng kẹp chuyên dụng, cấm dùng kết cấu nhà xưởng làm mát.",
+                    ref: "QCVN 03:2011/BLĐTBXH; TCVN 3146:1986",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.4.03",
+                    title: "Tình trạng cáp hàn, đầu nối và kìm hàn cách điện",
+                    desc: "Cáp hàn bọc cao su chịu mài mòn, mối nối tối đa 2 điểm có bọc kín; kìm hàn cách điện chịu nhiệt tốt, giữ que hàn chắc chắn.",
+                    ref: "QCVN 03:2011/BLĐTBXH; TCVN 3146:1986",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.4.04",
+                    title: "Rèm chắn hồ quang, thông gió và Giấy phép sinh lửa",
+                    desc: "Khu vực hàn có rèm chắn tia UV, chụp hút khói độc, dọn sạch vật liệu dễ cháy trong bán kính 10m hoặc có Hot Work Permit.",
+                    ref: "QCVN 03:2011/BLĐTBXH; TCVN 3146:1986",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                },
+                {
+                    id: "2.1.4.05",
+                    title: "Chứng chỉ thợ hàn và trang bị PPE hàn chuyên dụng",
+                    desc: "Thợ hàn có thẻ an toàn Nhóm 3, khám sức khỏe định kỳ; trang bị mặt nạ hàn tối sáng chuẩn, tạp dề da, găng tay da dài.",
+                    ref: "QCVN 03:2011/BLĐTBXH; TCVN 5083:1990",
+                    status: "Chưa đánh giá",
+                    finding: "",
+                    risk: "Thấp",
+                    capa: "",
+                    photos: []
+                }
+            ]
+        };
+
+        // Biến lưu trữ trạng thái hiện tại (Đồng bộ LocalStorage)
+        let auditState = JSON.parse(JSON.stringify(auditDataMaster));
+        let currentActiveItemForPhoto = null; // Lưu ID mục đang thao tác chụp ảnh
+
+        // Khởi tạo ứng dụng khi load trang
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            renderAllCategories();
+            updateDashboardStats();
+            
+            // Khôi phục URL Google Apps Script nếu đã lưu trước đó
+            const savedGasUrl = localStorage.getItem('evn_audit_gas_url');
+            if (savedGasUrl) {
+                document.getElementById('gas_url').value = savedGasUrl;
+            }
+        });
+
+        // Chuyển tab danh mục
+        function switchTab(catId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-evn-navy', 'border-t-4', 'border-evn-navy');
+                btn.classList.add('bg-slate-200', 'text-slate-600');
+            });
+
+            document.getElementById(catId).classList.add('active');
+            const activeBtn = document.getElementById('btn_' + catId);
+            activeBtn.classList.remove('bg-slate-200', 'text-slate-600');
+            activeBtn.classList.add('bg-white', 'text-evn-navy', 'border-t-4', 'border-evn-navy');
+        }
+
+        // Render toàn bộ các mục checklist
+        function renderAllCategories() {
+            Object.keys(auditState).forEach(catKey => {
+                const containerId = 'container_' + catKey.replace('cat', '');
+                const container = document.getElementById(containerId);
+                if (!container) return;
+
+                let html = '';
+                auditState[catKey].forEach((item, index) => {
+                    const statusColor = item.status === 'Đạt' ? 'bg-emerald-50 border-emerald-300' :
+                                        item.status === 'Không Đạt' ? 'bg-rose-50 border-rose-300' :
+                                        item.status === 'Không Áp Dụng' ? 'bg-slate-100 border-slate-300' : 'bg-white border-slate-200';
+
+                    const riskBadge = item.risk === 'Cao' ? 'bg-rose-600 text-white' :
+                                      item.risk === 'Trung bình' ? 'bg-amber-500 text-white' : 'bg-slate-600 text-white';
+
+                    // Render danh sách ảnh đã chụp (tối đa 3 tấm)
+                    let photosHtml = '';
+                    if (item.photos && item.photos.length > 0) {
+                        item.photos.forEach((photoBase64, pIdx) => {
+                            photosHtml += `
+                                <div class="relative group w-20 h-20 rounded-lg overflow-hidden border border-slate-300 shadow-sm bg-slate-100 flex-shrink-0">
+                                    <img src="${photoBase64}" class="w-full h-full object-cover cursor-pointer" onclick="previewImage('${photoBase64}')" title="Xem lớn">
+                                    <button onclick="removePhoto('${catKey}', '${item.id}', ${pIdx})" class="absolute top-1 right-1 bg-rose-600 hover:bg-rose-700 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs shadow" title="Xóa ảnh">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    // Nút chụp thêm ảnh (ẩn nếu đã đủ 3 tấm)
+                    let addPhotoButton = '';
+                    if (!item.photos || item.photos.length < 3) {
+                        addPhotoButton = `
+                            <button onclick="triggerPhotoCapture('${catKey}', '${item.id}')" class="w-20 h-20 border-2 border-dashed border-slate-300 hover:border-evn-blue hover:bg-sky-50 rounded-lg flex flex-col items-center justify-center text-slate-500 hover:text-evn-blue transition flex-shrink-0">
+                                <i class="fa-solid fa-camera text-lg mb-1"></i>
+                                <span class="text-[10px] font-medium">Chụp (${(item.photos||[]).length}/3)</span>
+                            </button>
+                        `;
+                    }
+
+                    html += `
+                        <div class="border rounded-xl p-4 transition shadow-sm ${statusColor}" id="card_${item.id}">
+                            <div class="flex flex-col md:flex-row md:items-start justify-between gap-3 pb-3 border-b border-slate-200/60">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-evn-navy text-white text-xs px-2 py-0.5 rounded font-bold">${item.id}</span>
+                                        <h4 class="font-bold text-slate-900 text-sm md:text-base">${item.title}</h4>
+                                    </div>
+                                    <p class="text-xs text-slate-600 leading-relaxed">${item.desc}</p>
+                                    <p class="text-[11px] text-sky-700 font-medium"><i class="fa-solid fa-book-bookmark mr-1"></i> ${item.ref}</p>
+                                </div>
+
+                                <!-- Trạng thái đánh giá -->
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <select onchange="updateItemField('${catKey}', '${item.id}', 'status', this.value)" class="text-xs font-semibold px-3 py-2 rounded-lg border shadow-sm focus:outline-none ${item.status === 'Đạt' ? 'bg-emerald-600 text-white border-emerald-700' : item.status === 'Không Đạt' ? 'bg-rose-600 text-white border-rose-700' : item.status === 'Không Áp Dụng' ? 'bg-slate-600 text-white border-slate-700' : 'bg-white text-slate-700 border-slate-300'}">
+                                        <option value="Chưa đánh giá" ${item.status === 'Chưa đánh giá' ? 'selected' : ''}>-- Chọn kết quả --</option>
+                                        <option value="Đạt" ${item.status === 'Đạt' ? 'selected' : ''}>ĐẠT (PASS)</option>
+                                        <option value="Không Đạt" ${item.status === 'Không Đạt' ? 'selected' : ''}>KHÔNG ĐẠT (FAIL)</option>
+                                        <option value="Không Áp Dụng" ${item.status === 'Không Áp Dụng' ? 'selected' : ''}>KHÔNG ÁP DỤNG (N/A)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Chi tiết ghi nhận, rủi ro, CAPA và Chụp hình -->
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-3 pt-2">
+                                <!-- Ghi chú lỗi (Finding) -->
+                                <div class="space-y-1">
+                                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wide">
+                                        <i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> Diễn giải điểm Không Phù Hợp (Finding)
+                                    </label>
+                                    <textarea rows="2" oninput="updateItemField('${catKey}', '${item.id}', 'finding', this.value)" placeholder="Nhập ghi chú chi tiết nếu không đạt..." class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-sky-500 focus:outline-none bg-white">${item.finding || ''}</textarea>
+                                </div>
+
+                                <!-- Hành động khắc phục (CAPA) -->
+                                <div class="space-y-1">
+                                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wide">
+                                        <i class="fa-solid fa-screwdriver-wrench text-sky-600 mr-1"></i> Hành động khắc phục phòng ngừa (CAPA)
+                                    </label>
+                                    <textarea rows="2" oninput="updateItemField('${catKey}', '${item.id}', 'capa', this.value)" placeholder="Nhập biện pháp khắc phục kiến nghị..." class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-sky-500 focus:outline-none bg-white">${item.capa || ''}</textarea>
+                                </div>
+
+                                <!-- Mức độ rủi ro & Chụp ảnh hiện trường -->
+                                <div class="flex flex-col justify-between space-y-2">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Mức độ rủi ro:</span>
+                                        <select onchange="updateItemField('${catKey}', '${item.id}', 'risk', this.value)" class="text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-300 ${riskBadge}">
+                                            <option value="Thấp" ${item.risk === 'Thấp' ? 'selected' : ''}>Thấp</option>
+                                            <option value="Trung bình" ${item.risk === 'Trung bình' ? 'selected' : ''}>Trung bình</option>
+                                            <option value="Cao" ${item.risk === 'Cao' ? 'selected' : ''}>Cao (Nghiêm trọng)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Khu vực hiển thị ảnh (1 đến 3 tấm) -->
+                                    <div>
+                                        <span class="block text-[11px] font-bold text-slate-700 uppercase tracking-wide mb-1">
+                                            Hình ảnh hiện trường (${(item.photos||[]).length}/3):
+                                        </span>
+                                        <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                                            ${photosHtml}
+                                            ${addPhotoButton}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            });
+        }
+
+        // Cập nhật giá trị trường dữ liệu khi Auditor thao tác
+        function updateItemField(catKey, itemId, field, value) {
+            const item = auditState[catKey].find(i => i.id === itemId);
+            if (item) {
+                item[field] = value;
+                saveToLocalStorage();
+                updateDashboardStats();
+                
+                // Cập nhật màu sắc card trực tiếp mà không cần re-render toàn bộ tránh mất focus
+                if (field === 'status') {
+                    const card = document.getElementById('card_' + itemId);
+                    if (card) {
+                        card.className = `border rounded-xl p-4 transition shadow-sm ${value === 'Đạt' ? 'bg-emerald-50 border-emerald-300' : value === 'Không Đạt' ? 'bg-rose-50 border-rose-300' : value === 'Không Áp Dụng' ? 'bg-slate-100 border-slate-300' : 'bg-white border-slate-200'}`;
+                    }
+                }
+            }
+        }
+
+        // Kích hoạt tính năng chụp ảnh / chọn ảnh
+        function triggerPhotoCapture(catKey, itemId) {
+            currentActiveItemForPhoto = { catKey, itemId };
+            const filePicker = document.getElementById('global_file_picker');
+            filePicker.value = ''; // Reset
+            filePicker.click();
+        }
+
+        // Xử lý file ảnh được chọn / chụp từ camera điện thoại
+        function handleFilePicked(event) {
+            const file = event.target.files[0];
+            if (!file || !currentActiveItemForPhoto) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert("Kích thước ảnh quá lớn (>5MB). Vui lòng chọn ảnh nhỏ hơn.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Img = e.target.result;
+                const { catKey, itemId } = currentActiveItemForPhoto;
+                const item = auditState[catKey].find(i => i.id === itemId);
+                if (item) {
+                    if (!item.photos) item.photos = [];
+                    if (item.photos.length < 3) {
+                        item.photos.push(base64Img);
+                        saveToLocalStorage();
+                        renderAllCategories();
+                    } else {
+                        alert("Mỗi tiêu chí chỉ hỗ trợ tối đa 3 hình ảnh ghi nhận!");
+                    }
+                }
+                currentActiveItemForPhoto = null;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Xóa ảnh
+        function removePhoto(catKey, itemId, photoIndex) {
+            if (confirm("Bạn có chắc chắn muốn xóa hình ảnh này không?")) {
+                const item = auditState[catKey].find(i => i.id === itemId);
+                if (item && item.photos) {
+                    item.photos.splice(photoIndex, 1);
+                    saveToLocalStorage();
+                    renderAllCategories();
+                }
+            }
+        }
+
+        // Xem ảnh lớn (Lightbox đơn giản)
+        function previewImage(imgSrc) {
+            const win = window.open("");
+            win.document.write(`
+                <html>
+                    <head><title>Xem ảnh hiện trường</title></head>
+                    <body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center; height:100vh;">
+                        <img src="${imgSrc}" style="max-width:100%; max-height:100%; object-fit:contain;">
+                    </body>
+                </html>
+            `);
+        }
+
+        // Tính toán & Hiển thị Thống kê Dashboard
+        function updateDashboardStats() {
+            let total = 0;
+            let pass = 0;
+            let fail = 0;
+            let evaluatedCount = 0;
+
+            Object.keys(auditState).forEach(catKey => {
+                auditState[catKey].forEach(item => {
+                    total++;
+                    if (item.status === 'Đạt') {
+                        pass++;
+                        evaluatedCount++;
+                    } else if (item.status === 'Không Đạt') {
+                        fail++;
+                        evaluatedCount++;
+                    } else if (item.status === 'Không Áp Dụng') {
+                        // Không tính vào mẫu số đánh giá tuân thủ
+                    }
+                });
+            });
+
+            // Tính tỷ lệ tuân thủ dựa trên tổng số mục đã đánh giá (Đạt + Không Đạt)
+            let complianceRate = (pass + fail) > 0 ? Math.round((pass / (pass + fail)) * 100) : 0;
+
+            document.getElementById('stat_total').innerText = total;
+            document.getElementById('stat_pass').innerText = pass;
+            document.getElementById('stat_fail').innerText = fail;
+            document.getElementById('stat_rate').innerText = complianceRate + '%';
+        }
+
+        // Lưu thông tin chung
+        function saveGeneralInfo() {
+            saveToLocalStorage();
+            showStatusMessage("Đã lưu thông tin chung thành công!");
+        }
+
+        // LocalStorage Management
+        function saveToLocalStorage() {
+            const generalInfo = {
+                company: document.getElementById('gen_company').value,
+                location: document.getElementById('gen_location').value,
+                auditor: document.getElementById('gen_auditor').value,
+                date: document.getElementById('gen_date').value
+            };
+            localStorage.setItem('evn_audit_general', JSON.stringify(generalInfo));
+            localStorage.setItem('evn_audit_data_v2.1', JSON.stringify(auditState));
+            
+            showStatusMessage("Đã tự động lưu thiết bị.");
+        }
+
+        function loadFromLocalStorage() {
+            const savedGen = localStorage.getItem('evn_audit_general');
+            if (savedGen) {
+                const info = JSON.parse(savedGen);
+                document.getElementById('gen_company').value = info.company || '';
+                document.getElementById('gen_location').value = info.location || '';
+                document.getElementById('gen_auditor').value = info.auditor || '';
+                document.getElementById('gen_date').value = info.date || '';
+            }
+
+            const savedData = localStorage.getItem('evn_audit_data_v2.1');
+            if (savedData) {
+                try {
+                    auditState = JSON.parse(savedData);
+                } catch(e) {
+                    console.error("Lỗi parse dữ liệu cũ:", e);
+                }
+            }
+        }
+
+        function showStatusMessage(msg) {
+            const st = document.getElementById('save_status');
+            st.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${msg}`;
+            setTimeout(() => {
+                st.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Dữ liệu đã lưu tự động trên thiết bị`;
+            }, 3000);
+        }
+
+        // Backup JSON
+        function exportDataJSON() {
+            const generalInfo = {
+                company: document.getElementById('gen_company').value,
+                location: document.getElementById('gen_location').value,
+                auditor: document.getElementById('gen_auditor').value,
+                date: document.getElementById('gen_date').value
+            };
+            const exportObj = { general: generalInfo, auditData: auditState };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `Audit_AnToanDien_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // Reset Data
+        function resetDataModal() {
+            if (confirm("CẢNH BÁO: Thao tác này sẽ xóa toàn bộ kết quả đánh giá hiện tại và khôi phục trạng thái ban đầu. Bạn có chắc chắn muốn làm mới không?")) {
+                localStorage.removeItem('evn_audit_data_v2.1');
+                auditState = JSON.parse(JSON.stringify(auditDataMaster));
+                renderAllCategories();
+                updateDashboardStats();
+                alert("Đã làm mới dữ liệu thành công!");
+            }
+        }
+
+        // Modal Sync Google Sheets
+        function openSyncModal() {
+            document.getElementById('syncModal').classList.remove('hidden');
+        }
+
+        function closeSyncModal() {
+            document.getElementById('syncModal').classList.add('hidden');
+        }
+
+        // Tiến hành Đồng bộ dữ liệu lên Google Apps Script Web App
+        async function startSyncData() {
+            const gasUrl = document.getElementById('gas_url').value.trim();
+            if (!gasUrl) {
+                alert("Vui lòng nhập Google Apps Script Web App URL hợp lệ!");
+                return;
+            }
+
+            // Lưu lại URL
+            localStorage.setItem('evn_audit_gas_url', gasUrl);
+
+            const btn = document.getElementById('sync_submit_btn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang đồng bộ...`;
+
+            const generalInfo = {
+                company: document.getElementById('gen_company').value,
+                location: document.getElementById('gen_location').value,
+                auditor: document.getElementById('gen_auditor').value,
+                date: document.getElementById('gen_date').value
+            };
+
+            const payload = {
+                general: generalInfo,
+                auditData: auditState,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                // Gửi request POST tới Google Apps Script (Sử dụng no-cors hoặc mode phù hợp tuỳ deployment)
+                await fetch(gasUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', // Cần thiết khi gọi Google Apps Script từ domain ngoài
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                alert("Đã gửi yêu cầu đồng bộ dữ liệu và hình ảnh lên Google Sheets / Drive thành công!\n(Hãy kiểm tra file Google Sheet đích của bạn).");
+                closeSyncModal();
+            } catch (error) {
+                console.error("Lỗi đồng bộ:", error);
+                alert("Lỗi kết nối đồng bộ: " + error.message + "\n(Vui lòng kiểm tra lại Web App URL hoặc quyền truy cập Apps Script).");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Đồng Bộ Ngay`;
+            }
+        }
+
+        // In / Xuất báo cáo PDF trực tiếp
+        function printReportPDF() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
