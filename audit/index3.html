@@ -92,7 +92,7 @@
                 { code: "HK-2.1.1.01", title: "Khoảng cách an toàn hành lang bảo vệ trạm biến áp và đường dây dẫn điện", desc: "Nghiêm cấm xây dựng nhà ở, công trình hoặc trồng cây xâm phạm hành lang bảo vệ an toàn trạm điện.", detail: "Biện pháp: Phát quang cây xanh định kỳ, đảm bảo khoảng cách an toàn tối thiểu theo cấp điện áp. Không tập kết vật tư cản trở lối tiếp cận trạm.", laws: "Luật Điện lực 61/2024/QH15; NĐ 62/2025/NĐ-CP (Điều 9.8)" },
                 { code: "HK-2.1.1.02", title: "Điều kiện chiếu sáng sự cố và chiếu sáng làm việc tại phòng trạm điện", desc: "Phòng đặt thiết bị điện phải đảm bảo tiêu chuẩn độ rọi chiếu sáng làm việc và chiếu sáng sự cố khi mất nguồn.", detail: "Biện pháp: Kiểm tra đo đạc độ rọi định kỳ (≥200 lux phòng tủ điện); duy trì hoạt động hệ thống đèn chiếu sáng sự cố backup.", laws: "QCVN 22:2016/BYT; Luật Điện lực 61/2024/QH15" },
                 { code: "HK-2.1.1.03", title: "Hệ thống lưới chắn ngăn ngừa động vật, côn trùng xâm nhập phòng điện", desc: "Các ô thông gió, cửa sổ, khe hở phòng điện phải được che chắn bằng lưới thép chống chuột bọ, côn trùng.", detail: "Biện pháp: Lắp đặt lưới mắt cáo inox lỗ nhỏ tại toàn bộ cửa thông gió; bịt kín các khe hở chân cửa.", laws: "NĐ 62/2025/NĐ-CP; Tiêu chuẩn kỹ thuật nhà máy Heineken" },
-                { code: "HK-2.1.1.04", title: "Tình trạng kỹ thuật mương cáp, hầm cáp ngầm nội bộ nhà máy", desc: "Hào và mương cáp ngầm phải sạch sẽ, khô ráo, không bị ngập nước thải hóa chất CIP hay rác thải.", detail: "Biện pháp: Kiểm tra nắp đان mương cáp nguyên vẹn, không bị sụt lún; khơi thông hệ thống thoát nước mương cáp định kỳ.", laws: "QCVN 25:2025/BCT; QCVN 26:2025/BCT" },
+                { code: "HK-2.1.1.04", title: "Tình trạng kỹ thuật mương cáp, hầm cáp ngầm nội bộ nhà máy", desc: "Hào và mương cáp ngầm phải sạch sẽ, khô ráo, không bị ngập nước thải hóa chất CIP hay rác thải.", detail: "Biện pháp: Kiểm tra nắp đan mương cáp nguyên vẹn, không bị sụt lún; khơi thông hệ thống thoát nước mương cáp định kỳ.", laws: "QCVN 25:2025/BCT; QCVN 26:2025/BCT" },
                 { code: "HK-2.1.1.05", title: "Mốc báo cáp ngầm và biển cảnh báo tuyến cáp điện ngầm", desc: "Tuyến cáp điện ngầm đi ngầm dưới đất phải có cọc mốc định vị và biển báo cảnh báo rõ ràng trên mặt đất.", detail: "Biện pháp: Cắm mốc định vị cáp ngầm khoảng cách ≤30m/mốc; sơn kẻ biển báo vị trí cáp đi qua.", laws: "QCVN 25:2025/BCT; 11 TCN 19-2006" },
                 { code: "HK-2.1.1.06", title: "Hệ thống nối đất an toàn và nối đất làm việc của trạm biến áp", desc: "Hệ thống nối đất vỏ thiết bị, nối đất lặp lại trung tính MBA phải đạt trị số điện trở kỹ thuật chuẩn.", detail: "Biện pháp: Đo kiểm tra điện trở nối đất định kỳ hàng năm đảm bảo Rđ ≤ 4 Ohm; kiểm tra bu-lông siết cáp tiếp địa.", laws: "QCVN 26:2025/BCT; TCVN 4756:1989" },
                 { code: "HK-2.1.1.07", title: "Hệ thống tiếp địa chống sét van và kim thu sét công trình trạm điện", desc: "Hệ thống chống sét trực tiếp (kim thu sét) và chống sét van bảo vệ MBA phải được kiểm định tiếp địa.", detail: "Biện pháp: Đo điện trở tiếp địa hệ thống chống sét trực tiếp ≤10 Ohm; kiểm tra hộp kiểm tra điện trở tiếp địa (Test box).", laws: "TCVN 9385:2012; QCVN 26:2025/BCT" },
@@ -150,8 +150,10 @@
             ]
         };
 
+        // Khi vừa mở ứng dụng, khởi tạo giao diện và tự động đọc dữ liệu 2 chiều từ Google Sheet
         document.addEventListener("DOMContentLoaded", function() {
             renderAllModules();
+            loadDataFromSheet();
         });
 
         function renderAllModules() {
@@ -247,38 +249,102 @@
             }
         }
 
-        // HÀM QUẢN LÝ ĐÓNG/MỞ THÔNG MINH (TỰ ĐỘNG THU GỌN CÁC MỤC KHÁC)
+        // ĐỒNG BỘ 2 CHIỀU: ĐỌC DỮ LIỆU TỪ GOOGLE SHEET ĐỔ VỀ KHI VỪA MỞ TRANG
+        async function loadDataFromSheet() {
+            try {
+                const response = await fetch(APPS_SCRIPT_URL);
+                const resJson = await response.json();
+                if (resJson.status === "success" && resJson.data) {
+                    resJson.data.forEach(item => {
+                        let safeCode = item.code.replace(/\./g, '_');
+                        
+                        let resultSelect = document.querySelector(`.result-select[data-code="${item.code}"]`);
+                        if (resultSelect && item.result) resultSelect.value = item.result;
+                        
+                        let riskSelect = document.querySelector(`.risk-select[data-code="${item.code}"]`);
+                        if (riskSelect && item.risk) riskSelect.value = item.risk;
+                        
+                        let noteInput = document.querySelector(`.note-input[data-code="${item.code}"]`);
+                        if (noteInput && item.note) noteInput.value = item.note;
+                        
+                        let capaInput = document.querySelector(`.capa-input[data-code="${item.code}"]`);
+                        if (capaInput && item.capa) capaInput.value = item.capa;
+
+                        // Hiển thị ảnh cũ từ Drive nếu có
+                        if (item.img1 && item.img1.startsWith("http")) {
+                            let prev = document.getElementById(`prev_${safeCode}_1`);
+                            let icon = document.getElementById(`icon_${safeCode}_1`);
+                            let del = document.getElementById(`del_${safeCode}_1`);
+                            if (prev && icon && del) {
+                                prev.src = item.img1;
+                                prev.classList.remove('d-none');
+                                icon.classList.add('d-none');
+                                del.classList.remove('d-none');
+                            }
+                        }
+                        if (item.img2 && item.img2.startsWith("http")) {
+                            let prev = document.getElementById(`prev_${safeCode}_2`);
+                            let icon = document.getElementById(`icon_${safeCode}_2`);
+                            let del = document.getElementById(`del_${safeCode}_2`);
+                            if (prev && icon && del) {
+                                prev.src = item.img2;
+                                prev.classList.remove('d-none');
+                                icon.classList.add('d-none');
+                                del.classList.remove('d-none');
+                            }
+                        }
+                        if (item.img3 && item.img3.startsWith("http")) {
+                            let prev = document.getElementById(`prev_${safeCode}_3`);
+                            let icon = document.getElementById(`icon_${safeCode}_3`);
+                            let del = document.getElementById(`del_${safeCode}_3`);
+                            if (prev && icon && del) {
+                                prev.src = item.img3;
+                                prev.classList.remove('d-none');
+                                icon.classList.add('d-none');
+                                del.classList.remove('d-none');
+                            }
+                        }
+                        
+                        // Cập nhật Badge trạng thái trên giao diện
+                        let badgeEl = document.querySelector(`.status-badge-${safeCode}`);
+                        if (badgeEl && item.result && item.result !== "N/A (Chưa kiểm tra)") {
+                            badgeEl.innerText = item.result;
+                            badgeEl.className = "badge small " + 
+                                (item.result === "Tuân thủ" ? "bg-success" : 
+                                (item.result === "Tuân thủ một phần" ? "bg-warning text-dark" : 
+                                (item.result === "Chưa tuân thủ" ? "bg-danger" : "bg-secondary")));
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error("Lỗi đồng bộ dữ liệu GET từ Sheet:", err);
+            }
+        }
+
+        // QUẢN LÝ ĐÓNG/MỞ THÔNG MINH (TỰ ĐỘNG THU GỌN CÁC MỤC KHÁC)
         function toggleCollapse(safeCode) {
             const targetEl = document.getElementById(`collapse_${safeCode}`);
             const isOpen = targetEl.classList.contains('show');
 
-            // Đóng tất cả các mục đang mở trên toàn trang
             document.querySelectorAll('.collapse-content.show').forEach(el => {
                 let bsCollapse = bootstrap.Collapse.getInstance(el);
-                if (bsCollapse) {
-                    bsCollapse.hide();
-                } else {
-                    el.classList.remove('show');
-                }
+                if (bsCollapse) bsCollapse.hide();
+                else el.classList.remove('show');
             });
 
-            // Nếu mục click chưa mở thì tiến hành mở lên
             if (!isOpen) {
                 let bsCollapse = bootstrap.Collapse.getOrCreateInstance(targetEl);
                 bsCollapse.show();
-                // Cuộn mượt màn hình tới thẻ đang chọn
                 setTimeout(() => {
                     document.getElementById(`item_${safeCode}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }, 150);
             }
         }
 
-        // CHUYỂN PHÂN MỤC (TỰ ĐỘNG THU GỌN TOÀN BỘ)
         function switchModule(val) {
             document.querySelectorAll('.audit-module').forEach(el => el.classList.add('d-none'));
             document.getElementById(`mod_${val}`).classList.remove('d-none');
             
-            // Đóng tất cả các card đang mở
             document.querySelectorAll('.collapse-content.show').forEach(el => {
                 let bsCollapse = bootstrap.Collapse.getInstance(el);
                 if (bsCollapse) bsCollapse.hide();
@@ -331,7 +397,7 @@
             return prev.classList.contains('d-none') ? "" : prev.src;
         }
 
-        // HÀM ĐỒNG BỘ RIÊNG CHO TỪNG MỤC & TỰ ĐỘNG CẬP NHẬT TRẠNG THÁI BADGE
+        // HÀM LƯU VÀ ĐỒNG BỘ NGƯỢC LÊN GOOGLE SHEET & DRIVE (POST)
         async function syncSingleItem(code, title) {
             const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
             document.getElementById('loadingText').innerText = `Đang lưu mục ${code} lên Google Sheet & Drive...`;
@@ -341,9 +407,11 @@
             const risk = document.querySelector(`.risk-select[data-code="${code}"]`).value;
             const note = document.querySelector(`.note-input[data-code="${code}"]`).value;
             const capa = document.querySelector(`.capa-input[data-code="${code}"]`).value;
-            const img1 = getImageData(code, 1);
-            const img2 = getImageData(code, 2);
-            const img3 = getImageData(code, 3);
+            
+            // Lấy ảnh mới chọn hoặc giữ nguyên ảnh cũ nếu đã có sẵn URL trên preview
+            let img1 = getImageData(code, 1);
+            let img2 = getImageData(code, 2);
+            let img3 = getImageData(code, 3);
 
             const payload = {
                 code: code,
@@ -366,7 +434,6 @@
                 const resJson = await response.json();
                 modal.hide();
                 if (resJson.status === "success") {
-                    // CẬP NHẬT TRẠNG THÁI BADGE NGAY LẬP TỨC TRÊN GIAO DIỆN
                     let safeCode = code.replace(/\./g, '_');
                     let badgeEl = document.querySelector(`.status-badge-${safeCode}`);
                     if (badgeEl) {
@@ -377,7 +444,6 @@
                             (result === "Chưa tuân thủ" ? "bg-danger" : "bg-secondary")));
                     }
 
-                    // Tự động thu gọn lại mục vừa lưu xong để chuyển qua mục khác
                     let targetEl = document.getElementById(`collapse_${safeCode}`);
                     let bsCollapse = bootstrap.Collapse.getInstance(targetEl);
                     if (bsCollapse) bsCollapse.hide();
