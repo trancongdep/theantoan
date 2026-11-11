@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HSE Audit - An Toàn Điện 2026 (Mr. An Toàn)</title>
+    <title>HSE Audit - Heineken Vietnam 2026 (Mr. An Toàn)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #1B365D; --secondary: #2F5597; --accent: #0D6EFD; }
+        :root { --primary: #00A651; --secondary: #1B365D; --accent: #0D6EFD; }
         body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
-        .app-header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 15px; border-radius: 0 0 15px 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .app-header { background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; padding: 15px; border-radius: 0 0 15px 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .card-criteria { border: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-bottom: 15px; transition: all 0.2s; background: #fff; }
         .card-criteria:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .badge-code { background-color: var(--primary); font-size: 0.85rem; }
+        .badge-code { background-color: var(--secondary); font-size: 0.85rem; }
         .img-preview-box { width: 65px; height: 65px; border: 2px dashed #ccc; border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
         .img-preview-box img { width: 100%; height: 100%; object-fit: cover; }
         .img-preview-box .remove-btn { position: absolute; top: 2px; right: 2px; background: rgba(255,0,0,0.7); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; border: none; }
@@ -26,11 +26,11 @@
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-bolt-lightning me-2"></i>HSE AUDIT AN TOÀN ĐIỆN</h5>
-                    <small class="text-light">Auditor: Trần Công Đẹp | Ngày: 12/11/2026</small>
+                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-beer-mug-empty me-2"></i>HEINEKEN VIETNAM - HSE AUDIT 2026</h5>
+                    <small class="text-light">Auditor: Trần Công Đẹp | Ngày chốt: 12/11/2026</small>
                 </div>
                 <div>
-                    <a href="https://docs.google.com/spreadsheets/d/1nKGtjgh_B0-dToYJtak1lZ4YB5seeDLpxLRXfvKp720/edit?pli=1&gid=0#gid=0" target="_blank" class="btn btn-sm btn-light text-primary fw-bold">
+                    <a href="https://docs.google.com/spreadsheets/d/1nKGtjgh_B0-dToYJtak1lZ4YB5seeDLpxLRXfvKp720/edit?pli=1&gid=0#gid=0" target="_blank" class="btn btn-sm btn-light text-success fw-bold">
                         <i class="fa-solid fa-table me-1"></i>Mở Sheet
                     </a>
                 </div>
@@ -42,12 +42,12 @@
         <!-- MENU DROPDOWN CHỌN CHUYÊN ĐỀ -->
         <div class="card shadow-sm mb-3 border-0">
             <div class="card-body py-2">
-                <label for="moduleSelect" class="form-label fw-bold text-primary mb-1 small"><i class="fa-solid fa-list-ul me-1"></i>CHỌN HẠNG MỤC AUDIT:</label>
-                <select class="form-select form-select-lg border-primary fw-bold text-dark" id="moduleSelect" onchange="switchModule(this.value)">
-                    <option value="211">2.1.1. Bảo vệ thiết bị điện & công trình điện</option>
-                    <option value="212">2.1.2. An toàn trong sử dụng điện sản xuất</option>
-                    <option value="213">2.1.3. An toàn dụng cụ điện cầm tay</option>
-                    <option value="214">2.1.4. An toàn hàn điện</option>
+                <label for="moduleSelect" class="form-label fw-bold text-success mb-1 small"><i class="fa-solid fa-list-ul me-1"></i>CHỌN PHÂN MỤC AUDIT:</label>
+                <select class="form-select form-select-lg border-success fw-bold text-dark" id="moduleSelect" onchange="switchModule(this.value)">
+                    <option value="211">2.1.1. Bảo vệ thiết bị điện & công trình điện (5 tiêu chí)</option>
+                    <option value="212">2.1.2. An toàn trong sử dụng điện sản xuất (9 tiêu chí)</option>
+                    <option value="213">2.1.3. An toàn dụng cụ điện cầm tay (4 tiêu chí)</option>
+                    <option value="214">2.1.4. An toàn hàn điện (2 tiêu chí)</option>
                 </select>
             </div>
         </div>
@@ -77,7 +77,7 @@
     <div class="modal fade" id="loadingModal" data-bs-backdrop="static" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-sm text-center">
             <div class="modal-content py-3">
-                <div class="spinner-border text-primary mx-auto mb-2" role="status"></div>
+                <div class="spinner-border text-success mx-auto mb-2" role="status"></div>
                 <div class="fw-bold" id="loadingText">Đang lưu dữ liệu lên Google...</div>
             </div>
         </div>
@@ -89,42 +89,172 @@
 
         const auditData = {
             "211": [
-                { code: "2.1.1.01", title: "Hành lang đường dây trên không", desc: "Không có công trình cơi nới vi phạm khoảng cách an toàn phóng điện, cây xanh được cắt tỉa an toàn.", detail: "Kiểm tra thực tế tuyến đường dây trung/hạ thế trong khuôn viên nhà máy. Đảm bảo khoảng cách ly pha-đất và pha-pha theo cấp điện áp. Cây xanh phải được cắt tỉa định kỳ, không để cành vướng vào đường dây khi có gió bão.", laws: "NĐ 62/2025/NĐ-CP - QCVN 25:2025/BCT" },
-                { code: "2.1.1.02", title: "Cọc mốc và bảo vệ cáp ngầm", desc: "Có mốc báo hiệu cáp ngầm, không trồng cây rễ sâu hoặc đào bới trong hành lang bảo vệ cáp.", detail: "Kiểm tra các cọc mốc định vị tuyến cáp ngầm tại các điểm chuyển hướng, điểm đấu nối. Khu vực phía trên tuyến cáp không bị xe tải nặng chèn ép lún sụt hoặc tự ý đào bới xây dựng công trình.", laws: "NĐ 62/2025/NĐ-CP - 11 TCN 19-2006" },
-                { code: "2.1.1.03", title: "An toàn Trạm biến áp & Phòng MSB", desc: "Tường rào, cửa khóa chắc chắn, lưới chắn chuột, hố thu dầu sự cố sạch sẽ không đọng nước.", detail: "Kiểm tra cửa phòng điện luôn khóa, mở ra ngoài. Các ô thông gió và rãnh cáp phải có lưới thép chống chuột bọ. Đối với MBA ngâm dầu, kiểm tra hố thu dầu sỏi đỡ sạch sẽ, không bị bít kín rác thải.", laws: "NĐ 62/2025/NĐ-CP - TT 02/2025/TT-BCT" },
-                { code: "2.1.1.04", title: "Kiểm định thiết bị điện cao/trung thế", desc: "MBA, chống sét van, cáp ngầm có tem và giấy chứng nhận kiểm định định kỳ còn hạn.", detail: "Rà soát hồ sơ kiểm định kỹ thuật an toàn của tổ chức có chức năng đối với MBA, chống sét van, máy cắt trung thế. Đối chiếu số chế tạo (Serial) thực tế trên thiết bị với giấy chứng nhận.", laws: "Thông tư 02/2025/TT-BCT" },
-                { code: "2.1.1.05", title: "Kiểm định dụng cụ an toàn điện", desc: "Sào, găng, ủng, thảm cách điện kiểm định định kỳ đúng hạn, cất giữ trong tủ chuyên dụng.", detail: "Kiểm tra tem kiểm định dán trên sào, găng tay, ủng và thảm cách điện. Găng/ủng định kỳ 6 tháng/lần; sào và bút thử điện định kỳ 12 tháng/lần. Bảo quản trong tủ khô ráo.", laws: "Thông tư 02/2025/TT-BCT" },
-                { code: "2.1.1.06", title: "Nối đất an toàn vỏ thiết bị", desc: "Vỏ tủ điện, MBA, thang máng cáp nối đất chắc chắn; dây nối đất màu vàng - xanh chuẩn kỹ thuật.", detail: "Kiểm tra bu-lông tiếp địa vỏ máy, thanh cái PE trong tủ điện và dây đồng bện nối cánh tủ. Đo điện trở tiếp địa an toàn định kỳ hàng năm đảm bảo Rđ <= 4 Ohm.", laws: "TCVN 4756:1989 - QCVN 25:2025/BCT" },
-                { code: "2.1.1.07", title: "Hệ thống chống sét & Cắt lọc sét", desc: "Kim thu sét, hộp kiểm tra tiếp địa nguyên vẹn; thiết bị cắt lọc sét (SPD) trong tủ MSB hoạt động tốt.", detail: "Kiểm tra kim thu sét trên mái, hộp kiểm tra điện trở tiếp địa (Test box) xung quanh xưởng. Kiểm tra đèn báo/cờ hiển thị trạng thái của thiết bị cắt lọc sét (SPD) trong tủ điện tổng.", laws: "TCVN 9385:2012" },
-                { code: "2.1.1.08", title: "Bảo vệ quá dòng & Chống dòng rò", desc: "MCCB, MCB định mức phù hợp; tủ điện khu ẩm ướt có lắp thiết bị chống dòng rò (RCD/RCBO <= 30mA).", detail: "Đối chiếu dòng định mức của thiết bị đóng cắt với tiết diện dây dẫn. Kiểm tra nút Test trên các thiết bị chống dòng rò tại khu vực ẩm ướt để đảm bảo cơ cấu tác động nhạy.", laws: "TCVN 7447 - QCVN 25:2025/BCT" },
-                { code: "2.1.1.09", title: "Che chắn tủ điện & Bịt kín lỗ cáp", desc: "Có tấm chắn mica bảo vệ chống chạm trực tiếp (IP2X), đáy tủ bịt kín chống chuột bọ xâm nhập.", detail: "Kiểm tra mặt nạ mica che các thanh cái (Busbar) bên trong tủ điện. Các lỗ luồn cáp dưới đáy tủ phải được chèn bịt kín bằng cao su hoặc đất sét chống cháy.", laws: "QCVN 25:2025/BCT" },
-                { code: "2.1.1.10", title: "Biển báo an toàn điện & Sơ đồ", desc: "Có đầy đủ biển báo điện áp cao, cấm đóng điện tại TBA, tủ điện và sơ đồ đơn tuyến cập nhật thực tế.", detail: "Kiểm tra sự hiện diện của biển báo cấm, cảnh báo nguy hiểm điện áp trên cửa TBA và mặt tủ điện. Kiểm tra sơ đồ đơn tuyến gắn bên trong cánh cửa tủ phân phối.", laws: "Thông tư 02/2025/TT-BCT" }
+                { 
+                    code: "2.1.1.1", 
+                    title: "Hành lang bảo vệ an toàn trạm biến áp và đường dây dẫn điện", 
+                    desc: "Cấm vi phạm hành lang an toàn công trình điện; đảm bảo khoảng cách an toàn đối với ĐDK và trạm điện.", 
+                    detail: "Khảo sát, chặt tỉa cây định kỳ gần trạm; không cơi nới công trình xâm phạm hành lang bảo vệ trạm biến áp; giữ lối ra vào và hệ thống thoát nước thông thoáng. Lỗi hay gặp: Trồng cây vi phạm khoảng cách, tập kết vật tư cản trở đường vào trạm.", 
+                    laws: "Luật Điện lực 61/2024/QH15; NĐ 62/2025/NĐ-CP (Điều 9.8 Luật ĐL; Điều 6 NĐ 62)",
+                    defaultStatus: "Tuân thủ một phần" 
+                },
+                { 
+                    code: "2.1.1.2", 
+                    title: "Điều kiện phòng đặt thiết bị điện, thông gió, chiếu sáng", 
+                    desc: "Phòng đặt thiết bị điện phải có biển báo nguy hiểm, đường thoát hiểm, chiếu sáng đầy đủ, chống động vật xâm nhập.", 
+                    detail: "Độ rọi phòng điện phải đạt chuẩn (phòng tủ điện >=200 lux, bảng điện >=500 lux); lắp lưới thép mắt cáo lỗ nhỏ ngăn côn trùng/động vật tại cửa thông gió; đậy kín mương cáp ngầm, tránh đọng nước.", 
+                    laws: "Luật Điện lực 61/2024/QH15; NĐ 62/2025/NĐ-CP; QCVN 22:2016/BYT",
+                    defaultStatus: "Tuân thủ một phần" 
+                },
+                { 
+                    code: "2.1.1.3", 
+                    title: "Hệ thống nối đất an toàn và chống sét trạm điện", 
+                    desc: "Hệ thống thiết bị điện, nối đất, chống sét phải được nghiệm thu, kiểm tra định kỳ đạt trị số chuẩn.", 
+                    detail: "Đo kiểm tra định kỳ điện trở nối đất trạm biến áp (<=4 Ohm) và hệ thống chống sét trực tiếp (<=10 Ohm); cập nhật sơ đồ hoàn công tiếp địa.", 
+                    laws: "QCVN 26:2025/BCT; TCVN 9385:2012; Luật Điện lực 61/2024/QH15",
+                    defaultStatus: "Tuân thủ" 
+                },
+                { 
+                    code: "2.1.1.4", 
+                    title: "Quản lý, lắp đặt cáp điện ngầm và hào mương cáp", 
+                    desc: "Tuyến cáp ngầm phải có biển báo 'CÁP ĐIỆN LỰC' trên mặt đất/cột mốc; khoảng cách <=30m; chống thấm hào cáp.", 
+                    detail: "Cắm mốc báo cáp ngầm đúng quy chuẩn; kiểm tra nắp đan mương cáp nội bộ nhà máy; không xả nước thải hóa chất CIP tràn vào mương cáp điện.", 
+                    laws: "QCVN 25:2025/BCT; QCVN 26:2025/BCT",
+                    defaultStatus: "Tuân thủ" 
+                },
+                { 
+                    code: "2.1.1.5", 
+                    title: "Bảo vệ công trình điện lực và chế độ báo cáo sự cố", 
+                    desc: "Báo cáo nhanh tai nạn điện chết người trong 24h; gửi báo cáo an toàn điện và vi phạm hành lang cho Sở Công Thương.", 
+                    detail: "Thiết lập quy trình báo cáo tai nạn điện nội bộ; lập và lưu trữ hồ sơ theo dõi sự cố điện; gửi báo cáo an toàn điện hàng năm đúng thời hạn trước ngày 10/01.", 
+                    laws: "Luật Điện lực 61/2024/QH15; NĐ 62/2025/NĐ-CP; TT 02/2025/TT-BCT",
+                    defaultStatus: "Chưa tuân thủ" 
+                }
             ],
             "212": [
-                { code: "2.1.2.01", title: "Thẻ an toàn điện nhân sự", desc: "Nhân viên vận hành, sửa chữa điện được huấn luyện, sát hạch và cấp Thẻ an toàn điện đúng bậc.", detail: "Kiểm tra Thẻ an toàn điện của từng nhân sự bảo trì điện (Bậc 1 đến Bậc 5). Nội dung huấn luyện phải phù hợp với công việc và cấp điện áp thực tế quản lý.", laws: "Luật Điện lực 2024 - TT 02/2025/TT-BCT" },
-                { code: "2.1.2.02", title: "Huấn luyện ATVSLĐ Nhóm 3", desc: "Nhân sự làm việc với điện có Thẻ ATVSLĐ Nhóm 3 còn hiệu lực (2 năm/lần).", detail: "Kiểm tra hồ sơ huấn luyện và Thẻ an toàn lao động Nhóm 3 đối với công việc làm việc với điện, làm việc trên cao theo đúng quy định định kỳ 2 năm.", laws: "Nghị định 44/2016/NĐ-CP - TT 06/2020/TT-BLĐTBXH" },
-                { code: "2.1.2.03", title: "Chế độ Phiếu & Lệnh công tác", desc: "Công việc sửa chữa điện thực hiện nghiêm ngặt theo Phiếu công tác / Lệnh công tác và lưu trữ đầy đủ.", detail: "Kiểm tra tập lưu trữ Phiếu công tác và sổ ghi Lệnh công tác trong 6 tháng gần nhất. Rà soát chữ ký của các chức danh: Người cấp phiếu, Người chỉ huy, Người cho phép.", laws: "Thông tư 02/2025/TT-BCT" },
-                { code: "2.1.2.04", title: "Quy trình LOTO & 5 bước kỹ thuật", desc: "Áp dụng khóa LOTO, thử không còn điện, đặt tiếp địa di động và treo biển cảnh báo trước khi sửa chữa.", detail: "Kiểm tra bộ dụng cụ khóa cô lập năng lượng (LOTO), bút thử điện, tiếp địa di động của đội bảo trì. Xác thực quy trình 5 bước kỹ thuật khi thao tác cắt điện.", laws: "QCVN 25:2025/BCT" },
-                { code: "2.1.2.05", title: "Đi dây cáp nguồn máy sản xuất", desc: "Cáp điện đi trên máng hoặc ống bảo vệ chắc chắn, không vắt qua góc sắc nhọn hoặc ngâm trên sàn ướt.", detail: "Kiểm tra tuyến cáp cấp nguồn từ máng cáp xuống tủ điều khiển máy. Dây dẫn phải được luồn trong ống bảo vệ kín, không để trần trên sàn nhà xưởng ẩm ướt.", laws: "TCVN 7447-5-52" },
-                { code: "2.1.2.06", title: "Ổ cắm, phích cắm công nghiệp & Hành lang", desc: "Sử dụng phích cắm chuẩn công nghiệp, dán nhãn 220V/380V, hành lang trước tủ điện thông thoáng >= 0.8m.", detail: "Kiểm tra loại ổ cắm/phích cắm công nghiệp có cực tiếp địa. Kiểm tra hành lang thao tác trước các tủ điện không bị xếp hàng hóa cản trở.", laws: "QCVN 25:2025/BCT" },
-                { code: "2.1.2.07", title: "Nút dừng khẩn cấp (E-Stop) & Interlock", desc: "Nút E-Stop trên máy hoạt động tốt, các cửa che chắn có công tắc hành trình liên động ngắt điện.", detail: "Thử nghiệm thực tế nút nhấn E-Stop trên dây chuyền sản xuất. Kiểm tra công tắc hành trình (Interlock) tại các cửa che chắn nguy hiểm của máy.", laws: "TCVN 6719:2008 (ISO 13850)" },
-                { code: "2.1.2.08", title: "An toàn khu vực ẩm ướt & Không gian hạn chế", desc: "Thiết bị điện khu nước thải/ngoài trời đạt chuẩn IP54+, dùng nguồn SELV (<=24V) khi bảo trì bồn bể.", detail: "Kiểm tra cấp bảo vệ IP của tủ điện, đèn chiếu sáng tại khu vực xử lý nước thải hoặc ngoài trời. Kiểm tra nguồn điện hạ áp an toàn (SELV 24V) dùng khi bảo trì bồn bể.", laws: "QCVN 34:2018/BLĐTBXH" },
-                { code: "2.1.2.09", title: "Thiết bị điện phòng nổ & Chống tĩnh điện", desc: "Kho hóa chất/dung môi sử dụng thiết bị phòng nổ (Ex) và có kẹp tiếp địa tĩnh điện đầy đủ.", detail: "Kiểm tra nhãn thiết bị phòng nổ (Ex) tại kho hóa chất, trạm chiết rót dung môi. Kiểm tra hệ thống dây nối đẳng thế và kẹp tiếp địa tĩnh điện cho phuy chứa.", laws: "TCVN 10888 (IEC 60079)" },
-                { code: "2.1.2.10", title: "Trang bị PPE & PCCC chuyên dụng điện", desc: "Thợ điện có giày/găng cách điện, quần áo chống hồ quang; trang bị bình CO2 và hướng dẫn sơ cứu điện giật.", detail: "Kiểm tra trang bị bảo hộ (giày, găng, mũ cách điện) của thợ điện. Kiểm tra bình chữa cháy khí CO2 đặt tại phòng điện và bảng hướng dẫn sơ cứu.", laws: "Thông tư 25/2022/TT-BLĐTBXH" }
+                { 
+                    code: "2.1.2.1", 
+                    title: "Trang bị phương tiện bảo vệ cá nhân (PTBVCN) cách điện", 
+                    desc: "Người làm việc với thiết bị điện phải được trang cấp đủ ủng, găng tay cách điện, thảm, bút thử điện, sào.", 
+                    detail: "Trang bị tủ đựng dụng cụ an toàn điện tại phòng trạm; lập sổ theo dõi thử nghiệm định kỳ găng tay, ủng cao su cách điện 6 tháng/lần; loại bỏ dụng cụ nứt thủng.", 
+                    laws: "Luật Điện lực 2024; QCVN 25:2025/BCT; TT 25/2022/TT-BLĐTBXH",
+                    defaultStatus: "Tuân thủ một phần" 
+                },
+                { 
+                    code: "2.1.2.2", 
+                    title: "Đào tạo, sát hạch, phân bậc và cấp Thẻ an toàn điện", 
+                    desc: "Nhân viên vận hành, sửa chữa điện phải được huấn luyện, sát hạch và cấp Thẻ an toàn điện đúng bậc.", 
+                    detail: "Lập kế hoạch huấn luyện định kỳ hàng năm; tổ chức sát hạch phân bậc từ Bậc 1 đến Bậc 5 phù hợp với công việc và cấp điện áp đảm nhận.", 
+                    laws: "Nghị định 62/2025/NĐ-CP (Điều 23-29)",
+                    defaultStatus: "Tuân thủ" 
+                },
+                { 
+                    code: "2.1.2.3", 
+                    title: "Quy trình cấp Phiếu công tác (PCT) và Lệnh công tác (LCT)", 
+                    desc: "Mọi công việc sửa chữa điện phải thực hiện theo Phiếu công tác hoặc Lệnh công tác đúng quy định.", 
+                    detail: "Ban hành quyết định phân công chức danh an toàn; kiểm tra việc lập, duyệt, khóa và lưu trữ Phiếu/Lệnh công tác cho 100% công việc sửa chữa điện.", 
+                    laws: "Thông tư 02/2025/TT-BCT; QCVN 25:2025/BCT",
+                    defaultStatus: "Chưa tuân thủ" 
+                },
+                { 
+                    code: "2.1.2.4", 
+                    title: "Quy trình cô lập nguồn điện và khóa LOTO", 
+                    desc: "Áp dụng quy trình 5 bước kỹ thuật, khóa cô lập năng lượng (LOTO) và treo biển cảnh báo trước khi sửa chữa.", 
+                    detail: "Trang bị bộ khóa LOTO tiêu chuẩn cho đội bảo trì; thực hiện cắt điện, khóa ổ khóa, thử không còn điện, đặt tiếp địa di động và treo biển cấm.", 
+                    laws: "QCVN 25:2025/BCT; Thông tư 02/2025/TT-BCT",
+                    defaultStatus: "Tuân thủ một phần" 
+                },
+                { 
+                    code: "2.1.2.5", 
+                    title: "Hệ thống biển báo, biển cấm an toàn điện mẫu chuẩn", 
+                    desc: "Tại cửa TBA, vỏ tủ điện, cột điện phải gắn biển báo an toàn điện đúng quy cách mẫu chuẩn.", 
+                    detail: "Rà soát toàn bộ hệ thống biển báo 'Cấm vào - Điện áp cao', 'Cấm đóng điện - Có người đang làm việc' theo đúng mẫu tại Phụ lục C QCVN 25:2025/BCT.", 
+                    laws: "QCVN 25:2025/BCT (Phụ lục C); NĐ 62/2025/NĐ-CP",
+                    defaultStatus: "Tuân thủ một phần" 
+                },
+                { 
+                    code: "2.1.2.6", 
+                    title: "Kiểm định an toàn kỹ thuật định kỳ thiết bị, dụng cụ điện", 
+                    desc: "MBA, máy cắt, chống sét van, sào cách điện phải được kiểm định định kỳ bởi đơn vị có chức năng.", 
+                    detail: "Lập danh mục thiết bị bắt buộc kiểm định theo TT 02/2025/TT-BCT; thuê đơn vị kiểm định độc lập thực hiện và dán tem kiểm định đầy đủ.", 
+                    laws: "Thông tư 02/2025/TT-BCT (Phụ lục II); Luật Điện lực 2024",
+                    defaultStatus: "Chưa tuân thủ" 
+                },
+                { 
+                    code: "2.1.2.7", 
+                    title: "Lưu trữ và cập nhật hồ sơ kỹ thuật, sơ đồ đơn tuyến", 
+                    desc: "Mỗi trạm điện và tủ phân phối phải có sơ đồ nguyên lý đơn tuyến cập nhật đúng thực tế.", 
+                    detail: "Cập nhật kịp thời các thay đổi mạch điện vào bản vẽ hoàn công; niêm yết sơ đồ đơn tuyến tại phòng trực điện và bên trong cánh tủ MSB/DB.", 
+                    laws: "QCVN 26:2025/BCT; Thông tư 02/2025/TT-BCT",
+                    defaultStatus: "Tuân thủ một phần" 
+                },
+                { 
+                    code: "2.1.2.8", 
+                    title: "An toàn điện tại khu ẩm ướt, hóa chất (Khu nấu, lên men, CIP)", 
+                    desc: "Thiết bị điện tại khu vực ẩm ướt, tẩy rửa CIP phải đạt chuẩn IP54+ và qua chống dòng rò RCD/RCBO.", 
+                    detail: "Kiểm tra độ kín khít vỏ tủ điện, động cơ khu vực chiết rót, nấu bia, CIP; lắp đặt thiết bị bảo vệ dòng điện dư (<=30mA) cho các mạch di động.", 
+                    laws: "QCVN 26:2025/BCT; TCVN 7447-7-706",
+                    defaultStatus: "Tuân thủ một phần" 
+                },
+                { 
+                    code: "2.1.2.9", 
+                    title: "An toàn điện khu vực nguy cơ cháy nổ cao (Kho cồn, LPG, NH3, Silo)", 
+                    desc: "Toàn bộ thiết bị điện tại kho cồn, trạm LPG, Amoniac, Silo bụi cám phải là thiết bị phòng nổ (Ex).", 
+                    detail: "Kiểm tra nhãn chống cháy nổ (Ex) trên động cơ, đèn, hộp nối dây; kiểm tra hệ thống nối đất đẳng thế và kẹp tiếp địa chống tĩnh điện.", 
+                    laws: "TCVN 10888 (IEC 60079); QCVN 25:2025/BCT",
+                    defaultStatus: "Tuân thủ" 
+                }
             ],
             "213": [
-                { code: "2.1.3.01", title: "Danh mục & Đo cách điện dụng cụ cầm tay", desc: "Dụng cụ (máy mài, khoan) có mã quản lý, đo điện trở cách điện định kỳ (>=2 MOhm) và dán tem Đạt.", detail: "Kiểm tra danh mục quản lý thiết bị cầm tay. Kiểm tra sổ đo điện trở cách điện định kỳ bằng mê-ga-ôm kế (đạt >= 2 MOhm với thiết bị Cấp I; >= 7 MOhm với Cấp II).", laws: "QCVN 25:2025/BCT - TCVN 7996" },
-                { code: "2.1.3.02", title: "Phân cấp bảo vệ & Rulo chống dòng rò", desc: "Dụng cụ Cấp I/II được cắm qua tủ điện di động hoặc nguồn có tích hợp RCD/RCBO <= 30mA.", detail: "Kiểm tra nhãn phân cấp bảo vệ trên thân máy (Cấp I nối đất hoặc Cấp II cách điện kép). Kiểm tra các Rulo ổ cắm kéo dài phải tích hợp thiết bị chống dòng rò.", laws: "QCVN 25:2025/BCT" },
-                { code: "2.1.3.03", title: "Tình trạng dây nguồn & Chuôi chống gập", desc: "Dây cáp mềm không nối thủ công, chuôi chống gập tại đuôi máy nguyên vẹn, phích cắm chắc chắn.", detail: "Kiểm tra dọc chiều dài dây nguồn dụng cụ cầm tay không có vết nối băng keo. Kiểm tra chuôi cao su chống gập tại đầu dây vào thân máy.", laws: "TCVN 7996-1:2009" },
-                { code: "2.1.3.04", title: "Cơ cấu công tắc & Chụp bảo vệ đá mài", desc: "Công tắc nhạy, máy mài góc bắt buộc có chụp bảo vệ che chắn >= 180 độ và tay cầm phụ.", detail: "Kiểm tra công tắc đóng ngắt hoạt động tốt. Đối với máy mài góc, bắt buộc phải lắp chụp bảo vệ đá mài che chắn >= 180 độ và có tay cầm phụ.", laws: "TCVN 7996-1:2009" },
-                { code: "2.1.3.05", title: "PPE & An toàn thao tác dụng cụ cầm tay", desc: "Công nhân đeo kính chống văng bắn, mặt nạ, giày bảo hộ và không dùng găng vải dễ cuốn.", detail: "Kiểm tra việc sử dụng kính bảo hộ, mặt nạ chống văng khi thao tác máy cắt/mài. Đảm bảo công nhân không đeo găng tay vải sợi dễ bị cuốn vào trục quay.", laws: "Nghị định 44/2016/NĐ-CP" }
+                { 
+                    code: "2.1.3.1", 
+                    title: "Điều kiện đối với người vận hành dụng cụ điện cầm tay", 
+                    desc: "Công nhân sử dụng máy mài, máy khoan cầm tay phải được huấn luyện an toàn, trang bị PPE đầy đủ.", 
+                    detail: "Kiểm tra việc sử dụng kính bảo hộ, mặt nạ chống văng bắn, giày bảo hộ; tuyệt đối không dùng găng tay vải dễ bị cuốn vào trục máy quay.", 
+                    laws: "Nghị định 44/2016/NĐ-CP; QCVN 09:2012/BLĐTBXH",
+                    defaultStatus: "Tuân thủ một phần" 
+                },
+                { 
+                    code: "2.1.3.2", 
+                    title: "Sổ nhật ký quản lý, theo dõi kiểm tra định kỳ dụng cụ cầm tay", 
+                    desc: "Dụng cụ điện cầm tay phải được cấp mã quản lý, đo điện trở cách điện định kỳ và ghi sổ theo dõi.", 
+                    detail: "Lập danh mục mã định danh thiết bị; định kỳ kiểm tra ngoại quan và đo điện trở cách điện (>=2 MOhm với Cấp I, >=7 MOhm với Cấp II) ghi vào sổ.", 
+                    laws: "QCVN 09:2012/BLĐTBXH; TCVN 7996-1",
+                    defaultStatus: "Chưa tuân thủ" 
+                },
+                { 
+                    code: "2.1.3.3", 
+                    title: "Tình trạng kỹ thuật dây nguồn, phích cắm và vành bảo vệ", 
+                    desc: "Dây nguồn không nối thủ công; máy mài góc bắt buộc phải có vành bảo vệ đá cắt >= 180 độ.", 
+                    detail: "Kiểm tra cáp mềm bọc cao su nguyên vẹn, không tróc vỏ; phích cắm chắc chắn; máy mài phải có chụp bảo vệ đá và tay cầm phụ.", 
+                    laws: "TCVN 7996-1:2009 (IEC 60745-1)",
+                    defaultStatus: "Tuân thủ một phần" 
+                },
+                { 
+                    code: "2.1.3.4", 
+                    title: "Nguồn điện cấp và an toàn trong không gian hạn chế, bồn kín", 
+                    desc: "Khi dùng dụng cụ điện trong bồn nấu, tank bia, không gian hạn chế phải dùng nguồn SELV (<=24V).", 
+                    detail: "Sử dụng biến áp cách ly hoặc nguồn điện áp cực thấp an toàn (<=24V) khi bảo trì bên trong bồn chứa, tank lên men hoặc khu vực ẩm ướt ngập nước.", 
+                    laws: "QCVN 34:2018/BLĐTBXH; TCVN 7447-7-706",
+                    defaultStatus: "Tuân thủ" 
+                }
             ],
             "214": [
-                { code: "2.1.4.01", title: "Điện áp không tải máy hàn & Thiết bị VRD", desc: "Máy hàn có nắp che cọc đấu, dây nguồn <= 15m; tích hợp mạch giảm áp không tải (VRD) khi hàn ẩm ướt.", detail: "Kiểm tra nắp che an toàn tại cực đấu nối máy hàn. Đo điện áp không tải và kiểm tra tích hợp bộ giảm áp tự động VRD khi hàn trong môi trường ẩm ướt.", laws: "QCVN 03:2011/BLĐTBXH - TCVN 8524" },
-                { code: "2.1.4.02", title: "Nối đất vỏ máy hàn và kẹp vật hàn", desc: "Vỏ máy hàn nối đất chắc chắn; cáp mát kẹp trực tiếp vào vật hàn, cấm dùng kết cấu nhà xưởng làm dây mát.", detail: "Kiểm tra dây nối đất vỏ máy hàn. Cáp mát phải được kẹp trực tiếp vào vật hàn bằng kẹp chuyên dụng, tuyệt đối không dùng kết cấu xưởng làm đường dẫn mát.", laws: "QCVN 03:2011/BLĐTBXH" },
-                { code: "2.1.4.03", title: "An toàn cáp hàn và kìm hàn", desc: "Cáp hàn mềm bọc cao su không tróc vỏ, kìm hàn cách điện chịu nhiệt tốt, không vắt kìm lên bàn hàn.", detail: "Kiểm tra vỏ bọc cáp hàn không bị cháy sém, lộ lõi. Kìm hàn phải đảm bảo cách điện tốt, có giá treo cách điện khi ngưng sử dụng.", laws: "QCVN 03:2011/BLĐTBXH" },
-                { code: "2.1.4.04", title: "Che chắn hồ quang, thông gió & Giấy phép lửa", desc: "Có rèm chắn hồ quang, chụp hút khói hàn; cách ly vật liệu cháy >= 10m hoặc lập Hot Work Permit.", detail: "Kiểm tra rèm chắn tia hồ quang quanh khu vực hàn cố định. Khoảng cách cách ly vật liệu dễ cháy >= 10m hoặc phải có Giấy phép làm việc sinh lửa.", laws: "QCVN 03:2011/BLĐTBXH - TCVN 3146" },
-                { code: "2.1.4.05", title: "Chứng chỉ thợ hàn & PPE chuyên dụng", desc: "Thợ hàn có thẻ an toàn Nhóm 3, mặt nạ hàn lọc sáng chuẩn, găng tay da dài và tạp dề chống cháy.", detail: "Kiểm tra Thẻ an toàn Nhóm 3 của thợ hàn. Trang bị đầy đủ mặt nạ hàn lọc sáng, găng tay da chịu nhiệt, tạp dề da và giày bảo hộ chống cháy.", laws: "QCVN 03:2011/BLĐTBXH - TCVN 5083" }
+                { 
+                    code: "2.1.4.1", 
+                    title: "Tiêu chuẩn an toàn máy hàn điện, tiếp địa vỏ máy và kìm hàn", 
+                    desc: "Máy hàn phải nối đất vỏ, cáp mát kẹp trực tiếp vật hàn, có thiết bị giảm áp không tải (VRD) khi hàn ẩm.", 
+                    detail: "Kiểm tra cọc đấu nối có nắp che; cáp mát kẹp chặt vào chi tiết hàn (cấm dùng kết cấu xưởng làm dây mát); tích hợp mạch VRD giảm áp không tải.", 
+                    laws: "QCVN 03:2011/BLĐTBXH; TCVN 8524 (IEC 60974-1)",
+                    defaultStatus: "Tuân thủ một phần" 
+                },
+                { 
+                    code: "2.1.4.2", 
+                    title: "Giấy phép làm việc phát sinh nhiệt (Hot Work Permit) và PCCC", 
+                    desc: "Mọi công việc hàn cắt ngoài buồng hàn cố định phải lập Giấy phép sinh lửa và cách ly vật liệu cháy.", 
+                    detail: "Kiểm tra việc cấp Hot Work Permit trước khi hàn cắt tại khu vực sản xuất; dọn dẹp vật liệu dễ cháy trong bán kính 10m và trang bị bình chữa cháy.", 
+                    laws: "QCVN 03:2011/BLĐTBXH; TCVN 3146:1986",
+                    defaultStatus: "Tuân thủ" 
+                }
             ]
         };
 
@@ -137,6 +267,7 @@
                 const container = document.getElementById(`list_${modKey}`);
                 let html = "";
                 items.forEach((item) => {
+                    let badgeColor = item.defaultStatus === "Tuân thủ" ? "bg-success" : (item.defaultStatus === "Tuân thủ một phần" ? "bg-warning text-dark" : "bg-danger");
                     html += `
                         <div class="card card-criteria p-3" id="item_${item.code}">
                             <div class="d-flex justify-content-between align-items-center">
@@ -144,33 +275,35 @@
                                     <span class="badge badge-code me-1">${item.code}</span>
                                     <strong class="text-dark">${item.title}</strong>
                                 </div>
-                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_${item.code}">
+                                <button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_${item.code.replace(/\./g, '_')}">
                                     <i class="fa-solid fa-chevron-down"></i> Chi tiết
                                 </button>
                             </div>
                             <p class="small text-muted mt-2 mb-1">${item.desc}</p>
+                            <div><span class="badge ${badgeColor} small">${item.defaultStatus}</span></div>
 
                             <!-- PHẦN THU GỌN / MỞ RỘNG CHI TIẾT & HÌNH ẢNH -->
-                            <div class="collapse collapse-content p-2" id="collapse_${item.code}">
+                            <div class="collapse collapse-content p-2" id="collapse_${item.code.replace(/\./g, '_')}">
                                 <div class="alert alert-light border small mb-2 p-2">
-                                    <strong><i class="fa-solid fa-circle-info text-primary me-1"></i>Hướng dẫn kiểm tra & Căn cứ:</strong><br>
+                                    <strong><i class="fa-solid fa-circle-info text-success me-1"></i>Biện pháp kỹ thuật & Hướng dẫn:</strong><br>
                                     ${item.detail}<br>
-                                    <span class="text-primary fst-italic">Pháp lý: ${item.laws}</span>
+                                    <span class="text-success fst-italic">Căn cứ pháp lý: ${item.laws}</span>
                                 </div>
 
                                 <div class="row g-2 mb-2">
                                     <div class="col-6">
-                                        <label class="form-label small fw-bold mb-1">Kết quả:</label>
+                                        <label class="form-label small fw-bold mb-1">Kết quả Audit:</label>
                                         <select class="form-select form-select-sm fw-bold result-select" data-code="${item.code}">
-                                            <option value="Đạt" class="text-success">✔ ĐẠT</option>
-                                            <option value="Không đạt" class="text-danger" selected>✖ KHÔNG ĐẠT</option>
+                                            <option value="Tuân thủ" ${item.defaultStatus === "Tuân thủ" ? "selected" : ""}>✔ TUÂN THỦ</option>
+                                            <option value="Tuân thủ một phần" ${item.defaultStatus === "Tuân thủ một phần" ? "selected" : ""}>⚠ TUÂN THỦ MỘT PHẦN</option>
+                                            <option value="Chưa tuân thủ" ${item.defaultStatus === "Chưa tuân thủ" ? "selected" : ""}>✖ CHƯA TUÂN THỦ</option>
                                             <option value="Không áp dụng">― N/A</option>
                                         </select>
                                     </div>
                                     <div class="col-6">
                                         <label class="form-label small fw-bold mb-1">Mức độ rủi ro:</label>
                                         <select class="form-select form-select-sm risk-select" data-code="${item.code}">
-                                            <option value="Cao (Nghiêm trọng)">CAO</option>
+                                            <option value="Cao (Nghiêm trọng)">CAO / NGHIÊM TRỌNG</option>
                                             <option value="Trung bình" selected>TRUNG BÌNH</option>
                                             <option value="Thấp">THẤP</option>
                                         </select>
@@ -178,39 +311,39 @@
                                 </div>
 
                                 <div class="mb-2">
-                                    <input type="text" class="form-control form-control-sm note-input" data-code="${item.code}" placeholder="Ghi chú hiện trường / Mô tả lỗi...">
+                                    <input type="text" class="form-control form-control-sm note-input" data-code="${item.code}" placeholder="Ghi chú hiện trường / Mô tả lỗi thực tế tại Heineken...">
                                 </div>
                                 <div class="mb-2">
-                                    <input type="text" class="form-control form-control-sm capa-input" data-code="${item.code}" placeholder="Hành động khắc phục (CAPA) & Thời hạn...">
+                                    <input type="text" class="form-control form-control-sm capa-input" data-code="${item.code}" placeholder="Hành động khắc phục (CAPA) & Thời hạn hoàn thành...">
                                 </div>
 
                                 <!-- ẢNH CHỤP HIỆN TRƯỜNG (1-3 ẢNH) -->
                                 <div class="d-flex gap-2 align-items-center mb-3">
                                     <small class="text-muted fw-bold">Ảnh (${item.code}):</small>
                                     <div class="img-preview-box" onclick="triggerFileInput('${item.code}', 1)">
-                                        <i class="fa-solid fa-camera text-secondary" id="icon_${item.code}_1"></i>
-                                        <img id="prev_${item.code}_1" class="d-none">
-                                        <button type="button" class="remove-btn d-none" id="del_${item.code}_1" onclick="removeImage(event, '${item.code}', 1)">×</button>
+                                        <i class="fa-solid fa-camera text-secondary" id="icon_${item.code.replace(/\./g, '_')}_1"></i>
+                                        <img id="prev_${item.code.replace(/\./g, '_')}_1" class="d-none">
+                                        <button type="button" class="remove-btn d-none" id="del_${item.code.replace(/\./g, '_')}_1" onclick="removeImage(event, '${item.code}', 1)">×</button>
                                     </div>
                                     <div class="img-preview-box" onclick="triggerFileInput('${item.code}', 2)">
-                                        <i class="fa-solid fa-camera text-secondary" id="icon_${item.code}_2"></i>
-                                        <img id="prev_${item.code}_2" class="d-none">
-                                        <button type="button" class="remove-btn d-none" id="del_${item.code}_2" onclick="removeImage(event, '${item.code}', 2)">×</button>
+                                        <i class="fa-solid fa-camera text-secondary" id="icon_${item.code.replace(/\./g, '_')}_2"></i>
+                                        <img id="prev_${item.code.replace(/\./g, '_')}_2" class="d-none">
+                                        <button type="button" class="remove-btn d-none" id="del_${item.code.replace(/\./g, '_')}_2" onclick="removeImage(event, '${item.code}', 2)">×</button>
                                     </div>
                                     <div class="img-preview-box" onclick="triggerFileInput('${item.code}', 3)">
-                                        <i class="fa-solid fa-camera text-secondary" id="icon_${item.code}_3"></i>
-                                        <img id="prev_${item.code}_3" class="d-none">
-                                        <button type="button" class="remove-btn d-none" id="del_${item.code}_3" onclick="removeImage(event, '${item.code}', 3)">×</button>
+                                        <i class="fa-solid fa-camera text-secondary" id="icon_${item.code.replace(/\./g, '_')}_3"></i>
+                                        <img id="prev_${item.code.replace(/\./g, '_')}_3" class="d-none">
+                                        <button type="button" class="remove-btn d-none" id="del_${item.code.replace(/\./g, '_')}_3" onclick="removeImage(event, '${item.code}', 3)">×</button>
                                     </div>
-                                    <input type="file" accept="image/*" class="d-none" id="file_${item.code}_1" onchange="previewImage(this, '${item.code}', 1)">
-                                    <input type="file" accept="image/*" class="d-none" id="file_${item.code}_2" onchange="previewImage(this, '${item.code}', 2)">
-                                    <input type="file" accept="image/*" class="d-none" id="file_${item.code}_3" onchange="previewImage(this, '${item.code}', 3)">
+                                    <input type="file" accept="image/*" class="d-none" id="file_${item.code.replace(/\./g, '_')}_1" onchange="previewImage(this, '${item.code}', 1)">
+                                    <input type="file" accept="image/*" class="d-none" id="file_${item.code.replace(/\./g, '_')}_2" onchange="previewImage(this, '${item.code}', 2)">
+                                    <input type="file" accept="image/*" class="d-none" id="file_${item.code.replace(/\./g, '_')}_3" onchange="previewImage(this, '${item.code}', 3)">
                                 </div>
 
                                 <!-- NÚT LƯU RIÊNG CHO TỪNG MỤC -->
                                 <div class="d-grid">
                                     <button class="btn btn-success btn-sm fw-bold" onclick="syncSingleItem('${item.code}', '${item.title.replace(/'/g, "")}')">
-                                        <i class="fa-solid fa-cloud-arrow-up me-1"></i> Lưu & Đồng bộ mục này ngay
+                                        <i class="fa-solid fa-cloud-arrow-up me-1"></i> Lưu & Đồng bộ mục ${item.code} ngay
                                     </button>
                                 </div>
                             </div>
@@ -228,16 +361,18 @@
         }
 
         function triggerFileInput(code, index) {
-            document.getElementById(`file_${code}_${index}`).click();
+            let safeCode = code.replace(/\./g, '_');
+            document.getElementById(`file_${safeCode}_${index}`).click();
         }
 
         function previewImage(input, code, index) {
+            let safeCode = code.replace(/\./g, '_');
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const prev = document.getElementById(`prev_${code}_${index}`);
-                    const icon = document.getElementById(`icon_${code}_${index}`);
-                    const del = document.getElementById(`del_${code}_${index}`);
+                    const prev = document.getElementById(`prev_${safeCode}_${index}`);
+                    const icon = document.getElementById(`icon_${safeCode}_${index}`);
+                    const del = document.getElementById(`del_${safeCode}_${index}`);
                     
                     prev.src = e.target.result;
                     prev.classList.remove('d-none');
@@ -250,10 +385,11 @@
 
         function removeImage(event, code, index) {
             event.stopPropagation();
-            document.getElementById(`file_${code}_${index}`).value = "";
-            const prev = document.getElementById(`prev_${code}_${index}`);
-            const icon = document.getElementById(`icon_${code}_${index}`);
-            const del = document.getElementById(`del_${code}_${index}`);
+            let safeCode = code.replace(/\./g, '_');
+            document.getElementById(`file_${safeCode}_${index}`).value = "";
+            const prev = document.getElementById(`prev_${safeCode}_${index}`);
+            const icon = document.getElementById(`icon_${safeCode}_${index}`);
+            const del = document.getElementById(`del_${safeCode}_${index}`);
             
             prev.src = "";
             prev.classList.add('d-none');
@@ -262,7 +398,8 @@
         }
 
         function getImageData(code, index) {
-            const prev = document.getElementById(`prev_${code}_${index}`);
+            let safeCode = code.replace(/\./g, '_');
+            const prev = document.getElementById(`prev_${safeCode}_${index}`);
             return prev.classList.contains('d-none') ? "" : prev.src;
         }
 
@@ -301,7 +438,7 @@
                 const resJson = await response.json();
                 modal.hide();
                 if (resJson.status === "success") {
-                    alert(`✔ Đã lưu thành công mục [${code}] lên Google Sheet & Drive!`);
+                    alert(`✔ Đã lưu thành công mục [${code}] lên Google Sheet & Drive Heineken!`);
                 } else {
                     alert("Lỗi từ server: " + resJson.message);
                 }
