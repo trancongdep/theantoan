@@ -27,7 +27,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-0 fw-bold"><i class="fa-solid fa-beer-mug-empty me-2"></i>HEINEKEN VIETNAM - HSE AUDIT 2026</h5>
-                    <small class="text-light">Auditor: Trần Công Đẹp | 52</small>
+                    <small class="text-light">Auditor: Trần Công Đẹp | Tổng số: 52 Tiêu chí chuyên sâu</small>
                 </div>
                 <div>
                     <a href="https://docs.google.com/spreadsheets/d/1nKGtjgh_B0-dToYJtak1lZ4YB5seeDLpxLRXfvKp720/edit?pli=1&gid=0#gid=0" target="_blank" class="btn btn-sm btn-light text-success fw-bold">
@@ -39,16 +39,30 @@
     </div>
 
     <div class="container">
-        <!-- MENU DROPDOWN CHỌN CHUYÊN ĐỀ -->
+        <!-- Ô TÌM KIẾM NHANH & MENU CHỌN PHÂN MỤC -->
         <div class="card shadow-sm mb-3 border-0">
             <div class="card-body py-2">
-                <label for="moduleSelect" class="form-label fw-bold text-success mb-1 small"><i class="fa-solid fa-list-ul me-1"></i>CHỌN PHÂN MỤC AUDIT:</label>
-                <select class="form-select form-select-lg border-success fw-bold text-dark" id="moduleSelect" onchange="switchModule(this.value)">
-                    <option value="211">2.1.1. Bảo vệ TB điện & Hành lang trạm điện (14 tiêu chí)</option>
-                    <option value="212">2.1.2. An toàn trong sử dụng & vận hành điện sản xuất (22 tiêu chí)</option>
-                    <option value="213">2.1.3. An toàn trang thiết bị & dụng cụ điện cầm tay (10 tiêu chí)</option>
-                    <option value="214">2.1.4. An toàn thiết bị & thao tác hàn điện (6 tiêu chí)</option>
-                </select>
+                <div class="row g-2">
+                    <!-- Ô SEARCH -->
+                    <div class="col-12">
+                        <label for="searchKeyword" class="form-label fw-bold text-success mb-1 small"><i class="fa-solid fa-magnifying-glass me-1"></i>TÌM NHANH TIÊU CHÍ HOẶC LỖI:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control border-success" id="searchKeyword" placeholder="Nhập từ khóa (vd: trạm điện, tủ điện, tiếp địa, hàn...)" oninput="filterCriteria(this.value)">
+                            <button class="btn btn-outline-success" type="button" onclick="clearSearch()"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <!-- DROPDOWN CHỌN PHÂN MỤC -->
+                    <div class="col-12 mt-2">
+                        <label for="moduleSelect" class="form-label fw-bold text-success mb-1 small"><i class="fa-solid fa-list-ul me-1"></i>HOẶC CHỌN PHÂN MỤC AUDIT:</label>
+                        <select class="form-select form-select-lg border-success fw-bold text-dark" id="moduleSelect" onchange="switchModule(this.value)">
+                            <option value="all">--- Xem tất cả 52 tiêu chí cùng lúc ---</option>
+                            <option value="211">2.1.1. Bảo vệ TB điện & Hành lang trạm điện (14 tiêu chí)</option>
+                            <option value="212">2.1.2. An toàn trong sử dụng & vận hành điện sản xuất (22 tiêu chí)</option>
+                            <option value="213">2.1.3. An toàn trang thiết bị & dụng cụ điện cầm tay (10 tiêu chí)</option>
+                            <option value="214">2.1.4. An toàn thiết bị & thao tác hàn điện (6 tiêu chí)</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -58,15 +72,15 @@
                 <h6 class="text-uppercase fw-bold text-secondary mb-3"><i class="fa-solid fa-shield-halved me-1"></i>2.1.1. Bảo vệ TB điện, công trình điện và hành lang an toàn trạm điện</h6>
                 <div id="list_211"></div>
             </div>
-            <div class="audit-module d-none" id="mod_212">
+            <div class="audit-module" id="mod_212">
                 <h6 class="text-uppercase fw-bold text-secondary mb-3"><i class="fa-solid fa-industry me-1"></i>2.1.2. An toàn trong quản lý và sử dụng điện vận hành sản xuất</h6>
                 <div id="list_212"></div>
             </div>
-            <div class="audit-module d-none" id="mod_213">
+            <div class="audit-module" id="mod_213">
                 <h6 class="text-uppercase fw-bold text-secondary mb-3"><i class="fa-solid fa-toolbox me-1"></i>2.1.3. An toàn trang thiết bị và dụng cụ điện cầm tay</h6>
                 <div id="list_213"></div>
             </div>
-            <div class="audit-module d-none" id="mod_214">
+            <div class="audit-module" id="mod_214">
                 <h6 class="text-uppercase fw-bold text-secondary mb-3"><i class="fa-solid fa-fire-flame-curved me-1"></i>2.1.4. An toàn thiết bị và thao tác hàn điện (công việc phát sinh nhiệt)</h6>
                 <div id="list_214"></div>
             </div>
@@ -92,7 +106,7 @@
                 { code: "HK-2.1.1.01", title: "Khoảng cách an toàn hành lang bảo vệ trạm biến áp và đường dây dẫn điện", desc: "Nghiêm cấm xây dựng nhà ở, công trình hoặc trồng cây xâm phạm hành lang bảo vệ an toàn trạm điện.", detail: "Biện pháp: Phát quang cây xanh định kỳ, đảm bảo khoảng cách an toàn tối thiểu theo cấp điện áp. Không tập kết vật tư cản trở lối tiếp cận trạm.", laws: "Luật Điện lực 61/2024/QH15; NĐ 62/2025/NĐ-CP (Điều 9.8)" },
                 { code: "HK-2.1.1.02", title: "Điều kiện chiếu sáng sự cố và chiếu sáng làm việc tại phòng trạm điện", desc: "Phòng đặt thiết bị điện phải đảm bảo tiêu chuẩn độ rọi chiếu sáng làm việc và chiếu sáng sự cố khi mất nguồn.", detail: "Biện pháp: Kiểm tra đo đạc độ rọi định kỳ (≥200 lux phòng tủ điện); duy trì hoạt động hệ thống đèn chiếu sáng sự cố backup.", laws: "QCVN 22:2016/BYT; Luật Điện lực 61/2024/QH15" },
                 { code: "HK-2.1.1.03", title: "Hệ thống lưới chắn ngăn ngừa động vật, côn trùng xâm nhập phòng điện", desc: "Các ô thông gió, cửa sổ, khe hở phòng điện phải được che chắn bằng lưới thép chống chuột bọ, côn trùng.", detail: "Biện pháp: Lắp đặt lưới mắt cáo inox lỗ nhỏ tại toàn bộ cửa thông gió; bịt kín các khe hở chân cửa.", laws: "NĐ 62/2025/NĐ-CP; Tiêu chuẩn kỹ thuật nhà máy Heineken" },
-                { code: "HK-2.1.1.04", title: "Tình trạng kỹ thuật mương cáp, hầm cáp ngầm nội bộ nhà máy", desc: "Hào và mương cáp ngầm phải sạch sẽ, khô ráo, không bị ngập nước thải hóa chất CIP hay rác thải.", detail: "Biện pháp: Kiểm tra nắp đan mương cáp nguyên vẹn, không bị sụt lún; khơi thông hệ thống thoát nước mương cáp định kỳ.", laws: "QCVN 25:2025/BCT; QCVN 26:2025/BCT" },
+                { code: "HK-2.1.1.04", title: "Tình trạng kỹ thuật mương cáp, hầm cáp ngầm nội bộ nhà máy", desc: "Hào và mương cáp ngầm phải sạch sẽ, khô ráo, không bị ngập nước thải hóa chất CIP hay rác thải.", detail: "Biện pháp: Kiểm tra nắp đان mương cáp nguyên vẹn, không bị sụt lún; khơi thông hệ thống thoát nước mương cáp định kỳ.", laws: "QCVN 25:2025/BCT; QCVN 26:2025/BCT" },
                 { code: "HK-2.1.1.05", title: "Mốc báo cáp ngầm và biển cảnh báo tuyến cáp điện ngầm", desc: "Tuyến cáp điện ngầm đi ngầm dưới đất phải có cọc mốc định vị và biển báo cảnh báo rõ ràng trên mặt đất.", detail: "Biện pháp: Cắm mốc định vị cáp ngầm khoảng cách ≤30m/mốc; sơn kẻ biển báo vị trí cáp đi qua.", laws: "QCVN 25:2025/BCT; 11 TCN 19-2006" },
                 { code: "HK-2.1.1.06", title: "Hệ thống nối đất an toàn và nối đất làm việc của trạm biến áp", desc: "Hệ thống nối đất vỏ thiết bị, nối đất lặp lại trung tính MBA phải đạt trị số điện trở kỹ thuật chuẩn.", detail: "Biện pháp: Đo kiểm tra điện trở nối đất định kỳ hàng năm đảm bảo Rđ ≤ 4 Ohm; kiểm tra bu-lông siết cáp tiếp địa.", laws: "QCVN 26:2025/BCT; TCVN 4756:1989" },
                 { code: "HK-2.1.1.07", title: "Hệ thống tiếp địa chống sét van và kim thu sét công trình trạm điện", desc: "Hệ thống chống sét trực tiếp (kim thu sét) và chống sét van bảo vệ MBA phải được kiểm định tiếp địa.", detail: "Biện pháp: Đo điện trở tiếp địa hệ thống chống sét trực tiếp ≤10 Ohm; kiểm tra hộp kiểm tra điện trở tiếp địa (Test box).", laws: "TCVN 9385:2012; QCVN 26:2025/BCT" },
@@ -163,7 +177,7 @@
                 items.forEach((item) => {
                     let safeCode = item.code.replace(/\./g, '_');
                     html += `
-                        <div class="card card-criteria p-3" id="item_${safeCode}">
+                        <div class="card card-criteria p-3 audit-item-card" id="item_${safeCode}" data-search="${(item.code + ' ' + item.title + ' ' + item.desc + ' ' + item.detail).toLowerCase()}">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <span class="badge badge-code me-1">${item.code}</span>
@@ -247,6 +261,33 @@
                 });
                 container.innerHTML = html;
             }
+        }
+
+        // HÀM TÌM KIẾM NHANH THEO TỪ KHÓA
+        function filterCriteria(keyword) {
+            let kw = keyword.toLowerCase().trim();
+            let cards = document.querySelectorAll('.audit-item-card');
+            
+            if (kw.length > 0) {
+                // Khi đang tìm kiếm, tự động hiện tất cả các phân mục để quét từ khóa
+                document.querySelectorAll('.audit-module').forEach(el => el.classList.remove('d-none'));
+                document.getElementById('moduleSelect').value = "all";
+            }
+
+            cards.forEach(card => {
+                let textData = card.getAttribute('data-search');
+                if (textData.includes(kw)) {
+                    card.classList.remove('d-none');
+                } else {
+                    card.classList.add('d-none');
+                }
+            });
+        }
+
+        function clearSearch() {
+            document.getElementById('searchKeyword').value = "";
+            filterCriteria("");
+            switchModule(document.getElementById('moduleSelect').value);
         }
 
         // ĐỒNG BỘ 2 CHIỀU: ĐỌC DỮ LIỆU TỪ GOOGLE SHEET ĐỔ VỀ KHI VỪA MỞ TRANG
@@ -342,8 +383,16 @@
         }
 
         function switchModule(val) {
+            // Nếu đang có từ khóa tìm kiếm thì xóa trắng ô tìm kiếm khi chọn lại phân mục
+            document.getElementById('searchKeyword').value = "";
+            
             document.querySelectorAll('.audit-module').forEach(el => el.classList.add('d-none'));
-            document.getElementById(`mod_${val}`).classList.remove('d-none');
+            
+            if (val === "all") {
+                document.querySelectorAll('.audit-module').forEach(el => el.classList.remove('d-none'));
+            } else {
+                document.getElementById(`mod_${val}`).classList.remove('d-none');
+            }
             
             document.querySelectorAll('.collapse-content.show').forEach(el => {
                 let bsCollapse = bootstrap.Collapse.getInstance(el);
@@ -408,7 +457,6 @@
             const note = document.querySelector(`.note-input[data-code="${code}"]`).value;
             const capa = document.querySelector(`.capa-input[data-code="${code}"]`).value;
             
-            // Lấy ảnh mới chọn hoặc giữ nguyên ảnh cũ nếu đã có sẵn URL trên preview
             let img1 = getImageData(code, 1);
             let img2 = getImageData(code, 2);
             let img3 = getImageData(code, 3);
