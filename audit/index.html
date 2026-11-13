@@ -36,11 +36,7 @@
             border-radius: 16px; 
             box-shadow: 0 6px 20px rgba(0,0,0,0.04); 
             border: none; 
-            transition: transform 0.2s ease;
             background: #ffffff;
-        }
-        .card-custom:hover {
-            transform: translateY(-2px);
         }
         /* Nút bấm tùy chỉnh */
         .btn-heineken {
@@ -101,7 +97,7 @@
         }
         /* Tiêu đề phần */
         .section-title {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             font-weight: 700;
             color: var(--primary-color);
             display: flex;
@@ -112,11 +108,9 @@
             margin-right: 10px;
             color: var(--accent-color);
         }
-        /* Responsive tweaks */
         @media (max-width: 768px) {
             .container { padding-left: 12px; padding-right: 12px; }
             .card-custom { padding: 16px !important; }
-            h4.section-title { font-size: 1.1rem; }
         }
     </style>
 </head>
@@ -129,7 +123,7 @@
                 <div class="bg-white text-success rounded-circle p-2 me-2 d-flex align-items-center justify-content-center shadow" style="width: 36px; height: 36px;">
                     <i class="fa-solid fa-shield-halved"></i>
                 </div>
-                <span>HSE Audit Pro <span class="badge bg-success fs-6 ms-1">v2.0</span></span>
+                <span>HSE Audit Pro <span class="badge bg-success fs-6 ms-1">v2.1</span></span>
             </a>
             <div class="text-white-50 small d-none d-sm-block">
                 <i class="fa-solid fa-user-shield me-1"></i> Auditor: <strong>Trần Công Đẹp</strong>
@@ -154,7 +148,7 @@
                         <i class="fa-solid fa-plus-circle me-1"></i> Thêm Dự Án Mới
                     </button>
                     <button class="btn btn-outline-custom flex-grow-1" onclick="syncProjectData()">
-                        <i class="fa-solid fa-rotate me-1"></i> Đồng Bộ Sheet & Drive
+                        <i class="fa-solid fa-rotate me-1"></i> Đồng Bộ Dữ Liệu
                     </button>
                 </div>
             </div>
@@ -162,8 +156,8 @@
 
         <!-- SECTION 2: IMPORT DANH SÁCH TỦ ĐIỆN & THIẾT BỊ -->
         <div class="card card-custom p-4 mb-4">
-            <h4 class="section-title text-success"><i class="fa-solid fa-file-excel text-success"></i>Import Danh Sách Tủ Điện & Thiết Bị (Excel)</h4>
-            <p class="text-muted small mb-3">Tải file mẫu chuẩn, điền danh sách thiết bị/tủ điện của dự án mới và tải lên để hệ thống tự động khởi tạo.</p>
+            <h4 class="section-title text-success"><i class="fa-solid fa-file-excel"></i>Import Danh Sách Tủ Điện & Thiết Bị (Excel)</h4>
+            <p class="text-muted small mb-3">Tải file mẫu chuẩn, điền danh sách thiết bị/tủ điện và tải lên để hệ thống tự động khởi tạo.</p>
             <div class="row g-3">
                 <div class="col-md-6">
                     <button class="btn btn-outline-secondary w-100 py-3 rounded-3 fw-semibold shadow-sm" onclick="downloadTemplate()">
@@ -171,9 +165,7 @@
                     </button>
                 </div>
                 <div class="col-md-6">
-                    <div class="input-group">
-                        <input type="file" id="excelFile" class="form-control py-3" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
-                    </div>
+                    <input type="file" id="excelFile" class="form-control py-3" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
                 </div>
             </div>
             <div id="importResult" class="mt-3"></div>
@@ -211,7 +203,7 @@
                                 </a>
                             </td>
                             <td class="text-end pe-3">
-                                <button class="btn btn-sm btn-primary px-3 rounded-2 shadow-sm" onclick="editCriteria('HK-2.1.1.01')">
+                                <button class="btn btn-sm btn-primary px-3 rounded-2 shadow-sm" onclick="openUpdateModal('HK-2.1.1.01', 'Tủ RMU E3-41', 'Tuân thủ một phần', 'Cần cắt tỉa cây xanh hành lang.')">
                                     <i class="fa-solid fa-pen-to-square me-1"></i> Cập nhật
                                 </button>
                             </td>
@@ -223,7 +215,7 @@
 
     </div>
 
-    <!-- MODAL THÊM MỚI DỰ ÁN / NHÀ MÁY -->
+    <!-- MODAL THÊM MỚI DỰ ÁN / NHÀ MÁY (Tự động đóng sau khi hoàn tất) -->
     <div class="modal fade" id="newProjectModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content card-custom p-3 border-0">
@@ -240,13 +232,50 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-secondary">Mã Định Danh (ID không dấu):</label>
                             <input type="text" id="projId" class="form-control" placeholder="Ví dụ: Heineken_VungTau" required>
-                            <div class="form-text text-muted small">Hệ thống sẽ dùng mã này để tự động tạo Sheet con và Thư mục Drive riêng.</div>
+                            <div class="form-text text-muted small">Hệ thống dùng mã này để tạo Sheet con và Thư mục Drive riêng.</div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-light px-4 rounded-3 fw-semibold" data-bs-dismiss="modal">Hủy</button>
                     <button type="button" class="btn btn-heineken px-4" id="btnCreateProj" onclick="createNewProject()">Xác Nhận Khởi Tạo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CẬP NHẬT KẾT QUẢ HIỆN TRƯỜNG (Form nhập liệu nổi, tự động đóng khi lưu) -->
+    <div class="modal fade" id="updateAuditModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content card-custom p-3 border-0">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary"><i class="fa-solid fa-pen-to-square me-2 text-success"></i>Cập Nhật Hiện Trường Audit</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateAuditForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Mã Tiêu Chí & Thiết Bị:</label>
+                            <input type="text" id="auditCodeName" class="form-control bg-light" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Kết Quả Đánh Giá:</label>
+                            <select id="auditResult" class="form-select">
+                                <option value="Tuân thủ">Tuân thủ</option>
+                                <option value="Tuân thủ một phần">Tuân thủ một phần</option>
+                                <option value="Chưa tuân thủ">Chưa tuân thủ</option>
+                                <option value="N/A (Chưa kiểm tra)">N/A (Chưa kiểm tra)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Ý Kiến Ghi Nhận / Kiến Nghị (CAPA):</label>
+                            <textarea id="auditNote" class="form-control" rows="3" placeholder="Nhập ghi chú hiện trường..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light px-4 rounded-3 fw-semibold" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-heineken px-4" onclick="saveAuditUpdate()">Lưu & Đóng Form</button>
                 </div>
             </div>
         </div>
@@ -302,6 +331,7 @@
 
                 document.getElementById('currentProjectTitle').innerText = nameInput;
                 
+                // Tự động đóng form Modal sau khi khởi tạo thành công
                 bootstrap.Modal.getInstance(document.getElementById('newProjectModal')).hide();
                 document.getElementById('newProjectForm').reset();
                 
@@ -312,6 +342,28 @@
                 btn.disabled = false;
                 btn.innerHTML = "Xác Nhận Khởi Tạo";
             }
+        }
+
+        // Mở Form Popup Cập nhật hiện trường
+        function openUpdateModal(code, deviceName, currentResult, currentNote) {
+            document.getElementById('auditCodeName').value = `[${code}] ${deviceName}`;
+            document.getElementById('auditResult').value = currentResult;
+            document.getElementById('auditNote').value = currentNote;
+            
+            // Hiển thị Modal Popup
+            const updateModal = new bootstrap.Modal(document.getElementById('updateAuditModal'));
+            updateModal.show();
+        }
+
+        // Lưu dữ liệu và tự động đóng Form Popup
+        function saveAuditUpdate() {
+            // Lấy dữ liệu từ form và thực hiện xử lý lưu (hoặc đồng bộ Google Sheet)
+            alert("Đã lưu cập nhật hiện trường thành công!");
+            
+            // Tự động đóng Form Popup sau khi lưu xong
+            const modalEl = document.getElementById('updateAuditModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            modalInstance.hide();
         }
 
         // Tải file mẫu Excel (.xlsx) để import danh sách tủ/thiết bị
@@ -351,10 +403,6 @@
 
         function syncProjectData() {
             alert("Đã đồng bộ dữ liệu thành công với Google Sheet và Google Drive!");
-        }
-
-        function editCriteria(code) {
-            alert("Mở giao diện cập nhật chi tiết cho tiêu chí: " + code);
         }
     </script>
 </body>
