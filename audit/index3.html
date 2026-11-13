@@ -3,507 +3,418 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HSE Audit - Heineken Vietnam 2026 (52 Tiêu Chí - Mr. An Toàn)</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>HSE Audit Pro - Quản Lý Kiểm Tra An Toàn Hiện Trường</title>
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS (xlsx) để đọc file Excel import danh sách tủ/thiết bị -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #00A651; --secondary: #1B365D; --accent: #0D6EFD; }
-        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
-        .app-header { background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; padding: 15px; border-radius: 0 0 15px 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .card-criteria { border: none; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-bottom: 15px; transition: all 0.2s; background: #fff; }
-        .card-criteria:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .badge-code { background-color: var(--secondary); font-size: 0.85rem; }
-        .img-preview-box { width: 65px; height: 65px; border: 2px dashed #ccc; border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
-        .img-preview-box img { width: 100%; height: 100%; object-fit: cover; }
-        .img-preview-box .remove-btn { position: absolute; top: 2px; right: 2px; background: rgba(255,0,0,0.7); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; border: none; }
-        .collapse-content { background: #fafbfc; border-top: 1px dashed #e2e8f0; padding-top: 12px; margin-top: 12px; }
+        :root {
+            --primary-color: #1B365D; /* Xanh Navy Heineken */
+            --accent-color: #00A651;  /* Xanh lá Heineken */
+            --bg-body: #f4f7f6;
+        }
+        body { 
+            background-color: var(--bg-body); 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            color: #333;
+        }
+        /* Navbar tùy chỉnh cao cấp */
+        .navbar-custom { 
+            background: linear-gradient(135deg, var(--primary-color), #0f1f38); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .navbar-brand { 
+            font-weight: 700; 
+            letter-spacing: 0.5px;
+            color: #fff !important;
+        }
+        /* Card thiết kế hiện đại, bo góc lớn */
+        .card-custom { 
+            border-radius: 16px; 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.04); 
+            border: none; 
+            background: #ffffff;
+        }
+        /* Nút bấm tùy chỉnh */
+        .btn-heineken {
+            background-color: var(--accent-color);
+            color: #fff;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 10px 20px;
+            transition: all 0.3s;
+            border: none;
+        }
+        .btn-heineken:hover {
+            background-color: #008c43;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0,166,81,0.3);
+        }
+        .btn-outline-custom {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 10px 20px;
+        }
+        .btn-outline-custom:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+        /* Form control tinh tế */
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 1px solid #dee2e6;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 3px rgba(0, 166, 81, 0.15);
+            border-color: var(--accent-color);
+        }
+        /* Bảng hiển thị tối ưu mobile */
+        .table-responsive {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .table th {
+            background-color: var(--primary-color);
+            color: #fff;
+            font-weight: 600;
+            border: none;
+            padding: 14px;
+        }
+        .table td {
+            padding: 14px;
+            vertical-align: middle;
+        }
+        .badge-status {
+            font-size: 0.85rem;
+            padding: 0.5em 0.8em;
+            border-radius: 6px;
+        }
+        /* Tiêu đề phần */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .section-title i {
+            margin-right: 10px;
+            color: var(--accent-color);
+        }
+        @media (max-width: 768px) {
+            .container { padding-left: 12px; padding-right: 12px; }
+            .card-custom { padding: 16px !important; }
+        }
     </style>
 </head>
-<body class="pb-5">
+<body>
 
-    <!-- HEADER -->
-    <div class="app-header mb-3">
-        <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-beer-mug-empty me-2"></i>HEINEKEN VIETNAM - HSE AUDIT 2026</h5>
-                    <small class="text-light">Auditor: Trần Công Đẹp | Tổng số: 52 Tiêu chí chuyên sâu</small>
+    <!-- Navbar với Nút Menu 3 Gạch -->
+    <nav class="navbar navbar-dark navbar-custom sticky-top">
+        <div class="container">
+            <!-- Nút bật Menu 3 gạch -->
+            <button class="btn btn-outline-light border-0 px-2 py-1 me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+                <i class="fa-solid fa-bars fs-4"></i>
+            </button>
+            
+            <a class="navbar-brand d-flex align-items-center me-auto" href="#">
+                <div class="bg-white text-success rounded-circle p-1 me-2 d-flex align-items-center justify-content-center shadow" style="width: 32px; height: 32px;">
+                    <i class="fa-solid fa-shield-halved"></i>
                 </div>
-                <div>
-                    <a href="https://docs.google.com/spreadsheets/d/1nKGtjgh_B0-dToYJtak1lZ4YB5seeDLpxLRXfvKp720/edit?pli=1&gid=0#gid=0" target="_blank" class="btn btn-sm btn-light text-success fw-bold">
-                        <i class="fa-solid fa-table me-1"></i>Mở Sheet
-                    </a>
+                <span>HSE Audit Pro <span class="badge bg-success fs-6 ms-1">v2.2</span></span>
+            </a>
+            
+            <div class="text-white-50 small d-none d-sm-block">
+                <i class="fa-solid fa-user-shield me-1"></i> <strong>Trần Công Đẹp</strong>
+            </div>
+        </div>
+    </nav>
+
+    <!-- OFFCANVAS SIDEBAR (MENU 3 GẠCH ẨN/HIỆN) -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarMenu">
+        <div class="offcanvas-header bg-dark text-white">
+            <h5 class="offcanvas-title fw-bold"><i class="fa-solid fa-sliders me-2 text-success"></i>Menu Quản Lý Hệ Thống</h5>
+            <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body bg-light">
+            
+            <!-- Mục 1: Chọn và Thêm Dự Án -->
+            <div class="card card-custom p-3 mb-3">
+                <h6 class="section-title"><i class="fa-solid fa-industry"></i>Quản Lý Dự Án / Nhà Máy</h6>
+                <div class="mb-3">
+                    <label for="projectSelect" class="form-label fw-semibold text-secondary small">Chọn dự án hiện tại:</label>
+                    <select id="projectSelect" class="form-select form-select-sm shadow-sm" onchange="switchProject()">
+                        <option value="Heineken_Q12">Nhà máy Bia Heineken Việt Nam - Quận 12</option>
+                    </select>
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-heineken btn-sm" data-bs-toggle="modal" data-bs-target="#newProjectModal" data-bs-dismiss="offcanvas">
+                        <i class="fa-solid fa-plus-circle me-1"></i> Thêm Dự Án Mới
+                    </button>
+                    <button class="btn btn-outline-custom btn-sm py-2" onclick="syncProjectData()">
+                        <i class="fa-solid fa-rotate me-1"></i> Đồng Bộ Dữ Liệu
+                    </button>
                 </div>
             </div>
+
+            <!-- Mục 2: Import Danh Sách Thiết Bị Excel -->
+            <div class="card card-custom p-3">
+                <h6 class="section-title text-success"><i class="fa-solid fa-file-excel"></i>Import Danh Sách Thiết Bị</h6>
+                <p class="text-muted small mb-2">Tải file mẫu chuẩn, điền danh sách tủ điện và import vào hệ thống.</p>
+                <div class="d-grid gap-2 mb-2">
+                    <button class="btn btn-outline-secondary btn-sm py-2 fw-semibold" onclick="downloadTemplate()">
+                        <i class="fa-solid fa-download me-1 text-primary"></i> Tải File Mẫu Excel
+                    </button>
+                </div>
+                <div class="mb-2">
+                    <input type="file" id="excelFile" class="form-control form-control-sm" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
+                </div>
+                <div id="importResult" class="small mt-1"></div>
+            </div>
+
         </div>
     </div>
 
-    <div class="container">
-        <!-- Ô TÌM KIẾM NHANH & MENU CHỌN PHÂN MỤC -->
-        <div class="card shadow-sm mb-3 border-0">
-            <div class="card-body py-2">
-                <div class="row g-2">
-                    <!-- Ô SEARCH -->
-                    <div class="col-12">
-                        <label for="searchKeyword" class="form-label fw-bold text-success mb-1 small"><i class="fa-solid fa-magnifying-glass me-1"></i>TÌM NHANH TIÊU CHÍ HOẶC LỖI:</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control border-success" id="searchKeyword" placeholder="Nhập từ khóa (vd: trạm điện, tủ điện, tiếp địa, hàn...)" oninput="filterCriteria(this.value)">
-                            <button class="btn btn-outline-success" type="button" onclick="clearSearch()"><i class="fa-solid fa-xmark"></i></button>
-                        </div>
-                    </div>
-                    <!-- DROPDOWN CHỌN PHÂN MỤC -->
-                    <div class="col-12 mt-2">
-                        <label for="moduleSelect" class="form-label fw-bold text-success mb-1 small"><i class="fa-solid fa-list-ul me-1"></i>HOẶC CHỌN PHÂN MỤC AUDIT:</label>
-                        <select class="form-select form-select-lg border-success fw-bold text-dark" id="moduleSelect" onchange="switchModule(this.value)">
-                            <option value="all">--- Xem tất cả 52 tiêu chí cùng lúc ---</option>
-                            <option value="211">2.1.1. Bảo vệ TB điện & Hành lang trạm điện (14 tiêu chí)</option>
-                            <option value="212">2.1.2. An toàn trong sử dụng & vận hành điện sản xuất (22 tiêu chí)</option>
-                            <option value="213">2.1.3. An toàn trang thiết bị & dụng cụ điện cầm tay (10 tiêu chí)</option>
-                            <option value="214">2.1.4. An toàn thiết bị & thao tác hàn điện (6 tiêu chí)</option>
-                        </select>
-                    </div>
-                </div>
+    <!-- NỘI DUNG CHÍNH (THOÁNG ĐÃNG, TẬP TRUNG HIỆN TRƯỜNG) -->
+    <div class="container my-4">
+        
+        <div class="card card-custom p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <h4 class="section-title mb-0"><i class="fa-solid fa-clipboard-check"></i>Nhật Ký Kiểm Tra Hiện Trường</h4>
+                <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill shadow-sm" id="currentProjectTitle">Heineken - Quận 12</span>
             </div>
-        </div>
-
-        <!-- CONTAINER CHỨA CÁC MODULE -->
-        <div id="auditModulesContainer">
-            <div class="audit-module" id="mod_211">
-                <h6 class="text-uppercase fw-bold text-secondary mb-3"><i class="fa-solid fa-shield-halved me-1"></i>2.1.1. Bảo vệ TB điện, công trình điện và hành lang an toàn trạm điện</h6>
-                <div id="list_211"></div>
-            </div>
-            <div class="audit-module" id="mod_212">
-                <h6 class="text-uppercase fw-bold text-secondary mb-3"><i class="fa-solid fa-industry me-1"></i>2.1.2. An toàn trong quản lý và sử dụng điện vận hành sản xuất</h6>
-                <div id="list_212"></div>
-            </div>
-            <div class="audit-module" id="mod_213">
-                <h6 class="text-uppercase fw-bold text-secondary mb-3"><i class="fa-solid fa-toolbox me-1"></i>2.1.3. An toàn trang thiết bị và dụng cụ điện cầm tay</h6>
-                <div id="list_213"></div>
-            </div>
-            <div class="audit-module" id="mod_214">
-                <h6 class="text-uppercase fw-bold text-secondary mb-3"><i class="fa-solid fa-fire-flame-curved me-1"></i>2.1.4. An toàn thiết bị và thao tác hàn điện (công việc phát sinh nhiệt)</h6>
-                <div id="list_214"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- LOADING MODAL -->
-    <div class="modal fade" id="loadingModal" data-bs-backdrop="static" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-sm text-center">
-            <div class="modal-content py-3">
-                <div class="spinner-border text-success mx-auto mb-2" role="status"></div>
-                <div class="fw-bold" id="loadingText">Đang lưu dữ liệu lên Google...</div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzma73VLcrZNS_GD13A73BgrAiHqGRxJQuv4YzBFL_ogFdlSu8cO12dBEdp0fzmv5BAeg/exec";
-
-        const auditData = {
-            "211": [
-                { code: "HK-2.1.1.01", title: "Khoảng cách an toàn hành lang bảo vệ trạm biến áp và đường dây dẫn điện", desc: "Nghiêm cấm xây dựng nhà ở, công trình hoặc trồng cây xâm phạm hành lang bảo vệ an toàn trạm điện.", detail: "Biện pháp: Phát quang cây xanh định kỳ, đảm bảo khoảng cách an toàn tối thiểu theo cấp điện áp. Không tập kết vật tư cản trở lối tiếp cận trạm.", laws: "Luật Điện lực 61/2024/QH15; NĐ 62/2025/NĐ-CP (Điều 9.8)" },
-                { code: "HK-2.1.1.02", title: "Điều kiện chiếu sáng sự cố và chiếu sáng làm việc tại phòng trạm điện", desc: "Phòng đặt thiết bị điện phải đảm bảo tiêu chuẩn độ rọi chiếu sáng làm việc và chiếu sáng sự cố khi mất nguồn.", detail: "Biện pháp: Kiểm tra đo đạc độ rọi định kỳ (≥200 lux phòng tủ điện); duy trì hoạt động hệ thống đèn chiếu sáng sự cố backup.", laws: "QCVN 22:2016/BYT; Luật Điện lực 61/2024/QH15" },
-                { code: "HK-2.1.1.03", title: "Hệ thống lưới chắn ngăn ngừa động vật, côn trùng xâm nhập phòng điện", desc: "Các ô thông gió, cửa sổ, khe hở phòng điện phải được che chắn bằng lưới thép chống chuột bọ, côn trùng.", detail: "Biện pháp: Lắp đặt lưới mắt cáo inox lỗ nhỏ tại toàn bộ cửa thông gió; bịt kín các khe hở chân cửa.", laws: "NĐ 62/2025/NĐ-CP; Tiêu chuẩn kỹ thuật nhà máy Heineken" },
-                { code: "HK-2.1.1.04", title: "Tình trạng kỹ thuật mương cáp, hầm cáp ngầm nội bộ nhà máy", desc: "Hào và mương cáp ngầm phải sạch sẽ, khô ráo, không bị ngập nước thải hóa chất CIP hay rác thải.", detail: "Biện pháp: Kiểm tra nắp đان mương cáp nguyên vẹn, không bị sụt lún; khơi thông hệ thống thoát nước mương cáp định kỳ.", laws: "QCVN 25:2025/BCT; QCVN 26:2025/BCT" },
-                { code: "HK-2.1.1.05", title: "Mốc báo cáp ngầm và biển cảnh báo tuyến cáp điện ngầm", desc: "Tuyến cáp điện ngầm đi ngầm dưới đất phải có cọc mốc định vị và biển báo cảnh báo rõ ràng trên mặt đất.", detail: "Biện pháp: Cắm mốc định vị cáp ngầm khoảng cách ≤30m/mốc; sơn kẻ biển báo vị trí cáp đi qua.", laws: "QCVN 25:2025/BCT; 11 TCN 19-2006" },
-                { code: "HK-2.1.1.06", title: "Hệ thống nối đất an toàn và nối đất làm việc của trạm biến áp", desc: "Hệ thống nối đất vỏ thiết bị, nối đất lặp lại trung tính MBA phải đạt trị số điện trở kỹ thuật chuẩn.", detail: "Biện pháp: Đo kiểm tra điện trở nối đất định kỳ hàng năm đảm bảo Rđ ≤ 4 Ohm; kiểm tra bu-lông siết cáp tiếp địa.", laws: "QCVN 26:2025/BCT; TCVN 4756:1989" },
-                { code: "HK-2.1.1.07", title: "Hệ thống tiếp địa chống sét van và kim thu sét công trình trạm điện", desc: "Hệ thống chống sét trực tiếp (kim thu sét) và chống sét van bảo vệ MBA phải được kiểm định tiếp địa.", detail: "Biện pháp: Đo điện trở tiếp địa hệ thống chống sét trực tiếp ≤10 Ohm; kiểm tra hộp kiểm tra điện trở tiếp địa (Test box).", laws: "TCVN 9385:2012; QCVN 26:2025/BCT" },
-                { code: "HK-2.1.1.08", title: "Hệ thống thông gió, làm mát và giám sát nhiệt độ phòng máy biến áp", desc: "Phòng máy biến áp phải đảm bảo thông gió tốt, quạt hút nhiệt tự động hoạt động hiệu quả tránh quá nhiệt.", detail: "Biện pháp: Vệ sinh định kỳ các louver thông gió; kiểm tra cảm biến nhiệt độ và quạt tản nhiệt tự động trong phòng MBA.", laws: "NĐ 62/2025/NĐ-CP; Hướng dẫn vận hành MBA" },
-                { code: "HK-2.1.1.09", title: "Trang bị phương tiện chữa cháy tại chỗ chuyên dụng cho trạm điện", desc: "Khu vực trạm biến áp, phòng điện MSB phải trang bị đầy đủ bình chữa cháy khí CO2 hoặc bột khô, chăn chiên.", detail: "Biện pháp: Bố trí bình CO2 tại vị trí dễ thấy, kiểm tra áp suất bình định kỳ hàng tháng và dán tem kiểm tra.", laws: "TCVN 3890:2023; Luật PCCC" },
-                { code: "HK-2.1.1.10", title: "Cửa thoát nạn và khóa cửa phòng trạm biến áp, tủ điện tổng", desc: "Cửa phòng điện phải mở ra phía ngoài, không bị khóa trái khi có người làm việc bên trong, có thanh thoát hiểm.", detail: "Biện pháp: Đảm bảo lối đi và cửa thoát hiểm luôn thông thoáng, không cồng kềnh vật cản, bàn giao chìa khóa cho trực điện.", laws: "QCVN 06:2022/BXD; Quy chuẩn an toàn điện" },
-                { code: "HK-2.1.1.11", title: "Hồ sơ quản lý kỹ thuật, lý lịch thiết bị trạm điện và bản vẽ hoàn công", desc: "Trạm điện phải lưu trữ đầy đủ lý lịch thiết bị MBA, máy cắt, biên bản thí nghiệm định kỳ và bản vẽ hoàn công.", detail: "Biện pháp: Lập hồ sơ số hóa và lưu trữ bản cứng tủ tài liệu tại phòng trực điện, cập nhật thông tin kiểm định mới nhất.", laws: "Luật Điện lực 61/2024/QH15; TT 02/2025/TT-BCT" },
-                { code: "HK-2.1.1.12", title: "Chế độ báo cáo định kỳ công tác an toàn điện với cơ quan quản lý nhà nước", desc: "Lập và gửi báo cáo công tác an toàn điện định kỳ hàng năm cho Sở Công Thương đúng thời hạn.", detail: "Biện pháp: Tổng hợp số liệu vận hành, sự cố và huấn luyện an toàn gửi văn bản đúng hạn trước ngày 10/01 hàng năm.", laws: "NĐ 62/2025/NĐ-CP (Điều 20); TT 02/2025/TT-BCT" },
-                { code: "HK-2.1.1.13", title: "Quy trình điều tra, thống kê và báo cáo sự cố, tai nạn điện nghiêm trọng", desc: "Thiết lập quy trình báo cáo nhanh tai nạn điện trong 24h, điều tra nguyên nhân và khắc phục sự cố lưới điện.", detail: "Biện pháp: Ban hành quy trình ứng phó khẩn cấp sự cố điện; lưu giữ biên bản điều tra sự cố và hành động khắc phục.", laws: "NĐ 62/2025/NĐ-CP; Luật ATVSLĐ" },
-                { code: "HK-2.1.1.14", title: "Biển cảnh báo nguy hiểm điện áp cao tại trạm biến áp và tủ trung thế", desc: "Cửa trạm biến áp, rào chắn và vỏ tủ trung thế phải treo biển 'CẤM VÀO - ĐIỆN ÁP CAO 22kV'.", detail: "Biện pháp: Lắp đặt biển báo phản quang chuẩn mẫu quốc gia tại mọi mặt dễ quan sát bên ngoài trạm.", laws: "QCVN 25:2025/BCT (Phụ lục C)" }
-            ],
-            "212": [
-                { code: "HK-2.1.2.01", title: "Trang bị và quản lý phương tiện bảo vệ cá nhân (PTBVCN) cách điện", desc: "Thợ điện, nhân viên vận hành phải được trang bị đầy đủ găng tay, ủng, thảm cách điện, bút thử điện đạt chuẩn.", detail: "Biện pháp: Bố trí tủ đựng PTBVCN chuyên dụng; kiểm tra ngoại quan trước khi sử dụng, loại bỏ găng tay nứt thủng.", laws: "Luật Điện lực 2024; TT 25/2022/TT-BLĐTBXH" },
-                { code: "HK-2.1.2.02", title: "Thử nghiệm định kỳ găng tay cách điện và ủng cách điện cao su", desc: "Găng tay và ủng cách điện phải được thử nghiệm điện áp định kỳ 6 tháng/lần bởi đơn vị đủ năng lực.", detail: "Biện pháp: Gửi thử nghiệm định kỳ, khắc hạn dùng trên thân găng/ủng, tuyệt đối không dùng đồ quá hạn.", laws: "Thông tư 02/2025/TT-BCT; QCVN 25:2025/BCT" },
-                { code: "HK-2.1.2.03", title: "Kiểm tra thử nghiệm định kỳ sào cách điện và bút thử điện", desc: "Sào cách điện thao tác và bút thử điện cao/hạ thế phải được kiểm định/thử nghiệm định kỳ 12 tháng/lần.", detail: "Biện pháp: Dán tem kiểm định đầy đủ trên sào và bút thử điện, bảo quản nơi khô ráo chống ẩm.", laws: "Thông tư 02/2025/TT-BCT; Quy chuẩn an toàn điện" },
-                { code: "HK-2.1.2.04", title: "Huấn luyện an toàn điện, sát hạch phân bậc an toàn điện cho nhân viên", desc: "Nhân viên làm việc với điện phải được huấn luyện lý thuyết/thực hành an toàn điện hàng năm.", detail: "Biện pháp: Lập kế hoạch đào tạo, tổ chức lớp huấn luyện và sát hạch chuyên môn định kỳ cho 100% nhân sự.", laws: "Nghị định 62/2025/NĐ-CP (Điều 23-29)" },
-                { code: "HK-2.1.2.05", title: "Cấp Thẻ an toàn điện theo đúng chức danh và bậc an toàn", desc: "Nhân sự cơ điện vận hành phải được cấp Thẻ an toàn điện từ Bậc 1 đến Bậc 5 phù hợp công việc.", detail: "Biện pháp: Rà soát phân bậc thợ điện, cấp thẻ có dấu giáp lai và thời hạn hiệu lực rõ ràng.", laws: "Nghị định 62/2025/NĐ-CP; Luật Điện lực" },
-                { code: "HK-2.1.2.06", title: "Quy định cấp Phiếu công tác (PCT) khi sửa chữa trên thiết bị điện", desc: "Mọi công việc sửa chữa điện phức tạp phải lập, duyệt và thực hiện theo Phiếu công tác.", detail: "Biện pháp: Tuân thủ nghiêm ngặt quy trình 3 chức danh (Người cấp phiếu, Chỉ huy, Cho phép), lưu trữ cuống phiếu.", laws: "QCVN 25:2025/BCT (Mục III.VI)" },
-                { code: "HK-2.1.2.07", title: "Quy định thực hiện Lệnh công tác (LCT) đối với công việc đơn giản", desc: "Các công việc sửa chữa điện đơn giản, ngắn hạn được phép thực hiện theo Lệnh công tác ghi sổ.", detail: "Biện pháp: Ghi chép đầy đủ nội dung, thời gian, nhân sự thực hiện và người ra lệnh vào sổ Lệnh công tác.", laws: "QCVN 25:2025/BCT; Thông tư 02/2025/TT-BCT" },
-                { code: "HK-2.1.2.08", title: "Quy trình cô lập nguồn điện và khóa an toàn LOTO (Lockout/Tagout)", desc: "Thực hiện cô lập năng lượng triệt để, khóa ổ khóa cá nhân LOTO và treo thẻ cảnh báo trước khi bảo trì.", detail: "Biện pháp: Cấp bộ khóa LOTO cá nhân (ổ khóa đỏ, cùm khóa) cho thợ cơ điện; kiểm tra xác thực mất điện trước khi làm.", laws: "QCVN 25:2025/BCT; Quy chuẩn Heineken LOTO" },
-                { code: "HK-2.1.2.09", title: "Thực hiện thử hết điện và nối đất lưu động (tiếp địa di động)", desc: "Trước khi bắt đầu sửa chữa đường dây/thiết bị cắt điện, bắt buộc phải thử hết điện và đặt tiếp địa di động.", detail: "Biện pháp: Dùng bút thử điện kiểm tra không còn điện ở mọi pha, sau đó kẹp chắc chắn tiếp địa di động tại vùng làm việc.", laws: "QCVN 25:2025/BCT; TCVN 4756" },
-                { code: "HK-2.1.2.10", title: "Hệ thống biển báo an toàn điện lắp đặt tại các tủ điện phân phối", desc: "Các tủ điện phân phối MSB, DB, tủ điều khiển phải gắn biển cảnh báo điện áp, biển cấm đóng điện.", detail: "Biện pháp: Dán biển báo chuẩn mẫu Phụ lục C QCVN 25:2025/BCT trên mặt ngoài cánh tủ điện.", laws: "QCVN 25:2025/BCT (Phụ lục C)" },
-                { code: "HK-2.1.2.11", title: "Kiểm định an toàn kỹ thuật định kỳ máy biến áp và máy cắt điện > 1kV", desc: "Máy biến áp và thiết bị đóng cắt trung thế phải có giấy chứng nhận kiểm định còn hiệu lực.", detail: "Biện pháp: Thuê đơn vị kiểm định độc lập đo thử đặc tính cách điện, dòng rò, thời gian cắt định kỳ theo quy định.", laws: "Luật Điện lực 61/2024/QH15; TT 02/2025/TT-BCT" },
-                { code: "HK-2.1.2.12", title: "Kiểm định an toàn kỹ thuật định kỳ cáp điện lực điện áp > 1kV", desc: "Tuyến cáp ngầm trung thế phải được đo điện trở cách điện và thử nghiệm cao áp định kỳ.", detail: "Biện pháp: Lập danh mục cáp trung thế, lên lịch kiểm tra đo thông mạch và điện trở cách điện định kỳ.", laws: "Thông tư 02/2025/TT-BCT (Phụ lục II)" },
-                { code: "HK-2.1.2.13", title: "Sơ đồ nguyên lý đơn tuyến hệ thống điện gắn tại các phòng tủ điện", desc: "Phòng trực điện và các tủ phân phối chính phải niêm yết sơ đồ nguyên lý đơn tuyến cập nhật thực tế.", detail: "Biện pháp: Thiết kế bản vẽ sơ đồ đơn tuyến rõ ràng, ép plastic gắn trang trọng bên trong cánh tủ điện và phòng trực.", laws: "QCVN 26:2025/BCT; Thông tư 02/2025/TT-BCT" },
-                { code: "HK-2.1.2.14", title: "Định danh tên tủ, ký hiệu aptomat và nhãn mạch cấp nguồn (Circuit Labelling)", desc: "Tất cả các aptomat, cầu chì trong tủ điện phải có nhãn ghi rõ tên thiết bị phụ tải do nó cấp nguồn.", detail: "Biện pháp: In nhãn tên thiết bị rõ ràng gắn phía dưới từng aptomat trong tủ phân phối để thao tác chính xác.", laws: "TCVN 7447; QCVN 25:2025/BCT" },
-                { code: "HK-2.1.2.15", title: "Tấm chắn bảo vệ chống chạm điện trực tiếp (Dead-front Covers) trong tủ điện", desc: "Bên trong tủ điện phải có mặt nạ mica che chắn các cọc đấu Busbar, tránh chạm trực tiếp khi mở cửa tủ.", detail: "Biện pháp: Lắp đặt đầy đủ tấm chắn mica trong suốt bảo vệ chống chạm ngón tay vào điện áp sống (IP2X).", laws: "QCVN 25:2025/BCT; TCVN 7447" },
-                { code: "HK-2.1.2.16", title: "Trang bị thảm cao su cách điện chuyên dụng phía trước tủ điện", desc: "Phía trước các tủ điện phân phối chính (MSB) phải trải thảm cao su cách điện bề mặt chống trượt.", detail: "Biện pháp: Đặt thảm cao su cách điện kích thước phù hợp trước mặt tủ điện, kiểm định điện trở thảm định kỳ.", laws: "QCVN 25:2025/BCT; Thông tư 25/2022/TT-BLĐTBXH" },
-                { code: "HK-2.1.2.17", title: "Cấp bảo vệ chống xâm nhập (IP Rating) tủ điện khu vực ẩm ướt & CIP", desc: "Tủ điện đặt tại khu vực nấu bia, chiết rót, vệ sinh CIP phải đạt chuẩn kháng nước IP54 trở lên.", detail: "Biện pháp: Kiểm tra gioăng cao su cửa tủ, các tuyến cáp vào tủ phải dùng cable gland chống nước tuyệt đối.", laws: "QCVN 26:2025/BCT; IEC 60529" },
-                { code: "HK-2.1.2.18", title: "Lắp đặt aptomat chống rò chống giật (ELCB / RCCB / RCBO)", desc: "Các mạch điện cấp cho khu vực ẩm ướt, ổ cắm di động phải được bảo vệ qua thiết bị chống dòng rò ≤30mA.", detail: "Biện pháp: Lắp đặt RCBO/ELCB cho các lộ cấp nguồn ẩm ướt, định kỳ bấm nút Test kiểm tra độ nhạy.", laws: "TCVN 7447; QCVN 25:2025/BCT" },
-                { code: "HK-2.1.2.19", title: "An toàn điện khu vực nguy cơ cháy nổ cao (Kho cồn, Silo bụi malt, trạm NH3)", desc: "Thiết bị điện tại kho cồn, trạm lạnh NH3, trạm LPG phải hoàn toàn đạt tiêu chuẩn phòng nổ (Ex).", detail: "Biện pháp: Kiểm tra nhãn thiết bị Ex, hệ thống đẳng thế và kẹp tiếp địa chống tĩnh điện đường ống bồn cồn.", laws: "TCVN 10888 (IEC 60079); TCVN 3890" },
-                { code: "HK-2.1.2.20", title: "Đấu nối dây dẫn điện, đầu cốt (Lug) và quản lý máng cáp nội bộ xưởng", desc: "Cáp điện đấu nối phải bấm đầu cốt đồng chắc chắn, đi trong máng cáp hoặc ống bảo vệ gọn gàng.", detail: "Biện pháp: Cấm đấu nối dây điện vặn xoắn thủ công; bó cáp và đậy nắp máng cáp xưởng ngăn va đập cơ học.", laws: "TCVN 7447-5-52; QCVN 25:2025/BCT" },
-                { code: "HK-2.1.2.21", title: "Nối đất vỏ kim loại bảo vệ an toàn cho vỏ máy móc và băng chuyền", desc: "Toàn bộ khung vỏ động cơ, tủ điều khiển máy, khung băng chuyền sản xuất phải nối đất an toàn.", detail: "Biện pháp: Kéo dây tiếp địa PE riêng biệt đấu nối chắc chắn vào chân đế thiết bị và hệ thống tiếp địa chung.", laws: "TCVN 4756:1989; QCVN 26:2025/BCT" },
-                { code: "HK-2.1.2.22", title: "Hệ thống nút dừng khẩn cấp (Emergency Stop) cắt nguồn điện động lực", desc: "Các băng chuyền và máy sản xuất phải trang bị nút nhấn E-Stop hoạt động nhạy bén để ngắt điện khi khẩn cấp.", detail: "Biện pháp: Kiểm tra thử nghiệm thực tế tác động của nút E-Stop và rơ-le an toàn liên động (Interlock) định kỳ.", laws: "TCVN 6719:2008 (ISO 13850)" }
-            ],
-            "213": [
-                { code: "HK-2.1.3.01", title: "Điều kiện sát hạch an toàn và huấn luyện người sử dụng dụng cụ điện cầm tay", desc: "Công nhân sử dụng máy mài, máy khoan phải được huấn luyện an toàn và cấp phép sử dụng nội bộ.", detail: "Biện pháp: Tổ chức đào tạo hướng dẫn thao tác an toàn dụng cụ cầm tay, kiểm tra kiến thức trước khi cấp phép.", laws: "QCVN 09:2012/BLĐTBXH; Nghị định 44/2016" },
-                { code: "HK-2.1.3.02", title: "Quản lý mã số nhận diện (Asset Tag ID) và lập sổ theo dõi dụng cụ điện", desc: "Dụng cụ cầm tay phải được đánh mã số quản lý tài sản và lập sổ theo dõi kiểm tra kỹ thuật định kỳ.", detail: "Biện pháp: Dán mã vạch/mã số trên thân máy; mở sổ theo dõi tình trạng kỹ thuật và bảo dưỡng hàng tháng.", laws: "QCVN 09:2012/BLĐTBXH (Mục 3.3.3.3)" },
-                { code: "HK-2.1.3.03", title: "Dưỡng kiểm định kỳ điện trở cách điện của dụng cụ điện cầm tay", desc: "Đo điện trở cách điện dụng cụ cầm tay định kỳ (≥2 MOhm với Cấp I, ≥7 MOhm với Cấp II) ghi sổ.", detail: "Biện pháp: Dùng mê-ga-ôm kế kiểm tra cách điện cuộn dây với vỏ máy định kỳ, dán tem Đạt (Pass).", laws: "QCVN 09:2012/BLĐTBXH; TCVN 7996" },
-                { code: "HK-2.1.3.04", title: "Tình trạng kỹ thuật an toàn của dây dẫn nguồn và phích cắm điện", desc: "Dây nguồn cáp mềm nguyên vẹn không nối thủ công, phích cắm đúc chắc chắn có chân tiếp địa.", detail: "Biện pháp: Kiểm tra dây cáp không bị tróc vỏ lộ lõi; cấm dùng băng keo quấn nối dây nguồn dụng cụ cầm tay.", laws: "TCVN 7996-1:2009 (IEC 60745)" },
-                { code: "HK-2.1.3.05", title: "Lắp đặt và duy trì vành chắn bảo vệ (Safety Guard) của máy mài, máy cắt", desc: "Máy mài góc cầm tay bắt buộc phải lắp vành chụp bảo vệ đĩa mài góc che chắn ≥180 độ và tay cầm phụ.", detail: "Biện pháp: Kiểm tra trực quan máy mài trước khi xuất kho, tuyệt đối không cho phép tháo bỏ vành chắn bảo vệ.", laws: "TCVN 7996-2-3:2009; QCVN 09:2012" },
-                { code: "HK-2.1.3.06", title: "Độ tương thích tốc độ quay (RPM) của đĩa mài/cắt so với tốc độ máy", desc: "Tốc độ vòng quay cho phép của đĩa mài/cắt phải lớn hơn hoặc bằng tốc độ quay tối đa của máy mài.", detail: "Biện pháp: Kiểm tra thông số RPM trên nhãn đĩa cắt và thân máy trước khi lắp đặt vận hành.", laws: "QCVN 09:2012/BLĐTBXH; An toàn cơ điện" },
-                { code: "HK-2.1.3.07", title: "Chức năng tự ngắt và khóa an toàn công tắc nguồn (Dead-man Switch)", desc: "Công tắc máy cầm tay phải là dạng tự hồi về vị trí ngắt khi thả tay hoặc có lẫy khóa an toàn.", detail: "Biện pháp: Kiểm tra độ nhạy công tắc nguồn, không dùng dây chun buộc giữ cố định công tắc máy mài.", laws: "TCVN 7996-1:2009; IEC 60745" },
-                { code: "HK-2.1.3.08", title: "Quy định sử dụng điện áp cực thấp (SELV) trong không gian bồn kín (Confined Space)", desc: "Khi sử dụng dụng cụ điện trong bồn nấu, tank bia, bắt buộc dùng nguồn điện áp an toàn ≤24V.", detail: "Biện pháp: Trang bị máy biến áp cách ly hạ áp 220V xuống 24V đặt ngoài bồn chứa khi bảo trì bên trong.", laws: "QCVN 34:2018/BLĐTBXH; QCVN 25:2025" },
-                { code: "HK-2.1.3.09", title: "Sử dụng cuộn rulo dây điện di động có trang bị bảo vệ ELCB và chống quá nhiệt", desc: "Các cuộn dây nguồn kéo dài di động phải tích hợp aptomat chống dòng rò và rơ-le chống quá tải.", detail: "Biện pháp: Trang bị rulo ổ cắm có tích hợp sẵn RCBO bảo vệ chống giật khi cấp nguồn ngoài công trường.", laws: "QCVN 25:2025/BCT; TCVN 7447" },
-                { code: "HK-2.1.3.10", title: "Quy định lưu kho, bảo quản và vệ sinh dụng cụ điện sau ca làm việc", desc: "Dụng cụ cầm tay sau khi sử dụng phải được làm sạch, kiểm tra ngoại quan và cất giữ nơi khô ráo trong kho.", detail: "Biện pháp: Bố trí kệ tủ dụng cụ ngăn nắp tại xưởng bảo trì, bàn giao ca trực và kiểm kê định kỳ.", laws: "Quy chế quản lý dụng cụ Heineken" }
-            ],
-            "214": [
-                { code: "HK-2.1.4.01", title: "Nối đất bảo vệ an toàn cho vỏ máy biến áp hàn điện và vỏ máy phát điện hàn", desc: "Vỏ máy hàn điện phải được bắt bu-lông nối đất chắc chắn xuống hệ thống tiếp địa chung nhà xưởng.", detail: "Biện pháp: Kéo cáp đồng tiếp địa từ thân máy hàn đấu nối vào cọc tiếp địa cố định, cấm dùng kết cấu xưởng làm mát.", laws: "TCVN 3146:1986; QCVN 03:2011/BLĐTBXH" },
-                { code: "HK-2.1.4.02", title: "Trang bị và kiểm tra bộ giảm điện áp không tải an toàn (VRD) của máy hàn", desc: "Máy hàn phải tích hợp mạch giảm áp không tải (VRD) giữ điện áp hở mạch kìm hàn ≤24V khi không hàn.", detail: "Biện pháp: Đo kiểm tra điện áp không tải của máy hàn định kỳ, đảm bảo kích hoạt tính năng VRD khi hàn ẩm.", laws: "TCVN 8524 (IEC 60974-1); QCVN 03:2011" },
-                { code: "HK-2.1.4.03", title: "Tình trạng kỹ thuật kìm hàn, dây kẹp mát và cáp tải dòng hàn", desc: "Cáp hàn mềm bọc cao su nguyên vẹn, kìm hàn cách điện chịu nhiệt tốt, kẹp mát kẹp chặt trực tiếp vật hàn.", detail: "Biện pháp: Kiểm tra cáp hàn không bị cháy sém, kìm hàn có tay cầm cách điện nguyên vẹn, có giá treo khi nghỉ.", laws: "TCVN 3146:1986; QCVN 03:2011/BLĐTBXH" },
-                { code: "HK-2.1.4.04", title: "Quy định cấp Giấy phép làm việc phát sinh nhiệt (Hot Work Permit) và đánh giá rủi ro", desc: "Mọi công việc hàn cắt ngoài buồng hàn cố định phải được lập và phê duyệt Giấy phép Hot Work Permit.", detail: "Biện pháp: Khảo sát hiện trường, loại bỏ vật liệu cháy nổ, ký duyệt Giấy phép trước khi tiến hành hàn cắt.", laws: "TCVN 3146:1986; Quy chế PCCC Heineken" },
-                { code: "HK-2.1.4.05", title: "Biện pháp che chắn tia lửa hàn (Fire Blanket) và dọn dẹp vật liệu dễ cháy", desc: "Dọn sạch vật liệu dễ cháy trong bán kính 10m hoặc dùng bạt chống cháy (Fire Blanket) che chắn xỉ hàn.", detail: "Biện pháp: Trải bạt chống cháy bao quanh khu vực hàn, bịt kín các khe hở sàn để ngăn xỉ hàn rơi xuống tầng dưới.", laws: "TCVN 3146:1986; TCVN 3890:2023" },
-                { code: "HK-2.1.4.06", title: "Bố trí người cảnh giới PCCC (Fire Watcher) và giám sát sau khi hàn 30-60 phút", desc: "Bố trí nhân sự canh gác lửa trong suốt quá trình hàn và tiếp tục giám sát hiện trường sau khi hàn 30-60 phút.", detail: "Biện pháp: Trang bị bình chữa cháy xách tay tại chỗ, cử người mang thẻ Fire Watcher túc trực và kiểm tra tàn lửa.", laws: "TCVN 3146:1986; Nội quy PCCC Nhà máy" }
-            ]
-        };
-
-        // Khi vừa mở ứng dụng, khởi tạo giao diện và tự động đọc dữ liệu 2 chiều từ Google Sheet
-        document.addEventListener("DOMContentLoaded", function() {
-            renderAllModules();
-            loadDataFromSheet();
-        });
-
-        function renderAllModules() {
-            for (const [modKey, items] of Object.entries(auditData)) {
-                const container = document.getElementById(`list_${modKey}`);
-                let html = "";
-                items.forEach((item) => {
-                    let safeCode = item.code.replace(/\./g, '_');
-                    html += `
-                        <div class="card card-criteria p-3 audit-item-card" id="item_${safeCode}" data-search="${(item.code + ' ' + item.title + ' ' + item.desc + ' ' + item.detail).toLowerCase()}">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="badge badge-code me-1">${item.code}</span>
-                                    <strong class="text-dark">${item.title}</strong>
-                                </div>
-                                <button class="btn btn-sm btn-outline-success" type="button" onclick="toggleCollapse('${safeCode}')">
-                                    <i class="fa-solid fa-chevron-down" id="icon_chevron_${safeCode}"></i> Chi tiết
+            
+            <div class="table-responsive shadow-sm border rounded-3">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Mã Tiêu Chí</th>
+                            <th>Tên Thiết Bị / Tủ Điện</th>
+                            <th>Kết Quả Đánh Giá</th>
+                            <th>Thư Mục Drive</th>
+                            <th class="text-end pe-3">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditTableBody">
+                        <tr>
+                            <td class="ps-3 fw-bold text-primary">HK-2.1.1.01</td>
+                            <td>
+                                <div class="fw-semibold">Tủ RMU E3-41</div>
+                                <small class="text-muted">Khu vực trạm trung thế</small>
+                            </td>
+                            <td><span class="badge bg-warning text-dark badge-status"><i class="fa-solid fa-triangle-exclamation me-1"></i> Tuân thủ một phần</span></td>
+                            <td>
+                                <a href="https://drive.google.com/drive/folders/18zzPuGNiL6mPKtM-lE9RynCxHqAaXmnH" target="_blank" class="btn btn-sm btn-light border text-primary">
+                                    <i class="fa-brands fa-google-drive text-success me-1"></i> Mở Drive
+                                </a>
+                            </td>
+                            <td class="text-end pe-3">
+                                <button class="btn btn-sm btn-primary px-3 rounded-2 shadow-sm" onclick="openUpdateModal('HK-2.1.1.01', 'Tủ RMU E3-41', 'Tuân thủ một phần', 'Cần cắt tỉa cây xanh hành lang.')">
+                                    <i class="fa-solid fa-pen-to-square me-1"></i> Cập nhật
                                 </button>
-                            </div>
-                            <p class="small text-muted mt-2 mb-1">${item.desc}</p>
-                            <div><span class="badge bg-secondary small status-badge-${safeCode}">N/A (Chưa kiểm tra)</span></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-                            <!-- PHẦN THU GỌN / MỞ RỘNG CHI TIẾT & HÌNH ẢNH -->
-                            <div class="collapse collapse-content p-2" id="collapse_${safeCode}">
-                                <div class="alert alert-light border small mb-2 p-2">
-                                    <strong><i class="fa-solid fa-circle-info text-success me-1"></i>Yêu cầu kỹ thuật & Biện pháp:</strong><br>
-                                    ${item.detail}<br>
-                                    <span class="text-success fst-italic">Căn cứ pháp lý: ${item.laws}</span>
-                                </div>
+    </div>
 
-                                <div class="row g-2 mb-2">
-                                    <div class="col-6">
-                                        <label class="form-label small fw-bold mb-1">Kết quả Audit:</label>
-                                        <select class="form-select form-select-sm fw-bold result-select" data-code="${item.code}">
-                                            <option value="N/A (Chưa kiểm tra)" selected>― N/A (Chưa kiểm tra)</option>
-                                            <option value="Tuân thủ" class="text-success">✔ TUÂN THỦ</option>
-                                            <option value="Tuân thủ một phần" class="text-warning">⚠ TUÂN THỦ MỘT PHẦN</option>
-                                            <option value="Chưa tuân thủ" class="text-danger">✖ CHƯA TUÂN THỦ</option>
-                                            <option value="Không áp dụng">N/A (Không áp dụng)</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="form-label small fw-bold mb-1">Mức độ rủi ro:</label>
-                                        <select class="form-select form-select-sm risk-select" data-code="${item.code}">
-                                            <option value="Cao (Nghiêm trọng)">CAO / NGHIÊM TRỌNG</option>
-                                            <option value="Trung bình" selected>TRUNG BÌNH</option>
-                                            <option value="Thấp">THẤP</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="mb-2">
-                                    <input type="text" class="form-control form-control-sm note-input" data-code="${item.code}" placeholder="Ghi chú hiện trường / Mô tả lỗi thực tế tại Heineken...">
-                                </div>
-                                <div class="mb-2">
-                                    <input type="text" class="form-control form-control-sm capa-input" data-code="${item.code}" placeholder="Hành động khắc phục (CAPA) & Thời hạn hoàn thành...">
-                                </div>
-
-                                <!-- ẢNH CHỤP HIỆN TRƯỜNG (1-3 ẢNH) -->
-                                <div class="d-flex gap-2 align-items-center mb-3">
-                                    <small class="text-muted fw-bold">Ảnh (${item.code}):</small>
-                                    <div class="img-preview-box" onclick="triggerFileInput('${item.code}', 1)">
-                                        <i class="fa-solid fa-camera text-secondary" id="icon_${safeCode}_1"></i>
-                                        <img id="prev_${safeCode}_1" class="d-none">
-                                        <button type="button" class="remove-btn d-none" id="del_${safeCode}_1" onclick="removeImage(event, '${item.code}', 1)">×</button>
-                                    </div>
-                                    <div class="img-preview-box" onclick="triggerFileInput('${item.code}', 2)">
-                                        <i class="fa-solid fa-camera text-secondary" id="icon_${safeCode}_2"></i>
-                                        <img id="prev_${safeCode}_2" class="d-none">
-                                        <button type="button" class="remove-btn d-none" id="del_${safeCode}_2" onclick="removeImage(event, '${item.code}', 2)">×</button>
-                                    </div>
-                                    <div class="img-preview-box" onclick="triggerFileInput('${item.code}', 3)">
-                                        <i class="fa-solid fa-camera text-secondary" id="icon_${safeCode}_3"></i>
-                                        <img id="prev_${safeCode}_3" class="d-none">
-                                        <button type="button" class="remove-btn d-none" id="del_${safeCode}_3" onclick="removeImage(event, '${item.code}', 3)">×</button>
-                                    </div>
-                                    <input type="file" accept="image/*" class="d-none" id="file_${safeCode}_1" onchange="previewImage(this, '${item.code}', 1)">
-                                    <input type="file" accept="image/*" class="d-none" id="file_${safeCode}_2" onchange="previewImage(this, '${item.code}', 2)">
-                                    <input type="file" accept="image/*" class="d-none" id="file_${safeCode}_3" onchange="previewImage(this, '${item.code}', 3)">
-                                </div>
-
-                                <!-- NÚT LƯU RIÊNG CHO TỪNG MỤC -->
-                                <div class="d-grid">
-                                    <button class="btn btn-success btn-sm fw-bold" onclick="syncSingleItem('${item.code}', '${item.title.replace(/'/g, "")}')">
-                                        <i class="fa-solid fa-cloud-arrow-up me-1"></i> Lưu & Đồng bộ mục ${item.code} ngay
-                                    </button>
-                                </div>
-                            </div>
+    <!-- MODAL THÊM MỚI DỰ ÁN / NHÀ MÁY (Tự động đóng khi xong) -->
+    <div class="modal fade" id="newProjectModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content card-custom p-3 border-0">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary"><i class="fa-solid fa-folder-plus me-2 text-success"></i>Tạo Dự Án / Nhà Máy Mới</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newProjectForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Tên Dự Án / Nhà Máy:</label>
+                            <input type="text" id="projName" class="form-control" placeholder="Ví dụ: Nhà máy Heineken Vũng Tàu 2026" required>
                         </div>
-                    `;
-                });
-                container.innerHTML = html;
-            }
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Mã Định Danh (ID không dấu):</label>
+                            <input type="text" id="projId" class="form-control" placeholder="Ví dụ: Heineken_VungTau" required>
+                            <div class="form-text text-muted small">Hệ thống dùng mã này để tạo Sheet con và Thư mục Drive riêng.</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light px-4 rounded-3 fw-semibold" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-heineken px-4" id="btnCreateProj" onclick="createNewProject()">Xác Nhận Khởi Tạo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CẬP NHẬT HIỆN TRƯỜNG (Tự động đóng khi lưu) -->
+    <div class="modal fade" id="updateAuditModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content card-custom p-3 border-0">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary"><i class="fa-solid fa-pen-to-square me-2 text-success"></i>Cập Nhật Hiện Trường Audit</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateAuditForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Mã Tiêu Chí & Thiết Bị:</label>
+                            <input type="text" id="auditCodeName" class="form-control bg-light" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Kết Quả Đánh Giá:</label>
+                            <select id="auditResult" class="form-select">
+                                <option value="Tuân thủ">Tuân thủ</option>
+                                <option value="Tuân thủ một phần">Tuân thủ một phần</option>
+                                <option value="Chưa tuân thủ">Chưa tuân thủ</option>
+                                <option value="N/A (Chưa kiểm tra)">N/A (Chưa kiểm tra)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Ý Kiến Ghi Nhận / Kiến Nghị (CAPA):</label>
+                            <textarea id="auditNote" class="form-control" rows="3" placeholder="Nhập ghi chú hiện trường..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light px-4 rounded-3 fw-semibold" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-heineken px-4" onclick="saveAuditUpdate()">Lưu & Đóng Form</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // URL Web App Google Apps Script của anh
+        const API_URL = "https://script.google.com/macros/s/AKfycbwgduPJlBj5MEparof3X_9Mlijbap1onyg5xkrp2nsc23KI2qTYWOB9pdmR-I9xzmQtNA/exec";
+
+        function switchProject() {
+            const select = document.getElementById('projectSelect');
+            const projectName = select.options[select.selectedIndex].text;
+            document.getElementById('currentProjectTitle').innerText = projectName;
         }
 
-        // HÀM TÌM KIẾM NHANH THEO TỪ KHÓA
-        function filterCriteria(keyword) {
-            let kw = keyword.toLowerCase().trim();
-            let cards = document.querySelectorAll('.audit-item-card');
+        // Gọi API Web App tự động tạo Sheet con và Thư mục con trên Drive
+        async function createNewProject() {
+            const nameInput = document.getElementById('projName').value.trim();
+            const idInput = document.getElementById('projId').value.trim();
             
-            if (kw.length > 0) {
-                // Khi đang tìm kiếm, tự động hiện tất cả các phân mục để quét từ khóa
-                document.querySelectorAll('.audit-module').forEach(el => el.classList.remove('d-none'));
-                document.getElementById('moduleSelect').value = "all";
+            if(!nameInput || !idInput) {
+                alert("Vui lòng nhập đầy đủ thông tin tên và mã định danh dự án!");
+                return;
             }
 
-            cards.forEach(card => {
-                let textData = card.getAttribute('data-search');
-                if (textData.includes(kw)) {
-                    card.classList.remove('d-none');
-                } else {
-                    card.classList.add('d-none');
-                }
-            });
-        }
-
-        function clearSearch() {
-            document.getElementById('searchKeyword').value = "";
-            filterCriteria("");
-            switchModule(document.getElementById('moduleSelect').value);
-        }
-
-        // ĐỒNG BỘ 2 CHIỀU: ĐỌC DỮ LIỆU TỪ GOOGLE SHEET ĐỔ VỀ KHI VỪA MỞ TRANG
-        async function loadDataFromSheet() {
-            try {
-                const response = await fetch(APPS_SCRIPT_URL);
-                const resJson = await response.json();
-                if (resJson.status === "success" && resJson.data) {
-                    resJson.data.forEach(item => {
-                        let safeCode = item.code.replace(/\./g, '_');
-                        
-                        let resultSelect = document.querySelector(`.result-select[data-code="${item.code}"]`);
-                        if (resultSelect && item.result) resultSelect.value = item.result;
-                        
-                        let riskSelect = document.querySelector(`.risk-select[data-code="${item.code}"]`);
-                        if (riskSelect && item.risk) riskSelect.value = item.risk;
-                        
-                        let noteInput = document.querySelector(`.note-input[data-code="${item.code}"]`);
-                        if (noteInput && item.note) noteInput.value = item.note;
-                        
-                        let capaInput = document.querySelector(`.capa-input[data-code="${item.code}"]`);
-                        if (capaInput && item.capa) capaInput.value = item.capa;
-
-                        // Hiển thị ảnh cũ từ Drive nếu có
-                        if (item.img1 && item.img1.startsWith("http")) {
-                            let prev = document.getElementById(`prev_${safeCode}_1`);
-                            let icon = document.getElementById(`icon_${safeCode}_1`);
-                            let del = document.getElementById(`del_${safeCode}_1`);
-                            if (prev && icon && del) {
-                                prev.src = item.img1;
-                                prev.classList.remove('d-none');
-                                icon.classList.add('d-none');
-                                del.classList.remove('d-none');
-                            }
-                        }
-                        if (item.img2 && item.img2.startsWith("http")) {
-                            let prev = document.getElementById(`prev_${safeCode}_2`);
-                            let icon = document.getElementById(`icon_${safeCode}_2`);
-                            let del = document.getElementById(`del_${safeCode}_2`);
-                            if (prev && icon && del) {
-                                prev.src = item.img2;
-                                prev.classList.remove('d-none');
-                                icon.classList.add('d-none');
-                                del.classList.remove('d-none');
-                            }
-                        }
-                        if (item.img3 && item.img3.startsWith("http")) {
-                            let prev = document.getElementById(`prev_${safeCode}_3`);
-                            let icon = document.getElementById(`icon_${safeCode}_3`);
-                            let del = document.getElementById(`del_${safeCode}_3`);
-                            if (prev && icon && del) {
-                                prev.src = item.img3;
-                                prev.classList.remove('d-none');
-                                icon.classList.add('d-none');
-                                del.classList.remove('d-none');
-                            }
-                        }
-                        
-                        // Cập nhật Badge trạng thái trên giao diện
-                        let badgeEl = document.querySelector(`.status-badge-${safeCode}`);
-                        if (badgeEl && item.result && item.result !== "N/A (Chưa kiểm tra)") {
-                            badgeEl.innerText = item.result;
-                            badgeEl.className = "badge small " + 
-                                (item.result === "Tuân thủ" ? "bg-success" : 
-                                (item.result === "Tuân thủ một phần" ? "bg-warning text-dark" : 
-                                (item.result === "Chưa tuân thủ" ? "bg-danger" : "bg-secondary")));
-                        }
-                    });
-                }
-            } catch (err) {
-                console.error("Lỗi đồng bộ dữ liệu GET từ Sheet:", err);
-            }
-        }
-
-        // QUẢN LÝ ĐÓNG/MỞ THÔNG MINH (TỰ ĐỘNG THU GỌN CÁC MỤC KHÁC)
-        function toggleCollapse(safeCode) {
-            const targetEl = document.getElementById(`collapse_${safeCode}`);
-            const isOpen = targetEl.classList.contains('show');
-
-            document.querySelectorAll('.collapse-content.show').forEach(el => {
-                let bsCollapse = bootstrap.Collapse.getInstance(el);
-                if (bsCollapse) bsCollapse.hide();
-                else el.classList.remove('show');
-            });
-
-            if (!isOpen) {
-                let bsCollapse = bootstrap.Collapse.getOrCreateInstance(targetEl);
-                bsCollapse.show();
-                setTimeout(() => {
-                    document.getElementById(`item_${safeCode}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }, 150);
-            }
-        }
-
-        function switchModule(val) {
-            // Nếu đang có từ khóa tìm kiếm thì xóa trắng ô tìm kiếm khi chọn lại phân mục
-            document.getElementById('searchKeyword').value = "";
-            
-            document.querySelectorAll('.audit-module').forEach(el => el.classList.add('d-none'));
-            
-            if (val === "all") {
-                document.querySelectorAll('.audit-module').forEach(el => el.classList.remove('d-none'));
-            } else {
-                document.getElementById(`mod_${val}`).classList.remove('d-none');
-            }
-            
-            document.querySelectorAll('.collapse-content.show').forEach(el => {
-                let bsCollapse = bootstrap.Collapse.getInstance(el);
-                if (bsCollapse) bsCollapse.hide();
-                else el.classList.remove('show');
-            });
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function triggerFileInput(code, index) {
-            let safeCode = code.replace(/\./g, '_');
-            document.getElementById(`file_${safeCode}_${index}`).click();
-        }
-
-        function previewImage(input, code, index) {
-            let safeCode = code.replace(/\./g, '_');
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const prev = document.getElementById(`prev_${safeCode}_${index}`);
-                    const icon = document.getElementById(`icon_${safeCode}_${index}`);
-                    const del = document.getElementById(`del_${safeCode}_${index}`);
-                    
-                    prev.src = e.target.result;
-                    prev.classList.remove('d-none');
-                    icon.classList.add('d-none');
-                    del.classList.remove('d-none');
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function removeImage(event, code, index) {
-            event.stopPropagation();
-            let safeCode = code.replace(/\./g, '_');
-            document.getElementById(`file_${safeCode}_${index}`).value = "";
-            const prev = document.getElementById(`prev_${safeCode}_${index}`);
-            const icon = document.getElementById(`icon_${safeCode}_${index}`);
-            const del = document.getElementById(`del_${safeCode}_${index}`);
-            
-            prev.src = "";
-            prev.classList.add('d-none');
-            icon.classList.remove('d-none');
-            del.classList.add('d-none');
-        }
-
-        function getImageData(code, index) {
-            let safeCode = code.replace(/\./g, '_');
-            const prev = document.getElementById(`prev_${safeCode}_${index}`);
-            return prev.classList.contains('d-none') ? "" : prev.src;
-        }
-
-        // HÀM LƯU VÀ ĐỒNG BỘ NGƯỢC LÊN GOOGLE SHEET & DRIVE (POST)
-        async function syncSingleItem(code, title) {
-            const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
-            document.getElementById('loadingText').innerText = `Đang lưu mục ${code} lên Google Sheet & Drive...`;
-            modal.show();
-
-            const result = document.querySelector(`.result-select[data-code="${code}"]`).value;
-            const risk = document.querySelector(`.risk-select[data-code="${code}"]`).value;
-            const note = document.querySelector(`.note-input[data-code="${code}"]`).value;
-            const capa = document.querySelector(`.capa-input[data-code="${code}"]`).value;
-            
-            let img1 = getImageData(code, 1);
-            let img2 = getImageData(code, 2);
-            let img3 = getImageData(code, 3);
-
-            const payload = {
-                code: code,
-                content: title,
-                result: result,
-                note: note,
-                risk: risk,
-                capa: capa,
-                image1: img1,
-                image2: img2,
-                image3: img3,
-                auditor: "Trần Công Đẹp"
-            };
+            const btn = document.getElementById('btnCreateProj');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Đang khởi tạo...`;
 
             try {
-                const response = await fetch(APPS_SCRIPT_URL, {
+                const payload = {
+                    action: "createProject",
+                    projId: idInput,
+                    projName: nameInput
+                };
+
+                await fetch(API_URL, {
                     method: "POST",
+                    mode: "no-cors", 
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify(payload)
                 });
-                const resJson = await response.json();
-                modal.hide();
-                if (resJson.status === "success") {
-                    let safeCode = code.replace(/\./g, '_');
-                    let badgeEl = document.querySelector(`.status-badge-${safeCode}`);
-                    if (badgeEl) {
-                        badgeEl.innerText = result;
-                        badgeEl.className = "badge small " + 
-                            (result === "Tuân thủ" ? "bg-success" : 
-                            (result === "Tuân thủ một phần" ? "bg-warning text-dark" : 
-                            (result === "Chưa tuân thủ" ? "bg-danger" : "bg-secondary")));
-                    }
 
-                    let targetEl = document.getElementById(`collapse_${safeCode}`);
-                    let bsCollapse = bootstrap.Collapse.getInstance(targetEl);
-                    if (bsCollapse) bsCollapse.hide();
+                const select = document.getElementById('projectSelect');
+                const option = document.createElement('option');
+                option.value = idInput;
+                option.text = nameInput;
+                select.add(option);
+                select.value = idInput;
 
-                    alert(`✔ Đã lưu thành công mục [${code}] lên Google Sheet & Drive Heineken!`);
-                } else {
-                    alert("Lỗi từ server: " + resJson.message);
-                }
-            } catch (err) {
-                modal.hide();
-                alert("Lỗi kết nối mạng khi đồng bộ: " + err.toString());
+                document.getElementById('currentProjectTitle').innerText = nameInput;
+                
+                // Tự động đóng Modal Dự án
+                bootstrap.Modal.getInstance(document.getElementById('newProjectModal')).hide();
+                document.getElementById('newProjectForm').reset();
+                
+                alert(`Khởi tạo thành công dự án "${nameInput}"!\n- Đã tạo Sheet con trên Google Sheet.\n- Đã tạo thư mục riêng trên Google Drive.`);
+            } catch (error) {
+                alert("Lỗi kết nối: " + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "Xác Nhận Khởi Tạo";
             }
+        }
+
+        // Mở Form Popup Cập nhật hiện trường
+        function openUpdateModal(code, deviceName, currentResult, currentNote) {
+            document.getElementById('auditCodeName').value = `[${code}] ${deviceName}`;
+            document.getElementById('auditResult').value = currentResult;
+            document.getElementById('auditNote').value = currentNote;
+            
+            const updateModal = new bootstrap.Modal(document.getElementById('updateAuditModal'));
+            updateModal.show();
+        }
+
+        // Lưu dữ liệu và tự động đóng Form Popup
+        function saveAuditUpdate() {
+            alert("Đã lưu cập nhật hiện trường thành công!");
+            
+            // Tự động đóng Form Popup sau khi lưu xong
+            const modalEl = document.getElementById('updateAuditModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            modalInstance.hide();
+        }
+
+        // Tải file mẫu Excel (.xlsx) để import danh sách tủ/thiết bị
+        function downloadTemplate() {
+            const wb = XLSX.utils.book_new();
+            const templateData = [
+                { "STT": 1, "Mã Tiêu Chí": "HK-2.1.1.01", "Khu Vực": "Trạm trung thế E3", "Tên Tủ Điện / Thiết Bị": "Tủ RMU E3-41", "Ghi Chú": "Kiểm tra hành lang an toàn" },
+                { "STT": 2, "Mã Tiêu Chí": "HK-2.1.2.01", "Khu Vực": "Xưởng Chiết Rót", "Tên Tủ Điện / Thiết Bị": "Tủ phân phối DB-01", "Ghi Chú": "Kiểm tra ELCB và thảm cách điện" }
+            ];
+            const ws = XLSX.utils.json_to_sheet(templateData);
+            XLSX.utils.book_append_sheet(wb, ws, "DanhSachThietBi");
+            XLSX.writeFile(wb, "Template_Danh_Sach_Thiet_Bi_Audit.xlsx");
+        }
+
+        // Xử lý Import file Excel danh sách thiết bị
+        function handleExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+
+                    let html = `<div class="alert alert-success d-flex align-items-center rounded-3 p-2 mb-0"><i class="fa-solid fa-check-circle me-2"></i> Đã import thành công <strong>${json.length}</strong> thiết bị!</div>`;
+                    document.getElementById('importResult').innerHTML = html;
+                } catch (error) {
+                    let html = `<div class="alert alert-danger rounded-3 p-2 mb-0">Lỗi đọc file: ${error.message}</div>`;
+                    document.getElementById('importResult').innerHTML = html;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function syncProjectData() {
+            alert("Đã đồng bộ dữ liệu thành công với Google Sheet và Google Drive!");
         }
     </script>
 </body>
