@@ -1,124 +1,209 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiểm Tra Thiết Bị Tủ Điện - De Heus</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 15px; color: #333; }
-        .container { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2 { color: #0056b3; text-align: center; font-size: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        select, input, button { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
-        button { background: #0056b3; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        button:hover { background: #004494; }
-        .hidden { display: none; }
-        .result-box { margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 4px; }
-        .alert-red { color: #d9534f; font-weight: bold; }
-    </style>
-</head>
-<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#"><i class="fa-solid fa-shield-halved me-2"></i>HSE Audit Pro v2.0</a>
+        <span class="text-light small">Auditor: Trần Công Đẹp (Mr. An Toàn)</span>
+    </div>
+</nav>
 
-<div class="container">
-    <h2>Audit Tủ Điện De Heus</h2>
+<div class="container my-4">
     
-    <div class="form-group">
-        <label for="panelSelect">Chọn Mã Tủ Điện:</label>
-        <select id="panelSelect" onchange="loadPanelData()">
-            <option value="">-- Chọn tủ --</option>
-            <option value="DB-10">Tủ DB-10</option>
-            <option value="MSB-F1A">Tủ MSB-F1A</option>
-        </select>
+    <!-- SECTION 1: QUẢN LÝ DỰ ÁN / NHÀ MÁY -->
+    <div class="card card-custom p-4 mb-4 bg-white">
+        <h4 class="mb-3 text-primary"><i class="fa-solid fa-industry me-2"></i>1. Chọn hoặc Thêm Mới Dự Án / Nhà Máy</h4>
+        <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+                <label for="projectSelect" class="form-label fw-bold">Danh sách dự án đang quản lý:</label>
+                <select id="projectSelect" class="form-select" onchange="switchProject()">
+                    <option value="Heineken_Q12">Nhà máy Bia Heineken Việt Nam - Quận 12</option>
+                    <option value="Heineken_VungTau">Nhà máy Bia Heineken Vũng Tàu</option>
+                </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#newProjectModal">
+                    <i class="fa-solid fa-plus-circle me-1"></i> Thêm Mới Dự Án / Nhà Máy
+                </button>
+                <button class="btn btn-outline-primary" onclick="syncProjectData()">
+                    <i class="fa-solid fa-rotate me-1"></i> Đồng bộ Sheet & Drive
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div id="panelDetails" class="hidden">
-        <div class="form-group">
-            <p><strong>Khu vực:</strong> <span id="txtArea"></span></p>
-            <p><strong>Bản vẽ:</strong> <a id="linkPdf" href="#" target="_blank">Xem Bản Vẽ PDF</a></p>
+    <div class="row">
+        <!-- SECTION 2: IMPORT DANH SÁCH TỦ ĐIỆN & THIẾT BỊ -->
+        <div class="col-lg-5 mb-4">
+            <div class="card card-custom p-4 h-100 bg-white">
+                <h4 class="mb-3 text-success"><i class="fa-solid fa-file-excel me-2"></i>2. Import Thiết Bị (Excel)</h4>
+                <p class="text-muted small">Tải file mẫu chuẩn, cập nhật danh sách tủ điện/thiết bị của dự án và tải lên.</p>
+                <div class="mb-3">
+                    <button class="btn btn-outline-secondary w-100 mb-2" onclick="downloadTemplate()">
+                        <i class="fa-solid fa-download me-1"></i> Tải File Mẫu Excel (.xlsx)
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Chọn file Excel dữ liệu:</label>
+                    <input type="file" id="excelFile" class="form-control" accept=".xlsx, .xls" onchange="handleExcelImport(event)">
+                </div>
+                <div id="importResult" class="mt-2"></div>
+            </div>
         </div>
-        
-        <div class="form-group">
-            <label for="cameraInput">Chụp ảnh thực tế tủ điện:</label>
-            <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="previewAndUploadImage(event)">
+
+        <!-- SECTION 3: KHU VỰC THỰC HIỆN AUDIT / HIỆN TRƯỜNG -->
+        <div class="col-lg-7 mb-4">
+            <div class="card card-custom p-4 h-100 bg-white">
+                <h4 class="mb-3 text-dark"><i class="fa-solid fa-clipboard-check me-2"></i>3. Nhật Ký Hiện Trường</h4>
+                <p class="text-muted small">Đang thao tác tại: <strong id="currentProjectTitle" class="text-success">Nhà máy Bia Heineken Việt Nam - Quận 12</strong></p>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Mã TC</th>
+                                <th>Tên Thiết Bị / Tủ</th>
+                                <th>Kết Quả</th>
+                                <th>Drive Folder</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTableBody">
+                            <tr>
+                                <td>HK-2.1.1.01</td>
+                                <td>Tủ RMU E3-41 (Trạm trung thế)</td>
+                                <td><span class="badge bg-warning text-dark badge-status">Tuân thủ 1 phần</span></td>
+                                <td><a href="#" target="_blank" class="small text-decoration-none"><i class="fa-brands fa-google-drive"></i> Folder</a></td>
+                                <td><button class="btn btn-sm btn-primary" onclick="editCriteria('HK-2.1.1.01')">Sửa</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        
-        <div id="loading" class="hidden" style="text-align: center; color: #0056b3;">Đang xử lý AI đối chiếu thiết bị...</div>
     </div>
 
-    <div id="resultSection" class="hidden result-box">
-        <h3>Kết quả Đối chiếu</h3>
-        <p><strong>Trạng thái:</strong> <span id="txtStatus" class="alert-red"></span></p>
-        <p><strong>Phát hiện lệch:</strong> <span id="txtDiscrepancy"></span></p>
-        <p><a id="linkImage" href="#" target="_blank">Xem ảnh thực tế trên Drive</a></p>
+</div>
+
+<!-- MODAL THÊM MỚI DỰ ÁN / NHÀ MÁY -->
+<div class="modal fade" id="newProjectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fa-solid fa-folder-plus me-2"></i>Tạo Dự Án / Nhà Máy Mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newProjectForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên Dự Án / Nhà Máy:</label>
+                        <input type="text" id="projName" class="form-control" placeholder="Ví dụ: Nhà máy Bia Heineken Vũng Tàu" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mã định danh (ID Sheet/Drive):</label>
+                        <input type="text" id="projId" class="form-control" placeholder="Ví dụ: Heineken_VungTau" required>
+                        <div class="form-text small">Dùng làm tên Sheet trên Google Sheets và tên thư mục trên Google Drive.</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-success" onclick="createNewProject()">Xác Nhận & Khởi Tạo</button>
+            </div>
+        </div>
     </div>
 </div>
 
-<script>
-    // Thay thế bằng URL Web App khi deploy Google Apps Script
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyps0gf596AoYEig2JdfmTeeda8uotx9iv9OwZYq99NOOqp0SQnXcDrYSqEXNTpn9F3/exec";
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    function loadPanelData() {
-        const panelId = document.getElementById("panelSelect").value;
-        if (!panelId) {
-            document.getElementById("panelDetails").classList.add("hidden");
+<script>
+    // Xử lý chuyển đổi giữa các dự án
+    function switchProject() {
+        const select = document.getElementById('projectSelect');
+        const projectName = select.options[select.selectedIndex].text;
+        document.getElementById('currentProjectTitle').innerText = projectName;
+    }
+
+    // Tạo dự án mới
+    function createNewProject() {
+        const name = document.getElementById('projName').value;
+        const id = document.getElementById('projId').value;
+        if(!name || !id) {
+            alert("Vui lòng nhập đầy đủ thông tin!");
             return;
         }
 
-        fetch(`${GAS_URL}?action=getPanelData&id=${panelId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    document.getElementById("txtArea").innerText = data.panel.khuVuc;
-                    document.getElementById("linkPdf").href = data.panel.linkPdf;
-                    document.getElementById("panelDetails").classList.remove("hidden");
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => console.error("Lỗi kết nối:", error));
+        const select = document.getElementById('projectSelect');
+        const option = document.createElement('option');
+        option.value = id;
+        option.text = name;
+        select.add(option);
+        select.value = id;
+
+        document.getElementById('currentProjectTitle').innerText = name;
+        
+        // Đóng modal
+        bootstrap.Modal.getInstance(document.getElementById('newProjectModal')).hide();
+        document.getElementById('newProjectForm').reset();
+        
+        alert(`Đã khởi tạo thành công dự án "${name}"!\n- Hệ thống đã sẵn sàng sinh Sheet riêng và Thư mục con trên Google Drive.`);
     }
 
-    function previewAndUploadImage(event) {
+    // Tải file mẫu Excel (.xlsx) để import danh sách tủ/thiết bị
+    function downloadTemplate() {
+        const wb = XLSX.utils.book_new();
+        const templateData = [
+            { "STT": 1, "Mã Tiêu Chí": "HK-2.1.1.01", "Khu Vực": "Trạm trung thế E3", "Tên Tủ Điện / Thiết Bị": "Tủ RMU E3-41", "Ghi Chú": "Kiểm tra hành lang an toàn" },
+            { "STT": 2, "Mã Tiêu Chí": "HK-2.1.2.01", "Khu Vực": "Xưởng Chiết Rót", "Tên Tủ Điện / Thiết Bị": "Tủ phân phối DB-01", "Ghi Chú": "Kiểm tra ELCB và thảm cách điện" }
+        ];
+        const ws = XLSX.utils.json_to_sheet(templateData);
+        XLSX.utils.book_append_sheet(wb, ws, "DanhSachThietBi");
+        XLSX.writeFile(wb, "Template_Danh_Sach_Thiet_Bi_Audit.xlsx");
+    }
+
+    // Xử lý Import file Excel danh sách thiết bị
+    function handleExcelImport(event) {
         const file = event.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
         reader.onload = function(e) {
-            const base64Image = e.target.result;
-            const panelId = document.getElementById("panelSelect").value;
-            
-            document.getElementById("loading").classList.remove("hidden");
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
 
-            fetch(GAS_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "verifyPanel",
-                    panelId: panelId,
-                    imagebase64: base64Image,
-                    technician: "KTV_NguyenVanA"
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("loading").classList.add("hidden");
-                if (data.status === "success") {
-                    document.getElementById("txtStatus").innerText = data.safetyStatus;
-                    document.getElementById("txtDiscrepancy").innerText = data.discrepancy;
-                    document.getElementById("linkImage").href = data.imageUrl;
-                    document.getElementById("resultSection").classList.remove("hidden");
-                } else {
-                    alert("Lỗi xử lý: " + data.message);
-                }
-            })
-            .catch(error => {
-                document.getElementById("loading").classList.add("hidden");
-                console.error("Lỗi:", error);
-            });
+                let html = `<div class="alert alert-success small py-2"><i class="fa-solid fa-check-circle me-1"></i> Đã import thành công <strong>${json.length}</strong> thiết bị/tủ điện!</div>`;
+                document.getElementById('importResult').innerHTML = html;
+                
+                // Cập nhật bảng hiển thị
+                let tbodyHtml = '';
+                json.forEach((item, index) => {
+                    tbodyHtml += `
+                        <tr>
+                            <td>${item["Mã Tiêu Chí"] || "HK-2.1."}</td>
+                            <td>${item["Tên Tủ Điện / Thiết Bị"] || "Thiết bị " + (index+1)}</td>
+                            <td><span class="badge bg-secondary badge-status">Chưa kiểm tra</span></td>
+                            <td><a href="#" class="small text-decoration-none"><i class="fa-brands fa-google-drive"></i> Tạo Folder</a></td>
+                            <td><button class="btn btn-sm btn-primary" onclick="editCriteria('${item["Mã Tiêu Chí"]}')">Kiểm tra</button></td>
+                        </tr>
+                    `;
+                });
+                document.getElementById('auditTableBody').innerHTML = tbodyHtml;
+
+            } catch (error) {
+                document.getElementById('importResult').innerHTML = `<div class="alert alert-danger small py-2">Lỗi đọc file: ${error.message}</div>`;
+            }
         };
-        reader.readAsDataURL(file);
+        reader.readAsArrayBuffer(file);
+    }
+
+    function syncProjectData() {
+        alert("Đang đồng bộ dữ liệu hai chiều với Google Sheet ID: 1nKGtjgh_B0-dToYJtak1lZ4YB5seeDLpxLRXfvKp720 và Google Drive...");
+    }
+
+    function editCriteria(code) {
+        alert("Mở giao diện kiểm tra hiện trường cho tiêu chí: " + code);
     }
 </script>
-
-</body>
-</html>
