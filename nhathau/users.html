@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý Người dùng & Phân quyền - CSMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div id="app-navbar"></div>
+
+  <div class="container-fluid px-4">
+    <h4 class="fw-bold mb-3"><i class="fas fa-users-cog text-primary me-2"></i>Quản lý Người dùng & Ma trận Phân quyền</h4>
+
+    <ul class="nav nav-tabs mb-3">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-users">Danh sách Người dùng</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-roles">Nhóm quyền (Roles)</button></li>
+    </ul>
+
+    <div class="tab-content bg-white p-4 rounded shadow-sm">
+      <!-- TAB 1: NGƯỜI DÙNG -->
+      <div class="tab-pane fade show active" id="tab-users">
+        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalAddUser">
+          <i class="fas fa-user-plus me-1"></i>Tạo Tài khoản Mới
+        </button>
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>STT</th><th>Họ tên</th><th>Tên đăng nhập / CCCD</th><th>Loại TK</th>
+                <th>Đơn vị / Nhà thầu</th><th>Nhóm quyền</th><th>Trạng thái</th><th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="tblUsers"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 2: NHÓM QUYỀN -->
+      <div class="tab-pane fade" id="tab-roles">
+        <div class="row g-3 mb-4 border-bottom pb-3">
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Tên nhóm quyền mới</label>
+            <input type="text" id="newRoleName" class="form-control" placeholder="VD: Bảo vệ cổng, Admin Nhà thầu, Duyệt SRA...">
+          </div>
+          <div class="col-md-8">
+            <label class="form-label fw-bold">Phân quyền chi tiết theo phân hệ</label>
+            <div class="row small">
+              <div class="col-md-4"><input type="checkbox" id="p_cfg_v"> Xem Cấu hình | <input type="checkbox" id="p_cfg_e"> Sửa</div>
+              <div class="col-md-4"><input type="checkbox" id="p_usr_v"> Xem User | <input type="checkbox" id="p_usr_a"> Thêm/Sửa</div>
+              <div class="col-md-4"><input type="checkbox" id="p_cnt_v" checked> Xem Nhà thầu | <input type="checkbox" id="p_cnt_e"> Cập nhật HS</div>
+              <div class="col-md-4 mt-1"><input type="checkbox" id="p_sra_v" checked> Xem Gói việc | <input type="checkbox" id="p_sra_app"> Duyệt SRA</div>
+              <div class="col-md-4 mt-1"><input type="checkbox" id="p_ptw_v" checked> Xem PTW | <input type="checkbox" id="p_ptw_app"> Duyệt PTW</div>
+              <div class="col-md-4 mt-1"><input type="checkbox" id="p_gate_v"> Kiểm soát thẻ cổng</div>
+            </div>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary" onclick="createRole()"><i class="fas fa-save me-1"></i>Lưu Nhóm Quyền</button>
+          </div>
+        </div>
+
+        <table class="table table-bordered align-middle">
+          <thead class="table-light"><tr><th>Mã Quyền</th><th>Tên Nhóm Quyền</th><th>Chi tiết quyền kích hoạt</th></tr></thead>
+          <tbody id="tblRoles"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL THÊM NGƯỜI DÙNG -->
+  <div class="modal fade" id="modalAddUser" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Thêm Mới Người Dùng</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formAddUser" class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Loại tài khoản *</label>
+              <select id="uType" class="form-select" onchange="toggleUserType()">
+                <option value="INTERNAL">Nội bộ Công ty</option>
+                <option value="CONTRACTOR">Nhà thầu</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nhóm quyền (Role) *</label>
+              <select id="uRole" class="form-select" required></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Họ và tên hiển thị *</label>
+              <input type="text" id="uName" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Số CCCD / Tên đăng nhập *</label>
+              <input type="text" id="uUsername" class="form-control" placeholder="Dùng CCCD để đăng nhập" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email nhận thông báo</label>
+              <input type="email" id="uEmail" class="form-control" placeholder="email@domain.com">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Mật khẩu khởi tạo (tối thiểu 6 ký tự) *</label>
+              <input type="password" id="uPassword" class="form-control" required minlength="6">
+            </div>
+
+            <!-- Trường dành cho Nội bộ -->
+            <div class="col-md-6 internal-field">
+              <label class="form-label">Bộ phận</label>
+              <select id="uDept" class="form-select"></select>
+            </div>
+            <div class="col-md-6 internal-field">
+              <label class="form-label">Chức vụ</label>
+              <select id="uPos" class="form-select"></select>
+            </div>
+
+            <!-- Trường dành cho Nhà thầu -->
+            <div class="col-md-12 contractor-field d-none">
+              <label class="form-label">Thuộc Nhà thầu *</label>
+              <select id="uContractor" class="form-select"></select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="saveNewUser()">Tạo Tài Khoản</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth-guard.js"></script>
+
+  <script>
+    let ROLES_CACHE = {};
+
+    initAuthGuard("users", () => {
+      loadRoles();
+      loadUsers();
+      loadDropdownOptions();
+    });
+
+    function toggleUserType() {
+      const isContractor = document.getElementById("uType").value === "CONTRACTOR";
+      document.querySelectorAll(".internal-field").forEach(el => el.classList.toggle("d-none", isContractor));
+      document.querySelectorAll(".contractor-field").forEach(el => el.classList.toggle("d-none", !isContractor));
+    }
+
+    function loadDropdownOptions() {
+      db.ref("config/departments").on("value", s => {
+        const d = s.val() || {};
+        document.getElementById("uDept").innerHTML = Object.values(d).map(v => `<option value="${v}">${v}</option>`).join("");
+      });
+      db.ref("config/positions").on("value", s => {
+        const d = s.val() || {};
+        document.getElementById("uPos").innerHTML = Object.values(d).map(v => `<option value="${v}">${v}</option>`).join("");
+      });
+      db.ref("contractors").on("value", s => {
+        const d = s.val() || {};
+        document.getElementById("uContractor").innerHTML = Object.entries(d).map(([k, v]) => `<option value="${k}">[${k}] ${v.name}</option>`).join("");
+      });
+    }
+
+    function loadRoles() {
+      db.ref("roles").on("value", snap => {
+        ROLES_CACHE = snap.val() || {};
+        document.getElementById("uRole").innerHTML = Object.entries(ROLES_CACHE)
+          .map(([id, r]) => `<option value="${id}">${r.name}</option>`).join("");
+
+        document.getElementById("tblRoles").innerHTML = Object.entries(ROLES_CACHE).map(([id, r]) => `
+          <tr>
+            <td><code>${id}</code></td>
+            <td class="fw-bold">${r.name}</td>
+            <td class="small">${JSON.stringify(r.permissions)}</td>
+          </tr>
+        `).join("");
+      });
+    }
+
+    function createRole() {
+      const name = document.getElementById("newRoleName").value.trim();
+      if (!name) return alert("Nhập tên nhóm quyền!");
+      const roleId = "ROLE_" + Date.now();
+      const permissions = {
+        config: { view: document.getElementById("p_cfg_v").checked, edit: document.getElementById("p_cfg_e").checked },
+        users: { view: document.getElementById("p_usr_v").checked, add: document.getElementById("p_usr_a").checked },
+        contractors: { view: document.getElementById("p_cnt_v").checked, edit: document.getElementById("p_cnt_e").checked },
+        sra: { view: document.getElementById("p_sra_v").checked, approve: document.getElementById("p_sra_app").checked },
+        ptw: { view: document.getElementById("p_ptw_v").checked, approve: document.getElementById("p_ptw_app").checked },
+        gate: { view: document.getElementById("p_gate_v").checked }
+      };
+      db.ref(`roles/${roleId}`).set({ name, permissions });
+      document.getElementById("newRoleName").value = "";
+      alert("Đã tạo nhóm quyền thành công!");
+    }
+
+    async function saveNewUser() {
+      const type = document.getElementById("uType").value;
+      const roleId = document.getElementById("uRole").value;
+      const name = document.getElementById("uName").value.trim();
+      const username = document.getElementById("uUsername").value.trim();
+      const realEmail = document.getElementById("uEmail").value.trim();
+      const password = document.getElementById("uPassword").value;
+
+      if (!name || !username || !password) return alert("Vui lòng điền đủ thông tin bắt buộc!");
+
+      // Sử dụng Secondary App để tạo User trên Firebase Auth mà không làm Admin hiện tại bị đăng xuất
+      const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary" + Date.now());
+      const authEmail = username.includes("@") ? username : `${username}@csms.local`;
+
+      try {
+        const userCred = await secondaryApp.auth().createUserWithEmailAndPassword(authEmail, password);
+        const uid = userCred.user.uid;
+        await secondaryApp.auth().signOut();
+        await secondaryApp.delete();
+
+        const userRecord = {
+          uid,
+          name,
+          username,
+          email: realEmail || authEmail,
+          type,
+          roleId,
+          department: type === "INTERNAL" ? document.getElementById("uDept").value : "",
+          position: type === "INTERNAL" ? document.getElementById("uPos").value : "",
+          contractorId: type === "CONTRACTOR" ? document.getElementById("uContractor").value : "",
+          active: true,
+          updatedAt: new Date().toLocaleString("vi-VN")
+        };
+
+        await db.ref(`users/${uid}`).set(userRecord);
+        bootstrap.Modal.getInstance(document.getElementById("modalAddUser")).hide();
+        document.getElementById("formAddUser").reset();
+        alert("Tạo tài khoản thành công!");
+      } catch (err) {
+        await secondaryApp.delete();
+        alert("Lỗi tạo tài khoản: " + err.message);
+      }
+    }
+
+    function loadUsers() {
+      db.ref("users").on("value", snap => {
+        const users = snap.val() || {};
+        document.getElementById("tblUsers").innerHTML = Object.entries(users).map(([uid, u], idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td class="fw-bold">${u.name}</td>
+            <td><code>${u.username}</code><br><small class="text-muted">${u.email}</small></td>
+            <td><span class="badge ${u.type === 'INTERNAL' ? 'bg-primary' : 'bg-warning text-dark'}">${u.type === 'INTERNAL' ? 'Nội bộ' : 'Nhà thầu'}</span></td>
+            <td>${u.type === 'INTERNAL' ? `${u.department || ''} - ${u.position || ''}` : `Mã NT: <b>${u.contractorId}</b>`}</td>
+            <td>${ROLES_CACHE[u.roleId]?.name || u.roleId}</td>
+            <td>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" ${u.active ? 'checked' : ''} onchange="db.ref('users/${uid}/active').set(this.checked)">
+              </div>
+            </td>
+            <td><button class="btn btn-outline-danger btn-sm" onclick="if(confirm('Xóa user này?')) db.ref('users/${uid}').remove()"><i class="fas fa-trash"></i></button></td>
+          </tr>
+        `).join("");
+      });
+    }
+  </script>
+</body>
+</html>
