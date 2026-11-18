@@ -1,4 +1,5 @@
 let CURRENT_USER = null;
+const SUPER_ADMIN_EMAIL = "deptc.gvatvsld@gmail.com"; // Khóa cứng email quản trị tối cao
 
 // Kiểm tra trạng thái đăng nhập trên mọi trang
 function initAuthGuard(requiredPageKey, onReadyCallback) {
@@ -10,41 +11,43 @@ function initAuthGuard(requiredPageKey, onReadyCallback) {
       return;
     }
 
-    // Lấy thông tin hồ sơ & quyền từ Realtime Database
     const snap = await db.ref(`users/${user.uid}`).once("value");
     let userData = snap.val();
 
-    // Tự động khởi tạo Super Admin cho tài khoản đăng nhập đầu tiên nếu hệ thống chưa có user
-    if (!userData) {
-      const allUsersSnap = await db.ref("users").limitToFirst(1).once("value");
-      if (!allUsersSnap.exists()) {
+    // Nếu là email Super Admin -> Tự động khởi tạo hoặc khôi phục toàn quyền
+    if (user.email === SUPER_ADMIN_EMAIL) {
+      const fullPermissions = {
+        config: { view: true, add: true, edit: true, delete: true },
+        users: { view: true, add: true, edit: true, delete: true },
+        contractors: { view: true, add: true, edit: true, delete: true },
+        sra: { view: true, add: true, edit: true, approve: true, send: true },
+        ptw: { view: true, add: true, edit: true, approve: true },
+        gate: { view: true, check: true }
+      };
+
+      await db.ref("roles/ROLE_SUPER_ADMIN").set({
+        name: "Quản trị hệ thống (Super Admin)",
+        permissions: fullPermissions
+      });
+
+      if (!userData || userData.roleId !== "ROLE_SUPER_ADMIN" || !userData.active) {
         userData = {
           uid: user.uid,
           email: user.email,
-          name: user.displayName || "Super Admin",
+          name: user.displayName || "Trần Công Đẹp (Admin)",
           username: user.email,
           type: "INTERNAL",
           roleId: "ROLE_SUPER_ADMIN",
           active: true,
-          createdAt: new Date().toISOString()
+          updatedAt: new Date().toISOString()
         };
         await db.ref(`users/${user.uid}`).set(userData);
-        await db.ref("roles/ROLE_SUPER_ADMIN").set({
-          name: "Quản trị hệ thống (Super Admin)",
-          permissions: {
-            config: { view: true, add: true, edit: true, delete: true },
-            users: { view: true, add: true, edit: true, delete: true },
-            contractors: { view: true, add: true, edit: true, delete: true },
-            sra: { view: true, add: true, edit: true, approve: true, send: true },
-            ptw: { view: true, add: true, edit: true, approve: true },
-            gate: { view: true, check: true }
-          }
-        });
-      } else {
-        alert("Tài khoản của bạn chưa được cấp quyền trên hệ thống. Vui lòng liên hệ Admin!");
-        await auth.signOut();
-        return;
       }
+    } else if (!userData) {
+      // Các tài khoản khác chưa được Admin tạo trong users.html sẽ bị chặn
+      alert("Tài khoản của bạn chưa được cấp quyền trên hệ thống. Vui lòng liên hệ Admin!");
+      await auth.signOut();
+      return;
     }
 
     if (!userData.active) {
@@ -53,7 +56,6 @@ function initAuthGuard(requiredPageKey, onReadyCallback) {
       return;
     }
 
-    // Lấy chi tiết quyền của Role
     const roleSnap = await db.ref(`roles/${userData.roleId}`).once("value");
     userData.role = roleSnap.val() || { name: "Chưa phân quyền", permissions: {} };
     CURRENT_USER = userData;
