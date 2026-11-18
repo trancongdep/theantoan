@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cấu hình Hệ thống - CSMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div id="app-navbar"></div>
+
+  <div class="container-fluid px-4">
+    <h4 class="fw-bold mb-3"><i class="fas fa-cogs text-primary me-2"></i>Cấu hình Danh mục Nền tảng</h4>
+
+    <!-- Tabs chức năng cấu hình -->
+    <ul class="nav nav-tabs mb-3" id="configTabs" role="tablist">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-sites">Nhà máy & Khu vực</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-depts">Bộ phận & Chức vụ</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-hazards">Danh mục Mối nguy</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-courses">Khóa đào tạo</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ptw">Giấy phép làm việc mẫu</button></li>
+    </ul>
+
+    <div class="tab-content bg-white p-4 rounded shadow-sm">
+      <!-- 1. NHÀ MÁY & KHU VỰC -->
+      <div class="tab-pane fade show active" id="tab-sites">
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <input type="text" id="siteName" class="form-control" placeholder="Tên Nhà máy / Đơn vị (VD: Nhà máy 1)">
+          </div>
+          <div class="col-md-5">
+            <input type="text" id="siteAreas" class="form-control" placeholder="Các khu vực cách nhau dấu phẩy (VD: Xưởng SX, Kho hóa chất, Trạm điện)">
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-primary w-100" onclick="addSite()"><i class="fas fa-plus me-1"></i>Thêm Nhà máy</button>
+          </div>
+        </div>
+        <table class="table table-bordered table-hover align-middle">
+          <thead class="table-light"><tr><th>STT</th><th>Tên Nhà máy / Đơn vị</th><th>Danh sách Khu vực làm việc</th><th width="100">Xóa</th></tr></thead>
+          <tbody id="tblSites"></tbody>
+        </table>
+      </div>
+
+      <!-- 2. BỘ PHẬN & CHỨC VỤ -->
+      <div class="tab-pane fade" id="tab-depts">
+        <div class="row">
+          <div class="col-md-6">
+            <h6 class="fw-bold">Quản lý Bộ phận</h6>
+            <div class="input-group mb-3">
+              <input type="text" id="deptName" class="form-control" placeholder="Tên bộ phận (VD: Bộ phận An toàn, Bảo vệ...)">
+              <button class="btn btn-primary" onclick="addSimpleItem('departments', 'deptName')">Thêm</button>
+            </div>
+            <ul class="list-group" id="listDepartments"></ul>
+          </div>
+          <div class="col-md-6">
+            <h6 class="fw-bold">Quản lý Chức vụ</h6>
+            <div class="input-group mb-3">
+              <input type="text" id="posName" class="form-control" placeholder="Tên chức vụ (VD: Giám sát, Trưởng ca bảo vệ...)">
+              <button class="btn btn-primary" onclick="addSimpleItem('positions', 'posName')">Thêm</button>
+            </div>
+            <ul class="list-group" id="listPositions"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. DANH MỤC MỐI NGUY -->
+      <div class="tab-pane fade" id="tab-hazards">
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <input type="text" id="hazCategory" class="form-control" placeholder="Nhóm mối nguy (VD: Điện, Cháy nổ, Trên cao)">
+          </div>
+          <div class="col-md-5">
+            <input type="text" id="hazItems" class="form-control" placeholder="Các mối nguy chi tiết cách nhau dấu phẩy">
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-primary w-100" onclick="addHazard()"><i class="fas fa-plus me-1"></i>Thêm Nhóm mối nguy</button>
+          </div>
+        </div>
+        <table class="table table-bordered align-middle">
+          <thead class="table-light"><tr><th>STT</th><th>Danh mục Mối nguy</th><th>Các mối nguy cụ thể</th><th width="100">Xóa</th></tr></thead>
+          <tbody id="tblHazards"></tbody>
+        </table>
+      </div>
+
+      <!-- 4. KHÓA ĐÀO TẠO -->
+      <div class="tab-pane fade" id="tab-courses">
+        <div class="row g-3 mb-4">
+          <div class="col-md-4"><input type="text" id="crsName" class="form-control" placeholder="Tên khóa học (VD: An toàn chung, Hot Work)"></div>
+          <div class="col-md-2">
+            <select id="crsType" class="form-select"><option value="Offline">Offline</option><option value="Online">Online</option></select>
+          </div>
+          <div class="col-md-3"><input type="number" id="crsMonths" class="form-control" placeholder="Hiệu lực (tháng)" value="12"></div>
+          <div class="col-md-3"><button class="btn btn-primary w-100" onclick="addCourse()"><i class="fas fa-plus me-1"></i>Thêm Khóa học</button></div>
+        </div>
+        <table class="table table-bordered align-middle">
+          <thead class="table-light"><tr><th>STT</th><th>Tên khóa đào tạo</th><th>Hình thức</th><th>Thời hạn (Tháng)</th><th width="100">Xóa</th></tr></thead>
+          <tbody id="tblCourses"></tbody>
+        </table>
+      </div>
+
+      <!-- 5. GIẤY PHÉP LÀM VIỆC MẪU (PTW TEMPLATES) -->
+      <div class="tab-pane fade" id="tab-ptw">
+        <div class="row g-3 mb-4">
+          <div class="col-md-4"><input type="text" id="ptwTplName" class="form-control" placeholder="Tên mẫu giấy phép (VD: Làm việc trên cao, Cô lập điện)"></div>
+          <div class="col-md-5"><input type="text" id="ptwTplCriteria" class="form-control" placeholder="Các tiêu chí bắt buộc cách nhau dấu phẩy (VD: Sức khỏe loại 1-2, Dây cứu sinh, Khoanh vùng)"></div>
+          <div class="col-md-3"><button class="btn btn-primary w-100" onclick="addPtwTemplate()"><i class="fas fa-plus me-1"></i>Thêm Mẫu PTW</button></div>
+        </div>
+        <table class="table table-bordered align-middle">
+          <thead class="table-light"><tr><th>STT</th><th>Tên Giấy phép mẫu</th><th>Danh sách Tiêu chí kiểm duyệt</th><th width="100">Xóa</th></tr></thead>
+          <tbody id="tblPtw"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth-guard.js"></script>
+
+  <script>
+    initAuthGuard("config", () => loadAllConfigs());
+
+    function loadAllConfigs() {
+      // Lắng nghe Realtime dữ liệu cấu hình
+      db.ref("config").on("value", snap => {
+        const cfg = snap.val() || {};
+        renderSites(cfg.sites || {});
+        renderSimpleList("listDepartments", "departments", cfg.departments || {});
+        renderSimpleList("listPositions", "positions", cfg.positions || {});
+        renderHazards(cfg.hazards || {});
+        renderCourses(cfg.courses || {});
+        renderPtw(cfg.ptwTemplates || {});
+      });
+    }
+
+    // 1. Nhà máy & Khu vực
+    function addSite() {
+      const name = document.getElementById("siteName").value.trim();
+      const areas = document.getElementById("siteAreas").value.split(",").map(s => s.trim()).filter(Boolean);
+      if (!name) return alert("Nhập tên nhà máy!");
+      db.ref("config/sites").push({ name, areas });
+      document.getElementById("siteName").value = "";
+      document.getElementById("siteAreas").value = "";
+    }
+    function renderSites(data) {
+      const tbody = document.getElementById("tblSites");
+      tbody.innerHTML = Object.entries(data).map(([id, item], idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td class="fw-bold">${item.name}</td>
+          <td>${(item.areas || []).map(a => `<span class="badge bg-secondary me-1">${a}</span>`).join("")}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="db.ref('config/sites/${id}').remove()"><i class="fas fa-trash"></i></button></td>
+        </tr>
+      `).join("");
+    }
+
+    // 2. Bộ phận & Chức vụ
+    function addSimpleItem(node, inputId) {
+      const val = document.getElementById(inputId).value.trim();
+      if (!val) return;
+      db.ref(`config/${node}`).push(val);
+      document.getElementById(inputId).value = "";
+    }
+    function renderSimpleList(ulId, node, data) {
+      document.getElementById(ulId).innerHTML = Object.entries(data).map(([id, val]) => `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          ${val}
+          <button class="btn btn-outline-danger btn-sm" onclick="db.ref('config/${node}/${id}').remove()"><i class="fas fa-times"></i></button>
+        </li>
+      `).join("");
+    }
+
+    // 3. Mối nguy
+    function addHazard() {
+      const category = document.getElementById("hazCategory").value.trim();
+      const items = document.getElementById("hazItems").value.split(",").map(s => s.trim()).filter(Boolean);
+      if (!category) return;
+      db.ref("config/hazards").push({ category, items });
+      document.getElementById("hazCategory").value = "";
+      document.getElementById("hazItems").value = "";
+    }
+    function renderHazards(data) {
+      document.getElementById("tblHazards").innerHTML = Object.entries(data).map(([id, item], idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td class="fw-bold text-danger">${item.category}</td>
+          <td>${(item.items || []).join(", ")}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="db.ref('config/hazards/${id}').remove()"><i class="fas fa-trash"></i></button></td>
+        </tr>
+      `).join("");
+    }
+
+    // 4. Khóa đào tạo
+    function addCourse() {
+      const name = document.getElementById("crsName").value.trim();
+      const type = document.getElementById("crsType").value;
+      const validMonths = parseInt(document.getElementById("crsMonths").value) || 12;
+      if (!name) return;
+      db.ref("config/courses").push({ name, type, validMonths });
+      document.getElementById("crsName").value = "";
+    }
+    function renderCourses(data) {
+      document.getElementById("tblCourses").innerHTML = Object.entries(data).map(([id, item], idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td class="fw-bold">${item.name}</td>
+          <td><span class="badge ${item.type === 'Online' ? 'bg-info' : 'bg-warning text-dark'}">${item.type}</span></td>
+          <td>${item.validMonths} tháng</td>
+          <td><button class="btn btn-danger btn-sm" onclick="db.ref('config/courses/${id}').remove()"><i class="fas fa-trash"></i></button></td>
+        </tr>
+      `).join("");
+    }
+
+    // 5. Mẫu PTW
+    function addPtwTemplate() {
+      const name = document.getElementById("ptwTplName").value.trim();
+      const criteria = document.getElementById("ptwTplCriteria").value.split(",").map(s => s.trim()).filter(Boolean);
+      if (!name || criteria.length === 0) return alert("Nhập tên giấy phép và ít nhất 1 tiêu chí!");
+      db.ref("config/ptwTemplates").push({ name, criteria });
+      document.getElementById("ptwTplName").value = "";
+      document.getElementById("ptwTplCriteria").value = "";
+    }
+    function renderPtw(data) {
+      document.getElementById("tblPtw").innerHTML = Object.entries(data).map(([id, item], idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td class="fw-bold text-primary">${item.name}</td>
+          <td><ol class="mb-0 ps-3">${(item.criteria || []).map(c => `<li>${c}</li>`).join("")}</ol></td>
+          <td><button class="btn btn-danger btn-sm" onclick="db.ref('config/ptwTemplates/${id}').remove()"><i class="fas fa-trash"></i></button></td>
+        </tr>
+      `).join("");
+    }
+  </script>
+</body>
+</html>
