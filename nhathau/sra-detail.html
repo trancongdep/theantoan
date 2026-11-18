@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chi tiết Gói công việc & Cấp thẻ QR - CSMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <style>
+    .qr-card-preview { border: 2px solid #0284c7; border-radius: 12px; background: #fff; max-width: 480px; margin: auto; overflow: hidden; }
+    .qr-card-header { background: linear-gradient(90deg, #0f172a, #0284c7); color: #fff; padding: 12px 16px; }
+    @media print {
+      body * { visibility: hidden; }
+      #printableGatePass, #printableGatePass * { visibility: visible; }
+      #printableGatePass { position: fixed; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div id="app-navbar"></div>
+
+  <div class="container-fluid px-4 pb-5">
+    <!-- HEADER & THANH CÔNG CỤ DUYỆT / GỬI MAIL / ĐÓNG GÓI VIỆC -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+      <div>
+        <a href="sra-list.html" class="btn btn-sm btn-outline-secondary mb-1"><i class="fas fa-arrow-left me-1"></i>Quay lại danh sách</a>
+        <h4 class="fw-bold mb-0 text-primary" id="headerSraTitle">Chi tiết Gói công việc</h4>
+      </div>
+      <div class="d-flex flex-wrap gap-2" id="actionToolbar"></div>
+    </div>
+
+    <!-- TABS CHI TIẾT GÓI VIỆC -->
+    <ul class="nav nav-tabs mb-3" role="tablist">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-info">1. Thông tin chung & Mối nguy</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-assign-workers">2. Nhân sự tham gia & Đào tạo</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-assign-eq">3. Vật tư & Thiết bị huy động</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ptw-linked">4. Giấy phép làm việc (PTW)</button></li>
+    </ul>
+
+    <div class="tab-content bg-white p-4 rounded shadow-sm">
+      <!-- TAB 1: THÔNG TIN CHUNG -->
+      <div class="tab-pane fade show active" id="tab-info">
+        <div class="row g-3" id="sraGeneralInfo"></div>
+      </div>
+
+      <!-- TAB 2: NHÂN SỰ THAM GIA, KẾT QUẢ ĐÀO TẠO & CẤP THẺ QR RA VÀO CỔNG -->
+      <div class="tab-pane fade" id="tab-assign-workers">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+          <div class="input-group w-auto">
+            <select id="selectWorkerToAssign" class="form-select"></select>
+            <button class="btn btn-primary" onclick="assignWorkerToSra()"><i class="fas fa-user-plus me-1"></i>Đưa vào gói việc</button>
+          </div>
+          <button id="btnBulkGatePass" class="btn btn-success d-none" onclick="openIssueGatePassModal()">
+            <i class="fas fa-id-card me-1"></i>Cấp Thẻ QR Ra vào cổng
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th width="40"><input type="checkbox" onclick="toggleAllWorkers(this)"></th>
+                <th>Họ tên & CCCD</th>
+                <th>Hồ sơ cá nhân (5 mục)</th>
+                <th>Khóa đào tạo bắt buộc</th>
+                <th>Trạng thái duyệt</th>
+                <th>Thẻ ra vào cổng (QR)</th>
+                <th width="200">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="tblAssignedWorkers"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 3: VẬT TƯ THIẾT BỊ -->
+      <div class="tab-pane fade" id="tab-assign-eq">
+        <div class="input-group w-50 mb-3">
+          <select id="selectEqToAssign" class="form-select"></select>
+          <button class="btn btn-primary" onclick="assignEqToSra()"><i class="fas fa-plus me-1"></i>Đăng ký thiết bị vào gói việc</button>
+        </div>
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr><th>Mã TB</th><th>Tên Vật tư / Thiết bị</th><th>Phân loại</th><th>Hồ sơ kiểm định</th><th>Hạn kiểm định</th><th>Trạng thái</th><th>Xóa</th></tr>
+          </thead>
+          <tbody id="tblAssignedEq"></tbody>
+        </table>
+      </div>
+
+      <!-- TAB 4: GIẤY PHÉP LÀM VIỆC LIÊN KẾT -->
+      <div class="tab-pane fade" id="tab-ptw-linked">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-muted small">Danh sách Giấy phép làm việc hàng ngày (Daily PTW) thuộc gói công việc này.</span>
+          <a id="linkCreatePtw" href="ptw.html" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i>Tạo Giấy phép làm việc mới</a>
+        </div>
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr><th>Mã PTW</th><th>Loại giấy phép</th><th>Hiệu lực</th><th>Tiêu chí đạt</th><th>Trạng thái</th><th>Mở</th></tr>
+          </thead>
+          <tbody id="tblLinkedPtw"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CẬP NHẬT KẾT QUẢ ĐÀO TẠO CHO NHÂN SỰ (STEP 13) -->
+  <div class="modal fade" id="modalTrainingResult" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Cập nhật Kết quả Đào tạo An toàn</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="trWorkerCccd">
+          <p class="fw-bold mb-2" id="trWorkerLabel"></p>
+          <div id="trCoursesFormList"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          <button type="button" class="btn btn-primary" onclick="saveTrainingResults()">Lưu Kết Quả</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CẤP THẺ RA VÀO CỔNG (STEP 13) -->
+  <div class="modal fade" id="modalIssueGatePass" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">Cấp Thẻ QR Ra vào cổng</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info small">Chỉ cấp thẻ cho nhân sự đã được duyệt hồ sơ và đạt các khóa huấn luyện an toàn yêu cầu.</div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Hiệu lực thẻ từ ngày *</label>
+            <input type="date" id="gpFrom" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Đến ngày *</label>
+            <input type="date" id="gpTo" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-success" onclick="confirmIssueGatePass()">Xác nhận Cấp Thẻ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL XEM & IN THẺ RA VÀO CỔNG QR -->
+  <div class="modal fade" id="modalViewQrCard" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Thẻ Ra Vào Cổng Nhà Thầu</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="printableGatePass">
+          <div class="qr-card-preview shadow-sm">
+            <div class="qr-card-header d-flex justify-content-between align-items-center">
+              <div>
+                <div class="small opacity-75">HỆ THỐNG QUẢN LÝ AN TOÀN CSMS</div>
+                <h5 class="fw-bold mb-0">THẺ RA VÀO CỔNG</h5>
+              </div>
+              <i class="fas fa-shield-alt fa-2x"></i>
+            </div>
+            <div class="p-3 row align-items-center">
+              <div class="col-7 small">
+                <p class="mb-1"><strong>Họ tên:</strong> <span id="qrName" class="text-uppercase fw-bold text-primary"></span></p>
+                <p class="mb-1"><strong>CCCD:</strong> <code id="qrCccd" class="fs-6"></code></p>
+                <p class="mb-1"><strong>Nhà thầu:</strong> <span id="qrContractor"></span></p>
+                <p class="mb-1"><strong>Khu vực:</strong> <span id="qrSite"></span></p>
+                <p class="mb-0"><strong>Hiệu lực:</strong> <span id="qrValid" class="text-success fw-bold"></span></p>
+              </div>
+              <div class="col-5 text-center">
+                <div id="qrcodeContainer" class="d-inline-block p-1 border rounded"></div>
+                <div class="small text-muted mt-1" style="font-size: 10px;">Quét tại cổng bảo vệ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          <button type="button" class="btn btn-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>In Thẻ / Lưu PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ĐÓNG GÓI CÔNG VIỆC & ĐÁNH GIÁ NHÀ THẦU (STEP 18) -->
+  <div class="modal fade" id="modalCloseSra" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title">Hoàn thành & Đánh giá Nhà thầu</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-bold">1. Đánh giá tuân thủ An toàn (HSE) *</label>
+            <select id="rateSafety" class="form-select">
+              <option value="Rất tốt">Rất tốt (Không vi phạm, chủ động phòng ngừa)</option>
+              <option value="Tốt">Tốt</option>
+              <option value="Hoàn thành">Hoàn thành (Có nhắc nhở nhỏ)</option>
+              <option value="Tệ">Tệ (Vi phạm quy định an toàn)</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">2. Đánh giá Chất lượng & Tiến độ dịch vụ *</label>
+            <select id="rateQuality" class="form-select">
+              <option value="Rất tốt">Rất tốt</option>
+              <option value="Tốt">Tốt</option>
+              <option value="Hoàn thành">Hoàn thành</option>
+              <option value="Tệ">Tệ</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">3. Đề xuất tiếp tục hợp tác lần sau *</label>
+            <select id="rateRehire" class="form-select">
+              <option value="Tiếp tục">Tiếp tục sử dụng</option>
+              <option value="Không tiếp tục">Không tiếp tục (Đưa vào danh sách hạn chế)</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Ghi chú nghiệm thu</label>
+            <textarea id="rateNote" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-success" onclick="submitCloseAndRateSra()">Xác nhận Đóng Gói Việc</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js?v=3"></script>
+  <script src="js/gas-api.js?v=3"></script>
+  <script src="js/auth-guard.js?v=3"></script>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const SRA_ID = urlParams.get("id");
+    let SRA_DATA = null;
+    let CONTRACTOR_DATA = null;
+
+    initAuthGuard("sra", () => {
+      if (!SRA_ID) return window.location.href = "sra-list.html";
+      document.getElementById("linkCreatePtw").href = `ptw.html?sraId=${SRA_ID}`;
+      loadSraDetail();
+    });
+
+    function loadSraDetail() {
+      db.ref(`packages_sra/${SRA_ID}`).on("value", snap => {
+        SRA_DATA = snap.val();
+        if (!SRA_DATA) return alert("Không tìm thấy gói công việc!");
+
+        document.getElementById("headerSraTitle").textContent = `[${SRA_DATA.code}] ${SRA_DATA.title}`;
+        renderActionToolbar();
+        renderGeneralInfo();
+
+        db.ref(`contractors/${SRA_DATA.contractorId}`).on("value", cSnap => {
+          CONTRACTOR_DATA = cSnap.val() || {};
+          renderAssignedWorkers();
+          renderAssignedEquipments();
+        });
+
+        loadLinkedPtw();
+      });
+    }
+
+    function renderActionToolbar() {
+      const tb = document.getElementById("actionToolbar");
+      const isInternal = CURRENT_USER.type === "INTERNAL";
+      let html = "";
+
+      if (isInternal && SRA_DATA.status === "PENDING") {
+        html += `
+          <button class="btn btn-success btn-sm" onclick="approveSra('APPROVED')"><i class="fas fa-check me-1"></i>Duyệt SRA</button>
+          <button class="btn btn-danger btn-sm" onclick="approveSra('REJECTED')"><i class="fas fa-times me-1"></i>Từ chối</button>
+        `;
+      }
+      if (isInternal && SRA_DATA.status === "APPROVED") {
+        html += `<button class="btn btn-info text-white btn-sm" onclick="sendEmailNotification('TO_CONTRACTOR')"><i class="fas fa-paper-plane me-1"></i>Gửi thông báo Nhà thầu</button>`;
+        if (SRA_DATA.workStatus !== "COMPLETED") {
+          html += `<button class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modalCloseSra"><i class="fas fa-flag-checkered me-1"></i>Đóng & Đánh giá NT</button>`;
+        }
+      }
+      if (!isInternal) {
+        html += `<button class="btn btn-warning btn-sm" onclick="sendEmailNotification('TO_OWNER')"><i class="fas fa-envelope me-1"></i>Gửi Chủ đầu tư duyệt hồ sơ</button>`;
+      }
+      tb.innerHTML = html;
+    }
+
+    async function approveSra(newStatus) {
+      await db.ref(`packages_sra/${SRA_ID}`).update({
+        status: newStatus,
+        approvedBy: CURRENT_USER.name,
+        approvedAt: new Date().toLocaleString("vi-VN")
+      });
+      alert(newStatus === "APPROVED" ? "Đã phê duyệt Gói công việc!" : "Đã từ chối Gói công việc!");
+    }
+
+    async function sendEmailNotification(direction) {
+      try {
+        if (direction === "TO_CONTRACTOR") {
+          const toEmail = CONTRACTOR_DATA.email;
+          if (!toEmail) return alert("Nhà thầu chưa có email liên hệ!");
+          await GasAPI.sendEmail(
+            toEmail,
+            `Yêu cầu bổ sung hồ sơ Gói công việc [${SRA_DATA.code}]`,
+            `<p>Kính gửi <b>${SRA_DATA.contractorName}</b>,</p>
+             <p>Gói công việc <b>${SRA_DATA.title}</b> (${SRA_DATA.code}) đã được phê duyệt. Vui lòng truy cập hệ thống CSMS để cập nhật hồ sơ nhân sự, thiết bị và lịch huấn luyện an toàn.</p>`
+          );
+          alert("Đã gửi email thông báo tới Nhà thầu: " + toEmail);
+        } else {
+          await GasAPI.sendEmail(
+            "deptc.gvatvsld@gmail.com",
+            `Nhà thầu đã cập nhật hồ sơ [${SRA_DATA.code}]`,
+            `<p>Nhà thầu <b>${SRA_DATA.contractorName}</b> vừa cập nhật danh sách nhân sự/thiết bị cho gói việc <b>${SRA_DATA.title}</b>. Vui lòng kiểm tra và phê duyệt.</p>`
+          );
+          alert("Đã gửi thông báo tới Chủ đầu tư!");
+        }
+      } catch (e) {
+        alert("Lỗi gửi mail: " + e.message);
+      }
+    }
+
+    function renderGeneralInfo() {
+      document.getElementById("sraGeneralInfo").innerHTML = `
+        <div class="col-md-6">
+          <table class="table table-sm table-bordered">
+            <tr><th width="160" class="bg-light">Nhà thầu:</th><td class="fw-bold">${SRA_DATA.contractorName} (${SRA_DATA.contractorId})</td></tr>
+            <tr><th class="bg-light">Địa điểm:</th><td>${SRA_DATA.siteName} - ${SRA_DATA.area}</td></tr>
+            <tr><th class="bg-light">Thời gian:</th><td>${SRA_DATA.fromDate} đến ${SRA_DATA.toDate}</td></tr>
+            <tr><th class="bg-light">Giám sát:</th><td>${SRA_DATA.supervisorName}</td></tr>
+            <tr><th class="bg-light">Duyệt cấp 1 / 2:</th><td>${SRA_DATA.approver1Name} / ${SRA_DATA.approver2Name || '-'}</td></tr>
+          </table>
+        </div>
+        <div class="col-md-6">
+          <table class="table table-sm table-bordered">
+            <tr><th width="160" class="bg-light">Trạng thái SRA:</th><td><span class="badge ${SRA_DATA.status === 'APPROVED' ? 'bg-success' : 'bg-warning text-dark'}">${SRA_DATA.status}</span></td></tr>
+            <tr><th class="bg-light">Mô tả công việc:</th><td>${SRA_DATA.desc}</td></tr>
+            <tr><th class="bg-light text-danger">Mối nguy:</th><td>${(SRA_DATA.hazards || []).join("<br>")}</td></tr>
+            <tr><th class="bg-light text-success">Biện pháp KS:</th><td>${SRA_DATA.controls}</td></tr>
+            <tr><th class="bg-light text-primary">Khóa học bắt buộc:</th><td>${(SRA_DATA.requiredCourses || []).map(c => `<span class="badge bg-info text-dark me-1">${c.name}</span>`).join("")}</td></tr>
+          </table>
+        </div>
+      `;
+    }
+
+    // --- QUẢN LÝ NHÂN SỰ TRONG GÓI VIỆC ---
+    function renderAssignedWorkers() {
+      const allWorkers = CONTRACTOR_DATA.workers || {};
+      const assigned = SRA_DATA.assignedWorkers || {};
+      const isInternal = CURRENT_USER.type === "INTERNAL";
+
+      if (isInternal) document.getElementById("btnBulkGatePass").classList.remove("d-none");
+
+      // Dropdown chọn nhân sự chưa gán vào gói việc
+      document.getElementById("selectWorkerToAssign").innerHTML = Object.entries(allWorkers)
+        .filter(([cccd]) => !assigned[cccd])
+        .map(([cccd, w]) => `<option value="${cccd}">${w.name} (${cccd}) - ${w.job}</option>`).join("");
+
+      const reqCourses = SRA_DATA.requiredCourses || [];
+
+      document.getElementById("tblAssignedWorkers").innerHTML = Object.entries(assigned).map(([cccd, item]) => {
+        const w = allWorkers[cccd] || { name: item.name, docs: {}, trainings: {} };
+        const docs = w.docs || {};
+        const approvedDocs = Object.values(docs).filter(d => d.status === "APPROVED").length;
+
+        // Kiểm tra kết quả đào tạo
+        const passedCourses = reqCourses.filter(rc => w.trainings?.[rc.id]?.result === "PASS" && new Date(w.trainings[rc.id].expiry) >= new Date()).length;
+        const allCoursesOk = passedCourses === reqCourses.length;
+
+        // Thẻ ra vào cổng
+        const gp = w.gatePass;
+        const gpValid = gp && gp.active && new Date(gp.to) >= new Date();
+
+        return `
+          <tr>
+            <td><input type="checkbox" class="worker-chk" value="${cccd}"></td>
+            <td><div class="fw-bold">${w.name}</div><code>${cccd}</code></td>
+            <td><span class="badge ${approvedDocs >= 5 ? 'bg-success' : 'bg-warning text-dark'}">${approvedDocs}/5 hồ sơ đã duyệt</span></td>
+            <td>
+              <span class="badge ${allCoursesOk ? 'bg-success' : 'bg-danger'}">${passedCourses}/${reqCourses.length} khóa đạt</span>
+              ${isInternal ? `<button class="btn btn-link btn-sm p-0 ms-1" onclick="openTrainingModal('${cccd}')">Chấm điểm</button>` : ''}
+            </td>
+            <td>
+              ${item.approved
+                ? `<span class="badge bg-success">Đã duyệt tham gia</span>`
+                : (isInternal ? `<button class="btn btn-sm btn-outline-success" onclick="db.ref('packages_sra/${SRA_ID}/assignedWorkers/${cccd}/approved').set(true)">Duyệt nhân sự</button>` : `<span class="badge bg-warning text-dark">Chờ duyệt</span>`)}
+            </td>
+            <td>
+              ${gpValid
+                ? `<button class="btn btn-sm btn-outline-primary" onclick="viewQrCard('${cccd}')"><i class="fas fa-qrcode me-1"></i>Xem thẻ (${gp.to})</button>`
+                : `<span class="text-muted small">Chưa cấp / Hết hạn</span>`}
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-danger" onclick="db.ref('packages_sra/${SRA_ID}/assignedWorkers/${cccd}').remove()"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function assignWorkerToSra() {
+      const cccd = document.getElementById("selectWorkerToAssign").value;
+      if (!cccd) return alert("Không còn nhân sự khả dụng để chọn!");
+      const w = CONTRACTOR_DATA.workers[cccd];
+      await db.ref(`packages_sra/${SRA_ID}/assignedWorkers/${cccd}`).set({
+        cccd, name: w.name, approved: false, addedAt: new Date().toLocaleString("vi-VN")
+      });
+    }
+
+    function toggleAllWorkers(masterChk) {
+      document.querySelectorAll(".worker-chk").forEach(c => c.checked = masterChk.checked);
+    }
+
+    // Cập nhật kết quả đào tạo
+    function openTrainingModal(cccd) {
+      const w = CONTRACTOR_DATA.workers[cccd];
+      const reqCourses = SRA_DATA.requiredCourses || [];
+      document.getElementById("trWorkerCccd").value = cccd;
+      document.getElementById("trWorkerLabel").textContent = `Nhân sự: ${w.name} (${cccd})`;
+
+      const defaultExp = new Date();
+      defaultExp.setFullYear(defaultExp.getFullYear() + 1);
+      const defaultExpStr = defaultExp.toISOString().split("T")[0];
+
+      document.getElementById("trCoursesFormList").innerHTML = reqCourses.map(rc => {
+        const cur = w.trainings?.[rc.id] || {};
+        return `
+          <div class="border rounded p-2 mb-2 bg-light">
+            <div class="fw-bold text-primary mb-1">${rc.name}</div>
+            <div class="row g-2">
+              <div class="col-6">
+                <select class="form-select form-select-sm tr-res" data-cid="${rc.id}" data-cname="${rc.name}">
+                  <option value="PASS" ${cur.result === 'PASS' ? 'selected' : ''}>Đạt (PASS)</option>
+                  <option value="FAIL" ${cur.result === 'FAIL' ? 'selected' : ''}>Chưa đạt (FAIL)</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <input type="date" class="form-control form-control-sm tr-exp" data-cid="${rc.id}" value="${cur.expiry || defaultExpStr}">
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      new bootstrap.Modal(document.getElementById("modalTrainingResult")).show();
+    }
+
+    async function saveTrainingResults() {
+      const cccd = document.getElementById("trWorkerCccd").value;
+      const updates = {};
+      document.querySelectorAll(".tr-res").forEach(sel => {
+        const cid = sel.dataset.cid;
+        const expInput = document.querySelector(`.tr-exp[data-cid="${cid}"]`);
+        updates[cid] = {
+          courseName: sel.dataset.cname,
+          result: sel.value,
+          expiry: expInput.value,
+          updatedBy: CURRENT_USER.name
+        };
+      });
+      await db.ref(`contractors/${SRA_DATA.contractorId}/workers/${cccd}/trainings`).update(updates);
+      bootstrap.Modal.getInstance(document.getElementById("modalTrainingResult")).hide();
+    }
+
+    // Cấp thẻ ra vào cổng QR
+    function openIssueGatePassModal() {
+      const selected = Array.from(document.querySelectorAll(".worker-chk:checked"));
+      if (selected.length === 0) return alert("Vui lòng tích chọn ít nhất 1 nhân sự để cấp thẻ!");
+      document.getElementById("gpFrom").value = SRA_DATA.fromDate;
+      document.getElementById("gpTo").value = SRA_DATA.toDate;
+      new bootstrap.Modal(document.getElementById("modalIssueGatePass")).show();
+    }
+
+    async function confirmIssueGatePass() {
+      const from = document.getElementById("gpFrom").value;
+      const to = document.getElementById("gpTo").value;
+      if (!from || !to) return alert("Chọn thời hạn hiệu lực thẻ!");
+
+      const selectedCccds = Array.from(document.querySelectorAll(".worker-chk:checked")).map(c => c.value);
+      for (const cccd of selectedCccds) {
+        await db.ref(`contractors/${SRA_DATA.contractorId}/workers/${cccd}/gatePass`).set({
+          active: true,
+          from, to,
+          siteName: SRA_DATA.siteName,
+          area: SRA_DATA.area,
+          sraCode: SRA_ID,
+          issuedBy: CURRENT_USER.name,
+          issuedAt: new Date().toLocaleString("vi-VN")
+        });
+      }
+      bootstrap.Modal.getInstance(document.getElementById("modalIssueGatePass")).hide();
+      alert(`Đã cấp thẻ QR ra vào cổng cho ${selectedCccds.length} nhân sự!`);
+    }
+
+    function viewQrCard(cccd) {
+      const w = CONTRACTOR_DATA.workers[cccd];
+      const gp = w.gatePass;
+      document.getElementById("qrName").textContent = w.name;
+      document.getElementById("qrCccd").textContent = cccd;
+      document.getElementById("qrContractor").textContent = SRA_DATA.contractorName;
+      document.getElementById("qrSite").textContent = `${gp.siteName} (${gp.area})`;
+      document.getElementById("qrValid").textContent = `${gp.from} → ${gp.to}`;
+
+      const qrBox = document.getElementById("qrcodeContainer");
+      qrBox.innerHTML = "";
+      new QRCode(qrBox, {
+        text: JSON.stringify({ cccd: cccd, contractorId: SRA_DATA.contractorId }),
+        width: 110,
+        height: 110
+      });
+
+      new bootstrap.Modal(document.getElementById("modalViewQrCard")).show();
+    }
+
+    // --- VẬT TƯ THIẾT BỊ ---
+    function renderAssignedEquipments() {
+      const allEq = CONTRACTOR_DATA.equipments || {};
+      const assigned = SRA_DATA.assignedEquipments || {};
+
+      document.getElementById("selectEqToAssign").innerHTML = Object.entries(allEq)
+        .filter(([code]) => !assigned[code])
+        .map(([code, eq]) => `<option value="${code}">[${code}] ${eq.name} (${eq.type})</option>`).join("");
+
+      document.getElementById("tblAssignedEq").innerHTML = Object.keys(assigned).map(code => {
+        const eq = allEq[code] || {};
+        return `
+          <tr>
+            <td><code>${code}</code></td>
+            <td class="fw-bold">${eq.name || ''}</td>
+            <td>${eq.type || ''}</td>
+            <td>${eq.fileUrl ? `<a href="${eq.fileUrl}" target="_blank">Xem hồ sơ</a>` : '-'}</td>
+            <td>${eq.expiry || '-'}</td>
+            <td><span class="badge ${eq.status === 'APPROVED' ? 'bg-success' : 'bg-warning text-dark'}">${eq.status || 'PENDING'}</span></td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="db.ref('packages_sra/${SRA_ID}/assignedEquipments/${code}').remove()"><i class="fas fa-trash"></i></button></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function assignEqToSra() {
+      const code = document.getElementById("selectEqToAssign").value;
+      if (!code) return;
+      await db.ref(`packages_sra/${SRA_ID}/assignedEquipments/${code}`).set(true);
+    }
+
+    // --- GIẤY PHÉP LÀM VIỆC LIÊN KẾT ---
+    function loadLinkedPtw() {
+      db.ref("permits_ptw").orderByChild("sraId").equalTo(SRA_ID).on("value", snap => {
+        const list = snap.val() || {};
+        document.getElementById("tblLinkedPtw").innerHTML = Object.values(list).map(p => {
+          const totalC = (p.checklist || []).length;
+          const okC = (p.checklist || []).filter(c => c.approved).length;
+          return `
+            <tr>
+              <td class="fw-bold text-primary">${p.code}</td>
+              <td>${p.templateName}</td>
+              <td>${p.validFrom} → ${p.validTo}</td>
+              <td><span class="badge bg-info text-dark">${okC}/${totalC} tiêu chí đạt</span></td>
+              <td><span class="badge ${p.status === 'APPROVED' ? 'bg-success' : 'bg-warning text-dark'}">${p.status}</span></td>
+              <td><a href="ptw.html?sraId=${SRA_ID}&ptwId=${p.code}" class="btn btn-sm btn-primary">Chi tiết</a></td>
+            </tr>
+          `;
+        }).join("");
+      });
+    }
+
+    // --- ĐÓNG GÓI CÔNG VIỆC & ĐÁNH GIÁ NHÀ THẦU ---
+    async function submitCloseAndRateSra() {
+      const rating = {
+        safety: document.getElementById("rateSafety").value,
+        quality: document.getElementById("rateQuality").value,
+        rehire: document.getElementById("rateRehire").value,
+        note: document.getElementById("rateNote").value.trim(),
+        ratedBy: CURRENT_USER.name,
+        ratedAt: new Date().toLocaleString("vi-VN")
+      };
+
+      await db.ref(`packages_sra/${SRA_ID}`).update({
+        workStatus: "COMPLETED",
+        rating
+      });
+
+      await GasAPI.syncRow(
+        "Danh_Gia_Nha_Thau",
+        ["Mã SRA", "Gói Công Việc", "Mã NT", "Tên Nhà Thầu", "Đánh Giá An Toàn", "Đánh Giá Chất Lượng", "Tiếp Tục Hợp Tác", "Ghi Chú", "Ngày Đánh Giá"],
+        [SRA_ID, SRA_DATA.title, SRA_DATA.contractorId, SRA_DATA.contractorName, rating.safety, rating.quality, rating.rehire, rating.note, rating.ratedAt],
+        0, SRA_ID
+      );
+
+      bootstrap.Modal.getInstance(document.getElementById("modalCloseSra")).hide();
+      alert("Đã đóng gói công việc và lưu kết quả đánh giá nhà thầu!");
+    }
+  </script>
+</body>
+</html>

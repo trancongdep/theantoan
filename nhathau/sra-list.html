@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danh sách Gói công việc (SRA) - CSMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div id="app-navbar"></div>
+
+  <div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="fw-bold mb-0"><i class="fas fa-briefcase text-primary me-2"></i>Quản lý Gói công việc (SRA)</h4>
+      <button id="btnNewSra" class="btn btn-primary d-none" data-bs-toggle="modal" data-bs-target="#modalCreateSra">
+        <i class="fas fa-plus me-1"></i>Tạo Gói công việc mới
+      </button>
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-body py-2 bg-white rounded row g-2 align-items-center">
+        <div class="col-md-4">
+          <input type="text" id="filterKeyword" class="form-control form-control-sm" placeholder="Tìm mã SRA, tên gói việc, nhà thầu..." onkeyup="renderSraTable()">
+        </div>
+        <div class="col-md-3">
+          <select id="filterApproval" class="form-select form-select-sm" onchange="renderSraTable()">
+            <option value="">-- Tất cả trạng thái duyệt --</option>
+            <option value="PENDING">Chờ duyệt SRA</option>
+            <option value="APPROVED">Đã duyệt SRA</option>
+            <option value="REJECTED">Từ chối</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select id="filterWorkStatus" class="form-select form-select-sm" onchange="renderSraTable()">
+            <option value="">-- Tất cả tiến độ thi công --</option>
+            <option value="WAITING">Chờ thực hiện</option>
+            <option value="IN_PROGRESS">Đang thực hiện</option>
+            <option value="COMPLETED">Hoàn thành / Đã đóng</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bảng danh sách SRA -->
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Mã Gói việc</th>
+                <th>Tên Gói công việc</th>
+                <th>Nhà thầu</th>
+                <th>Nhà máy / Khu vực</th>
+                <th>Thời gian thực hiện</th>
+                <th>Giám sát</th>
+                <th>Duyệt SRA</th>
+                <th>Tiến độ</th>
+                <th>Đánh giá sau NT</th>
+                <th width="140">Chi tiết</th>
+              </tr>
+            </thead>
+            <tbody id="tblSraList"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TẠO GÓI CÔNG VIỆC MỚI (STEP 11) -->
+  <div class="modal fade" id="modalCreateSra" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Thêm mới Gói công việc (Safety Risk Assessment - SRA)</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formCreateSra" class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Tên gọi gói công việc *</label>
+              <input type="text" id="sraTitle" class="form-control" placeholder="VD: Bảo trì hệ thống điện trạm biến áp..." required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Nhà thầu thực hiện *</label>
+              <select id="sraContractor" class="form-select" required></select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Nhà máy / Đơn vị *</label>
+              <select id="sraSite" class="form-select" onchange="onSraSiteChange()" required></select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Khu vực làm việc *</label>
+              <select id="sraArea" class="form-select" required></select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Cán bộ Giám sát công việc *</label>
+              <select id="sraSupervisor" class="form-select" required></select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label fw-bold">Thời gian từ *</label>
+              <input type="date" id="sraFrom" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-bold">Thời gian đến *</label>
+              <input type="date" id="sraTo" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-bold">Người duyệt cấp 1 *</label>
+              <select id="sraApprover1" class="form-select" required></select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-bold">Người duyệt cấp 2</label>
+              <select id="sraApprover2" class="form-select"></select>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label fw-bold">Mô tả phạm vi công việc *</label>
+              <textarea id="sraDesc" class="form-control" rows="2" required></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold text-danger">Nhận diện Mối nguy liên quan *</label>
+              <div id="sraHazardsBox" class="border rounded p-2 bg-light" style="max-height: 150px; overflow-y: auto;"></div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold text-success">Biện pháp kiểm soát an toàn đề nghị *</label>
+              <textarea id="sraControls" class="form-control" rows="5" placeholder="Nhập các biện pháp LOTO, rào chắn, PPE bắt buộc..." required></textarea>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label fw-bold text-primary">Khóa đào tạo an toàn bắt buộc cho nhân sự gói việc này *</label>
+              <div id="sraCoursesBox" class="d-flex flex-wrap gap-3 border rounded p-2 bg-light"></div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="saveNewSra()"><i class="fas fa-save me-1"></i>Lưu Gói công việc</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js?v=3"></script>
+  <script src="js/gas-api.js?v=3"></script>
+  <script src="js/auth-guard.js?v=3"></script>
+
+  <script>
+    let SRA_CACHE = {};
+    let CONTRACTORS_MAP = {};
+    let SITES_MAP = {};
+    let USERS_MAP = {};
+
+    initAuthGuard("sra", (user) => {
+      if (user.type === "INTERNAL") {
+        document.getElementById("btnNewSra").classList.remove("d-none");
+      }
+      loadFormMasterData();
+      loadSraList();
+    });
+
+    function loadFormMasterData() {
+      db.ref("contractors").on("value", s => {
+        CONTRACTORS_MAP = s.val() || {};
+        document.getElementById("sraContractor").innerHTML = Object.entries(CONTRACTORS_MAP)
+          .map(([k, v]) => `<option value="${k}">[${k}] ${v.name}</option>`).join("");
+      });
+
+      db.ref("config/sites").on("value", s => {
+        SITES_MAP = s.val() || {};
+        document.getElementById("sraSite").innerHTML = Object.entries(SITES_MAP)
+          .map(([k, v]) => `<option value="${k}">${v.name}</option>`).join("");
+        onSraSiteChange();
+      });
+
+      db.ref("users").orderByChild("type").equalTo("INTERNAL").on("value", s => {
+        USERS_MAP = s.val() || {};
+        const opts = Object.entries(USERS_MAP).map(([uid, u]) => `<option value="${uid}">${u.name}</option>`).join("");
+        document.getElementById("sraSupervisor").innerHTML = opts;
+        document.getElementById("sraApprover1").innerHTML = opts;
+        document.getElementById("sraApprover2").innerHTML = `<option value="">-- Không yêu cầu --</option>` + opts;
+      });
+
+      db.ref("config/hazards").on("value", s => {
+        const haz = s.val() || {};
+        document.getElementById("sraHazardsBox").innerHTML = Object.entries(haz).map(([k, h]) => `
+          <div class="form-check">
+            <input class="form-check-input haz-chk" type="checkbox" value="${h.category}: ${(h.items || []).join(', ')}" id="haz_${k}">
+            <label class="form-check-label small" for="haz_${k}"><b>${h.category}:</b> ${(h.items || []).join(', ')}</label>
+          </div>
+        `).join("");
+      });
+
+      db.ref("config/courses").on("value", s => {
+        const crs = s.val() || {};
+        document.getElementById("sraCoursesBox").innerHTML = Object.entries(crs).map(([k, c]) => `
+          <div class="form-check">
+            <input class="form-check-input crs-chk" type="checkbox" value="${k}" data-name="${c.name}" id="crs_${k}">
+            <label class="form-check-label small fw-semibold" for="crs_${k}">${c.name} (${c.type})</label>
+          </div>
+        `).join("");
+      });
+    }
+
+    function onSraSiteChange() {
+      const siteId = document.getElementById("sraSite").value;
+      const areas = SITES_MAP[siteId]?.areas || [];
+      document.getElementById("sraArea").innerHTML = areas.map(a => `<option value="${a}">${a}</option>`).join("");
+    }
+
+    async function saveNewSra() {
+      const title = document.getElementById("sraTitle").value.trim();
+      const contractorId = document.getElementById("sraContractor").value;
+      const siteId = document.getElementById("sraSite").value;
+      const area = document.getElementById("sraArea").value;
+      const supervisorUid = document.getElementById("sraSupervisor").value;
+      const fromDate = document.getElementById("sraFrom").value;
+      const toDate = document.getElementById("sraTo").value;
+      const approver1Uid = document.getElementById("sraApprover1").value;
+      const approver2Uid = document.getElementById("sraApprover2").value;
+      const desc = document.getElementById("sraDesc").value.trim();
+      const controls = document.getElementById("sraControls").value.trim();
+
+      const hazards = Array.from(document.querySelectorAll(".haz-chk:checked")).map(el => el.value);
+      const requiredCourses = Array.from(document.querySelectorAll(".crs-chk:checked")).map(el => ({
+        id: el.value, name: el.dataset.name
+      }));
+
+      if (!title || !contractorId || !fromDate || !toDate) return alert("Vui lòng nhập đầy đủ thông tin bắt buộc!");
+
+      const now = new Date();
+      const dateStr = now.toISOString().slice(2, 10).replace(/-/g, "");
+      const sraCode = `SRA-${contractorId}-${dateStr}-${Math.floor(100 + Math.random() * 900)}`;
+
+      const sraObj = {
+        code: sraCode,
+        title,
+        contractorId,
+        contractorName: CONTRACTORS_MAP[contractorId]?.name || contractorId,
+        siteId,
+        siteName: SITES_MAP[siteId]?.name || "",
+        area,
+        supervisorUid,
+        supervisorName: USERS_MAP[supervisorUid]?.name || "",
+        fromDate,
+        toDate,
+        approver1Uid,
+        approver1Name: USERS_MAP[approver1Uid]?.name || "",
+        approver2Uid,
+        approver2Name: USERS_MAP[approver2Uid]?.name || "",
+        desc,
+        hazards,
+        controls,
+        requiredCourses,
+        status: "PENDING",
+        workStatus: "WAITING",
+        createdBy: CURRENT_USER.name,
+        createdAt: now.toLocaleString("vi-VN")
+      };
+
+      await db.ref(`packages_sra/${sraCode}`).set(sraObj);
+      await GasAPI.syncRow(
+        "Goi_Cong_Viec_SRA",
+        ["Mã SRA", "Tên Gói Việc", "Nhà Thầu", "Nhà Máy - Khu Vực", "Từ Ngày", "Đến Ngày", "Giám Sát", "Trạng Thái Duyệt", "Tiến Độ"],
+        [sraCode, title, sraObj.contractorName, `${sraObj.siteName} - ${area}`, fromDate, toDate, sraObj.supervisorName, "Chờ duyệt", "Chờ thực hiện"],
+        0, sraCode
+      );
+
+      bootstrap.Modal.getInstance(document.getElementById("modalCreateSra")).hide();
+      document.getElementById("formCreateSra").reset();
+      alert(`Đã tạo gói công việc ${sraCode} thành công!`);
+    }
+
+    function loadSraList() {
+      db.ref("packages_sra").on("value", snap => {
+        SRA_CACHE = snap.val() || {};
+        renderSraTable();
+      });
+    }
+
+    function renderSraTable() {
+      const kw = document.getElementById("filterKeyword").value.toLowerCase();
+      const fApp = document.getElementById("filterApproval").value;
+      const fWork = document.getElementById("filterWorkStatus").value;
+
+      const list = Object.values(SRA_CACHE).filter(s => {
+        if (CURRENT_USER.type === "CONTRACTOR" && CURRENT_USER.contractorId !== s.contractorId) return false;
+        if (fApp && s.status !== fApp) return false;
+        if (fWork && s.workStatus !== fWork) return false;
+        if (kw && !(`${s.code} ${s.title} ${s.contractorName}`.toLowerCase().includes(kw))) return false;
+        return true;
+      });
+
+      document.getElementById("tblSraList").innerHTML = list.reverse().map(s => `
+        <tr>
+          <td><a href="sra-detail.html?id=${s.code}" class="fw-bold text-decoration-none">${s.code}</a></td>
+          <td class="fw-semibold">${s.title}</td>
+          <td><span class="badge bg-light text-dark border">${s.contractorId}</span> ${s.contractorName}</td>
+          <td>${s.siteName}<br><small class="text-muted">${s.area}</small></td>
+          <td class="small">${s.fromDate} <br>→ ${s.toDate}</td>
+          <td class="small">${s.supervisorName}</td>
+          <td>${renderApprovalBadge(s.status)}</td>
+          <td>${renderWorkBadge(s.workStatus)}</td>
+          <td class="small">${s.rating ? `<span class="text-success fw-bold">AT: ${s.rating.safety}</span><br>CL: ${s.rating.quality}` : '-'}</td>
+          <td>
+            <a href="sra-detail.html?id=${s.code}" class="btn btn-sm btn-primary w-100">
+              <i class="fas fa-folder-open me-1"></i>Mở hồ sơ
+            </a>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function renderApprovalBadge(st) {
+      if (st === "APPROVED") return `<span class="badge bg-success">Đã duyệt</span>`;
+      if (st === "REJECTED") return `<span class="badge bg-danger">Từ chối</span>`;
+      return `<span class="badge bg-warning text-dark">Chờ duyệt</span>`;
+    }
+    function renderWorkBadge(st) {
+      if (st === "COMPLETED") return `<span class="badge bg-secondary">Đã đóng</span>`;
+      if (st === "IN_PROGRESS") return `<span class="badge bg-primary">Đang thi công</span>`;
+      return `<span class="badge bg-info text-dark">Chờ thực hiện</span>`;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giấy phép làm việc (PTW) - CSMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <style>
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.6); z-index: 9999;
+      display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff;
+    }
+    @media print {
+      body * { visibility: hidden; }
+      #printablePtwArea, #printablePtwArea * { visibility: visible; }
+      #printablePtwArea { position: fixed; left: 0; top: 0; width: 100%; padding: 20px; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div id="app-navbar"></div>
+
+  <div id="loadingOverlay" class="loading-overlay d-none">
+    <div class="spinner-border text-info mb-3" style="width: 3rem; height: 3rem;"></div>
+    <h5>Đang tải minh chứng an toàn lên Google Drive...</h5>
+  </div>
+
+  <div class="container-fluid px-4 pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="fw-bold mb-0"><i class="fas fa-file-signature text-primary me-2"></i>Quản lý Giấy phép Làm việc (Daily PTW)</h4>
+      <button id="btnOpenCreatePtw" class="btn btn-primary d-none" data-bs-toggle="modal" data-bs-target="#modalCreatePtw">
+        <i class="fas fa-plus me-1"></i>Cấp Giấy phép Làm việc mới
+      </button>
+    </div>
+
+    <div class="row g-4">
+      <!-- CỘT TRÁI: DANH SÁCH GIẤY PHÉP -->
+      <div class="col-lg-5">
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white fw-bold">Danh sách Giấy phép Làm việc</div>
+          <div class="list-group list-group-flush" id="listPtwItems" style="max-height: 75vh; overflow-y: auto;"></div>
+        </div>
+      </div>
+
+      <!-- CỘT PHẢI: CHI TIẾT CHECKLIST TIÊU CHÍ & PHÊ DUYỆT / IN PDF -->
+      <div class="col-lg-7">
+        <div id="ptwDetailPlaceholder" class="card shadow-sm border-0 p-5 text-center text-muted">
+          <i class="fas fa-file-alt fa-3x mb-3 opacity-50"></i>
+          <p>Chọn một Giấy phép làm việc ở danh sách bên trái để kiểm tra tiêu chí an toàn, phê duyệt hoặc in bản cứng.</p>
+        </div>
+
+        <div id="printablePtwArea" class="card shadow-sm border-0 d-none">
+          <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center no-print">
+            <span class="fw-bold" id="ptwHeaderCode">CHI TIẾT GIẤY PHÉP</span>
+            <div class="d-flex gap-2" id="ptwActionBtns"></div>
+          </div>
+          <div class="card-body">
+            <div class="text-center border-bottom pb-3 mb-3">
+              <h5 class="fw-bold text-uppercase mb-1">GIẤY PHÉP LÀM VIỆC AN TOÀN (PTW)</h5>
+              <div class="text-primary fw-bold" id="printPtwCode"></div>
+            </div>
+
+            <table class="table table-sm table-bordered mb-3 small">
+              <tr><th width="160" class="bg-light">Gói công việc (SRA):</th><td id="detSra"></td><th width="140" class="bg-light">Nhà thầu:</th><td id="detContractor"></td></tr>
+              <tr><th class="bg-light">Loại giấy phép:</th><td id="detType" class="fw-bold text-danger"></td><th class="bg-light">Khu vực thi công:</th><td id="detLocation"></td></tr>
+              <tr><th class="bg-light">Hiệu lực phép:</th><td id="detValid" class="fw-bold text-primary"></td><th class="bg-light">Giám sát / Duyệt:</th><td id="detSup"></td></tr>
+              <tr><th class="bg-light">Mối nguy & Biện pháp:</th><td colspan="3" id="detHazards"></td></tr>
+            </table>
+
+            <h6 class="fw-bold mb-2"><i class="fas fa-tasks text-success me-1"></i>Checklist Tiêu chí An toàn Bắt buộc (Nhà thầu nộp minh chứng & HSE duyệt)</h6>
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle small">
+                <thead class="table-light">
+                  <tr>
+                    <th width="40">STT</th>
+                    <th>Tiêu chí kiểm tra an toàn</th>
+                    <th>Minh chứng thực tế (Ảnh / Tài liệu)</th>
+                    <th>Ghi chú nhà thầu</th>
+                    <th>Trạng thái</th>
+                    <th class="no-print" width="160">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="tblPtwChecklist"></tbody>
+              </table>
+            </div>
+
+            <div class="row text-center mt-4 pt-3 border-top small">
+              <div class="col-4"><strong>ĐẠI DIỆN NHÀ THẦU</strong><br><span class="text-muted">(Ký & ghi rõ họ tên)</span><br><br><br><span id="signContractor"></span></div>
+              <div class="col-4"><strong>GIÁM SÁT HIỆN TRƯỜNG</strong><br><span class="text-muted">(Ký xác nhận điều kiện AT)</span><br><br><br><span id="signSupervisor"></span></div>
+              <div class="col-4"><strong>CÁN BỘ DUYỆT CẤP PHÉP</strong><br><span class="text-muted">(Phê duyệt thi công)</span><br><br><br><span id="signApprover" class="fw-bold text-success"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TẠO MỚI GIẤY PHÉP LÀM VIỆC (STEP 14) -->
+  <div class="modal fade" id="modalCreatePtw" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Cấp Giấy phép Làm việc (Daily PTW)</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formCreatePtw" class="row g-3">
+            <div class="col-md-12">
+              <label class="form-label fw-bold">Chọn Gói công việc (SRA đã duyệt) *</label>
+              <select id="ptwSraSelect" class="form-select" required></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Loại Giấy phép làm việc mẫu *</label>
+              <select id="ptwTemplateSelect" class="form-select" required></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Vị trí làm việc cụ thể *</label>
+              <input type="text" id="ptwLocationDetail" class="form-control" placeholder="VD: Trạm biến áp T2, Cột số 15..." required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Hiệu lực từ ngày *</label>
+              <input type="date" id="ptwFrom" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Hiệu lực đến ngày *</label>
+              <input type="date" id="ptwTo" class="form-control" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="saveNewPtw()">Tạo Giấy Phép</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NHÀ THẦU NỘP MINH CHỨNG TIÊU CHÍ -->
+  <div class="modal fade" id="modalUploadCriterion" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Nộp Minh chứng Tiêu chí An toàn</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="critIndex">
+          <p class="fw-bold text-primary" id="critLabel"></p>
+          <div class="mb-3">
+            <label class="form-label">Ghi chú biện pháp đã thực hiện</label>
+            <input type="text" id="critNote" class="form-control" placeholder="VD: Đã đo nồng độ khí O2 = 20.9%, đã treo biển cấm đóng điện...">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Ảnh chụp hiện trường / Biên bản đo kiểm *</label>
+            <input type="file" id="critFile" class="form-control" accept="image/*,.pdf" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="submitCriterionEvidence()">Tải lên & Lưu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js?v=3"></script>
+  <script src="js/gas-api.js?v=3"></script>
+  <script src="js/auth-guard.js?v=3"></script>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const INIT_SRA_ID = urlParams.get("sraId");
+    let ACTIVE_PTW_ID = urlParams.get("ptwId") || "";
+
+    let SRA_MAP = {};
+    let PTW_TPL_MAP = {};
+    let PTW_ALL = {};
+
+    initAuthGuard("ptw", (user) => {
+      if (user.type === "INTERNAL") {
+        document.getElementById("btnOpenCreatePtw").classList.remove("d-none");
+      }
+      loadMasterData();
+      loadPtwList();
+    });
+
+    function loadMasterData() {
+      db.ref("packages_sra").on("value", s => {
+        SRA_MAP = s.val() || {};
+        const approvedSras = Object.values(SRA_MAP).filter(x => x.status === "APPROVED");
+        document.getElementById("ptwSraSelect").innerHTML = approvedSras.map(x =>
+          `<option value="${x.code}" ${x.code === INIT_SRA_ID ? 'selected' : ''}>[${x.code}] ${x.title} - ${x.contractorName}</option>`
+        ).join("");
+      });
+
+      db.ref("config/ptwTemplates").on("value", s => {
+        PTW_TPL_MAP = s.val() || {};
+        document.getElementById("ptwTemplateSelect").innerHTML = Object.entries(PTW_TPL_MAP).map(([id, t]) =>
+          `<option value="${id}">${t.name} (${(t.criteria || []).length} tiêu chí)</option>`
+        ).join("");
+      });
+    }
+
+    async function saveNewPtw() {
+      const sraId = document.getElementById("ptwSraSelect").value;
+      const tplId = document.getElementById("ptwTemplateSelect").value;
+      const locDetail = document.getElementById("ptwLocationDetail").value.trim();
+      const validFrom = document.getElementById("ptwFrom").value;
+      const validTo = document.getElementById("ptwTo").value;
+
+      if (!sraId || !tplId || !validFrom || !validTo) return alert("Nhập đủ thông tin bắt buộc!");
+      const sra = SRA_MAP[sraId];
+      const tpl = PTW_TPL_MAP[tplId];
+
+      const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, "");
+      const ptwCode = `DATW-${sra.contractorId}-${dateStr}-${Math.floor(100 + Math.random() * 900)}`;
+
+      const checklist = (tpl.criteria || []).map(c => ({
+        criterion: c,
+        fileUrl: "",
+        fileName: "",
+        note: "",
+        approved: false
+      }));
+
+      const ptwObj = {
+        code: ptwCode,
+        sraId,
+        sraTitle: sra.title,
+        contractorId: sra.contractorId,
+        contractorName: sra.contractorName,
+        siteName: sra.siteName,
+        area: sra.area,
+        locationDetail: locDetail,
+        hazards: sra.hazards || [],
+        controls: sra.controls || "",
+        supervisorName: sra.supervisorName,
+        templateId: tplId,
+        templateName: tpl.name,
+        validFrom,
+        validTo,
+        status: "PENDING",
+        checklist,
+        createdBy: CURRENT_USER.name,
+        createdAt: new Date().toLocaleString("vi-VN")
+      };
+
+      await db.ref(`permits_ptw/${ptwCode}`).set(ptwObj);
+      await GasAPI.syncRow(
+        "Giay_Phep_PTW",
+        ["Mã PTW", "Mã SRA", "Nhà Thầu", "Loại Giấy Phép", "Vị Trí", "Từ Ngày", "Đến Ngày", "Giám Sát", "Trạng Thái"],
+        [ptwCode, sraId, sra.contractorName, tpl.name, `${sra.siteName} - ${locDetail}`, validFrom, validTo, sra.supervisorName, "Chờ duyệt"],
+        0, ptwCode
+      );
+
+      bootstrap.Modal.getInstance(document.getElementById("modalCreatePtw")).hide();
+      ACTIVE_PTW_ID = ptwCode;
+      renderPtwDetail();
+    }
+
+    function loadPtwList() {
+      db.ref("permits_ptw").on("value", snap => {
+        PTW_ALL = snap.val() || {};
+        const items = Object.values(PTW_ALL).filter(p => {
+          if (CURRENT_USER.type === "CONTRACTOR" && CURRENT_USER.contractorId !== p.contractorId) return false;
+          if (INIT_SRA_ID && p.sraId !== INIT_SRA_ID) return false;
+          return true;
+        });
+
+        document.getElementById("listPtwItems").innerHTML = items.reverse().map(p => `
+          <button type="button" class="list-group-item list-group-item-action ${p.code === ACTIVE_PTW_ID ? 'active' : ''}" onclick="selectPtw('${p.code}')">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-bold">${p.code}</span>
+              <span class="badge ${p.status === 'APPROVED' ? 'bg-success' : (p.status === 'CLOSED' ? 'bg-secondary' : 'bg-warning text-dark')}">${p.status}</span>
+            </div>
+            <div class="small fw-semibold">${p.templateName} — ${p.contractorName}</div>
+            <div class="small opacity-75">Hiệu lực: ${p.validFrom} → ${p.validTo}</div>
+          </button>
+        `).join("");
+
+        if (ACTIVE_PTW_ID && PTW_ALL[ACTIVE_PTW_ID]) {
+          renderPtwDetail();
+        }
+      });
+    }
+
+    function selectPtw(code) {
+      ACTIVE_PTW_ID = code;
+      loadPtwList();
+    }
+
+    function renderPtwDetail() {
+      const p = PTW_ALL[ACTIVE_PTW_ID];
+      if (!p) return;
+
+      document.getElementById("ptwDetailPlaceholder").classList.add("d-none");
+      document.getElementById("printablePtwArea").classList.remove("d-none");
+
+      document.getElementById("ptwHeaderCode").textContent = `GIẤY PHÉP #${p.code}`;
+      document.getElementById("printPtwCode").textContent = `Số: ${p.code} | Trạng thái: ${p.status}`;
+      document.getElementById("detSra").textContent = `[${p.sraId}] ${p.sraTitle}`;
+      document.getElementById("detContractor").textContent = p.contractorName;
+      document.getElementById("detType").textContent = p.templateName;
+      document.getElementById("detLocation").textContent = `${p.siteName} - ${p.area} (${p.locationDetail})`;
+      document.getElementById("detValid").textContent = `${p.validFrom} đến ${p.validTo}`;
+      document.getElementById("detSup").textContent = p.supervisorName;
+      document.getElementById("detHazards").innerHTML = `<b>Mối nguy:</b> ${(p.hazards || []).join(", ")} <br><b>Biện pháp:</b> ${p.controls}`;
+
+      document.getElementById("signContractor").textContent = p.contractorName;
+      document.getElementById("signSupervisor").textContent = p.supervisorName;
+      document.getElementById("signApprover").textContent = p.approvedBy ? `${p.approvedBy} (${p.approvedAt})` : "Chưa phê duyệt";
+
+      const isInternal = CURRENT_USER.type === "INTERNAL";
+      const allCriteriaOk = (p.checklist || []).every(c => c.approved);
+
+      let btns = `<button class="btn btn-sm btn-outline-light" onclick="window.print()"><i class="fas fa-print me-1"></i>In / Xuất PDF</button>`;
+      if (isInternal && p.status === "PENDING") {
+        btns += `<button class="btn btn-sm btn-success" onclick="approveFullPtw()"><i class="fas fa-check-double me-1"></i>Phê duyệt Cấp phép</button>`;
+      }
+      if (isInternal && p.status === "APPROVED") {
+        btns += `<button class="btn btn-sm btn-secondary" onclick="db.ref('permits_ptw/${p.code}/status').set('CLOSED')">Đóng giấy phép</button>`;
+      }
+      document.getElementById("ptwActionBtns").innerHTML = btns;
+
+      document.getElementById("tblPtwChecklist").innerHTML = (p.checklist || []).map((item, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td class="fw-semibold">${item.criterion}</td>
+          <td>${item.fileUrl ? `<a href="${item.fileUrl}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-image me-1"></i>Xem minh chứng</a>` : '<span class="text-muted">Chưa nộp</span>'}</td>
+          <td>${item.note || '-'}</td>
+          <td>${item.approved ? '<span class="badge bg-success">Đạt</span>' : '<span class="badge bg-warning text-dark">Chờ duyệt</span>'}</td>
+          <td class="no-print">
+            <button class="btn btn-sm btn-primary" onclick="openUploadCriterion(${idx}, '${item.criterion}')"><i class="fas fa-camera"></i> Nộp</button>
+            ${isInternal && item.fileUrl ? `
+              <button class="btn btn-sm btn-success" onclick="db.ref('permits_ptw/${p.code}/checklist/${idx}/approved').set(true)"><i class="fas fa-check"></i></button>
+            ` : ''}
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function openUploadCriterion(idx, label) {
+      document.getElementById("critIndex").value = idx;
+      document.getElementById("critLabel").textContent = label;
+      document.getElementById("critNote").value = "";
+      document.getElementById("critFile").value = "";
+      new bootstrap.Modal(document.getElementById("modalUploadCriterion")).show();
+    }
+
+    async function submitCriterionEvidence() {
+      const idx = document.getElementById("critIndex").value;
+      const note = document.getElementById("critNote").value.trim();
+      const fileInput = document.getElementById("critFile");
+      if (!fileInput.files.length) return alert("Vui lòng chọn ảnh hoặc file minh chứng!");
+
+      const p = PTW_ALL[ACTIVE_PTW_ID];
+      const folderPath = [`${p.contractorId}_${p.contractorName}`, `Goi_Viec_${p.sraId}`, `PTW_${p.code}`];
+
+      document.getElementById("loadingOverlay").classList.remove("d-none");
+      try {
+        const upRes = await GasAPI.uploadFile(fileInput.files[0], folderPath);
+        await db.ref(`permits_ptw/${p.code}/checklist/${idx}`).update({
+          fileUrl: upRes.fileUrl,
+          fileName: upRes.fileName,
+          note: note,
+          uploadedBy: CURRENT_USER.name
+        });
+        bootstrap.Modal.getInstance(document.getElementById("modalUploadCriterion")).hide();
+      } catch (e) {
+        alert("Lỗi upload: " + e.message);
+      } finally {
+        document.getElementById("loadingOverlay").classList.add("d-none");
+      }
+    }
+
+    async function approveFullPtw() {
+      const p = PTW_ALL[ACTIVE_PTW_ID];
+      const unapproved = (p.checklist || []).filter(c => !c.approved).length;
+      if (unapproved > 0 && !confirm(`Vẫn còn ${unapproved} tiêu chí chưa tích duyệt từng dòng. Bạn vẫn muốn phê duyệt toàn bộ giấy phép này?`)) {
+        return;
+      }
+      await db.ref(`permits_ptw/${p.code}`).update({
+        status: "APPROVED",
+        approvedBy: CURRENT_USER.name,
+        approvedAt: new Date().toLocaleString("vi-VN")
+      });
+      alert("Đã phê duyệt Giấy phép làm việc!");
+    }
+  </script>
+</body>
+</html>

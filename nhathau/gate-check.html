@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kiểm soát Thẻ Ra vào Cổng (QR & CCCD) - CSMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <style>
+    #qrReader { width: 100%; border-radius: 12px; overflow: hidden; background: #000; }
+    .result-box { border-radius: 16px; transition: all 0.3s; }
+  </style>
+</head>
+<body class="bg-light">
+  <div id="app-navbar"></div>
+
+  <div class="container-fluid px-4 pb-5">
+    <h4 class="fw-bold mb-3"><i class="fas fa-qrcode text-primary me-2"></i>Trạm Kiểm soát Ra vào Cổng Nhà thầu</h4>
+
+    <div class="row g-4">
+      <!-- CỘT TRÁI: QUÉT CAMERA QR HOẶC NHẬP CCCD -->
+      <div class="col-lg-5">
+        <div class="card shadow-sm border-0 mb-3">
+          <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-camera me-2"></i>Quét mã QR trên Thẻ nhân viên</span>
+            <button id="btnToggleCam" class="btn btn-sm btn-info fw-bold" onclick="toggleCamera()">Bật Camera</button>
+          </div>
+          <div class="card-body text-center">
+            <div id="qrReader"></div>
+            <small class="text-muted d-block mt-2">Đưa mã QR trên thẻ ra vào cổng vào khung hình camera</small>
+          </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white fw-bold"><i class="fas fa-keyboard me-2 text-primary"></i>Tra cứu thủ công theo Số CCCD</div>
+          <div class="card-body">
+            <div class="input-group input-group-lg">
+              <input type="text" id="manualCccdInput" class="form-control" placeholder="Nhập số CCCD..." onkeyup="if(event.key==='Enter') verifyWorkerAccess(this.value)">
+              <button class="btn btn-primary fw-bold" onclick="verifyWorkerAccess(document.getElementById('manualCccdInput').value)">
+                <i class="fas fa-search me-1"></i>Kiểm tra
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CỘT PHẢI: KẾT QUẢ XÁC THỰC REALTIME -->
+      <div class="col-lg-7">
+        <div id="verifyResultCard" class="card result-box shadow-sm border-0 p-4 text-center bg-white">
+          <i class="fas fa-id-badge fa-4x text-secondary opacity-50 mb-3"></i>
+          <h5 class="text-muted">Sẵn sàng kiểm tra</h5>
+          <p class="small text-muted mb-0">Quét mã QR hoặc nhập số CCCD của nhân viên nhà thầu để đối chiếu hiệu lực hồ sơ & thẻ ra vào.</p>
+        </div>
+
+        <!-- LỊCH SỬ QUÉT TRONG CA -->
+        <div class="card shadow-sm border-0 mt-4">
+          <div class="card-header bg-white fw-bold">Nhật ký Ra vào cổng gần nhất</div>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle mb-0 small">
+              <thead class="table-light"><tr><th>Thời gian</th><th>Họ tên</th><th>CCCD</th><th>Nhà thầu</th><th>Kết quả</th><th>Lý do</th></tr></thead>
+              <tbody id="tblGateHistory"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js?v=3"></script>
+  <script src="js/gas-api.js?v=3"></script>
+  <script src="js/auth-guard.js?v=3"></script>
+
+  <script>
+    let ALL_CONTRACTORS = {};
+    let html5QrCode = null;
+    let isScanning = false;
+
+    initAuthGuard("gate", () => {
+      db.ref("contractors").on("value", s => { ALL_CONTRACTORS = s.val() || {}; });
+      loadGateHistory();
+    });
+
+    function toggleCamera() {
+      const btn = document.getElementById("btnToggleCam");
+      if (!isScanning) {
+        html5QrCode = new Html5Qrcode("qrReader");
+        html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => {
+            try {
+              const obj = JSON.parse(decodedText);
+              verifyWorkerAccess(obj.cccd || decodedText);
+            } catch {
+              verifyWorkerAccess(decodedText);
+            }
+          }
+        ).then(() => {
+          isScanning = true;
+          btn.textContent = "Tắt Camera";
+          btn.classList.replace("btn-info", "btn-danger");
+        }).catch(err => alert("Không mở được Camera: " + err));
+      } else {
+        html5QrCode.stop().then(() => {
+          isScanning = false;
+          btn.textContent = "Bật Camera";
+          btn.classList.replace("btn-danger", "btn-info");
+        });
+      }
+    }
+
+    async function verifyWorkerAccess(rawInput) {
+      const cccd = (rawInput || "").trim();
+      if (!cccd) return;
+
+      let foundWorker = null;
+      let foundContractor = null;
+
+      Object.entries(ALL_CONTRACTORS).forEach(([cId, c]) => {
+        if (c.workers && c.workers[cccd]) {
+          foundWorker = c.workers[cccd];
+          foundContractor = c;
+        }
+      });
+
+      const card = document.getElementById("verifyResultCard");
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+
+      if (!foundWorker) {
+        card.className = "card result-box shadow-sm border-danger border-3 p-4 text-center bg-danger bg-opacity-10";
+        card.innerHTML = `
+          <i class="fas fa-times-circle fa-4x text-danger mb-2"></i>
+          <h4 class="fw-bold text-danger">KHÔNG TÌM THẤY DỮ LIỆU</h4>
+          <p class="mb-0">Số CCCD <code>${cccd}</code> chưa được đăng ký trên hệ thống CSMS.</p>
+        `;
+        return;
+      }
+
+      // Kiểm tra các điều kiện an toàn cứng (Hard-block)
+      let allowed = true;
+      let denyReasons = [];
+
+      if (!foundContractor.active) {
+        allowed = false;
+        denyReasons.push("Nhà thầu đang bị tạm khóa hoạt động");
+      }
+      if (!foundWorker.gatePass || !foundWorker.gatePass.active) {
+        allowed = false;
+        denyReasons.push("Nhân sự chưa được cấp Thẻ ra vào cổng");
+      } else if (new Date(foundWorker.gatePass.to) < today) {
+        allowed = false;
+        denyReasons.push(`Thẻ ra vào cổng đã hết hạn (${foundWorker.gatePass.to})`);
+      }
+
+      // Kiểm tra hạn giấy khám sức khỏe & chứng chỉ huấn luyện
+      Object.entries(foundWorker.docs || {}).forEach(([k, d]) => {
+        if (d.expiry && new Date(d.expiry) < today) {
+          allowed = false;
+          denyReasons.push(`Hồ sơ (${k.toUpperCase()}) đã hết hạn ngày ${d.expiry}`);
+        }
+      });
+
+      const reasonText = allowed ? "Đủ điều kiện an toàn & Thẻ còn hiệu lực" : denyReasons.join("; ");
+
+      card.className = `card result-box shadow-sm border-3 p-4 text-start ${allowed ? 'border-success bg-success bg-opacity-10' : 'border-danger bg-danger bg-opacity-10'}`;
+      card.innerHTML = `
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <i class="fas ${allowed ? 'fa-check-circle text-success' : 'fa-ban text-danger'} fa-4x"></i>
+          <div>
+            <h3 class="fw-bold mb-0 ${allowed ? 'text-success' : 'text-danger'}">${allowed ? 'CHO PHÉP VÀO CỔNG' : 'TỪ CHỐI VÀO CỔNG'}</h3>
+            <div class="fw-semibold">${reasonText}</div>
+          </div>
+        </div>
+        <div class="bg-white p-3 rounded border">
+          <div class="row">
+            <div class="col-md-6"><strong>Họ và tên:</strong> ${foundWorker.name}</div>
+            <div class="col-md-6"><strong>Số CCCD:</strong> <code>${cccd}</code></div>
+            <div class="col-md-6 mt-2"><strong>Nhà thầu:</strong> ${foundContractor.name}</div>
+            <div class="col-md-6 mt-2"><strong>Công việc:</strong> ${foundWorker.job}</div>
+            <div class="col-md-6 mt-2"><strong>Khu vực được phép:</strong> ${foundWorker.gatePass?.siteName || '-'} (${foundWorker.gatePass?.area || '-'})</div>
+            <div class="col-md-6 mt-2"><strong>Hạn thẻ cổng:</strong> ${foundWorker.gatePass?.to || 'Chưa cấp'}</div>
+          </div>
+        </div>
+      `;
+
+      // Ghi log lên Firebase & Google Sheets
+      const timeStr = new Date().toLocaleString("vi-VN");
+      const logEntry = {
+        time: timeStr,
+        cccd,
+        workerName: foundWorker.name,
+        contractorName: foundContractor.name,
+        allowed,
+        reason: reasonText,
+        guardName: CURRENT_USER.name
+      };
+
+      await db.ref("gate_logs").push(logEntry);
+      GasAPI.syncRow(
+        "Log_Ra_Vao_Cong",
+        ["Thời Gian", "Số CCCD", "Họ Tên", "Nhà Thầu", "Kết Quả", "Chi Tiết", "Bảo Vệ Kiểm Tra"],
+        [timeStr, cccd, foundWorker.name, foundContractor.name, allowed ? "HỢP LỆ" : "TỪ CHỐI", reasonText, CURRENT_USER.name]
+      );
+    }
+
+    function loadGateHistory() {
+      db.ref("gate_logs").limitToLast(15).on("value", snap => {
+        const list = Object.values(snap.val() || {}).reverse();
+        document.getElementById("tblGateHistory").innerHTML = list.map(l => `
+          <tr>
+            <td>${l.time}</td>
+            <td class="fw-bold">${l.workerName}</td>
+            <td><code>${l.cccd}</code></td>
+            <td>${l.contractorName}</td>
+            <td><span class="badge ${l.allowed ? 'bg-success' : 'bg-danger'}">${l.allowed ? 'Hợp lệ' : 'Từ chối'}</span></td>
+            <td>${l.reason}</td>
+          </tr>
+        `).join("");
+      });
+    }
+  </script>
+</body>
+</html>
