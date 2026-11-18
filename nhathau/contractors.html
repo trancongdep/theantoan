@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý Nhà thầu, Nhân sự & Thiết bị - CSMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <style>
+    .doc-badge { font-size: 0.75rem; }
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.6); z-index: 9999;
+      display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div id="app-navbar"></div>
+
+  <!-- Màn hình chờ khi đang upload file lên Google Drive -->
+  <div id="loadingOverlay" class="loading-overlay d-none">
+    <div class="spinner-border text-info mb-3" style="width: 3rem; height: 3rem;"></div>
+    <h5 id="loadingText">Đang tải tài liệu lên Google Drive & đồng bộ dữ liệu...</h5>
+  </div>
+
+  <div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="fw-bold mb-0"><i class="fas fa-hard-hat text-primary me-2"></i>Quản lý Nhà thầu, Nhân sự & Thiết bị</h4>
+      <button id="btnAddContractor" class="btn btn-primary d-none" data-bs-toggle="modal" data-bs-target="#modalAddContractor">
+        <i class="fas fa-plus me-1"></i>Thêm Nhà thầu mới
+      </button>
+    </div>
+
+    <!-- Thanh chọn Nhà thầu đang thao tác -->
+    <div class="card shadow-sm mb-3 border-0">
+      <div class="card-body py-2 bg-white rounded d-flex flex-wrap align-items-center gap-3">
+        <label class="fw-bold text-secondary mb-0"><i class="fas fa-building me-1"></i>Đang xem Nhà thầu:</label>
+        <select id="selectActiveContractor" class="form-select w-auto fw-bold text-primary" onchange="onSelectContractor()"></select>
+        <div id="contractorStatusBadge"></div>
+      </div>
+    </div>
+
+    <!-- Các Tab nghiệp vụ chi tiết -->
+    <ul class="nav nav-tabs mb-3" id="contractorTabs" role="tablist">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-company"><i class="fas fa-file-contract me-1"></i>1. Hồ sơ Pháp nhân Công ty</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-workers"><i class="fas fa-users me-1"></i>2. Danh sách Nhân sự & Hồ sơ</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-equipments"><i class="fas fa-tools me-1"></i>3. Vật tư & Thiết bị thi công</button></li>
+    </ul>
+
+    <div class="tab-content bg-white p-4 rounded shadow-sm">
+      <!-- TAB 1: HỒ SƠ PHÁP NHÂN CÔNG TY -->
+      <div class="tab-pane fade show active" id="tab-company">
+        <div id="companyInfoHeader" class="alert alert-info py-2 small mb-3"></div>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th width="50">STT</th>
+                <th>Loại hồ sơ pháp nhân</th>
+                <th>Tài liệu đã nộp (Google Drive)</th>
+                <th>Ngày hết hạn</th>
+                <th>Trạng thái duyệt</th>
+                <th width="220">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="tblCompanyDocs"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 2: NHÂN SỰ NHÀ THẦU -->
+      <div class="tab-pane fade" id="tab-workers">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <input type="text" id="searchWorker" class="form-control w-25" placeholder="Tìm tên hoặc CCCD..." onkeyup="renderWorkersTable()">
+          <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAddWorker">
+            <i class="fas fa-user-plus me-1"></i>Thêm Nhân sự Nhà thầu
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>STT</th>
+                <th>Họ và tên</th>
+                <th>Số CCCD / SĐT</th>
+                <th>Công việc chuyên môn</th>
+                <th>Tình trạng Hồ sơ (5 mục)</th>
+                <th>Trạng thái chung</th>
+                <th width="180">Hồ sơ chi tiết</th>
+              </tr>
+            </thead>
+            <tbody id="tblWorkers"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 3: VẬT TƯ & THIẾT BỊ -->
+      <div class="tab-pane fade" id="tab-equipments">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-muted small">Quản lý máy móc có yêu cầu nghiêm ngặt về ATLĐ, thiết bị nâng, máy hàn, hóa chất (MSDS)...</span>
+          <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAddEquipment">
+            <i class="fas fa-plus me-1"></i>Thêm Vật tư / Thiết bị
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>STT</th>
+                <th>Phân loại</th>
+                <th>Tên Vật tư / Thiết bị</th>
+                <th>Mã hiệu / Số đăng kiểm</th>
+                <th>Hồ sơ kiểm định / MSDS</th>
+                <th>Hạn kiểm định</th>
+                <th>Trạng thái</th>
+                <th width="180">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="tblEquipments"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 1: THÊM MỚI NHÀ THẦU (DÀNH CHO NỘI BỘ) -->
+  <div class="modal fade" id="modalAddContractor" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Thêm Mới Nhà Thầu</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formAddContractor" class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Mã nhà thầu *</label>
+              <input type="text" id="cCode" class="form-control" placeholder="VD: NT01" required>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Tên Nhà thầu *</label>
+              <input type="text" id="cName" class="form-control" placeholder="CÔNG TY TNHH..." required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Số điện thoại *</label>
+              <input type="text" id="cPhone" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email liên hệ *</label>
+              <input type="email" id="cEmail" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Dịch vụ cung cấp *</label>
+              <input type="text" id="cService" class="form-control" placeholder="Bảo trì điện, Xây dựng..." required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Cán bộ phụ trách (Nội bộ) *</label>
+              <select id="cPicUid" class="form-select" required></select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="saveNewContractor()">Lưu Nhà Thầu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: THÊM NHÂN SỰ NHÀ THẦU -->
+  <div class="modal fade" id="modalAddWorker" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">Thêm Nhân sự Nhà thầu</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formAddWorker" class="row g-3">
+            <div class="col-md-12">
+              <label class="form-label">Họ và tên nhân viên *</label>
+              <input type="text" id="wName" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Số CCCD (Mã định danh) *</label>
+              <input type="text" id="wCccd" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Số điện thoại</label>
+              <input type="text" id="wPhone" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Ngày sinh</label>
+              <input type="date" id="wDob" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Công việc đảm nhận *</label>
+              <input type="text" id="wJob" class="form-control" placeholder="VD: Thợ điện, Thợ hàn..." required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-success" onclick="saveNewWorker()">Lưu Nhân Sự</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: QUẢN LÝ & DUYỆT 5 LOẠI HỒ SƠ CỦA NHÂN SỰ -->
+  <div class="modal fade" id="modalWorkerDocs" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title" id="modalWorkerDocsTitle">Hồ sơ Nhân sự</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>STT</th>
+                <th>Loại hồ sơ bắt buộc</th>
+                <th>File đã tải lên</th>
+                <th>Hiệu lực đến</th>
+                <th>Trạng thái</th>
+                <th>Thao tác (Upload / Duyệt)</th>
+              </tr>
+            </thead>
+            <tbody id="tblWorkerDocsDetail"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: THÊM VẬT TƯ / THIẾT BỊ -->
+  <div class="modal fade" id="modalAddEquipment" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">Thêm Vật tư / Thiết bị</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formAddEquipment" class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Phân loại *</label>
+              <select id="eqType" class="form-select">
+                <option value="Thiết bị">Thiết bị / Máy móc</option>
+                <option value="Vật tư / Hóa chất">Vật tư / Hóa chất (MSDS)</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Mã thiết bị / Số Seri *</label>
+              <input type="text" id="eqCode" class="form-control" placeholder="VD: XC-01" required>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Tên gọi Vật tư / Thiết bị *</label>
+              <input type="text" id="eqName" class="form-control" placeholder="VD: Xe nâng hàng 2.5 tấn, Máy hàn Tig..." required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Hạn kiểm định / Hiệu lực</label>
+              <input type="date" id="eqExpiry" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">File Hồ sơ kiểm định / MSDS *</label>
+              <input type="file" id="eqFile" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-success" onclick="saveNewEquipment()">Tải lên & Lưu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: UPLOAD FILE DÙNG CHUNG CHO HỒ SƠ CÔNG TY & NHÂN SỰ -->
+  <div class="modal fade" id="modalUploadDoc" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="uploadModalTitle">Tải lên Hồ sơ</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="upTargetType"> <!-- 'COMPANY' hoặc 'WORKER' -->
+          <input type="hidden" id="upTargetId">   <!-- workerId nếu là WORKER -->
+          <input type="hidden" id="upDocKey">     <!-- key hồ sơ -->
+          <input type="hidden" id="upDocLabel">   <!-- tên hồ sơ -->
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Ngày hết hạn hiệu lực (Nếu có)</label>
+            <input type="date" id="upExpiryDate" class="form-control">
+            <div class="form-text">Hệ thống sẽ cảnh báo trước 30 ngày khi hồ sơ sắp hết hạn.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Chọn tệp tài liệu (PDF, Ảnh, Word, Excel) *</label>
+            <input type="file" id="upFileInput" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="executeUploadDoc()"><i class="fas fa-cloud-upload-alt me-1"></i>Xác nhận Tải lên</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js?v=2"></script>
+  <script src="js/gas-api.js?v=2"></script>
+  <script src="js/auth-guard.js?v=2"></script>
+
+  <script>
+    // Danh mục chuẩn hồ sơ pháp nhân & hồ sơ nhân sự theo tài liệu CSMS
+    const COMPANY_DOC_TYPES = [
+      { key: "dkkd", label: "Giấy phép đăng ký kinh doanh" },
+      { key: "gphd", label: "Giấy phép hoạt động / Chứng chỉ năng lực" },
+      { key: "khatvsld", label: "Kế hoạch An toàn vệ sinh lao động của nhà thầu" },
+      { key: "ccatld", label: "Chứng chỉ, chứng nhận liên quan đến ATVSLĐ" }
+    ];
+
+    const WORKER_DOC_TYPES = [
+      { key: "hdld", label: "Hợp đồng lao động" },
+      { key: "ksk", label: "Giấy khám sức khỏe định kỳ" },
+      { key: "bhtn", label: "Bảo hiểm tai nạn / BHXH" },
+      { key: "hlatvsld", label: "Hồ sơ huấn luyện ATVSLĐ theo luật (Nhóm 1-6)" },
+      { key: "cccm", label: "Bằng cấp, chứng chỉ chuyên môn / Thẻ an toàn điện" }
+    ];
+
+    let CONTRACTORS_CACHE = {};
+    let ACTIVE_CONTRACTOR_ID = "";
+    let INTERNAL_USERS_CACHE = {};
+
+    initAuthGuard("contractors", (user) => {
+      if (user.type === "INTERNAL") {
+        document.getElementById("btnAddContractor").classList.remove("d-none");
+        loadInternalUsers();
+      }
+      loadContractors();
+    });
+
+    function showLoading(msg) {
+      document.getElementById("loadingText").textContent = msg || "Đang xử lý...";
+      document.getElementById("loadingOverlay").classList.remove("d-none");
+    }
+    function hideLoading() {
+      document.getElementById("loadingOverlay").classList.add("d-none");
+    }
+
+    // Tải danh sách cán bộ nội bộ để chọn người phụ trách nhà thầu
+    function loadInternalUsers() {
+      db.ref("users").orderByChild("type").equalTo("INTERNAL").on("value", snap => {
+        INTERNAL_USERS_CACHE = snap.val() || {};
+        document.getElementById("cPicUid").innerHTML = Object.entries(INTERNAL_USERS_CACHE)
+          .map(([uid, u]) => `<option value="${uid}">${u.name} (${u.department || 'Nội bộ'})</option>`).join("");
+      });
+    }
+
+    // Tải danh sách nhà thầu (Phân luồng Nội bộ vs Nhà thầu)
+    function loadContractors() {
+      db.ref("contractors").on("value", snap => {
+        const all = snap.val() || {};
+        CONTRACTORS_CACHE = {};
+
+        Object.entries(all).forEach(([id, c]) => {
+          if (CURRENT_USER.type === "INTERNAL" || CURRENT_USER.contractorId === id) {
+            CONTRACTORS_CACHE[id] = c;
+          }
+        });
+
+        const select = document.getElementById("selectActiveContractor");
+        const ids = Object.keys(CONTRACTORS_CACHE);
+
+        if (ids.length === 0) {
+          select.innerHTML = `<option value="">-- Chưa có dữ liệu nhà thầu --</option>`;
+          ACTIVE_CONTRACTOR_ID = "";
+          clearTables();
+          return;
+        }
+
+        if (!ACTIVE_CONTRACTOR_ID || !CONTRACTORS_CACHE[ACTIVE_CONTRACTOR_ID]) {
+          ACTIVE_CONTRACTOR_ID = ids[0];
+        }
+
+        select.innerHTML = ids.map(id =>
+          `<option value="${id}" ${id === ACTIVE_CONTRACTOR_ID ? "selected" : ""}>[${id}] ${CONTRACTORS_CACHE[id].name}</option>`
+        ).join("");
+
+        renderActiveContractorView();
+      });
+    }
+
+    function onSelectContractor() {
+      ACTIVE_CONTRACTOR_ID = document.getElementById("selectActiveContractor").value;
+      renderActiveContractorView();
+    }
+
+    function clearTables() {
+      document.getElementById("tblCompanyDocs").innerHTML = "";
+      document.getElementById("tblWorkers").innerHTML = "";
+      document.getElementById("tblEquipments").innerHTML = "";
+    }
+
+    // Thêm nhà thầu mới
+    async function saveNewContractor() {
+      const code = document.getElementById("cCode").value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+      const name = document.getElementById("cName").value.trim();
+      const phone = document.getElementById("cPhone").value.trim();
+      const email = document.getElementById("cEmail").value.trim();
+      const service = document.getElementById("cService").value.trim();
+      const picUid = document.getElementById("cPicUid").value;
+
+      if (!code || !name) return alert("Vui lòng nhập Mã và Tên nhà thầu!");
+      if (CONTRACTORS_CACHE[code]) return alert("Mã nhà thầu này đã tồn tại!");
+
+      const contractorObj = {
+        code, name, phone, email, service, picUid,
+        active: true,
+        createdAt: new Date().toLocaleString("vi-VN")
+      };
+
+      showLoading("Đang lưu nhà thầu & đồng bộ Google Sheets...");
+      try {
+        await db.ref(`contractors/${code}`).set(contractorObj);
+        await GasAPI.syncRow(
+          "DS_NhaThau",
+          ["Mã NT", "Tên Nhà Thầu", "Dịch Vụ", "SĐT", "Email", "Trạng Thái", "Ngày Tạo"],
+          [code, name, service, phone, email, "Hoạt động", contractorObj.createdAt],
+          0, code
+        );
+        bootstrap.Modal.getInstance(document.getElementById("modalAddContractor")).hide();
+        document.getElementById("formAddContractor").reset();
+        ACTIVE_CONTRACTOR_ID = code;
+      } catch (e) {
+        alert("Lỗi: " + e.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Hiển thị toàn bộ dữ liệu của nhà thầu đang chọn
+    function renderActiveContractorView() {
+      const c = CONTRACTORS_CACHE[ACTIVE_CONTRACTOR_ID];
+      if (!c) return;
+
+      const picName = INTERNAL_USERS_CACHE[c.picUid]?.name || "Admin";
+      document.getElementById("contractorStatusBadge").innerHTML = `
+        <span class="badge ${c.active ? 'bg-success' : 'bg-danger'}">${c.active ? 'Đang hoạt động' : 'Tạm khóa'}</span>
+        <span class="ms-2 small text-muted">Dịch vụ: <b>${c.service}</b> | SĐT: <b>${c.phone}</b> | Phụ trách: <b>${picName}</b></span>
+      `;
+
+      document.getElementById("companyInfoHeader").innerHTML =
+        `<i class="fas fa-info-circle me-1"></i>Nhà thầu tải lên đầy đủ 4 loại hồ sơ pháp nhân bên dưới. Cán bộ HSE sẽ kiểm tra và phê duyệt từng mục.`;
+
+      renderCompanyDocsTable(c);
+      renderWorkersTable();
+      renderEquipmentsTable(c);
+    }
+
+    // Helper kiểm tra hạn sử dụng
+    function formatExpiryBadge(expiryStr) {
+      if (!expiryStr) return `<span class="text-muted small">Không thời hạn</span>`;
+      const today = new Date(); today.setHours(0,0,0,0);
+      const exp = new Date(expiryStr);
+      const diffDays = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) return `<span class="badge bg-danger">Hết hạn (${expiryStr})</span>`;
+      if (diffDays <= 30) return `<span class="badge bg-warning text-dark">Sắp hết hạn: còn ${diffDays} ngày (${expiryStr})</span>`;
+      return `<span class="badge bg-light text-dark border">${expiryStr}</span>`;
+    }
+
+    function formatStatusBadge(status) {
+      if (status === "APPROVED") return `<span class="badge bg-success"><i class="fas fa-check me-1"></i>Đã duyệt</span>`;
+      if (status === "REJECTED") return `<span class="badge bg-danger"><i class="fas fa-times me-1"></i>Từ chối</span>`;
+      if (status === "PENDING") return `<span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Chờ duyệt</span>`;
+      return `<span class="badge bg-secondary">Chưa nộp</span>`;
+    }
+
+    // 1. Render Bảng Hồ sơ Pháp nhân
+    function renderCompanyDocsTable(c) {
+      const docs = c.companyDocs || {};
+      const isInternal = CURRENT_USER.type === "INTERNAL";
+
+      document.getElementById("tblCompanyDocs").innerHTML = COMPANY_DOC_TYPES.map((dt, idx) => {
+        const d = docs[dt.key] || {};
+        return `
+          <tr>
+            <td>${idx + 1}</td>
+            <td class="fw-semibold">${dt.label}</td>
+            <td>${d.fileUrl ? `<a href="${d.fileUrl}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-external-link-alt me-1"></i>${d.fileName || 'Xem tài liệu'}</a>` : '<span class="text-muted small">Chưa có file</span>'}</td>
+            <td>${formatExpiryBadge(d.expiry)}</td>
+            <td>${formatStatusBadge(d.status)}</td>
+            <td>
+              <button class="btn btn-sm btn-primary" onclick="openUploadModal('COMPANY', '', '${dt.key}', '${dt.label}')">
+                <i class="fas fa-upload"></i> Tải lên
+              </button>
+              ${isInternal && d.fileUrl ? `
+                <button class="btn btn-sm btn-success" title="Duyệt" onclick="approveDoc('COMPANY', '', '${dt.key}', 'APPROVED')"><i class="fas fa-check"></i></button>
+                <button class="btn btn-sm btn-danger" title="Từ chối" onclick="approveDoc('COMPANY', '', '${dt.key}', 'REJECTED')"><i class="fas fa-times"></i></button>
+              ` : ''}
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    // 2. Thêm & Render Nhân sự Nhà thầu
+    async function saveNewWorker() {
+      if (!ACTIVE_CONTRACTOR_ID) return alert("Chưa chọn nhà thầu!");
+      const name = document.getElementById("wName").value.trim();
+      const cccd = document.getElementById("wCccd").value.trim();
+      const phone = document.getElementById("wPhone").value.trim();
+      const dob = document.getElementById("wDob").value;
+      const job = document.getElementById("wJob").value.trim();
+
+      if (!name || !cccd || !job) return alert("Nhập đủ Họ tên, CCCD và Công việc!");
+
+      const workerObj = {
+        name, cccd, phone, dob, job,
+        status: "PENDING",
+        updatedAt: new Date().toLocaleString("vi-VN")
+      };
+
+      showLoading("Đang lưu nhân sự & đồng bộ Google Sheets...");
+      try {
+        await db.ref(`contractors/${ACTIVE_CONTRACTOR_ID}/workers/${cccd}`).update(workerObj);
+        await GasAPI.syncRow(
+          "DS_NhanSu_NT",
+          ["Số CCCD", "Họ Tên", "Mã Nhà Thầu", "Tên Nhà Thầu", "Công Việc", "SĐT", "Trạng Thái"],
+          [cccd, name, ACTIVE_CONTRACTOR_ID, CONTRACTORS_CACHE[ACTIVE_CONTRACTOR_ID].name, job, phone, "Chờ hoàn thiện HS"],
+          0, cccd
+        );
+        bootstrap.Modal.getInstance(document.getElementById("modalAddWorker")).hide();
+        document.getElementById("formAddWorker").reset();
+      } catch (e) {
+        alert("Lỗi: " + e.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function renderWorkersTable() {
+      const c = CONTRACTORS_CACHE[ACTIVE_CONTRACTOR_ID];
+      if (!c) return;
+      const workers = c.workers || {};
+      const keyword = document.getElementById("searchWorker").value.toLowerCase();
+
+      const rows = Object.entries(workers).filter(([cccd, w]) =>
+        w.name.toLowerCase().includes(keyword) || cccd.includes(keyword)
+      );
+
+      document.getElementById("tblWorkers").innerHTML = rows.map(([cccd, w], idx) => {
+        const docs = w.docs || {};
+        const approvedCount = WORKER_DOC_TYPES.filter(t => docs[t.key]?.status === "APPROVED").length;
+        const allApproved = approvedCount === WORKER_DOC_TYPES.length;
+
+        return `
+          <tr>
+            <td>${idx + 1}</td>
+            <td class="fw-bold">${w.name}</td>
+            <td><code>${cccd}</code><br><small class="text-muted">${w.phone || ''}</small></td>
+            <td>${w.job}</td>
+            <td>
+              <span class="badge ${allApproved ? 'bg-success' : 'bg-info text-dark'}">
+                Đã duyệt: ${approvedCount} / ${WORKER_DOC_TYPES.length} hồ sơ
+              </span>
+            </td>
+            <td>${allApproved ? '<span class="badge bg-success">Đủ điều kiện</span>' : '<span class="badge bg-warning text-dark">Đang bổ sung / Chờ duyệt</span>'}</td>
+            <td>
+              <button class="btn btn-sm btn-primary" onclick="openWorkerDocsModal('${cccd}')">
+                <i class="fas fa-folder-open me-1"></i>Hồ sơ (${approvedCount}/5)
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    // Mở Modal chi tiết 5 hồ sơ của từng nhân viên
+    let CURRENT_MODAL_WORKER_CCCD = "";
+    function openWorkerDocsModal(cccd) {
+      CURRENT_MODAL_WORKER_CCCD = cccd;
+      const w = CONTRACTORS_CACHE[ACTIVE_CONTRACTOR_ID]?.workers?.[cccd];
+      if (!w) return;
+
+      document.getElementById("modalWorkerDocsTitle").textContent = `Hồ sơ Nhân sự: ${w.name} (CCCD: ${cccd})`;
+      renderWorkerDocsDetailTable(w);
+      new bootstrap.Modal(document.getElementById("modalWorkerDocs")).show();
+    }
+
+    function renderWorkerDocsDetailTable(w) {
+      const docs = w.docs || {};
+      const isInternal = CURRENT_USER.type === "INTERNAL";
+
+      document.getElementById("tblWorkerDocsDetail").innerHTML = WORKER_DOC_TYPES.map((dt, idx) => {
+        const d = docs[dt.key] || {};
+        return `
+          <tr>
+            <td>${idx + 1}</td>
+            <td class="fw-semibold">${dt.label}</td>
+            <td>${d.fileUrl ? `<a href="${d.fileUrl}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-file-alt me-1"></i>${d.fileName || 'Xem file'}</a>` : '<span class="text-muted small">Chưa nộp</span>'}</td>
+            <td>${formatExpiryBadge(d.expiry)}</td>
+            <td>${formatStatusBadge(d.status)}</td>
+            <td>
+              <button class="btn btn-sm btn-primary" onclick="openUploadModal('WORKER', '${w.cccd}', '${dt.key}', '${dt.label}')">
+                <i class="fas fa-upload"></i> Tải file
+              </button>
+              ${isInternal && d.fileUrl ? `
+                <button class="btn btn-sm btn-success" title="Duyệt" onclick="approveDoc('WORKER', '${w.cccd}', '${dt.key}', 'APPROVED')"><i class="fas fa-check"></i></button>
+                <button class="btn btn-sm btn-danger" title="Từ chối" onclick="approveDoc('WORKER', '${w.cccd}', '${dt.key}', 'REJECTED')"><i class="fas fa-times"></i></button>
+              ` : ''}
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    // Mở Modal Upload chung
+    function openUploadModal(targetType, targetId, docKey, docLabel) {
+      document.getElementById("upTargetType").value = targetType;
+      document.getElementById("upTargetId").value = targetId;
+      document.getElementById("upDocKey").value = docKey;
+      document.getElementById("upDocLabel").value = docLabel;
+      document.getElementById("uploadModalTitle").textContent = `Tải lên: ${docLabel}`;
+      document.getElementById("upFileInput").value = "";
+      document.getElementById("upExpiryDate").value = "";
+      new bootstrap.Modal(document.getElementById("modalUploadDoc")).show();
+    }
+
+    // Thực thi Upload lên Google Drive qua Apps Script & Lưu link vào Firebase
+    async function executeUploadDoc() {
+      const targetType = document.getElementById("upTargetType").value;
+      const targetId = document.getElementById("upTargetId").value;
+      const docKey = document.getElementById("upDocKey").value;
+      const expiry = document.getElementById("upExpiryDate").value;
+      const fileInput = document.getElementById("upFileInput");
+
+      if (!fileInput.files || fileInput.files.length === 0) return alert("Vui lòng chọn tệp!");
+      const file = fileInput.files[0];
+      const c = CONTRACTORS_CACHE[ACTIVE_CONTRACTOR_ID];
+
+      // Tạo đường dẫn thư mục phân cấp trên Google Drive
+      const rootContractorFolder = `${c.code}_${c.name}`;
+      let folderPath = [rootContractorFolder, "Ho_So_Phap_Nhan"];
+      if (targetType === "WORKER") {
+        const w = c.workers[targetId];
+        folderPath = [rootContractorFolder, "Nhan_Su", `${w.cccd}_${w.name}`];
+      }
+
+      showLoading(`Đang tải "${file.name}" lên Google Drive...`);
+      try {
+        const uploadRes = await GasAPI.uploadFile(file, folderPath);
+        const docRecord = {
+          fileName: uploadRes.fileName,
+          fileUrl: uploadRes.fileUrl,
+          expiry: expiry || "",
+          status: "PENDING",
+          uploadedBy: CURRENT_USER.name,
+          updatedAt: new Date().toLocaleString("vi-VN")
+        };
+
+        const dbPath = targetType === "COMPANY"
+          ? `contractors/${ACTIVE_CONTRACTOR_ID}/companyDocs/${docKey}`
+          : `contractors/${ACTIVE_CONTRACTOR_ID}/workers/${targetId}/docs/${docKey}`;
+
+        await db.ref(dbPath).set(docRecord);
+        bootstrap.Modal.getInstance(document.getElementById("modalUploadDoc")).hide();
+
+        if (targetType === "WORKER" && CURRENT_MODAL_WORKER_CCCD) {
+          setTimeout(() => renderWorkerDocsDetailTable(CONTRACTORS_CACHE[ACTIVE_CONTRACTOR_ID].workers[CURRENT_MODAL_WORKER_CCCD]), 300);
+        }
+      } catch (e) {
+        alert("Lỗi tải file lên Drive: " + e.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Cán bộ Nội bộ duyệt / từ chối hồ sơ
+    async function approveDoc(targetType, targetId, docKey, newStatus) {
+      const dbPath = targetType === "COMPANY"
+        ? `contractors/${ACTIVE_CONTRACTOR_ID}/companyDocs/${docKey}`
+        : `contractors/${ACTIVE_CONTRACTOR_ID}/workers/${targetId}/docs/${docKey}`;
+
+      await db.ref(dbPath).update({
+        status: newStatus,
+        approvedBy: CURRENT_USER.name,
+        approvedAt: new Date().toLocaleString("vi-VN")
+      });
+
+      if (targetType === "WORKER" && CURRENT_MODAL_WORKER_CCCD) {
+        setTimeout(() => renderWorkerDocsDetailTable(CONTRACTORS_CACHE[ACTIVE_CONTRACTOR_ID].workers[CURRENT_MODAL_WORKER_CCCD]), 300);
+      }
+    }
+
+    // 3. Thêm & Render Vật tư / Thiết bị
+    async function saveNewEquipment() {
+      if (!ACTIVE_CONTRACTOR_ID) return alert("Chưa chọn nhà thầu!");
+      const type = document.getElementById("eqType").value;
+      const code = document.getElementById("eqCode").value.trim().toUpperCase();
+      const name = document.getElementById("eqName").value.trim();
+      const expiry = document.getElementById("eqExpiry").value;
+      const fileInput = document.getElementById("eqFile");
+
+      if (!code || !name || !fileInput.files.length) return alert("Nhập đủ thông tin và chọn file kiểm định/MSDS!");
+
+      const c = CONTRACTORS_CACHE[ACTIVE_CONTRACTOR_ID];
+      const folderPath = [`${c.code}_${c.name}`, "Vat_Tu_Thiet_Bi", `${code}_${name}`];
+
+      showLoading("Đang tải hồ sơ thiết bị lên Google Drive...");
+      try {
+        const uploadRes = await GasAPI.uploadFile(fileInput.files[0], folderPath);
+        await db.ref(`contractors/${ACTIVE_CONTRACTOR_ID}/equipments/${code}`).set({
+          type, code, name, expiry,
+          fileUrl: uploadRes.fileUrl,
+          fileName: uploadRes.fileName,
+          status: "PENDING",
+          updatedAt: new Date().toLocaleString("vi-VN")
+        });
+        bootstrap.Modal.getInstance(document.getElementById("modalAddEquipment")).hide();
+        document.getElementById("formAddEquipment").reset();
+      } catch (e) {
+        alert("Lỗi: " + e.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function renderEquipmentsTable(c) {
+      const eqs = c.equipments || {};
+      const isInternal = CURRENT_USER.type === "INTERNAL";
+
+      document.getElementById("tblEquipments").innerHTML = Object.entries(eqs).map(([code, eq], idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td><span class="badge bg-secondary">${eq.type}</span></td>
+          <td class="fw-bold">${eq.name}</td>
+          <td><code>${code}</code></td>
+          <td><a href="${eq.fileUrl}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-file-pdf me-1"></i>${eq.fileName}</a></td>
+          <td>${formatExpiryBadge(eq.expiry)}</td>
+          <td>${formatStatusBadge(eq.status)}</td>
+          <td>
+            ${isInternal ? `
+              <button class="btn btn-sm btn-success" onclick="db.ref('contractors/${ACTIVE_CONTRACTOR_ID}/equipments/${code}/status').set('APPROVED')"><i class="fas fa-check"></i> Duyệt</button>
+              <button class="btn btn-sm btn-danger" onclick="db.ref('contractors/${ACTIVE_CONTRACTOR_ID}/equipments/${code}/status').set('REJECTED')"><i class="fas fa-times"></i></button>
+            ` : '<span class="text-muted small">Chờ kiểm tra</span>'}
+          </td>
+        </tr>
+      `).join("");
+    }
+  </script>
+</body>
+</html>
