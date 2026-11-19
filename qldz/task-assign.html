@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giao việc 4086 — LĐCT-OPMS v1.1</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/offline-sync.js"></script>
+  <script src="js/auth-guard.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <div id="nav-mount"></div>
+  <main class="lg:ml-64 p-5 max-w-6xl">
+    <h1 class="text-xl font-bold text-slate-900 mb-1">Giao việc Kiểm tra &amp; Khảo sát hiện trường</h1>
+    <p class="text-xs text-slate-500 mb-4">Phân công kiểm tra ngày (1th), đêm (3th), kỹ thuật (12th), cắt điện (36th), đột xuất hoặc khảo sát</p>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 mb-5 grid grid-cols-1 md:grid-cols-6 gap-2">
+      <select id="t-type" class="border rounded-lg px-3 py-2 text-xs">
+        <option value="KT_NGAY">Định kỳ ban ngày (1 tháng)</option>
+        <option value="KT_DEM">Định kỳ ban đêm (3 tháng)</option>
+        <option value="KT_KY_THUAT">Kỹ thuật trèo trụ (12 tháng)</option>
+        <option value="KT_CAT_DIEN">Định kỳ cắt điện (36 tháng)</option>
+        <option value="KT_DOT_XUAT">Kiểm tra đột xuất</option>
+        <option value="KHAO_SAT">Khảo sát / Công tác giao</option>
+      </select>
+      <input id="t-line" list="dl-lines" class="border rounded-lg px-3 py-2 text-xs" placeholder="Mã tuyến (chọn hoặc nhập)" />
+      <input id="t-scope" class="border rounded-lg px-3 py-2 text-xs" placeholder="Phạm vi (VD: Trụ 01 - 15)" />
+      <input id="t-assignee" list="dl-users" class="border rounded-lg px-3 py-2 text-xs" placeholder="Người thực hiện" />
+      <input id="t-due" type="date" class="border rounded-lg px-3 py-2 text-xs" />
+      <button onclick="createTask()" class="bg-blue-900 hover:bg-blue-950 text-white rounded-lg px-3 py-2 text-xs font-semibold">Giao việc</button>
+    </div>
+    <datalist id="dl-lines"></datalist>
+    <datalist id="dl-users"></datalist>
+    <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="p-3">Mã Lệnh</th><th class="p-3">Loại công tác</th><th class="p-3">Tuyến &amp; Phạm vi</th><th class="p-3">Người thực hiện</th><th class="p-3">Hạn hoàn thành</th><th class="p-3">Trạng thái</th><th class="p-3 text-right">Thao tác</th></tr></thead>
+        <tbody id="task-body" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+  </main>
+  <script>
+    requireAuth(() => {
+      db.ref("assets").once("value", (snap) => {
+        const lines = Array.from(new Set(Object.values(snap.val() || {}).map(a => a.maTuyen).filter(Boolean))).sort();
+        document.getElementById("dl-lines").innerHTML = lines.map(l => `<option value="${escapeHtml(l)}">`).join("");
+      });
+      Promise.all([db.ref("users").once("value"), db.ref("pending_users").once("value")]).then(([uSnap, pSnap]) => {
+        const names = new Set();
+        Object.values(uSnap.val() || {}).forEach(u => u.name && names.add(u.name));
+        Object.values(pSnap.val() || {}).forEach(u => u.name && names.add(u.name));
+        document.getElementById("dl-users").innerHTML = Array.from(names).sort().map(n => `<option value="${escapeHtml(n)}">`).join("");
+      });
+      db.ref("tasks").on("value", (snap) => {
+        const list = Object.values(snap.val() || {}).reverse();
+        const tbody = document.getElementById("task-body");
+        if (list.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400 text-xs">Chưa có lệnh giao việc.</td></tr>`; return; }
+        tbody.innerHTML = list.map(t => `
+          <tr>
+            <td class="p-3 font-mono text-xs font-semibold">${escapeHtml(t.taskId)}</td>
+            <td class="p-3 text-xs">${escapeHtml(t.loaiCongTac)}</td>
+            <td class="p-3 text-xs">${escapeHtml(t.maTuyen)} · ${escapeHtml(t.phamVi)}</td>
+            <td class="p-3 text-xs">${escapeHtml(t.nguoiThucHien)}</td>
+            <td class="p-3 font-mono text-xs">${escapeHtml(t.hanHoanThanh)}</td>
+            <td class="p-3 text-xs"><span class="px-2 py-0.5 rounded ${t.trangThai === "DONE" ? "bg-emerald-100 text-emerald-800" : "bg-blue-50 text-blue-900"}">${escapeHtml(t.trangThai)}</span></td>
+            <td class="p-3 text-right whitespace-nowrap">
+              ${t.trangThai !== "DONE" ? `<button onclick="markTaskDone('${escapeHtml(t.taskId)}')" class="text-xs text-emerald-700 hover:underline mr-2">Hoàn thành</button>` : ""}
+              <button onclick="deleteTask('${escapeHtml(t.taskId)}')" class="text-xs text-red-700 hover:underline">Xóa</button>
+            </td>
+          </tr>`).join("");
+      });
+    });
+    async function createTask() {
+      if (!canApprove()) return alert("Chỉ Đội trưởng/Tổ trưởng được giao việc.");
+      const maTuyen = document.getElementById("t-line").value.trim();
+      if (!maTuyen) return alert("Vui lòng chọn hoặc nhập Mã tuyến.");
+      const taskId = "TSK-" + Date.now().toString().slice(-6);
+      await db.ref("tasks/" + taskId).set({
+        taskId, loaiCongTac: document.getElementById("t-type").value, maTuyen,
+        phamVi: document.getElementById("t-scope").value.trim(),
+        nguoiThucHien: document.getElementById("t-assignee").value.trim(),
+        nguoiGiao: window.currentUserProfile.name,
+        hanHoanThanh: document.getElementById("t-due").value,
+        trangThai: "ASSIGNED", ngayTao: new Date().toISOString()
+      });
+    }
+    async function markTaskDone(taskId) {
+      if (!canApprove()) return alert("Chỉ Đội trưởng/Tổ trưởng được xác nhận hoàn thành.");
+      await db.ref("tasks/" + taskId + "/trangThai").set("DONE");
+    }
+    async function deleteTask(taskId) {
+      if (!canApprove()) return alert("Chỉ Đội trưởng/Tổ trưởng được xóa lệnh.");
+      if (confirm(`Xóa lệnh ${taskId}?`)) await db.ref("tasks/" + taskId).remove();
+    }
+  </script>
+</body>
+</html>

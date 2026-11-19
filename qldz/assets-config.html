@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Danh mục Tuyến &amp; Trụ — LĐCT-OPMS v1.1</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/gas-api.js"></script>
+  <script src="js/offline-sync.js"></script>
+  <script src="js/auth-guard.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <div id="nav-mount"></div>
+  <main class="lg:ml-64 p-5 max-w-7xl space-y-5">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h1 class="text-xl font-bold text-slate-900">Danh mục Đường dây &amp; Trụ điện 110–220kV</h1>
+        <p class="text-xs text-slate-500">Quản lý tuyến ĐDK, cáp ngầm, tọa độ GPS trụ/hầm nối cáp theo 4086/QĐ-EVNHCMC — hỗ trợ tải mẫu Excel/CSV, cập nhật &amp; tải lên hàng loạt</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="downloadAssetTemplate()" class="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 rounded-lg text-xs font-semibold">
+          <i class="fa-solid fa-file-arrow-down mr-1 text-blue-800"></i>Tải danh mục mẫu (.xlsx)
+        </button>
+        <button onclick="exportCurrentAssets()" class="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 rounded-lg text-xs font-semibold">
+          <i class="fa-solid fa-file-export mr-1 text-teal-700"></i>Xuất danh mục hiện có
+        </button>
+        <label class="px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold cursor-pointer inline-flex items-center">
+          <i class="fa-solid fa-file-arrow-up mr-1"></i>Tải lên Excel/CSV
+          <input id="import-asset-file" type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleAssetFileSelect(event)" />
+        </label>
+        <button onclick="openAssetModal()" class="px-3.5 py-2 bg-blue-900 hover:bg-blue-950 text-white rounded-lg text-xs font-semibold">
+          <i class="fa-solid fa-plus mr-1"></i>Thêm lẻ
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">Tổng vị trí (Trụ/Hầm)</div><div id="stat-total" class="text-xl font-bold text-blue-900 mt-0.5">0</div></div>
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">Số tuyến đường dây</div><div id="stat-lines" class="text-xl font-bold text-teal-700 mt-0.5">0</div></div>
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">Vị trí 110kV / 220kV</div><div id="stat-volt" class="text-xl font-bold text-slate-800 mt-0.5">0 / 0</div></div>
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">Có tọa độ GPS</div><div id="stat-gps" class="text-xl font-bold text-emerald-700 mt-0.5">0</div></div>
+    </div>
+
+    <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-wrap gap-2 items-center">
+      <input id="f-search" oninput="renderAssetTable()" class="flex-1 min-w-[200px] border border-slate-300 rounded-lg px-3 py-1.5 text-xs" placeholder="Tìm mã tài sản, mã tuyến, tên tuyến, vị trí trụ..." />
+      <select id="f-line" onchange="renderAssetTable()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs max-w-[240px]">
+        <option value="">-- Tất cả tuyến --</option>
+      </select>
+      <select id="f-volt" onchange="renderAssetTable()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs">
+        <option value="">Tất cả cấp ĐA</option>
+        <option value="110kV">110kV</option>
+        <option value="220kV">220kV</option>
+      </select>
+      <select id="f-type" onchange="renderAssetTable()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs">
+        <option value="">Tất cả loại</option>
+        <option value="DDK">ĐDK</option>
+        <option value="CAP_NGAM">Cáp ngầm</option>
+      </select>
+      <span id="filter-count" class="text-xs text-slate-500 ml-auto"></span>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-slate-50 text-xs text-slate-500">
+          <tr>
+            <th class="p-3">Mã Tài sản</th>
+            <th class="p-3">Mã &amp; Tên tuyến</th>
+            <th class="p-3">Cấp ĐA</th>
+            <th class="p-3">Loại</th>
+            <th class="p-3">Vị trí (Trụ/Hầm)</th>
+            <th class="p-3">Tuyến đi chung</th>
+            <th class="p-3">Tọa độ GPS</th>
+            <th class="p-3 text-right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="asset-body" class="divide-y divide-slate-100"></tbody>
+      </table>
+      <div id="load-more-bar" class="hidden p-3 text-center border-t border-slate-100">
+        <button onclick="showLimit += 150; renderAssetTable();" class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium">Hiển thị thêm 150 dòng</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal thêm / sửa lẻ -->
+  <div id="asset-modal" class="fixed inset-0 bg-slate-900/50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-5 space-y-3">
+      <h2 id="modal-title" class="text-base font-bold text-slate-900">Thêm Vị trí Lưới điện</h2>
+      <input id="a-id-edit" type="hidden" />
+      <input id="a-line" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Mã tuyến (VD: 171-TD hoặc CB-TQ)" />
+      <input id="a-name" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Tên tuyến (VD: Cầu Bông (171) - Tân Quy (171))" />
+      <div class="grid grid-cols-2 gap-2">
+        <select id="a-volt" class="border rounded-lg px-3 py-2 text-sm"><option value="110kV">110kV</option><option value="220kV">220kV</option></select>
+        <select id="a-type" class="border rounded-lg px-3 py-2 text-sm"><option value="DDK">Đường dây trên không</option><option value="CAP_NGAM">Cáp ngầm</option></select>
+      </div>
+      <input id="a-pos" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Vị trí (VD: Trụ 18 hoặc Hầm J04)" />
+      <input id="a-shared" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Tuyến đi chung (nếu có)" />
+      <div class="grid grid-cols-2 gap-2">
+        <input id="a-lat" class="border rounded-lg px-3 py-2 text-sm" placeholder="Lat (10.8...)" />
+        <input id="a-lng" class="border rounded-lg px-3 py-2 text-sm" placeholder="Lng (106.7...)" />
+      </div>
+      <input id="a-team" class="w-full border rounded-lg px-3 py-2 text-sm" value="Đội QLLĐ 2" placeholder="Đơn vị QLVH" />
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeAssetModal()" class="px-3 py-2 text-xs border rounded-lg">Hủy</button>
+        <button onclick="saveAsset()" class="px-4 py-2 text-xs bg-blue-900 text-white rounded-lg font-semibold">Lưu tài sản</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Xem trước & Tải lên hàng loạt -->
+  <div id="import-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-4xl w-full p-5 space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b pb-3">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Xem trước Danh mục Đường dây &amp; Trụ điện tải lên</h2>
+          <p id="import-summary" class="text-xs text-slate-600 mt-0.5"></p>
+        </div>
+        <button onclick="closeImportModal()" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="overflow-auto flex-1 border rounded-xl">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-slate-50 text-slate-500 sticky top-0">
+            <tr><th class="p-2.5">Trạng thái</th><th class="p-2.5">Mã Tài sản</th><th class="p-2.5">Mã tuyến</th><th class="p-2.5">Tên tuyến</th><th class="p-2.5">Cấp ĐA</th><th class="p-2.5">Loại</th><th class="p-2.5">Vị trí</th><th class="p-2.5">GPS</th></tr>
+          </thead>
+          <tbody id="import-preview-body" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t">
+        <label class="flex items-center gap-2 text-xs text-slate-700">
+          <input type="checkbox" id="import-sync-gas" checked /> Đồng bộ song song sang Google Sheets (tab DM_Tuyen_Tru)
+        </label>
+        <div class="flex gap-2">
+          <button onclick="closeImportModal()" class="px-4 py-2 text-xs border rounded-lg">Hủy</button>
+          <button id="btn-confirm-import" onclick="confirmAssetImport()" class="px-4 py-2 text-xs bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-semibold">Xác nhận Lưu hàng loạt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allAssets = [];
+    let showLimit = 150;
+    let parsedImportRows = [];
+
+    requireAuth(() => {
+      db.ref("assets").on("value", (snap) => {
+        allAssets = Object.values(snap.val() || {});
+        updateStatsAndFilters();
+        renderAssetTable();
+      });
+    });
+
+    function updateStatsAndFilters() {
+      const lines = new Set(allAssets.map(a => a.maTuyen).filter(Boolean));
+      const v110 = allAssets.filter(a => a.capDienAp === "110kV").length;
+      const v220 = allAssets.filter(a => a.capDienAp === "220kV").length;
+      const hasGps = allAssets.filter(a => a.lat && a.lng).length;
+      document.getElementById("stat-total").textContent = allAssets.length.toLocaleString("vi-VN");
+      document.getElementById("stat-lines").textContent = lines.size.toLocaleString("vi-VN");
+      document.getElementById("stat-volt").textContent = `${v110} / ${v220}`;
+      document.getElementById("stat-gps").textContent = hasGps.toLocaleString("vi-VN");
+
+      const sel = document.getElementById("f-line");
+      const currentVal = sel.value;
+      sel.innerHTML = `<option value="">-- Tất cả tuyến (${lines.size}) --</option>` +
+        Array.from(lines).sort().map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join("");
+      sel.value = currentVal;
+    }
+
+    function renderAssetTable() {
+      const q = (document.getElementById("f-search").value || "").toLowerCase().trim();
+      const fLine = document.getElementById("f-line").value;
+      const fVolt = document.getElementById("f-volt").value;
+      const fType = document.getElementById("f-type").value;
+
+      const filtered = allAssets.filter(a => {
+        if (fLine && a.maTuyen !== fLine) return false;
+        if (fVolt && a.capDienAp !== fVolt) return false;
+        if (fType && a.loaiTaiSan !== fType) return false;
+        if (q) {
+          const hay = `${a.assetId} ${a.maTuyen} ${a.tenTuyen} ${a.viTri} ${a.tuyenDiChung || ""}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      document.getElementById("filter-count").textContent = `Hiển thị ${Math.min(filtered.length, showLimit)} / ${filtered.length} vị trí`;
+      const tbody = document.getElementById("asset-body");
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400 text-xs">Chưa có danh mục tuyến/trụ phù hợp. Bạn có thể bấm "Tải danh mục mẫu (.xlsx)" để nhập hàng loạt.</td></tr>`;
+        document.getElementById("load-more-bar").classList.add("hidden");
+        return;
+      }
+
+      const slice = filtered.slice(0, showLimit);
+      tbody.innerHTML = slice.map(a => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3 font-mono text-xs font-semibold text-slate-800">${escapeHtml(a.assetId)}</td>
+          <td class="p-3 text-xs"><span class="font-semibold text-blue-900">${escapeHtml(a.maTuyen)}</span><div class="text-slate-500 text-[11px]">${escapeHtml(a.tenTuyen || "")}</div></td>
+          <td class="p-3 text-xs">${escapeHtml(a.capDienAp)}</td>
+          <td class="p-3 text-xs">${escapeHtml(a.loaiTaiSan)}</td>
+          <td class="p-3 text-xs font-medium">${escapeHtml(a.viTri)}</td>
+          <td class="p-3 text-xs text-slate-500">${escapeHtml(a.tuyenDiChung || "")}</td>
+          <td class="p-3 font-mono text-xs">${a.lat && a.lng ? `${escapeHtml(a.lat)}, ${escapeHtml(a.lng)}` : `<span class="text-slate-300">—</span>`}</td>
+          <td class="p-3 text-right whitespace-nowrap">
+            <button onclick="editAsset('${escapeHtml(a.assetId)}')" class="text-xs text-blue-800 hover:underline mr-2">Sửa</button>
+            <button onclick="deleteAsset('${escapeHtml(a.assetId)}')" class="text-xs text-red-700 hover:underline">Xóa</button>
+          </td>
+        </tr>`).join("");
+
+      document.getElementById("load-more-bar").classList.toggle("hidden", filtered.length <= showLimit);
+    }
+
+    function openAssetModal(item = null) {
+      if (!canApprove()) return alert("Chỉ Đội trưởng/Tổ trưởng mới được cập nhật danh mục.");
+      document.getElementById("modal-title").textContent = item ? "Cập nhật Vị trí Lưới điện" : "Thêm Vị trí Lưới điện";
+      document.getElementById("a-id-edit").value = item ? item.assetId : "";
+      document.getElementById("a-line").value = item ? item.maTuyen : "";
+      document.getElementById("a-name").value = item ? (item.tenTuyen || "") : "";
+      document.getElementById("a-volt").value = item ? (item.capDienAp || "110kV") : "110kV";
+      document.getElementById("a-type").value = item ? (item.loaiTaiSan || "DDK") : "DDK";
+      document.getElementById("a-pos").value = item ? item.viTri : "";
+      document.getElementById("a-shared").value = item ? (item.tuyenDiChung || "") : "";
+      document.getElementById("a-lat").value = item ? (item.lat || "") : "";
+      document.getElementById("a-lng").value = item ? (item.lng || "") : "";
+      document.getElementById("a-team").value = item ? (item.doiQLVH || "Đội QLLĐ 2") : "Đội QLLĐ 2";
+      document.getElementById("asset-modal").classList.remove("hidden");
+    }
+
+    function editAsset(assetId) {
+      const item = allAssets.find(a => a.assetId === assetId);
+      if (item) openAssetModal(item);
+    }
+
+    async function deleteAsset(assetId) {
+      if (!canApprove()) return alert("Chỉ Đội trưởng/Tổ trưởng mới được xóa tài sản.");
+      if (!confirm(`Xóa vị trí ${assetId}?`)) return;
+      await db.ref("assets/" + assetId).remove();
+    }
+
+    function closeAssetModal() { document.getElementById("asset-modal").classList.add("hidden"); }
+
+    async function saveAsset() {
+      const maTuyen = document.getElementById("a-line").value.trim();
+      const viTri = document.getElementById("a-pos").value.trim();
+      if (!maTuyen || !viTri) return alert("Vui lòng nhập Mã tuyến và Vị trí.");
+      const editId = document.getElementById("a-id-edit").value;
+      const assetId = editId || `${maTuyen}_${viTri}`.replace(/[^a-zA-Z0-9_-]/g, "_");
+      const payload = {
+        assetId,
+        maTuyen,
+        tenTuyen: document.getElementById("a-name").value.trim(),
+        capDienAp: document.getElementById("a-volt").value,
+        loaiTaiSan: document.getElementById("a-type").value,
+        viTri,
+        tuyenDiChung: document.getElementById("a-shared").value.trim(),
+        lat: document.getElementById("a-lat").value.trim(),
+        lng: document.getElementById("a-lng").value.trim(),
+        doiQLVH: document.getElementById("a-team").value.trim() || "Đội QLLĐ 2"
+      };
+      await db.ref("assets/" + assetId).set(payload);
+      await callGasApi("syncAsset", payload);
+      closeAssetModal();
+    }
+
+    function downloadAssetTemplate() {
+      const sampleRows = [
+        {
+          MaTuyen: "CB-TQ",
+          TenTuyen: "Cầu Bông (171) - Tân Quy (171)",
+          CapDienAp: "110kV",
+          LoaiTaiSan: "DDK",
+          ViTri: "Trụ 01",
+          Lat: "10.945123",
+          Lng: "106.512345",
+          TuyenDiChung: "Cầu Bông (172) - Củ Chi (172)",
+          DoiQLVH: "Đội QLLĐ 2"
+        },
+        {
+          MaTuyen: "CB-CC2_220",
+          TenTuyen: "Cầu Bông (275) - Củ Chi 2 (278)",
+          CapDienAp: "220kV",
+          LoaiTaiSan: "DDK",
+          ViTri: "Trụ 75",
+          Lat: "11.012456",
+          Lng: "106.489123",
+          TuyenDiChung: "Cầu Bông (276) - Củ Chi 2 (277)",
+          DoiQLVH: "Đội QLLĐ 2"
+        },
+        {
+          MaTuyen: "PL-PĐ",
+          TenTuyen: "Phú Lâm (175) - Phú Định (171)",
+          CapDienAp: "110kV",
+          LoaiTaiSan: "CAP_NGAM",
+          ViTri: "Hầm J04",
+          Lat: "",
+          Lng: "",
+          TuyenDiChung: "",
+          DoiQLVH: "Đội QLLĐ 2"
+        }
+      ];
+      const guideRows = [
+        { Cot: "MaTuyen", BatBuoc: "Có", MoTa: "Mã ngắn đường dây (VD: CB-TQ, TĐ-CL, PL-PĐ)" },
+        { Cot: "TenTuyen", BatBuoc: "Nên có", MoTa: "Tên đầy đủ đường dây theo PMIS" },
+        { Cot: "CapDienAp", BatBuoc: "Có", MoTa: "Chỉ nhập 110kV hoặc 220kV" },
+        { Cot: "LoaiTaiSan", BatBuoc: "Có", MoTa: "Nhập DDK (Đường dây trên không) hoặc CAP_NGAM (Cáp ngầm)" },
+        { Cot: "ViTri", BatBuoc: "Có", MoTa: "Tên trụ hoặc hầm cáp (VD: Trụ 01, 23_BCHNS2, Hầm J04)" },
+        { Cot: "Lat / Lng", BatBuoc: "Không", MoTa: "Tọa độ GPS (số thập phân, VD: 10.945123)" },
+        { Cot: "TuyenDiChung", BatBuoc: "Không", MoTa: "Các đường dây đi chung trụ (nếu có)" },
+        { Cot: "DoiQLVH", BatBuoc: "Không", MoTa: "Mặc định: Đội QLLĐ 2" }
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sampleRows), "DanhMuc_TuyenTru");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(guideRows), "HuongDan_NhapLieu");
+      XLSX.writeFile(wb, "Mau_DanhMuc_DuongDay_TruDien_OPMS.xlsx");
+    }
+
+    function exportCurrentAssets() {
+      if (allAssets.length === 0) return alert("Chưa có dữ liệu để xuất.");
+      const rows = allAssets.map(a => ({
+        AssetID: a.assetId || "",
+        MaTuyen: a.maTuyen || "",
+        TenTuyen: a.tenTuyen || "",
+        CapDienAp: a.capDienAp || "110kV",
+        LoaiTaiSan: a.loaiTaiSan || "DDK",
+        ViTri: a.viTri || "",
+        Lat: a.lat || "",
+        Lng: a.lng || "",
+        TuyenDiChung: a.tuyenDiChung || "",
+        DoiQLVH: a.doiQLVH || "Đội QLLĐ 2"
+      }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "DanhMuc_TuyenTru");
+      XLSX.writeFile(wb, `DanhMuc_DuongDay_TruDien_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    }
+
+    function pickCol(row, keys) {
+      for (const k of keys) {
+        if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== "") return String(row[k]).trim();
+      }
+      const lowerMap = {};
+      Object.keys(row).forEach(rk => { lowerMap[rk.trim().toLowerCase()] = row[rk]; });
+      for (const k of keys) {
+        const v = lowerMap[k.toLowerCase()];
+        if (v !== undefined && v !== null && String(v).trim() !== "") return String(v).trim();
+      }
+      return "";
+    }
+
+    function handleAssetFileSelect(ev) {
+      if (!canApprove()) { ev.target.value = ""; return alert("Chỉ Đội trưởng/Tổ trưởng mới được tải lên danh mục."); }
+      const file = ev.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const wb = XLSX.read(e.target.result, { type: "array" });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const rawRows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+          if (rawRows.length === 0) return alert("File không có dữ liệu.");
+
+          parsedImportRows = rawRows.map((r, idx) => {
+            const maTuyen = pickCol(r, ["MaTuyen", "Mã tuyến", "Đường dây/TBA", "DuongDay"]);
+            const tenTuyen = pickCol(r, ["TenTuyen", "Tên tuyến", "Đường dây/TBA"]);
+            const viTri = pickCol(r, ["ViTri", "Vị trí", "ViTriTru_Ham", "Thiết bị/Công trình"]);
+            let capDienAp = pickCol(r, ["CapDienAp", "Cấp ĐA", "Cấp điện áp"]) || "110kV";
+            if (!["110kV", "220kV"].includes(capDienAp)) capDienAp = capDienAp.includes("220") ? "220kV" : "110kV";
+            let loaiTaiSan = pickCol(r, ["LoaiTaiSan", "Loại", "Loại tài sản"]) || "DDK";
+            if (!["DDK", "CAP_NGAM"].includes(loaiTaiSan)) loaiTaiSan = loaiTaiSan.toLowerCase().includes("ngầm") ? "CAP_NGAM" : "DDK";
+            const lat = pickCol(r, ["Lat", "Y", "Vĩ độ"]);
+            const lng = pickCol(r, ["Lng", "X", "Kinh độ"]);
+            const tuyenDiChung = pickCol(r, ["TuyenDiChung", "Tuyến đi chung"]);
+            const doiQLVH = pickCol(r, ["DoiQLVH", "Đơn vị"]) || "Đội QLLĐ 2";
+            const rawAssetId = pickCol(r, ["AssetID", "Mã Tài sản", "Mã thiết bị"]);
+            const assetId = (rawAssetId || `${maTuyen}_${viTri}`).replace(/[^a-zA-Z0-9_-]/g, "_");
+            const valid = Boolean(maTuyen && viTri);
+            return { rowNum: idx + 2, valid, error: valid ? "" : "Thiếu Mã tuyến hoặc Vị trí", assetId, maTuyen, tenTuyen, capDienAp, loaiTaiSan, viTri, lat, lng, tuyenDiChung, doiQLVH };
+          });
+
+          const validCount = parsedImportRows.filter(x => x.valid).length;
+          const errCount = parsedImportRows.length - validCount;
+          document.getElementById("import-summary").textContent = `Tổng ${parsedImportRows.length} dòng: ${validCount} hợp lệ, ${errCount} lỗi (sẽ bỏ qua dòng lỗi).`;
+          document.getElementById("import-preview-body").innerHTML = parsedImportRows.slice(0, 200).map(x => `
+            <tr class="${x.valid ? "" : "bg-red-50"}">
+              <td class="p-2">${x.valid ? `<span class="text-emerald-700 font-semibold">Hợp lệ</span>` : `<span class="text-red-700 font-semibold">${escapeHtml(x.error)}</span>`}</td>
+              <td class="p-2 font-mono">${escapeHtml(x.assetId)}</td>
+              <td class="p-2 font-semibold">${escapeHtml(x.maTuyen)}</td>
+              <td class="p-2">${escapeHtml(x.tenTuyen)}</td>
+              <td class="p-2">${escapeHtml(x.capDienAp)}</td>
+              <td class="p-2">${escapeHtml(x.loaiTaiSan)}</td>
+              <td class="p-2">${escapeHtml(x.viTri)}</td>
+              <td class="p-2 font-mono">${x.lat && x.lng ? `${escapeHtml(x.lat)}, ${escapeHtml(x.lng)}` : "—"}</td>
+            </tr>`).join("");
+          document.getElementById("btn-confirm-import").disabled = validCount === 0;
+          document.getElementById("import-modal").classList.remove("hidden");
+        } catch (err) {
+          alert("Không đọc được file: " + err.message);
+        } finally {
+          ev.target.value = "";
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function closeImportModal() { document.getElementById("import-modal").classList.add("hidden"); }
+
+    async function confirmAssetImport() {
+      const validItems = parsedImportRows.filter(x => x.valid);
+      if (validItems.length === 0) return;
+      const btn = document.getElementById("btn-confirm-import");
+      btn.disabled = true;
+      btn.textContent = `Đang lưu ${validItems.length} vị trí...`;
+
+      try {
+        // 1. Batch write lên Firebase theo từng lô 400 bản ghi
+        for (let i = 0; i < validItems.length; i += 400) {
+          const chunk = validItems.slice(i, i + 400);
+          const updates = {};
+          chunk.forEach(item => {
+            updates["assets/" + item.assetId] = {
+              assetId: item.assetId, maTuyen: item.maTuyen, tenTuyen: item.tenTuyen,
+              capDienAp: item.capDienAp, loaiTaiSan: item.loaiTaiSan, viTri: item.viTri,
+              tuyenDiChung: item.tuyenDiChung, lat: item.lat, lng: item.lng, doiQLVH: item.doiQLVH
+            };
+          });
+          await db.ref().update(updates);
+        }
+
+        // 2. Đồng bộ sang Google Sheets nếu được chọn (lô 300 bản ghi)
+        if (document.getElementById("import-sync-gas").checked) {
+          for (let i = 0; i < validItems.length; i += 300) {
+            await callGasApi("syncAssetsBatch", { items: validItems.slice(i, i + 300) });
+          }
+        }
+
+        alert(`Đã cập nhật thành công ${validItems.length} vị trí đường dây / trụ điện!`);
+        closeImportModal();
+      } catch (err) {
+        alert("Lỗi khi lưu hàng loạt: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Xác nhận Lưu hàng loạt";
+      }
+    }
+  </script>
+</body>
+</html>

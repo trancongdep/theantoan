@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tồn tại &amp; Xuất PMIS — LĐCT-OPMS v1.1</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/gas-api.js"></script>
+  <script src="js/offline-sync.js"></script>
+  <script src="js/auth-guard.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <div id="nav-mount"></div>
+  <main class="lg:ml-64 p-5 max-w-6xl space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div><h1 class="text-xl font-bold text-slate-900">Quản lý Tồn tại &amp; Xuất dữ liệu PMIS (SLA 24–48 giờ)</h1><p class="text-xs text-slate-500">Chỉ Đội trưởng/Tổ trưởng mới có quyền duyệt biên bản và đóng tồn tại</p></div>
+      <div class="flex gap-2">
+        <button onclick="downloadPMISCsv()" class="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg text-xs font-semibold"><i class="fa-solid fa-file-csv mr-1"></i>Tải CSV chuẩn PMIS</button>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+      <div class="px-4 py-3 border-b border-slate-200 font-semibold text-sm text-slate-900">1. Biên bản chờ duyệt</div>
+      <table class="w-full text-sm text-left"><thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="p-3">Mã phiếu</th><th class="p-3">Tuyến / Vị trí</th><th class="p-3">Loại KT</th><th class="p-3">Người KT</th><th class="p-3">Thao tác</th></tr></thead><tbody id="pending-body" class="divide-y divide-slate-100"></tbody></table>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+      <div class="px-4 py-3 border-b border-slate-200 font-semibold text-sm text-slate-900">2. Danh sách Tồn tại / Khiếm khuyết</div>
+      <table class="w-full text-sm text-left"><thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="p-3">Mã Tồn tại</th><th class="p-3">Tuyến / Vị trí</th><th class="p-3">Mô tả</th><th class="p-3">Trạng thái</th><th class="p-3">Thao tác</th></tr></thead><tbody id="defect-body" class="divide-y divide-slate-100"></tbody></table>
+    </div>
+  </main>
+  <script>
+    requireAuth(() => {
+      db.ref("inspections").on("value", (snap) => {
+        const list = Object.values(snap.val() || {}).filter(r => r.trangThaiDuyet !== "APPROVED");
+        const tbody = document.getElementById("pending-body");
+        if (list.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 text-xs">Không có biên bản chờ duyệt.</td></tr>`; return; }
+        tbody.innerHTML = list.map(r => `<tr><td class="p-3 font-mono text-xs">${escapeHtml(r.recordId)}</td><td class="p-3 text-xs">${escapeHtml(r.maTuyen)} · ${escapeHtml(r.assetId)}</td><td class="p-3 text-xs">${escapeHtml(r.loaiKT)}</td><td class="p-3 text-xs">${escapeHtml(r.nguoiKT)}</td><td class="p-3"><button onclick="approveRecord('${escapeHtml(r.recordId)}')" class="px-3 py-1 bg-blue-900 text-white rounded text-xs">Duyệt</button></td></tr>`).join("");
+      });
+      db.ref("defects").on("value", (snap) => {
+        const list = Object.values(snap.val() || {}).reverse();
+        const tbody = document.getElementById("defect-body");
+        if (list.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 text-xs">Chưa có tồn tại nào.</td></tr>`; return; }
+        tbody.innerHTML = list.map(d => `<tr><td class="p-3 font-mono text-xs">${escapeHtml(d.defectId)}</td><td class="p-3 text-xs">${escapeHtml(d.maTuyen)} · ${escapeHtml(d.assetId)}</td><td class="p-3 text-xs">${escapeHtml(d.moTa)}</td><td class="p-3 text-xs font-semibold ${d.trangThai === "OPEN" ? "text-red-700" : "text-emerald-700"}">${escapeHtml(d.trangThai)}</td><td class="p-3">${d.trangThai === "OPEN" ? `<button onclick="closeDefect('${escapeHtml(d.defectId)}')" class="px-3 py-1 bg-emerald-700 text-white rounded text-xs">Đóng tồn tại</button>` : `<span class="text-xs text-slate-400">Đã đóng</span>`}</td></tr>`).join("");
+      });
+    });
+
+    async function approveRecord(recordId) {
+      if (!canApprove()) return alert("Chỉ Đội trưởng/Tổ trưởng mới được duyệt biên bản.");
+      const approvedAt = new Date().toISOString();
+      await db.ref("inspections/" + recordId).update({
+        trangThaiDuyet: "APPROVED",
+        approvedBy: window.currentUserProfile.name,
+        approvedAt
+      });
+      await callGasApi("approveInspection", { recordId, approvedBy: window.currentUserProfile.name, approvedAt });
+    }
+
+    async function closeDefect(defectId) {
+      if (!canApprove()) return alert("Chỉ Đội trưởng/Tổ trưởng mới được đóng tồn tại.");
+      await db.ref("defects/" + defectId).update({
+        trangThai: "CLOSED",
+        nguoiDong: window.currentUserProfile.name,
+        ngayDong: new Date().toISOString()
+      });
+      await callGasApi("updateDefect", { defectId, trangThai: "CLOSED", nguoiDong: window.currentUserProfile.name });
+    }
+
+    async function downloadPMISCsv() {
+      try {
+        const res = await fetchPmisExportFromGas();
+        if (res.ok && res.rows && res.rows.length > 1) {
+          const csv = res.rows.map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+          const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+          const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `PMIS_Export_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+          return;
+        }
+      } catch (e) {}
+
+      // Fallback xuất trực tiếp từ Firebase nếu GAS chưa có dữ liệu
+      const snap = await db.ref("inspections").once("value");
+      const list = Object.values(snap.val() || {});
+      if (list.length === 0) return alert("Chưa có dữ liệu kiểm tra để xuất PMIS.");
+      const header = ["RecordID", "MaTuyen", "ViTri", "LoaiKT_4086", "NguoiKT", "ThoiGianKT", "KetQua", "GhiChu", "TrangThaiDuyet"];
+      const rows = [header, ...list.map(r => [r.recordId, r.maTuyen, r.assetId, r.loaiKT, r.nguoiKT, r.thoiGianKT, r.ketQua, r.ghiChu || "", r.trangThaiDuyet])];
+      const csv = rows.map(row => row.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `PMIS_Export_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    }
+  </script>
+</body>
+</html>
