@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Phân quyền RBAC — LĐCT-OPMS v1.0</title>
+  <title>Phân quyền RBAC theo Email — LĐCT-OPMS v1.0</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -14,39 +14,135 @@
 </head>
 <body class="bg-slate-50 min-h-screen">
   <div id="nav-mount"></div>
-  <main class="lg:ml-64 p-5 max-w-5xl">
-    <h1 class="text-xl font-bold text-slate-900 mb-1">Phân quyền Đa cấp (RBAC)</h1>
-    <p class="text-xs text-slate-500 mb-4">Chỉ Đội trưởng (CAPTAIN) mới có quyền thay đổi vai trò trên Firebase Rules</p>
-    <div class="bg-white p-4 rounded-xl border border-slate-200 mb-5 grid grid-cols-1 md:grid-cols-5 gap-2">
-      <input id="u-uid" class="border rounded-lg px-3 py-2 text-xs font-mono" placeholder="Firebase UID" />
-      <input id="u-name" class="border rounded-lg px-3 py-2 text-xs" placeholder="Họ và tên" />
-      <input id="u-email" class="border rounded-lg px-3 py-2 text-xs" placeholder="Email" />
+
+  <main class="lg:ml-64 p-5 max-w-5xl space-y-6">
+    <div>
+      <h1 class="text-xl font-bold text-slate-900 mb-1">Phân quyền Đa cấp theo Email (Không cần UID)</h1>
+      <p class="text-xs text-slate-500">Chỉ cần nhập Email và Vai trò; nhân viên đăng nhập Google lần đầu sẽ tự động khớp quyền</p>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-4 gap-2.5">
+      <input id="u-email" type="email" class="border rounded-lg px-3 py-2 text-xs" placeholder="Email nhân viên (VD: an@evnhcmc.vn)" />
+      <input id="u-name" class="border rounded-lg px-3 py-2 text-xs" placeholder="Họ và tên nhân viên" />
       <select id="u-role" class="border rounded-lg px-3 py-2 text-xs">
         <option value="INSPECTOR">INSPECTOR (Nhân viên QLVH)</option>
         <option value="TEAM_LEAD">TEAM_LEAD (Tổ trưởng)</option>
         <option value="CAPTAIN">CAPTAIN (Đội trưởng/Phó)</option>
         <option value="VIEWER">VIEWER (KTVH / An toàn)</option>
       </select>
-      <button onclick="saveUser()" class="bg-blue-900 text-white rounded-lg px-3 py-2 text-xs font-semibold">Lưu quyền</button>
+      <button onclick="inviteUserByEmail()" class="bg-blue-900 hover:bg-blue-950 text-white rounded-lg px-3 py-2 text-xs font-semibold">
+        <i class="fa-solid fa-user-plus mr-1"></i>Cấp quyền theo Email
+      </button>
     </div>
+
     <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+      <div class="px-4 py-3 border-b border-slate-200 text-sm font-semibold text-slate-900">1. Danh sách Email đã cấp quyền (Chờ &amp; Đã kích hoạt)</div>
       <table class="w-full text-sm text-left">
-        <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="p-3">UID</th><th class="p-3">Họ tên</th><th class="p-3">Email</th><th class="p-3">Vai trò</th></tr></thead>
+        <thead class="bg-slate-50 text-xs text-slate-500">
+          <tr>
+            <th class="p-3">Email</th>
+            <th class="p-3">Họ tên</th>
+            <th class="p-3">Vai trò</th>
+            <th class="p-3">Trạng thái</th>
+            <th class="p-3">Xóa</th>
+          </tr>
+        </thead>
+        <tbody id="invite-body" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+      <div class="px-4 py-3 border-b border-slate-200 text-sm font-semibold text-slate-900">2. Tài khoản đã đăng nhập hệ thống</div>
+      <table class="w-full text-sm text-left">
+        <thead class="bg-slate-50 text-xs text-slate-500">
+          <tr>
+            <th class="p-3">Họ tên</th>
+            <th class="p-3">Email</th>
+            <th class="p-3">Vai trò hiện tại</th>
+            <th class="p-3">Đổi vai trò</th>
+          </tr>
+        </thead>
         <tbody id="user-body" class="divide-y divide-slate-100"></tbody>
       </table>
     </div>
   </main>
+
   <script>
+    function toEmailKey(email) {
+      return email.trim().toLowerCase().replace(/\./g, ",");
+    }
+
     requireAuth(() => {
+      db.ref("invites").on("value", (snap) => {
+        const obj = snap.val() || {};
+        const tbody = document.getElementById("invite-body");
+        const entries = Object.entries(obj);
+        if (entries.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 text-xs">Chưa có email nào được cấp quyền.</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = entries.map(([key, inv]) => `
+          <tr>
+            <td class="p-3 text-xs font-mono">${inv.email || ""}</td>
+            <td class="p-3 text-xs font-medium">${inv.name || ""}</td>
+            <td class="p-3 text-xs font-semibold text-blue-900">${inv.role}</td>
+            <td class="p-3 text-xs">${inv.status === "ACTIVE" ? '<span class="text-emerald-700 font-medium">Đã kích hoạt</span>' : '<span class="text-amber-700">Chờ đăng nhập</span>'}</td>
+            <td class="p-3"><button onclick="removeInvite('${key}')" class="text-xs text-red-700 hover:underline">Thu hồi</button></td>
+          </tr>
+        `).join("");
+      });
+
       db.ref("users").on("value", (snap) => {
-        document.getElementById("user-body").innerHTML = Object.entries(snap.val() || {}).map(([uid, u]) => `<tr><td class="p-3 font-mono text-xs">${uid}</td><td class="p-3 text-xs font-medium">${u.name || ""}</td><td class="p-3 text-xs">${u.email || ""}</td><td class="p-3 text-xs font-semibold text-blue-900">${u.role}</td></tr>`).join("");
+        const obj = snap.val() || {};
+        const tbody = document.getElementById("user-body");
+        tbody.innerHTML = Object.entries(obj).map(([uid, u]) => `
+          <tr>
+            <td class="p-3 text-xs font-medium">${u.name || ""}</td>
+            <td class="p-3 text-xs font-mono">${u.email || ""}</td>
+            <td class="p-3 text-xs font-semibold text-blue-900">${u.role}</td>
+            <td class="p-3 text-xs">
+              <select onchange="changeUserRole('${uid}', this.value)" class="border rounded px-2 py-1 text-xs">
+                <option value="INSPECTOR" ${u.role === "INSPECTOR" ? "selected" : ""}>INSPECTOR</option>
+                <option value="TEAM_LEAD" ${u.role === "TEAM_LEAD" ? "selected" : ""}>TEAM_LEAD</option>
+                <option value="CAPTAIN" ${u.role === "CAPTAIN" ? "selected" : ""}>CAPTAIN</option>
+                <option value="VIEWER" ${u.role === "VIEWER" ? "selected" : ""}>VIEWER</option>
+              </select>
+            </td>
+          </tr>
+        `).join("");
       });
     });
-    async function saveUser() {
-      if (window.currentUserProfile?.role !== "CAPTAIN") return alert("Chỉ tài khoản CAPTAIN mới được phân quyền.");
-      const uid = document.getElementById("u-uid").value.trim(); if (!uid) return alert("Nhập Firebase UID.");
-      await db.ref("users/" + uid).set({ name: document.getElementById("u-name").value.trim(), email: document.getElementById("u-email").value.trim(), role: document.getElementById("u-role").value, team: "Đội QLLĐ 2", active: true });
-      alert("Đã cập nhật phân quyền.");
+
+    async function inviteUserByEmail() {
+      if (window.currentUserProfile?.role !== "CAPTAIN") {
+        return alert("Chỉ tài khoản CAPTAIN mới được cấp quyền nhân viên.");
+      }
+      const email = document.getElementById("u-email").value.trim().toLowerCase();
+      const name = document.getElementById("u-name").value.trim();
+      const role = document.getElementById("u-role").value;
+      if (!email || !email.includes("@")) return alert("Vui lòng nhập Email hợp lệ.");
+
+      await db.ref("invites/" + toEmailKey(email)).set({
+        email,
+        name: name || email.split("@")[0],
+        role,
+        team: "Đội QLLĐ 2",
+        status: "PENDING",
+        createdAt: new Date().toISOString()
+      });
+      document.getElementById("u-email").value = "";
+      document.getElementById("u-name").value = "";
+      alert(`Đã cấp quyền ${role} cho ${email}. Nhân viên chỉ cần đăng nhập Google để sử dụng.`);
+    }
+
+    async function removeInvite(key) {
+      if (window.currentUserProfile?.role !== "CAPTAIN") return alert("Chỉ CAPTAIN mới được thu hồi.");
+      await db.ref("invites/" + key).remove();
+    }
+
+    async function changeUserRole(uid, newRole) {
+      if (window.currentUserProfile?.role !== "CAPTAIN") return alert("Chỉ CAPTAIN mới được đổi vai trò.");
+      await db.ref("users/" + uid + "/role").set(newRole);
     }
   </script>
 </body>
