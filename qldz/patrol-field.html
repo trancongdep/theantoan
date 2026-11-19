@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kiểm tra Hiện trường — LĐCT-OPMS v1.0</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/gas-api.js"></script>
+  <script src="js/offline-sync.js"></script>
+  <script src="js/auth-guard.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <div id="nav-mount"></div>
+  <main class="lg:ml-64 p-4 sm:p-6 max-w-3xl">
+    <h1 class="text-xl font-bold text-slate-900 mb-1">Kiểm tra Hiện trường (4086/QĐ-EVNHCMC)</h1>
+    <p class="text-xs text-slate-500 mb-4">Hỗ trợ lưu Offline IndexedDB khi mất sóng 4G và tự đồng bộ khi có mạng</p>
+    <div class="bg-white p-5 rounded-xl border border-slate-200 space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Chế độ kiểm tra</label>
+          <select id="p-type" onchange="renderChecklist()" class="w-full border rounded-lg px-3 py-2 text-sm">
+            <option value="KT_NGAY">Định kỳ ban ngày (1 tháng/lần)</option>
+            <option value="KT_DEM">Định kỳ ban đêm (3 tháng/lần)</option>
+            <option value="KT_DOT_XUAT">Kiểm tra đột xuất (Thi công/Sự cố)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Mã lệnh giao việc (nếu có)</label>
+          <input id="p-task" class="w-full border rounded-lg px-3 py-2 text-sm font-mono" placeholder="TSK-..." />
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-700 mb-1">Mã tuyến</label><input id="p-line" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="VD: 171-TD" /></div>
+        <div><label class="block text-xs font-medium text-slate-700 mb-1">Vị trí Trụ / Hầm cáp</label><input id="p-asset" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="VD: Trụ 18 hoặc Hầm J04" /></div>
+      </div>
+      <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
+        <div class="text-xs"><span class="font-semibold text-slate-800">Check-in GPS:</span><span id="gps-text" class="font-mono text-slate-600 ml-1">Chưa lấy tọa độ</span></div>
+        <button onclick="getGPS()" class="px-3 py-1.5 bg-blue-900 text-white rounded-lg text-xs font-medium"><i class="fa-solid fa-location-dot mr-1"></i>Lấy GPS</button>
+      </div>
+      <div><div class="text-xs font-semibold text-slate-800 mb-2">Hạng mục kiểm tra chuẩn 4086</div><div id="checklist-box" class="space-y-2 text-sm"></div></div>
+      <div>
+        <label class="block text-xs font-medium text-slate-700 mb-1">Kết quả tổng hợp</label>
+        <select id="p-result" class="w-full border rounded-lg px-3 py-2 text-sm"><option value="DAT">Đạt — Không phát hiện bất thường</option><option value="KHONG_DAT">Không đạt — Phát hiện tồn tại / vi phạm</option></select>
+      </div>
+      <div><label class="block text-xs font-medium text-slate-700 mb-1">Mô tả tồn tại / Ghi chú hiện trường</label><textarea id="p-note" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Ghi rõ khoảng cách cây, công trình vi phạm hành lang, hiện tượng phóng điện..."></textarea></div>
+      <div><label class="block text-xs font-medium text-slate-700 mb-1">Ảnh hiện trường (Tự nén &amp; gắn watermark GPS)</label><input id="p-photos" type="file" accept="image/*" multiple class="w-full text-xs border rounded-lg p-2" /></div>
+      <button onclick="submitPatrol()" id="btn-submit" class="w-full py-3 bg-blue-900 hover:bg-blue-950 text-white rounded-xl text-sm font-semibold"><i class="fa-solid fa-paper-plane mr-1"></i>Gửi Biên bản Kiểm tra</button>
+    </div>
+  </main>
+  <script>
+    let currentLat = "", currentLng = "";
+    const CHECKLISTS = {
+      KT_NGAY: ["Hành lang an toàn (4m với 110kV, 6m với 220kV theo QCVN 25:2025/BCT)", "Móng cột, tiếp địa, dây néo, thanh giằng không bị xói lở/mất cắp", "Chuỗi sứ cách điện, dây dẫn, dây chống sét nguyên vẹn", "Hầm cáp, ống thép/HDPE bảo vệ nhô lên cột cao tối thiểu 2,0m"],
+      KT_DEM: ["Kiểm tra phát nhiệt nóng đỏ tại mối nối, lèo, kẹp cực", "Kiểm tra phóng điện vầng quang (Corona) trên chuỗi sứ", "Kiểm tra chớp lửa bề mặt cách điện tại khu vực ô nhiễm/ẩm ướt"],
+      KT_DOT_XUAT: ["Kiểm tra công trình thi công, đào đường, xe cơ giới gần tuyến cáp/ĐDK", "Kiểm tra sạt lở, ngập úng hoặc vật bay vướng dây sau mưa bão", "Lập biên bản cảnh báo / đình chỉ tạm thời nếu đe dọa an toàn lưới"]
+    };
+    requireAuth(() => { renderChecklist(); getGPS(); });
+    function renderChecklist() {
+      const items = CHECKLISTS[document.getElementById("p-type").value] || [];
+      document.getElementById("checklist-box").innerHTML = items.map((label) => `<label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer"><input type="checkbox" checked class="mt-0.5 chk-item" data-label="${label}" /><span class="text-xs text-slate-800">${label}</span></label>`).join("");
+    }
+    function getGPS() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition((pos) => { currentLat = pos.coords.latitude.toFixed(6); currentLng = pos.coords.longitude.toFixed(6); document.getElementById("gps-text").textContent = `${currentLat}, ${currentLng}`; }, () => { document.getElementById("gps-text").textContent = "Không lấy được GPS"; }, { enableHighAccuracy: true, timeout: 8000 });
+    }
+    async function submitPatrol() {
+      if (isReadOnly()) return alert("Tài khoản VIEWER không có quyền ghi.");
+      const btn = document.getElementById("btn-submit"); btn.disabled = true; btn.textContent = "Đang xử lý ảnh & lưu dữ liệu...";
+      try {
+        const recordId = "PAT-" + Date.now().toString().slice(-7);
+        const gpsStr = currentLat ? `${currentLat},${currentLng}` : "N/A";
+        const files = Array.from(document.getElementById("p-photos").files || []);
+        const photos = []; for (const f of files) photos.push(await compressImageWithWatermark(f, gpsStr));
+        const checklist = {}; document.querySelectorAll(".chk-item").forEach((el, idx) => { checklist["item_" + (idx + 1)] = { label: el.dataset.label, ok: el.checked }; });
+        const ketQua = document.getElementById("p-result").value, note = document.getElementById("p-note").value.trim();
+        const fbData = { recordId, taskId: document.getElementById("p-task").value.trim(), maTuyen: document.getElementById("p-line").value.trim(), assetId: document.getElementById("p-asset").value.trim(), loaiKT: document.getElementById("p-type").value, nguoiKT: window.currentUserProfile.name, thoiGianKT: new Date().toISOString(), lat: currentLat, lng: currentLng, ketQua, ghiChu: note, trangThaiDuyet: "SUBMITTED" };
+        const gasData = { ...fbData, checklist, photos, tonTai: ketQua === "KHONG_DAT" ? note : "" };
+        if (!navigator.onLine) {
+          await enqueueOfflinePayload({ queueId: recordId, firebasePath: "inspections/" + recordId, firebaseData: fbData, gasAction: "saveInspection", gasData });
+          alert("Mất mạng! Đã lưu phiếu " + recordId + " vào hàng đợi Offline.");
+        } else {
+          await db.ref("inspections/" + recordId).set(fbData);
+          if (ketQua === "KHONG_DAT") await db.ref("defects/DEF-" + recordId).set({ defectId: "DEF-" + recordId, recordId, maTuyen: fbData.maTuyen, assetId: fbData.assetId, moTa: note || "Phát hiện bất thường hiện trường", trangThai: "OPEN", nguoiMo: fbData.nguoiKT, ngayMo: fbData.thoiGianKT });
+          await callGasApi("saveInspection", gasData);
+          alert("Đã lưu biên bản " + recordId + " lên Firebase, Google Sheets và Drive!");
+        }
+        location.href = "dashboard.html";
+      } catch (err) { alert("Lỗi: " + err.message); } finally { btn.disabled = false; btn.textContent = "Gửi Biên bản Kiểm tra"; }
+    }
+  </script>
+</body>
+</html>
