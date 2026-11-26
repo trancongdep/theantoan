@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EVNHCMC – Tra cứu Phiếu công tác & Lệnh công tác</title>
+  <style>
+    :root {
+      --primary: #0f4c81;
+      --primary-dark: #0a355c;
+      --accent: #2563eb;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --pct-bg: #eff6ff;
+      --pct-fg: #1d4ed8;
+      --lct-bg: #fef3c7;
+      --lct-fg: #b45309;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary) 60%, #1d64c2);
+      color: #fff;
+      padding: 20px 24px;
+      box-shadow: 0 4px 16px rgba(10, 53, 92, 0.2);
+    }
+
+    .header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button, select, input {
+      font: inherit;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-light {
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .btn-light:hover { background: rgba(255, 255, 255, 0.24); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #1d4ed8; }
+
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+    }
+    .btn-success:hover { background: #15803d; }
+
+    .btn-outline {
+      background: #fff;
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px 24px 48px;
+    }
+
+    .meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 18px;
+      font-size: 0.875rem;
+      box-shadow: var(--shadow);
+    }
+
+    .meta-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+    }
+    .meta-pill strong { color: var(--text); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--primary);
+    }
+    .stat-card.pct { border-left-color: #2563eb; }
+    .stat-card.lct { border-left-color: #d97706; }
+    .stat-card.done { border-left-color: #16a34a; }
+    .stat-card.other { border-left-color: #ef4444; }
+
+    .stat-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .stat-value {
+      font-size: 1.85rem;
+      font-weight: 800;
+      margin-top: 4px;
+      color: var(--text);
+    }
+
+    .toolbar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    @media (max-width: 960px) {
+      .filters { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .filters { grid-template-columns: 1fr; }
+      .container { padding: 14px; }
+      header { padding: 16px; }
+    }
+
+    .input, .select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      font-size: 0.875rem;
+      outline: none;
+    }
+    .input:focus, .select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .table-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1060px;
+      font-size: 0.86rem;
+    }
+
+    thead th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 700;
+      text-align: left;
+      padding: 12px 12px;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tbody tr {
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-pct { background: var(--pct-bg); color: var(--pct-fg); }
+    .badge-lct { background: var(--lct-bg); color: var(--lct-fg); }
+
+    .code-cell {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 0.82rem;
+    }
+
+    .content-cell {
+      white-space: pre-line;
+      max-width: 380px;
+      word-break: break-word;
+    }
+
+    .status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-dot::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    .subtext {
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-top: 2px;
+    }
+
+    .empty-state {
+      padding: 48px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 0.875rem;
+      display: none;
+    }
+    .alert.show { display: block; }
+    .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .alert-info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 1000;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .modal-body {
+      padding: 18px 20px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 10px 14px;
+      font-size: 0.88rem;
+    }
+    @media (max-width: 560px) {
+      .detail-grid { grid-template-columns: 1fr; gap: 4px; }
+    }
+    .detail-label {
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .detail-val {
+      color: var(--text);
+      white-space: pre-line;
+      word-break: break-word;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 560px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+    .form-field { display: flex; flex-direction: column; gap: 5px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-field label { font-size: 0.82rem; font-weight: 600; color: #334155; }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .close-x {
+      border: none;
+      background: transparent;
+      font-size: 1.4rem;
+      line-height: 1;
+      color: var(--muted);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <h1>EVNHCMC – Quản lý Phiếu công tác &amp; Lệnh công tác</h1>
+        <p>Tự động tổng hợp danh sách PCT &amp; LCT ngày hôm qua và hôm nay từ appct.evnhcmc.vn</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-light" id="btnReload" title="Tải lại file data/tickets.json mới nhất">↻ Tải lại dữ liệu</button>
+        <button class="btn btn-light" id="btnLiveModal" title="Truy vấn trực tiếp qua Cloudflare Worker Proxy">⚡ Truy vấn trực tiếp</button>
+        <button class="btn btn-success" id="btnExport">⬇ Xuất Excel (CSV)</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="alert alert-error" id="alertError"></div>
+    <div class="alert alert-info" id="alertInfo"></div>
+
+    <div class="meta-bar">
+      <div class="meta-items">
+        <span class="meta-pill">📅 Khoảng lọc: <strong id="metaRange">--</strong></span>
+        <span class="meta-pill">🕒 Cập nhật lúc: <strong id="metaUpdated">--</strong></span>
+        <span class="meta-pill">📡 Nguồn: <strong id="metaMode">GitHub Actions (data/tickets.json)</strong></span>
+      </div>
+      <div class="meta-pill">Đang hiển thị: <strong id="metaShown">0</strong> bản ghi</div>
+    </div>
+
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Tổng phiếu &amp; lệnh</div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+      <div class="stat-card pct">
+        <div class="stat-label">Phiếu công tác (PCT)</div>
+        <div class="stat-value" id="statPct">0</div>
+      </div>
+      <div class="stat-card lct">
+        <div class="stat-label">Lệnh công tác (LCT)</div>
+        <div class="stat-value" id="statLct">0</div>
+      </div>
+      <div class="stat-card done">
+        <div class="stat-label">Đã hoàn thành</div>
+        <div class="stat-value" id="statDone">0</div>
+      </div>
+      <div class="stat-card other">
+        <div class="stat-label">Chưa xong / Dừng CT</div>
+        <div class="stat-value" id="statOther">0</div>
+      </div>
+    </section>
+
+    <section class="toolbar">
+      <div class="tabs" id="tabBar">
+        <button class="tab-btn active" data-tab="ALL">Tất cả (<span id="tabCountAll">0</span>)</button>
+        <button class="tab-btn" data-tab="PCT">Phiếu công tác (<span id="tabCountPct">0</span>)</button>
+        <button class="tab-btn" data-tab="LCT">Lệnh công tác (<span id="tabCountLct">0</span>)</button>
+      </div>
+
+      <div class="filters">
+        <input type="search" id="searchInput" class="input" placeholder="Tìm theo mã phiếu/lệnh, nội dung công tác, trạm/đơn vị, chỉ huy trực tiếp, người cấp..." />
+        <select id="dayFilter" class="select">
+          <option value="ALL">Ngày: Tất cả (Hôm qua &amp; Hôm nay)</option>
+          <option value="TODAY">Chỉ ngày hôm nay</option>
+          <option value="YESTERDAY">Chỉ ngày hôm qua</option>
+        </select>
+        <select id="statusFilter" class="select">
+          <option value="ALL">Trạng thái: Tất cả</option>
+        </select>
+        <select id="riskFilter" class="select">
+          <option value="ALL">Cảnh báo: Tất cả</option>
+        </select>
+        <button class="btn btn-outline" id="btnReset">Xóa lọc</button>
+      </div>
+    </section>
+
+    <section class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:48px">STT</th>
+              <th style="width:76px">Loại</th>
+              <th style="width:210px">Mã phiếu / lệnh</th>
+              <th style="width:140px">Thời gian cấp / tạo</th>
+              <th style="width:165px">Thời gian thực hiện</th>
+              <th style="width:170px">Đơn vị / Tổ</th>
+              <th>Nội dung công tác</th>
+              <th style="width:185px">Chỉ huy / Cấp phiếu</th>
+              <th style="width:130px">Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="9" class="empty-state">Đang tải dữ liệu...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal xem chi tiết phiếu/lệnh -->
+  <div class="modal-backdrop" id="detailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="detailTitle">Chi tiết phiếu công tác</h2>
+        <button class="close-x" id="closeDetail">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-grid" id="detailGrid"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btnCloseDetail2">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal truy vấn trực tiếp qua Cloudflare Worker Proxy (Tùy chọn) -->
+  <div class="modal-backdrop" id="liveModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Truy vấn trực tiếp từ appct.evnhcmc.vn (Qua API Proxy)</h2>
+        <button class="close-x" id="closeLive">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-top:0;font-size:0.85rem;color:#475569;">
+          Do máy chủ <code>appctapi.evnhcmc.vn</code> chặn CORS từ <code>github.io</code>, để đăng nhập và lọc ngày trực tiếp trên trình duyệt bạn cần điền URL Cloudflare Worker (xem file <code>cloudflare-worker/worker.js</code>). Nếu dùng chế độ tự động của <strong>GitHub Actions</strong>, bạn không cần dùng mục này.
+        </p>
+        <form id="liveForm" class="form-grid">
+          <div class="form-field full">
+            <label for="proxyUrl">URL Cloudflare Worker Proxy</label>
+            <input id="proxyUrl" class="input" type="url" placeholder="https://appct-proxy.your-name.workers.dev" required />
+          </div>
+          <div class="form-field">
+            <label for="liveUser">Tài khoản (Username)</label>
+            <input id="liveUser" class="input" type="text" placeholder="deptc" autocomplete="username" required />
+          </div>
+          <div class="form-field">
+            <label for="livePass">Mật khẩu (chỉ dùng trong phiên, không lưu)</label>
+            <input id="livePass" class="input" type="password" autocomplete="current-password" required />
+          </div>
+          <div class="form-field">
+            <label for="liveFrom">Từ ngày</label>
+            <input id="liveFrom" class="input" type="date" required />
+          </div>
+          <div class="form-field">
+            <label for="liveTo">Đến ngày</label>
+            <input id="liveTo" class="input" type="date" required />
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="cancelLive">Hủy</button>
+        <button class="btn btn-primary" id="submitLive">Đăng nhập &amp; Tải dữ liệu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fallback cho chế độ mở trực tiếp file:// trên máy tính -->
+  <script src="data/tickets.js"></script>
+  <script>
+    const state = {
+      data: null,
+      allItems: [],
+      filtered: [],
+      tab: "ALL",
+      search: "",
+      day: "ALL",
+      status: "ALL",
+      risk: "ALL",
+      modeLabel: "GitHub Actions (data/tickets.json)"
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function stripHtml(str) {
+      const div = document.createElement("div");
+      div.innerHTML = String(str ?? "");
+      return (div.textContent || div.innerText || "").replace(/•/g, "").replace(/\s+/g, " ").trim();
+    }
+
+    function showError(msg) {
+      const el = $("alertError");
+      el.textContent = msg;
+      el.classList.toggle("show", Boolean(msg));
+    }
+
+    function showInfo(msg) {
+      const el = $("alertInfo");
+      el.textContent = msg;
+      el.classList.toggle("show", Boolean(msg));
+    }
+
+    function getVnDateParts(offsetDays = 0) {
+      const now = new Date();
+      const vnMs = now.getTime() + 7 * 3600 * 1000 + offsetDays * 86400 * 1000;
+      const d = new Date(vnMs);
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(d.getUTCDate()).padStart(2, "0");
+      return { iso: `${y}-${m}-${day}`, dmyDash: `${day}-${m}-${y}`, dmySlash: `${day}/${m}/${y}` };
+    }
+
+    function extractDmyDash(dateText) {
+      const m = String(dateText || "").match(/(\d{2}-\d{2}-\d{4})/);
+      return m ? m[1] : "";
+    }
+
+    function isoToDmyDash(iso) {
+      if (!iso) return "";
+      const [y, m, d] = iso.split("-");
+      return y && m && d ? `${d}-${m}-${y}` : "";
+    }
+
+    function buildSelectOptions(selectEl, values, defaultLabel) {
+      const prev = selectEl.value;
+      selectEl.innerHTML = `<option value="ALL">${escapeHtml(defaultLabel)}</option>`;
+      [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, "vi")).forEach((v) => {
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        selectEl.appendChild(opt);
+      });
+      if ([...selectEl.options].some((o) => o.value === prev)) {
+        selectEl.value = prev;
+      }
+    }
+
+    function applyData(payload, modeLabel) {
+      state.data = payload;
+      state.modeLabel = modeLabel;
+      const pct = Array.isArray(payload.pct) ? payload.pct : [];
+      const lct = Array.isArray(payload.lct) ? payload.lct : [];
+      state.allItems = [...pct, ...lct];
+
+      $("metaRange").textContent = payload.dateRange
+        ? `${payload.dateRange.fromDisplay} → ${payload.dateRange.toDisplay}`
+        : "--";
+      $("metaUpdated").textContent = payload.generatedAtDisplay || "--";
+      $("metaMode").textContent = modeLabel;
+
+      const doneCount = state.allItems.filter((x) =>
+        (x.status || "").toLowerCase().includes("hoàn thành")
+      ).length;
+
+      $("statTotal").textContent = state.allItems.length;
+      $("statPct").textContent = pct.length;
+      $("statLct").textContent = lct.length;
+      $("statDone").textContent = doneCount;
+      $("statOther").textContent = state.allItems.length - doneCount;
+
+      $("tabCountAll").textContent = state.allItems.length;
+      $("tabCountPct").textContent = pct.length;
+      $("tabCountLct").textContent = lct.length;
+
+      buildSelectOptions($("statusFilter"), state.allItems.map((x) => x.status), "Trạng thái: Tất cả");
+      buildSelectOptions($("riskFilter"), state.allItems.map((x) => x.riskLevel), "Cảnh báo: Tất cả");
+
+      renderTable();
+    }
+
+    function renderTable() {
+      const q = state.search.trim().toLowerCase();
+      const todayDash = state.data?.dateRange?.to
+        ? isoToDmyDash(state.data.dateRange.to)
+        : getVnDateParts(0).dmyDash;
+      const yesterdayDash = state.data?.dateRange?.from
+        ? isoToDmyDash(state.data.dateRange.from)
+        : getVnDateParts(-1).dmyDash;
+
+      state.filtered = state.allItems.filter((item) => {
+        if (state.tab !== "ALL" && item.ticketType !== state.tab) return false;
+        if (state.status !== "ALL" && item.status !== state.status) return false;
+        if (state.risk !== "ALL" && item.riskLevel !== state.risk) return false;
+
+        if (state.day !== "ALL") {
+          const itemDay = extractDmyDash(item.createdAt) || extractDmyDash(item.dateStart);
+          if (state.day === "TODAY" && itemDay !== todayDash) return false;
+          if (state.day === "YESTERDAY" && itemDay !== yesterdayDash) return false;
+        }
+
+        if (q) {
+          const haystack = [
+            item.code,
+            item.content,
+            item.department,
+            item.organization,
+            item.commander,
+            item.approver,
+            item.issuer,
+            item.status,
+            item.businessType,
+            item.workType,
+            item.riskLevel
+          ].join(" ").toLowerCase();
+          if (!haystack.includes(q)) return false;
+        }
+        return true;
+      });
+
+      $("metaShown").textContent = state.filtered.length;
+      const tbody = $("tableBody");
+
+      if (!state.filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="9" class="empty-state">Không có Phiếu công tác hoặc Lệnh công tác nào khớp bộ lọc.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = state.filtered.map((item, idx) => {
+        const isPct = item.ticketType === "PCT";
+        const timeExec = isPct
+          ? `<div><strong>BĐ:</strong> ${escapeHtml(item.dateStart || "-")}</div><div><strong>KT:</strong> ${escapeHtml(item.dateEnd || "-")}</div>`
+          : `<div><strong>BĐ:</strong> ${escapeHtml(item.dateStart || "-")}</div>`;
+        const people = isPct
+          ? `<div><strong>CHTT:</strong> ${escapeHtml(item.commander || "-")}</div><div class="subtext">Cấp phiếu: ${escapeHtml(item.issuer || "-")}</div>`
+          : `<div><strong>CHTT:</strong> ${escapeHtml(item.commander || "-")}</div><div class="subtext">Ra lệnh: ${escapeHtml(item.issuer || "-")}</div>`;
+        const riskText = item.riskLevel ? `<div class="subtext" style="color:${escapeHtml(item.riskColor || "#64748b")}">${escapeHtml(item.riskLevel)}</div>` : "";
+        const unitSub = item.organization ? `<div class="subtext">${escapeHtml(item.organization)}</div>` : "";
+
+        return `
+          <tr data-idx="${idx}">
+            <td>${idx + 1}</td>
+            <td><span class="badge ${isPct ? "badge-pct" : "badge-lct"}">${escapeHtml(item.ticketType)}</span></td>
+            <td>
+              <div class="code-cell">${escapeHtml(item.code)}</div>
+              <div class="subtext">${escapeHtml(item.businessType || "")}${item.workType ? " • " + escapeHtml(item.workType) : ""}</div>
+            </td>
+            <td>
+              <div>${escapeHtml(item.createdAt || "-")}</div>
+              <div class="subtext">CN: ${escapeHtml(item.updatedAt || "-")}</div>
+            </td>
+            <td>${timeExec}</td>
+            <td>
+              <div><strong>${escapeHtml(item.department || "-")}</strong></div>
+              ${unitSub}
+            </td>
+            <td class="content-cell">${escapeHtml(item.content || "-")}</td>
+            <td>${people}</td>
+            <td>
+              <div class="status-dot" style="color:${escapeHtml(item.statusColor || "#334155")}">${escapeHtml(item.status || "-")}</div>
+              ${riskText}
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function openDetail(item) {
+      const isPct = item.ticketType === "PCT";
+      $("detailTitle").textContent = `${isPct ? "Phiếu công tác" : "Lệnh công tác"}: ${item.code}`;
+      const rows = [
+        ["Loại", isPct ? "Phiếu công tác (PCT)" : "Lệnh công tác (LCT)"],
+        ["Mã phiếu / lệnh", item.code],
+        ["Trạng thái", item.status],
+        ["Mức độ cảnh báo", item.riskLevel || "-"],
+        ["Thời gian cấp / tạo", item.createdAt || "-"],
+        ["Thời gian cập nhật", item.updatedAt || "-"],
+        ["Thời gian bắt đầu", item.dateStart || "-"],
+        ...(isPct ? [["Thời gian kết thúc", item.dateEnd || "-"]] : []),
+        ["Đơn vị / Phòng tổ", item.department || "-"],
+        [isPct ? "Đơn vị cấp phiếu" : "Đơn vị ra lệnh", item.organization || "-"],
+        ["Nội dung công tác", item.content || "-"],
+        ["Loại hình công tác", item.businessType || "-"],
+        ...(item.workType ? [["Loại công việc", item.workType]] : []),
+        ["Chỉ huy trực tiếp", item.commander || "-"],
+        ...(isPct ? [["Người cho phép", item.approver || "-"]] : []),
+        [isPct ? "Người cấp phiếu" : "Người ra lệnh", item.issuer || "-"],
+        ...(isPct ? [["Đối tượng thực hiện", item.scope || "-"], ["Trạng thái vi phạm", item.violation || "-"]] : []),
+        ...(item.crmCode ? [["Mã CRM", item.crmCode]] : []),
+        ...(item.moderation ? [["Trạng thái điều phối", item.moderation]] : [])
+      ];
+
+      $("detailGrid").innerHTML = rows.map(([label, val]) => `
+        <div class="detail-label">${escapeHtml(label)}</div>
+        <div class="detail-val">${escapeHtml(val)}</div>
+      `).join("");
+
+      $("detailModal").classList.add("open");
+    }
+
+    function exportCsv() {
+      if (!state.filtered.length) {
+        alert("Không có dữ liệu để xuất.");
+        return;
+      }
+      const headers = [
+        "STT", "Loại", "Mã phiếu/lệnh", "Thời gian cấp/tạo", "Thời gian cập nhật",
+        "Thời gian bắt đầu", "Thời gian kết thúc", "Đơn vị công tác / Tổ", "Đơn vị cấp / ra lệnh",
+        "Nội dung công tác", "Loại hình công tác", "Loại công việc", "Chỉ huy trực tiếp",
+        "Người cho phép", "Người cấp phiếu / ra lệnh", "Mức độ cảnh báo", "Trạng thái"
+      ];
+      const csvEscape = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const lines = [headers.map(csvEscape).join(",")];
+      state.filtered.forEach((x, i) => {
+        lines.push([
+          i + 1, x.ticketType, x.code, x.createdAt, x.updatedAt,
+          x.dateStart, x.dateEnd, x.department, x.organization,
+          x.content, x.businessType, x.workType, x.commander,
+          x.approver, x.issuer, x.riskLevel, x.status
+        ].map(csvEscape).join(","));
+      });
+
+      const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const range = state.data?.dateRange ? `${state.data.dateRange.from}_${state.data.dateRange.to}` : getVnDateParts(0).iso;
+      a.href = url;
+      a.download = `EVNHCMC_PCT_LCT_${range}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function loadStaticData() {
+      showError("");
+      showInfo("");
+      try {
+        const res = await fetch(`data/tickets.json?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        applyData(json, "GitHub Actions (data/tickets.json)");
+      } catch (err) {
+        if (window.APPCT_DATA) {
+          applyData(window.APPCT_DATA, "Dữ liệu cục bộ (data/tickets.js)");
+        } else {
+          showError(
+            "Không tải được data/tickets.json. Hãy chắc chắn GitHub Actions đã chạy thành công ít nhất 1 lần hoặc chạy `python scripts/fetch_appct.py`."
+          );
+          $("tableBody").innerHTML = `<tr><td colspan="9" class="empty-state">Chưa có dữ liệu.</td></tr>`;
+        }
+      }
+    }
+
+    function normalizePctClient(item) {
+      const s = item.status || {};
+      const l = item.levelDangerous || {};
+      return {
+        id: item.id,
+        ticketType: "PCT",
+        code: item.code || "",
+        createdAt: item.createdAt || "",
+        updatedAt: item.updatedAt || "",
+        dateStart: item.dateStart || "",
+        dateEnd: item.dateEnd || "",
+        department: item.DEPARTMENT || "",
+        organization: item.AUTHORIZATION_ORGANIZATIONCODE || "",
+        content: (item.CONTENT_BUSINESS_TRIP || "").trim(),
+        businessType: item.TYPE_BUSINESS || "",
+        workType: "",
+        scope: item.SCOPE_DEPARTMENT || "",
+        commander: item.R_CHTT || "",
+        approver: item.R_CHO_PHEP || "",
+        issuer: item.createdBy || "",
+        crmCode: "",
+        riskLevel: (l.name || "").trim(),
+        riskColor: l.value || "",
+        violation: stripHtml(item.violateTag) || "Không vi phạm",
+        moderation: item.moderation?.status || stripHtml(item.moderationStatus),
+        status: s.name || stripHtml(item.statusTag),
+        statusColor: s.color || "#64748b"
+      };
+    }
+
+    function normalizeLctClient(item) {
+      const s = item.status || {};
+      const l = item.levelDangerous || {};
+      return {
+        id: item.id,
+        ticketType: "LCT",
+        code: item.code || "",
+        createdAt: item.createdAt || "",
+        updatedAt: item.updatedAt || "",
+        dateStart: item.time || "",
+        dateEnd: "",
+        department: item.DEPARTMENT || "",
+        organization: item.ORGANIZATION || "",
+        content: (item.CONTENT_BUSINESS_TRIP || "").trim(),
+        businessType: item.TYPE_LCT || "",
+        workType: item.TYPE_WORK || "",
+        scope: "",
+        commander: item.R_CHTT || "",
+        approver: "",
+        issuer: item.createdBy || "",
+        crmCode: item.CRM_CODE || "",
+        riskLevel: (l.name || "").trim(),
+        riskColor: l.value || "",
+        violation: "",
+        moderation: item.moderation?.status || stripHtml(item.moderationStatus),
+        status: s.name || stripHtml(item.statusTag),
+        statusColor: s.color || "#64748b"
+      };
+    }
+
+    async function fetchAllViaProxy(proxyBase, token, typeTicket, body) {
+      const all = [];
+      let page = 1;
+      while (true) {
+        const url = `${proxyBase}/core-service/api/ticket/list?page=${page}&pageSize=100&typeTicket=${typeTicket}&client=Web`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+            "locale": "vi",
+            "language": "vi"
+          },
+          body: JSON.stringify(body)
+        });
+        const json = await res.json();
+        const batch = json?.data?.list || [];
+        all.push(...batch);
+        const totalPages = Number(json?.data?.pagination?.totalPages || 1);
+        if (page >= totalPages || !batch.length) break;
+        page++;
+      }
+      return all;
+    }
+
+    async function runLiveQuery() {
+      const proxyBase = $("proxyUrl").value.trim().replace(/\/+$/, "");
+      const username = $("liveUser").value.trim();
+      const password = $("livePass").value;
+      const fromIso = $("liveFrom").value;
+      const toIso = $("liveTo").value;
+
+      if (!proxyBase || !username || !password || !fromIso || !toIso) {
+        alert("Vui lòng nhập đầy đủ thông tin.");
+        return;
+      }
+
+      const btn = $("submitLive");
+      btn.disabled = true;
+      btn.textContent = "Đang tải...";
+      showError("");
+
+      try {
+        localStorage.setItem("appct_proxy_url", proxyBase);
+        localStorage.setItem("appct_last_user", username);
+
+        const loginRes = await fetch(`${proxyBase}/core-service/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "locale": "vi", "language": "vi" },
+          body: JSON.stringify({ username, password, remember: true })
+        });
+        const loginJson = await loginRes.json();
+        const token = loginJson?.data?.accessToken;
+        if (!token || loginJson.code !== 1 || loginJson?.data?.resultCode === -1) {
+          throw new Error(loginJson?.message || "Đăng nhập thất bại.");
+        }
+
+        const fromDate = new Date(`${fromIso}T00:00:00+07:00`).toISOString();
+        const toDate = new Date(`${toIso}T23:59:59.999+07:00`).toISOString();
+
+        const [pctRaw, lctRaw] = await Promise.all([
+          fetchAllViaProxy(proxyBase, token, "PCT", { fromDate, toDate, search: "", status: [], level: [] }),
+          fetchAllViaProxy(proxyBase, token, "LCT", {
+            fromDate, toDate, search: "", status: [], typeLCT: [], typeWork: [],
+            level: [], crm: false, organization: [], department: []
+          })
+        ]);
+
+        const [fy, fm, fd] = fromIso.split("-");
+        const [ty, tm, td] = toIso.split("-");
+        const nowStr = new Date().toLocaleString("vi-VN");
+
+        applyData({
+          generatedAtDisplay: `${nowStr} (Trực tiếp)`,
+          dateRange: { from: fromIso, to: toIso, fromDisplay: `${fd}/${fm}/${fy}`, toDisplay: `${td}/${tm}/${ty}` },
+          pct: pctRaw.map(normalizePctClient),
+          lct: lctRaw.map(normalizeLctClient)
+        }, "Truy vấn trực tiếp (API Proxy)");
+
+        $("liveModal").classList.remove("open");
+        $("livePass").value = "";
+        showInfo(`Đã tải trực tiếp thành công ${pctRaw.length} Phiếu công tác và ${lctRaw.length} Lệnh công tác.`);
+      } catch (err) {
+        showError(`Lỗi truy vấn trực tiếp: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Đăng nhập & Tải dữ liệu";
+      }
+    }
+
+    // Event bindings
+    $("tabBar").addEventListener("click", (e) => {
+      const btn = e.target.closest(".tab-btn");
+      if (!btn) return;
+      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.tab = btn.dataset.tab;
+      renderTable();
+    });
+
+    $("searchInput").addEventListener("input", (e) => {
+      state.search = e.target.value;
+      renderTable();
+    });
+    $("dayFilter").addEventListener("change", (e) => {
+      state.day = e.target.value;
+      renderTable();
+    });
+    $("statusFilter").addEventListener("change", (e) => {
+      state.status = e.target.value;
+      renderTable();
+    });
+    $("riskFilter").addEventListener("change", (e) => {
+      state.risk = e.target.value;
+      renderTable();
+    });
+
+    $("btnReset").addEventListener("click", () => {
+      state.search = "";
+      state.day = "ALL";
+      state.status = "ALL";
+      state.risk = "ALL";
+      $("searchInput").value = "";
+      $("dayFilter").value = "ALL";
+      $("statusFilter").value = "ALL";
+      $("riskFilter").value = "ALL";
+      renderTable();
+    });
+
+    $("tableBody").addEventListener("click", (e) => {
+      const tr = e.target.closest("tr[data-idx]");
+      if (!tr) return;
+      const item = state.filtered[Number(tr.dataset.idx)];
+      if (item) openDetail(item);
+    });
+
+    $("closeDetail").addEventListener("click", () => $("detailModal").classList.remove("open"));
+    $("btnCloseDetail2").addEventListener("click", () => $("detailModal").classList.remove("open"));
+    $("detailModal").addEventListener("click", (e) => {
+      if (e.target === $("detailModal")) $("detailModal").classList.remove("open");
+    });
+
+    $("btnLiveModal").addEventListener("click", () => {
+      $("proxyUrl").value = localStorage.getItem("appct_proxy_url") || "";
+      $("liveUser").value = localStorage.getItem("appct_last_user") || "";
+      $("liveFrom").value = getVnDateParts(-1).iso;
+      $("liveTo").value = getVnDateParts(0).iso;
+      $("liveModal").classList.add("open");
+    });
+    $("closeLive").addEventListener("click", () => $("liveModal").classList.remove("open"));
+    $("cancelLive").addEventListener("click", () => $("liveModal").classList.remove("open"));
+    $("liveModal").addEventListener("click", (e) => {
+      if (e.target === $("liveModal")) $("liveModal").classList.remove("open");
+    });
+    $("submitLive").addEventListener("click", runLiveQuery);
+
+    $("btnReload").addEventListener("click", loadStaticData);
+    $("btnExport").addEventListener("click", exportCsv);
+
+    loadStaticData();
+  </script>
+</body>
+</html>
