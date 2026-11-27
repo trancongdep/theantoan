@@ -1,0 +1,40 @@
+# === Bí mật, token & cấu hình cục bộ ===
+.env
+.env.*
+!.env.example
+*token*
+*secret*
+*credential*
+*.key
+*.pem
+*.p12
+*.pfx
+
+# === Trạng thái & dữ liệu hàng đợi Telegram nội bộ ===
+last_update_id.json
+inbox/
+SWITCH_DOFFICE.txt
+
+# === Tài liệu, hướng dẫn điều phối & tệp nội bộ ===
+.agent/
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+*.pdf
+*.zip
+~$*
+
+# === Python cache & tệp tạm hệ thống ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.tmp
+.*.tmp
+*.bak
+Thumbs.db
+.DS_Store

@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Thông báo Điều phối • Đường dây 2</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --bg-elev: #111827;
+      --bg-card: #161f33;
+      --bg-card-hover: #1b2640;
+      --border: #26334d;
+      --border-strong: #374a6d;
+      --text: #e5edf9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.14);
+      --green: #22c55e;
+      --green-soft: rgba(34, 197, 94, 0.15);
+      --amber: #f59e0b;
+      --amber-soft: rgba(245, 158, 11, 0.16);
+      --red: #ef4444;
+      --red-soft: rgba(239, 68, 68, 0.16);
+      --purple: #a855f7;
+      --purple-soft: rgba(168, 85, 247, 0.16);
+      --cyan: #06b6d4;
+      --cyan-soft: rgba(6, 182, 212, 0.16);
+      --indigo: #6366f1;
+      --indigo-soft: rgba(99, 102, 241, 0.16);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: radial-gradient(circle at top right, #13203b 0%, var(--bg) 52%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 14px 12px 48px;
+    }
+
+    /* Header */
+    .topbar {
+      background: rgba(17, 24, 39, 0.88);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 12px;
+    }
+
+    .topbar-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.22);
+      flex-shrink: 0;
+    }
+
+    .pulse-dot.warn {
+      background: var(--amber);
+      box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.22);
+    }
+
+    .brand h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand .sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border-strong);
+      background: #1a253b;
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      padding: 7px 11px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s, border-color 0.15s, transform 0.08s;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: #243352;
+      border-color: var(--accent);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: rgba(56, 189, 248, 0.55);
+      color: #bae6fd;
+    }
+
+    .btn-primary:hover {
+      background: rgba(56, 189, 248, 0.26);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.14);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #fecaca;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.24);
+      border-color: var(--red);
+    }
+
+    .btn-ack {
+      background: rgba(34, 197, 94, 0.18);
+      border-color: rgba(34, 197, 94, 0.6);
+      color: #bbf7d0;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+    }
+
+    .btn-ack:hover {
+      background: rgba(34, 197, 94, 0.3);
+    }
+
+    .status-strip {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(38, 51, 77, 0.75);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .stat-pill {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 0.74rem;
+      color: var(--text);
+    }
+
+    .stat-pill strong {
+      color: var(--accent);
+    }
+
+    .stat-pill.pending strong {
+      color: var(--amber);
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 1.5px dashed var(--border-strong);
+      border-radius: var(--radius);
+      background: rgba(17, 24, 39, 0.55);
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    .dropzone-text {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .dropzone-text strong {
+      color: var(--text);
+    }
+
+    /* Controls / Filters */
+    .filters-box {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-dim);
+      margin-right: 4px;
+      min-width: 44px;
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      background: #0f172a;
+      color: var(--text-muted);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip:hover {
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+
+    .chip.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #e0f2fe;
+    }
+
+    .chip .count {
+      opacity: 0.75;
+      margin-left: 3px;
+      font-weight: 500;
+    }
+
+    .search-input {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 8px 11px;
+      font-size: 0.84rem;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    /* Banner alert */
+    .notice-banner {
+      display: none;
+      margin-bottom: 12px;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      background: rgba(245, 158, 11, 0.12);
+      color: #fde68a;
+      font-size: 0.8rem;
+    }
+
+    .notice-banner.show {
+      display: block;
+    }
+
+    /* List & Cards */
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 13px 14px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .card:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .card.cat-ONLINE { border-left-color: var(--green); }
+    .card.cat-REMIND_15M { border-left-color: var(--amber); }
+    .card.cat-THONG_TIN_CHUNG { border-left-color: var(--accent); }
+    .card.cat-ANH { border-left-color: var(--cyan); }
+    .card.cat-TIN_TUC { border-left-color: #fb7185; }
+    .card.cat-QUY_CHUAN { border-left-color: var(--indigo); }
+    .card.cat-LENH_HE_THONG { border-left-color: var(--purple); }
+    .card.cat-ERROR { border-left-color: var(--red); }
+
+    .card.needs-ack {
+      box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.35);
+    }
+
+    .card-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border: 1px solid transparent;
+    }
+
+    .badge-machine {
+      background: rgba(148, 163, 184, 0.14);
+      border-color: rgba(148, 163, 184, 0.35);
+      color: #cbd5e1;
+    }
+
+    .badge-machine.DELL {
+      background: rgba(56, 189, 248, 0.14);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #7dd3fc;
+    }
+
+    .badge-machine.VP {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: rgba(168, 85, 247, 0.4);
+      color: #d8b4fe;
+    }
+
+    .badge-cat-ONLINE { background: var(--green-soft); color: #86efac; border-color: rgba(34, 197, 94, 0.4); }
+    .badge-cat-REMIND_15M { background: var(--amber-soft); color: #fcd34d; border-color: rgba(245, 158, 11, 0.45); }
+    .badge-cat-THONG_TIN_CHUNG { background: var(--accent-soft); color: #7dd3fc; border-color: rgba(56, 189, 248, 0.4); }
+    .badge-cat-ANH { background: var(--cyan-soft); color: #67e8f9; border-color: rgba(6, 182, 212, 0.4); }
+    .badge-cat-TIN_TUC { background: rgba(251, 113, 133, 0.16); color: #fda4af; border-color: rgba(251, 113, 133, 0.45); }
+    .badge-cat-QUY_CHUAN { background: var(--indigo-soft); color: #a5b4fc; border-color: rgba(99, 102, 241, 0.45); }
+    .badge-cat-LENH_HE_THONG { background: var(--purple-soft); color: #d8b4fe; border-color: rgba(168, 85, 247, 0.45); }
+    .badge-cat-ERROR { background: var(--red-soft); color: #fca5a5; border-color: rgba(239, 68, 68, 0.45); }
+
+    .badge-ack-done {
+      background: var(--green-soft);
+      border-color: rgba(34, 197, 94, 0.45);
+      color: #86efac;
+    }
+
+    .card-time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-content {
+      font-size: 0.93rem;
+      color: #f1f5f9;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-bottom: 10px;
+    }
+
+    .card-image {
+      margin-bottom: 10px;
+    }
+
+    .card-image img {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      display: block;
+      object-fit: contain;
+      background: #0b1120;
+    }
+
+    .card-image a {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 0.76rem;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .card-image a:hover {
+      text-decoration: underline;
+    }
+
+    .card-foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(38, 51, 77, 0.65);
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .meta-left {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-mini {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.73rem;
+      cursor: pointer;
+    }
+
+    .btn-mini:hover {
+      border-color: var(--red);
+      color: #fca5a5;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 36px 16px;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 10px 8px 36px;
+      }
+      .topbar {
+        padding: 12px;
+      }
+      .brand h1 {
+        font-size: 0.96rem;
+      }
+      .btn {
+        padding: 6px 9px;
+        font-size: 0.76rem;
+      }
+      .card {
+        padding: 11px 12px;
+      }
+      .card-content {
+        font-size: 0.89rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="topbar-row">
+        <div class="brand">
+          <span id="liveDot" class="pulse-dot" title="Trạng thái đồng bộ"></span>
+          <div>
+            <h1>Thông báo Điều phối • Đường dây 2</h1>
+            <div class="sub">Đội Quản lý lưới điện 2 — Tự động đọc <code>notifications.json</code> mỗi 30 giây</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="btnRefresh" class="btn btn-primary" type="button">↻ Tải ngay</button>
+          <button id="btnExport" class="btn" type="button">⬇ Xuất JSON</button>
+          <button id="btnClear" class="btn btn-danger" type="button">✕ Xóa</button>
+        </div>
+      </div>
+
+      <div class="status-strip">
+        <div class="stats">
+          <span class="stat-pill">Tổng: <strong id="statTotal">0</strong></span>
+          <span class="stat-pill">Hiển thị: <strong id="statVisible">0</strong></span>
+          <span class="stat-pill pending">Chờ ACK: <strong id="statPendingAck">0</strong></span>
+        </div>
+        <div id="syncStatus">Đang khởi tạo...</div>
+      </div>
+    </header>
+
+    <div id="noticeBanner" class="notice-banner"></div>
+
+    <section id="dropzone" class="dropzone">
+      <div class="dropzone-text">
+        <strong>Kéo thả tệp JSON / REQ_*.json</strong> vào đây hoặc bấm chọn tệp để nạp trực tiếp vào lịch sử trình duyệt.
+      </div>
+      <div>
+        <input id="fileInput" type="file" accept=".json,application/json" multiple hidden />
+        <button id="btnPickFile" class="btn" type="button">📂 Chọn tệp JSON / REQ</button>
+      </div>
+    </section>
+
+    <section class="filters-box">
+      <div class="filter-row" id="machineFilters">
+        <span class="filter-label">Máy</span>
+      </div>
+      <div class="filter-row" id="categoryFilters">
+        <span class="filter-label">Loại</span>
+      </div>
+      <div>
+        <input id="searchInput" class="search-input" type="search" placeholder="Tìm nhanh theo nội dung, người gửi, update_id..." />
+      </div>
+    </section>
+
+    <main id="notificationList" class="list"></main>
+  </div>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "dd2_telegram_notifications_v1";
+      const REFRESH_INTERVAL_MS = 30000;
+
+      const MACHINES = ["ALL", "DELL", "VP"];
+      const CATEGORIES = [
+        "ALL",
+        "ONLINE",
+        "REMIND_15M",
+        "THONG_TIN_CHUNG",
+        "ANH",
+        "TIN_TUC",
+        "QUY_CHUAN",
+        "LENH_HE_THONG",
+        "ERROR"
+      ];
+
+      const CATEGORY_LABELS = {
+        ALL: "Tất cả",
+        ONLINE: "ONLINE",
+        REMIND_15M: "REMIND_15M",
+        THONG_TIN_CHUNG: "THONG_TIN_CHUNG",
+        ANH: "ANH",
+        TIN_TUC: "TIN_TUC",
+        QUY_CHUAN: "QUY_CHUAN",
+        LENH_HE_THONG: "LENH_HE_THONG",
+        ERROR: "ERROR"
+      };
+
+      const CATEGORY_MAP = {
+        ONLINE: "ONLINE",
+        REMIND_15M: "REMIND_15M",
+        REMIND: "REMIND_15M",
+        NHAC_15P: "REMIND_15M",
+        THONG_TIN_CHUNG: "THONG_TIN_CHUNG",
+        CHUNG: "THONG_TIN_CHUNG",
+        ANH: "ANH",
+        ANH_HIEN_TRUONG: "ANH",
+        TIN: "TIN_TUC",
+        TIN_TUC: "TIN_TUC",
+        TIN_TUC_SU_CO: "TIN_TUC",
+        SU_CO: "TIN_TUC",
+        CHUAN: "QUY_CHUAN",
+        QUY_CHUAN: "QUY_CHUAN",
+        QLVH: "QUY_CHUAN",
+        LENH: "LENH_HE_THONG",
+        LENH_HE_THONG: "LENH_HE_THONG",
+        ERROR: "ERROR",
+        LOI: "ERROR"
+      };
+
+      const ACK_CATEGORIES = new Set(["ONLINE", "REMIND_15M"]);
+
+      let state = {
+        items: [],
+        machine: "ALL",
+        category: "ALL",
+        search: "",
+        countdown: REFRESH_INTERVAL_MS / 1000,
+        lastSyncText: "Chưa đồng bộ"
+      };
+
+      const elList = document.getElementById("notificationList");
+      const elMachineFilters = document.getElementById("machineFilters");
+      const elCategoryFilters = document.getElementById("categoryFilters");
+      const elSearch = document.getElementById("searchInput");
+      const elStatTotal = document.getElementById("statTotal");
+      const elStatVisible = document.getElementById("statVisible");
+      const elStatPendingAck = document.getElementById("statPendingAck");
+      const elSyncStatus = document.getElementById("syncStatus");
+      const elLiveDot = document.getElementById("liveDot");
+      const elBanner = document.getElementById("noticeBanner");
+      const elDropzone = document.getElementById("dropzone");
+      const elFileInput = document.getElementById("fileInput");
+
+      function normalizeCategory(rawCat, attachedImage) {
+        const key = String(rawCat || "").trim().toUpperCase();
+        if (CATEGORY_MAP[key]) return CATEGORY_MAP[key];
+        if (attachedImage) return "ANH";
+        return "THONG_TIN_CHUNG";
+      }
+
+      function normalizeMachine(rawMachine) {
+        const val = String(rawMachine || "").trim().toUpperCase();
+        return val || "DELL";
+      }
+
+      function makeId(raw, machine, category, timestamp) {
+        if (raw.id && String(raw.id).trim()) return String(raw.id).trim();
+        if (raw.update_id !== undefined && raw.update_id !== null && String(raw.update_id).trim() !== "") {
+          return `REQ_${raw.update_id}`;
+        }
+        return `${machine}_${category}_${timestamp}`;
+      }
+
+      function normalizeItem(raw, existing = null) {
+        const attachedImage = typeof raw.attached_image === "string"
+          ? raw.attached_image.trim().replace(/\\/g, "/") || null
+          : (existing ? existing.attached_image : null);
+
+        const category = normalizeCategory(raw.category || raw.raw_category, attachedImage);
+        const machine = normalizeMachine(raw.machine || raw.machine_source);
+        const timestamp = String(raw.timestamp || "").trim() || new Date().toISOString();
+        const id = makeId(raw, machine, category, timestamp);
+        const needsAck = Boolean(raw.needs_ack) || ACK_CATEGORIES.has(category);
+
+        let acknowledged = Boolean(raw.acknowledged);
+        let ackedAt = raw.acked_at || null;
+        if (existing && existing.acknowledged && !acknowledged) {
+          acknowledged = true;
+          ackedAt = existing.acked_at || null;
+        }
+
+        return {
+          id,
+          update_id: raw.update_id ?? (existing ? existing.update_id : null),
+          machine,
+          machine_source: machine,
+          category,
+          raw_category: String(raw.raw_category || raw.category || category),
+          timestamp,
+          sender_name: String(raw.sender_name || "Hệ thống").trim() || "Hệ thống",
+          sender_id: raw.sender_id ?? (existing ? existing.sender_id : null),
+          title: String(raw.title || "").trim() || `${category} — ${String(raw.sender_name || "Hệ thống")}`,
+          content: String(raw.content || "").trim(),
+          attached_image: attachedImage,
+          status: String(raw.status || "NEW").trim().toUpperCase(),
+          needs_ack: needsAck,
+          acknowledged,
+          acked_at: ackedAt,
+          source_file: raw.source_file || (existing ? existing.source_file : null)
+        };
+      }
+
+      function extractRecordsFromPayload(parsed) {
+        if (Array.isArray(parsed)) return parsed.filter((x) => x && typeof x === "object");
+        if (parsed && typeof parsed === "object") {
+          if (Array.isArray(parsed.items)) return parsed.items.filter((x) => x && typeof x === "object");
+          if (Array.isArray(parsed.notifications)) return parsed.notifications.filter((x) => x && typeof x === "object");
+          return [parsed];
+        }
+        return [];
+      }
+
+      function sortItems(items) {
+        return items.sort((a, b) => {
+          const tsCmp = String(b.timestamp || "").localeCompare(String(a.timestamp || ""));
+          if (tsCmp !== 0) return tsCmp;
+          return (Number(b.update_id) || 0) - (Number(a.update_id) || 0);
+        });
+      }
+
+      function loadFromStorage() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            state.items = sortItems(parsed.map((item) => normalizeItem(item)));
+          }
+        } catch (err) {
+          console.warn("Không đọc được localStorage:", err);
+        }
+      }
+
+      function saveToStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+        } catch (err) {
+          console.warn("Không lưu được localStorage:", err);
+        }
+      }
+
+      function mergeRecords(incomingList) {
+        const map = new Map(state.items.map((it) => [it.id, it]));
+        let count = 0;
+        for (const raw of incomingList) {
+          if (!raw || typeof raw !== "object") continue;
+          const preview = normalizeItem(raw);
+          const existing = map.get(preview.id) || null;
+          const merged = normalizeItem(raw, existing);
+          map.set(merged.id, merged);
+          count += 1;
+        }
+        state.items = sortItems(Array.from(map.values()));
+        saveToStorage();
+        return count;
+      }
+
+      function formatTime(isoStr) {
+        if (!isoStr) return "—";
+        const d = new Date(isoStr);
+        if (Number.isNaN(d.getTime())) return isoStr;
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      }
+
+      function nowShortTime() {
+        const d = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function showBanner(msg) {
+        if (!msg) {
+          elBanner.classList.remove("show");
+          elBanner.textContent = "";
+          return;
+        }
+        elBanner.textContent = msg;
+        elBanner.classList.add("show");
+      }
+
+      function getFilteredItems() {
+        const q = state.search.trim().toLowerCase();
+        return state.items.filter((item) => {
+          if (state.machine !== "ALL" && item.machine !== state.machine) return false;
+          if (state.category !== "ALL" && item.category !== state.category) return false;
+          if (q) {
+            const hay = [
+              item.content,
+              item.sender_name,
+              item.sender_id,
+              item.update_id,
+              item.category,
+              item.machine,
+              item.title
+            ].join(" ").toLowerCase();
+            if (!hay.includes(q)) return false;
+          }
+          return true;
+        });
+      }
+
+      function renderFilters() {
+        const machineCounts = { ALL: state.items.length, DELL: 0, VP: 0 };
+        const catCounts = { ALL: 0 };
+        CATEGORIES.forEach((c) => { catCounts[c] = 0; });
+
+        for (const it of state.items) {
+          if (machineCounts[it.machine] !== undefined) machineCounts[it.machine] += 1;
+          if (state.machine === "ALL" || it.machine === state.machine) {
+            catCounts.ALL += 1;
+            if (catCounts[it.category] !== undefined) catCounts[it.category] += 1;
+          }
+        }
+
+        elMachineFilters.innerHTML = `<span class="filter-label">Máy</span>` + MACHINES.map((m) => `
+          <button type="button" class="chip ${state.machine === m ? "active" : ""}" data-machine="${m}">
+            ${m}<span class="count">(${machineCounts[m] || 0})</span>
+          </button>
+        `).join("");
+
+        elCategoryFilters.innerHTML = `<span class="filter-label">Loại</span>` + CATEGORIES.map((c) => `
+          <button type="button" class="chip ${state.category === c ? "active" : ""}" data-category="${c}">
+            ${CATEGORY_LABELS[c]}<span class="count">(${catCounts[c] || 0})</span>
+          </button>
+        `).join("");
+      }
+
+      function renderList() {
+        const visible = getFilteredItems();
+        const pendingAck = state.items.filter((i) => i.needs_ack && !i.acknowledged).length;
+
+        elStatTotal.textContent = String(state.items.length);
+        elStatVisible.textContent = String(visible.length);
+        elStatPendingAck.textContent = String(pendingAck);
+
+        renderFilters();
+
+        if (!visible.length) {
+          elList.innerHTML = `
+            <div class="empty">
+              Không có thông báo nào khớp bộ lọc hiện tại.<br />
+              Hãy chạy <code>python build_notifications.py</code> hoặc kéo thả tệp <code>notifications.json</code> / <code>REQ_*.json</code> vào khung phía trên.
+            </div>
+          `;
+          return;
+        }
+
+        elList.innerHTML = visible.map((item) => {
+          const needsAckAction = item.needs_ack && !item.acknowledged;
+          const imgHtml = item.attached_image
+            ? `
+              <div class="card-image">
+                <img src="${escapeHtml(item.attached_image)}" alt="Ảnh đính kèm" loading="lazy" onerror="this.style.display='none'" />
+                <a href="${escapeHtml(item.attached_image)}" target="_blank" rel="noopener">📎 ${escapeHtml(item.attached_image)}</a>
+              </div>
+            `
+            : "";
+
+          const ackControl = item.needs_ack
+            ? (item.acknowledged
+                ? `<span class="badge badge-ack-done" title="Đã xác nhận lúc ${escapeHtml(formatTime(item.acked_at))}">✓ Đã ACK${item.acked_at ? " • " + escapeHtml(formatTime(item.acked_at).split(" ")[1] || "") : ""}</span>`
+                : `<button type="button" class="btn btn-ack" data-ack="${escapeHtml(item.id)}">✓ Xác nhận ACK</button>`)
+            : "";
+
+          const uidMeta = item.update_id !== null && item.update_id !== undefined
+            ? `<span>ID: <code>${escapeHtml(item.update_id)}</code></span>`
+            : "";
+
+          return `
+            <article class="card cat-${escapeHtml(item.category)} ${needsAckAction ? "needs-ack" : ""}">
+              <div class="card-head">
+                <div class="badges">
+                  <span class="badge badge-machine ${escapeHtml(item.machine)}">${escapeHtml(item.machine)}</span>
+                  <span class="badge badge-cat-${escapeHtml(item.category)}">${escapeHtml(item.category)}</span>
+                  <span class="badge badge-machine">${escapeHtml(item.status)}</span>
+                </div>
+                <span class="card-time">${escapeHtml(formatTime(item.timestamp))}</span>
+              </div>
+              <div class="card-content">${escapeHtml(item.content || "(Không có nội dung văn bản)")}</div>
+              ${imgHtml}
+              <div class="card-foot">
+                <div class="meta-left">
+                  <span>👤 <strong>${escapeHtml(item.sender_name)}</strong>${item.sender_id ? ` (${escapeHtml(item.sender_id)})` : ""}</span>
+                  ${uidMeta}
+                </div>
+                <div class="card-actions">
+                  ${ackControl}
+                  <button type="button" class="btn-mini" data-delete="${escapeHtml(item.id)}" title="Xóa mục này">Xóa</button>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join("");
+      }
+
+      function updateSyncStrip() {
+        elSyncStatus.textContent = `${state.lastSyncText} • Tự tải lại sau ${state.countdown}s`;
+      }
+
+      async function fetchNotificationsJson(manual = false) {
+        try {
+          const resp = await fetch(`./notifications.json?t=${Date.now()}`, { cache: "no-store" });
+          if (!resp.ok) {
+            throw new Error(`HTTP ${resp.status}`);
+          }
+          const data = await resp.json();
+          const records = extractRecordsFromPayload(data);
+          mergeRecords(records);
+          state.lastSyncText = `Đã đọc notifications.json (${records.length} mục) lúc ${nowShortTime()}`;
+          elLiveDot.classList.remove("warn");
+          showBanner("");
+          renderList();
+        } catch (err) {
+          elLiveDot.classList.add("warn");
+          state.lastSyncText = `Không đọc tự động được lúc ${nowShortTime()}`;
+          if (location.protocol === "file:") {
+            showBanner("Trình duyệt đang mở trực tiếp qua file:// nên chặn tự đọc notifications.json. Hãy dùng nút 'Chọn tệp JSON / REQ' (hoặc kéo thả notifications.json), hoặc chạy máy chủ cục bộ: python -m http.server 8000.");
+          } else if (manual) {
+            showBanner(`Không thể tải notifications.json (${err.message}). Kiểm tra tệp đã được tạo bằng python build_notifications.py chưa.`);
+          }
+        } finally {
+          state.countdown = REFRESH_INTERVAL_MS / 1000;
+          updateSyncStrip();
+        }
+      }
+
+      async function handleFiles(fileList) {
+        const files = Array.from(fileList || []);
+        if (!files.length) return;
+        let importedCount = 0;
+        let failedFiles = [];
+
+        for (const file of files) {
+          try {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            const records = extractRecordsFromPayload(parsed);
+            importedCount += mergeRecords(records);
+          } catch (err) {
+            failedFiles.push(file.name);
+          }
+        }
+
+        renderList();
+        if (failedFiles.length) {
+          showBanner(`Đã nạp ${importedCount} bản ghi. Lỗi đọc tệp: ${failedFiles.join(", ")}`);
+        } else {
+          showBanner(`Đã nạp thành công ${importedCount} bản ghi từ ${files.length} tệp JSON và lưu vào trình duyệt.`);
+        }
+      }
+
+      function exportJson() {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        const payload = {
+          updated_at: now.toISOString(),
+          source: "thongbao.html",
+          total: state.items.length,
+          items: state.items
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2) + "\n"], { type: "application/json;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `notifications_${stamp}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // Event listeners
+      elMachineFilters.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-machine]");
+        if (!btn) return;
+        state.machine = btn.dataset.machine;
+        renderList();
+      });
+
+      elCategoryFilters.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-category]");
+        if (!btn) return;
+        state.category = btn.dataset.category;
+        renderList();
+      });
+
+      elSearch.addEventListener("input", () => {
+        state.search = elSearch.value;
+        renderList();
+      });
+
+      elList.addEventListener("click", (e) => {
+        const ackBtn = e.target.closest("[data-ack]");
+        if (ackBtn) {
+          const id = ackBtn.dataset.ack;
+          const item = state.items.find((x) => x.id === id);
+          if (item) {
+            item.acknowledged = true;
+            item.acked_at = new Date().toISOString();
+            item.status = "ACK";
+            saveToStorage();
+            renderList();
+          }
+          return;
+        }
+
+        const delBtn = e.target.closest("[data-delete]");
+        if (delBtn) {
+          const id = delBtn.dataset.delete;
+          state.items = state.items.filter((x) => x.id !== id);
+          saveToStorage();
+          renderList();
+        }
+      });
+
+      document.getElementById("btnRefresh").addEventListener("click", () => fetchNotificationsJson(true));
+      document.getElementById("btnExport").addEventListener("click", exportJson);
+      document.getElementById("btnClear").addEventListener("click", () => {
+        if (!state.items.length) return;
+        if (!confirm("Xóa toàn bộ lịch sử thông báo đang lưu trên trình duyệt?")) return;
+        state.items = [];
+        localStorage.removeItem(STORAGE_KEY);
+        renderList();
+        showBanner("Đã xóa lịch sử trên trình duyệt. Bấm 'Tải ngay' nếu muốn đọc lại từ notifications.json.");
+      });
+
+      document.getElementById("btnPickFile").addEventListener("click", () => elFileInput.click());
+      elFileInput.addEventListener("change", () => {
+        handleFiles(elFileInput.files);
+        elFileInput.value = "";
+      });
+
+      ["dragenter", "dragover"].forEach((evt) => {
+        elDropzone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          elDropzone.classList.add("dragover");
+        });
+      });
+      ["dragleave", "drop"].forEach((evt) => {
+        elDropzone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          elDropzone.classList.remove("dragover");
+        });
+      });
+      elDropzone.addEventListener("drop", (e) => {
+        handleFiles(e.dataTransfer.files);
+      });
+
+      // Init
+      loadFromStorage();
+      renderList();
+      fetchNotificationsJson(false);
+
+      setInterval(() => {
+        state.countdown -= 1;
+        if (state.countdown <= 0) {
+          fetchNotificationsJson(false);
+        } else {
+          updateSyncStrip();
+        }
+      }, 1000);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "updated_at": "2026-11-28T04:38:07+07:00",
+  "source": "build_notifications.py",
+  "total": 1,
+  "items": [
+    {
+      "id": "REQ_541942445",
+      "update_id": 541942445,
+      "machine": "DELL",
+      "machine_source": "DELL",
+      "category": "THONG_TIN_CHUNG",
+      "raw_category": "THONG_TIN_CHUNG",
+      "timestamp": "2026-11-28T04:33:35+07:00",
+      "sender_name": "Trần Công Đẹp",
+      "sender_id": 5467714705,
+      "title": "Thông tin chung — Trần Công Đẹp",
+      "content": "Xin chào buổi sáng",
+      "attached_image": null,
+      "status": "NEW",
+      "needs_ack": false,
+      "acknowledged": false,
+      "acked_at": null,
+      "source_file": "inbox/REQ_DELL_20261128_043335_541942445.json"
+    }
+  ]
+}
