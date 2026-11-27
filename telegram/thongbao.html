@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Thông báo Điều phối • Đường dây 2</title>
+  <title>Thông báo Điều phối • Đường dây 2 (Firebase Live)</title>
   <style>
     :root {
       --bg: #0b1120;
@@ -55,9 +55,8 @@
       padding: 14px 12px 48px;
     }
 
-    /* Header */
     .topbar {
-      background: rgba(17, 24, 39, 0.88);
+      background: rgba(17, 24, 39, 0.9);
       backdrop-filter: blur(10px);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -129,13 +128,18 @@
       white-space: nowrap;
     }
 
-    .btn:hover {
+    .btn:hover:not(:disabled) {
       background: #243352;
       border-color: var(--accent);
     }
 
-    .btn:active {
+    .btn:active:not(:disabled) {
       transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: wait;
     }
 
     .btn-primary {
@@ -144,7 +148,7 @@
       color: #bae6fd;
     }
 
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       background: rgba(56, 189, 248, 0.26);
     }
 
@@ -154,7 +158,7 @@
       color: #fecaca;
     }
 
-    .btn-danger:hover {
+    .btn-danger:hover:not(:disabled) {
       background: rgba(239, 68, 68, 0.24);
       border-color: var(--red);
     }
@@ -167,7 +171,7 @@
       font-size: 0.78rem;
     }
 
-    .btn-ack:hover {
+    .btn-ack:hover:not(:disabled) {
       background: rgba(34, 197, 94, 0.3);
     }
 
@@ -207,7 +211,6 @@
       color: var(--amber);
     }
 
-    /* Dropzone */
     .dropzone {
       border: 1.5px dashed var(--border-strong);
       border-radius: var(--radius);
@@ -236,7 +239,6 @@
       color: var(--text);
     }
 
-    /* Controls / Filters */
     .filters-box {
       background: var(--bg-elev);
       border: 1px solid var(--border);
@@ -313,7 +315,6 @@
       color: var(--text-dim);
     }
 
-    /* Banner alert */
     .notice-banner {
       display: none;
       margin-bottom: 12px;
@@ -325,11 +326,16 @@
       font-size: 0.8rem;
     }
 
+    .notice-banner.ok {
+      border-color: rgba(34, 197, 94, 0.45);
+      background: rgba(34, 197, 94, 0.12);
+      color: #bbf7d0;
+    }
+
     .notice-banner.show {
       display: block;
     }
 
-    /* List & Cards */
     .list {
       display: flex;
       flex-direction: column;
@@ -540,14 +546,14 @@
     <header class="topbar">
       <div class="topbar-row">
         <div class="brand">
-          <span id="liveDot" class="pulse-dot" title="Trạng thái đồng bộ"></span>
+          <span id="liveDot" class="pulse-dot" title="Trạng thái đồng bộ Firebase"></span>
           <div>
             <h1>Thông báo Điều phối • Đường dây 2</h1>
-            <div class="sub">Đội Quản lý lưới điện 2 — Tự động đọc <code>notifications.json</code> mỗi 30 giây</div>
+            <div class="sub">Firebase RTDB (<code>dd2_notifications</code>) — Tự động đồng bộ mỗi 15 giây</div>
           </div>
         </div>
         <div class="actions">
-          <button id="btnRefresh" class="btn btn-primary" type="button">↻ Tải ngay</button>
+          <button id="btnSyncFirebase" class="btn btn-primary" type="button">↻ Đồng bộ Firebase ngay</button>
           <button id="btnExport" class="btn" type="button">⬇ Xuất JSON</button>
           <button id="btnClear" class="btn btn-danger" type="button">✕ Xóa</button>
         </div>
@@ -559,7 +565,7 @@
           <span class="stat-pill">Hiển thị: <strong id="statVisible">0</strong></span>
           <span class="stat-pill pending">Chờ ACK: <strong id="statPendingAck">0</strong></span>
         </div>
-        <div id="syncStatus">Đang khởi tạo...</div>
+        <div id="syncStatus">Đang kết nối Firebase...</div>
       </div>
     </header>
 
@@ -567,7 +573,7 @@
 
     <section id="dropzone" class="dropzone">
       <div class="dropzone-text">
-        <strong>Kéo thả tệp JSON / REQ_*.json</strong> vào đây hoặc bấm chọn tệp để nạp trực tiếp vào lịch sử trình duyệt.
+        <strong>Kéo thả tệp JSON / REQ_*.json</strong> vào đây hoặc bấm chọn tệp để nạp thủ công (lưu đệm cục bộ khi mất mạng).
       </div>
       <div>
         <input id="fileInput" type="file" accept=".json,application/json" multiple hidden />
@@ -583,7 +589,7 @@
         <span class="filter-label">Loại</span>
       </div>
       <div>
-        <input id="searchInput" class="search-input" type="search" placeholder="Tìm nhanh theo nội dung, người gửi, update_id..." />
+        <input id="searchInput" class="search-input" type="search" placeholder="Tìm nhanh theo nội dung, người gửi, record_id, update_id..." />
       </div>
     </section>
 
@@ -592,8 +598,12 @@
 
   <script>
     (() => {
-      const STORAGE_KEY = "dd2_telegram_notifications_v1";
-      const REFRESH_INTERVAL_MS = 30000;
+      const FIREBASE_DB_URL = "https://doautoread-default-rtdb.firebaseio.com";
+      const FIREBASE_NODE = "dd2_notifications";
+      const FIREBASE_ENDPOINT = `${FIREBASE_DB_URL}/${FIREBASE_NODE}.json`;
+
+      const STORAGE_KEY = "dd2_telegram_notifications_v2";
+      const REFRESH_INTERVAL_MS = 15000;
 
       const MACHINES = ["ALL", "DELL", "VP"];
       const CATEGORIES = [
@@ -650,7 +660,8 @@
         category: "ALL",
         search: "",
         countdown: REFRESH_INTERVAL_MS / 1000,
-        lastSyncText: "Chưa đồng bộ"
+        lastSyncText: "Chưa đồng bộ",
+        syncing: false
       };
 
       const elList = document.getElementById("notificationList");
@@ -665,6 +676,15 @@
       const elBanner = document.getElementById("noticeBanner");
       const elDropzone = document.getElementById("dropzone");
       const elFileInput = document.getElementById("fileInput");
+      const elBtnSync = document.getElementById("btnSyncFirebase");
+
+      function sanitizeKey(rawKey) {
+        return String(rawKey || "")
+          .trim()
+          .replace(/[^A-Za-z0-9_-]+/g, "_")
+          .replace(/_+/g, "_")
+          .replace(/^_|_$/g, "") || "UNKNOWN_RECORD";
+      }
 
       function normalizeCategory(rawCat, attachedImage) {
         const key = String(rawCat || "").trim().toUpperCase();
@@ -675,15 +695,28 @@
 
       function normalizeMachine(rawMachine) {
         const val = String(rawMachine || "").trim().toUpperCase();
-        return val || "DELL";
+        return val ? sanitizeKey(val) : "DELL";
       }
 
-      function makeId(raw, machine, category, timestamp) {
-        if (raw.id && String(raw.id).trim()) return String(raw.id).trim();
+      function makeRecordId(raw, machine, category, timestamp) {
+        const prefix = `${machine}_`;
         if (raw.update_id !== undefined && raw.update_id !== null && String(raw.update_id).trim() !== "") {
-          return `REQ_${raw.update_id}`;
+          return sanitizeKey(`${machine}_${String(raw.update_id).trim()}`);
         }
-        return `${machine}_${category}_${timestamp}`;
+        if (raw.event_id && String(raw.event_id).trim()) {
+          const ev = String(raw.event_id).trim();
+          return sanitizeKey(ev.toUpperCase().startsWith(prefix) ? ev : `${machine}_${ev}`);
+        }
+        for (const field of ["record_id", "id"]) {
+          const candidate = String(raw[field] || "").trim();
+          if (!candidate) continue;
+          if (/^REQ_\d+$/i.test(candidate)) {
+            return sanitizeKey(`${machine}_${candidate.split("_")[1]}`);
+          }
+          return sanitizeKey(candidate.toUpperCase().startsWith(prefix) ? candidate : `${machine}_${candidate}`);
+        }
+        const compactTs = String(timestamp || "").replace(/[^0-9]/g, "").slice(0, 14) || Date.now();
+        return sanitizeKey(`${machine}_${category}_${compactTs}`);
       }
 
       function normalizeItem(raw, existing = null) {
@@ -694,18 +727,22 @@
         const category = normalizeCategory(raw.category || raw.raw_category, attachedImage);
         const machine = normalizeMachine(raw.machine || raw.machine_source);
         const timestamp = String(raw.timestamp || "").trim() || new Date().toISOString();
-        const id = makeId(raw, machine, category, timestamp);
+        const recordId = makeRecordId(raw, machine, category, timestamp);
         const needsAck = Boolean(raw.needs_ack) || ACK_CATEGORIES.has(category);
 
-        let acknowledged = Boolean(raw.acknowledged);
+        let acked = Boolean(raw.acked ?? raw.acknowledged ?? false);
         let ackedAt = raw.acked_at || null;
-        if (existing && existing.acknowledged && !acknowledged) {
-          acknowledged = true;
+        if (existing && (existing.acked || existing.acknowledged) && !acked) {
+          acked = true;
           ackedAt = existing.acked_at || null;
         }
 
+        let status = String(raw.status || "NEW").trim().toUpperCase();
+        if (acked && status === "NEW") status = "ACK";
+
         return {
-          id,
+          record_id: recordId,
+          id: recordId,
           update_id: raw.update_id ?? (existing ? existing.update_id : null),
           machine,
           machine_source: machine,
@@ -717,20 +754,35 @@
           title: String(raw.title || "").trim() || `${category} — ${String(raw.sender_name || "Hệ thống")}`,
           content: String(raw.content || "").trim(),
           attached_image: attachedImage,
-          status: String(raw.status || "NEW").trim().toUpperCase(),
+          status,
           needs_ack: needsAck,
-          acknowledged,
+          acked,
+          acknowledged: acked,
           acked_at: ackedAt,
           source_file: raw.source_file || (existing ? existing.source_file : null)
         };
       }
 
       function extractRecordsFromPayload(parsed) {
-        if (Array.isArray(parsed)) return parsed.filter((x) => x && typeof x === "object");
-        if (parsed && typeof parsed === "object") {
+        if (!parsed) return [];
+        if (Array.isArray(parsed)) {
+          return parsed.filter((x) => x && typeof x === "object");
+        }
+        if (typeof parsed === "object") {
           if (Array.isArray(parsed.items)) return parsed.items.filter((x) => x && typeof x === "object");
           if (Array.isArray(parsed.notifications)) return parsed.notifications.filter((x) => x && typeof x === "object");
-          return [parsed];
+          // Đối tượng đơn lẻ (REQ_*.json)
+          if ("content" in parsed || "update_id" in parsed || "category" in parsed) {
+            return [parsed];
+          }
+          // Object map từ Firebase RTDB: { "DELL_541942445": { ... }, "VP_ONLINE_...": { ... } }
+          const records = [];
+          for (const [key, val] of Object.entries(parsed)) {
+            if (val && typeof val === "object") {
+              records.push({ record_id: val.record_id || key, ...val });
+            }
+          }
+          return records;
         }
         return [];
       }
@@ -764,15 +816,24 @@
         }
       }
 
-      function mergeRecords(incomingList) {
-        const map = new Map(state.items.map((it) => [it.id, it]));
+      function mergeRecords(incomingList, remoteAuthoritative = false) {
+        const map = new Map(state.items.map((it) => [it.record_id, it]));
         let count = 0;
         for (const raw of incomingList) {
           if (!raw || typeof raw !== "object") continue;
           const preview = normalizeItem(raw);
-          const existing = map.get(preview.id) || null;
-          const merged = normalizeItem(raw, existing);
-          map.set(merged.id, merged);
+          const existing = map.get(preview.record_id) || null;
+          const merged = normalizeItem(raw, remoteAuthoritative ? null : existing);
+          if (remoteAuthoritative && existing) {
+            // Nếu máy này đã ACK cục bộ khi offline mà Firebase chưa kịp nhận, giữ cờ ACK cục bộ
+            if (existing.acked && !merged.acked) {
+              merged.acked = true;
+              merged.acknowledged = true;
+              merged.acked_at = existing.acked_at;
+              merged.status = "ACK";
+            }
+          }
+          map.set(merged.record_id, merged);
           count += 1;
         }
         state.items = sortItems(Array.from(map.values()));
@@ -803,13 +864,14 @@
           .replace(/'/g, "&#39;");
       }
 
-      function showBanner(msg) {
+      function showBanner(msg, isOk = false) {
         if (!msg) {
-          elBanner.classList.remove("show");
+          elBanner.classList.remove("show", "ok");
           elBanner.textContent = "";
           return;
         }
         elBanner.textContent = msg;
+        elBanner.classList.toggle("ok", isOk);
         elBanner.classList.add("show");
       }
 
@@ -820,6 +882,7 @@
           if (state.category !== "ALL" && item.category !== state.category) return false;
           if (q) {
             const hay = [
+              item.record_id,
               item.content,
               item.sender_name,
               item.sender_id,
@@ -862,7 +925,7 @@
 
       function renderList() {
         const visible = getFilteredItems();
-        const pendingAck = state.items.filter((i) => i.needs_ack && !i.acknowledged).length;
+        const pendingAck = state.items.filter((i) => i.needs_ack && !i.acked).length;
 
         elStatTotal.textContent = String(state.items.length);
         elStatVisible.textContent = String(visible.length);
@@ -874,14 +937,14 @@
           elList.innerHTML = `
             <div class="empty">
               Không có thông báo nào khớp bộ lọc hiện tại.<br />
-              Hãy chạy <code>python build_notifications.py</code> hoặc kéo thả tệp <code>notifications.json</code> / <code>REQ_*.json</code> vào khung phía trên.
+              Nhấn <strong>Đồng bộ Firebase ngay</strong> hoặc kéo thả tệp <code>notifications.json</code> / <code>REQ_*.json</code> vào khung phía trên.
             </div>
           `;
           return;
         }
 
         elList.innerHTML = visible.map((item) => {
-          const needsAckAction = item.needs_ack && !item.acknowledged;
+          const needsAckAction = item.needs_ack && !item.acked;
           const imgHtml = item.attached_image
             ? `
               <div class="card-image">
@@ -892,13 +955,9 @@
             : "";
 
           const ackControl = item.needs_ack
-            ? (item.acknowledged
+            ? (item.acked
                 ? `<span class="badge badge-ack-done" title="Đã xác nhận lúc ${escapeHtml(formatTime(item.acked_at))}">✓ Đã ACK${item.acked_at ? " • " + escapeHtml(formatTime(item.acked_at).split(" ")[1] || "") : ""}</span>`
-                : `<button type="button" class="btn btn-ack" data-ack="${escapeHtml(item.id)}">✓ Xác nhận ACK</button>`)
-            : "";
-
-          const uidMeta = item.update_id !== null && item.update_id !== undefined
-            ? `<span>ID: <code>${escapeHtml(item.update_id)}</code></span>`
+                : `<button type="button" class="btn btn-ack" data-ack="${escapeHtml(item.record_id)}">✓ Xác nhận (ACK)</button>`)
             : "";
 
           return `
@@ -916,11 +975,11 @@
               <div class="card-foot">
                 <div class="meta-left">
                   <span>👤 <strong>${escapeHtml(item.sender_name)}</strong>${item.sender_id ? ` (${escapeHtml(item.sender_id)})` : ""}</span>
-                  ${uidMeta}
+                  <span>Node: <code>${escapeHtml(item.record_id)}</code></span>
                 </div>
                 <div class="card-actions">
                   ${ackControl}
-                  <button type="button" class="btn-mini" data-delete="${escapeHtml(item.id)}" title="Xóa mục này">Xóa</button>
+                  <button type="button" class="btn-mini" data-delete="${escapeHtml(item.record_id)}" title="Xóa khỏi bộ nhớ trình duyệt">Xóa</button>
                 </div>
               </div>
             </article>
@@ -929,33 +988,86 @@
       }
 
       function updateSyncStrip() {
-        elSyncStatus.textContent = `${state.lastSyncText} • Tự tải lại sau ${state.countdown}s`;
+        elSyncStatus.textContent = `${state.lastSyncText} • Làm mới sau ${state.countdown}s`;
       }
 
-      async function fetchNotificationsJson(manual = false) {
+      async function syncFromFirebase(manual = false) {
+        if (state.syncing) return;
+        state.syncing = true;
+        elBtnSync.disabled = true;
+
         try {
-          const resp = await fetch(`./notifications.json?t=${Date.now()}`, { cache: "no-store" });
+          const resp = await fetch(`${FIREBASE_ENDPOINT}?t=${Date.now()}`, { cache: "no-store" });
           if (!resp.ok) {
             throw new Error(`HTTP ${resp.status}`);
           }
           const data = await resp.json();
           const records = extractRecordsFromPayload(data);
-          mergeRecords(records);
-          state.lastSyncText = `Đã đọc notifications.json (${records.length} mục) lúc ${nowShortTime()}`;
+          mergeRecords(records, true);
+          state.lastSyncText = `Firebase OK (${records.length} mục) lúc ${nowShortTime()}`;
           elLiveDot.classList.remove("warn");
-          showBanner("");
+          if (manual) {
+            showBanner(`Đã đồng bộ ${records.length} thông báo mới nhất từ Firebase (${FIREBASE_NODE}) lúc ${nowShortTime()}.`, true);
+          } else {
+            showBanner("");
+          }
           renderList();
         } catch (err) {
           elLiveDot.classList.add("warn");
-          state.lastSyncText = `Không đọc tự động được lúc ${nowShortTime()}`;
-          if (location.protocol === "file:") {
-            showBanner("Trình duyệt đang mở trực tiếp qua file:// nên chặn tự đọc notifications.json. Hãy dùng nút 'Chọn tệp JSON / REQ' (hoặc kéo thả notifications.json), hoặc chạy máy chủ cục bộ: python -m http.server 8000.");
-          } else if (manual) {
-            showBanner(`Không thể tải notifications.json (${err.message}). Kiểm tra tệp đã được tạo bằng python build_notifications.py chưa.`);
-          }
+          state.lastSyncText = `Mất kết nối Firebase lúc ${nowShortTime()} (dùng cache)`;
+          showBanner(`Không thể kết nối Firebase (${err.message}). Đang hiển thị dữ liệu đệm lưu trên localStorage.`);
         } finally {
+          state.syncing = false;
+          elBtnSync.disabled = false;
           state.countdown = REFRESH_INTERVAL_MS / 1000;
           updateSyncStrip();
+        }
+      }
+
+      async function sendAckToFirebase(recordId, buttonEl) {
+        const item = state.items.find((x) => x.record_id === recordId);
+        if (!item) return;
+
+        const ackedAt = new Date().toISOString();
+        if (buttonEl) {
+          buttonEl.disabled = true;
+          buttonEl.textContent = "Đang gửi ACK...";
+        }
+
+        const patchBody = {
+          acked: true,
+          acknowledged: true,
+          acked_at: ackedAt,
+          status: "ACK"
+        };
+
+        const nodeUrl = `${FIREBASE_DB_URL}/${FIREBASE_NODE}/${encodeURIComponent(recordId)}.json`;
+
+        try {
+          const resp = await fetch(nodeUrl, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(patchBody)
+          });
+          if (!resp.ok) {
+            throw new Error(`HTTP ${resp.status}`);
+          }
+          item.acked = true;
+          item.acknowledged = true;
+          item.acked_at = ackedAt;
+          item.status = "ACK";
+          saveToStorage();
+          renderList();
+          showBanner(`Đã xác nhận ACK cho ${recordId} và đồng bộ lên Firebase thành công.`, true);
+        } catch (err) {
+          // Lưu tạm cục bộ phòng khi mất mạng
+          item.acked = true;
+          item.acknowledged = true;
+          item.acked_at = ackedAt;
+          item.status = "ACK";
+          saveToStorage();
+          renderList();
+          showBanner(`Đã ghi ACK cục bộ cho ${recordId}, nhưng chưa gửi lên Firebase được (${err.message}).`);
         }
       }
 
@@ -970,7 +1082,7 @@
             const text = await file.text();
             const parsed = JSON.parse(text);
             const records = extractRecordsFromPayload(parsed);
-            importedCount += mergeRecords(records);
+            importedCount += mergeRecords(records, false);
           } catch (err) {
             failedFiles.push(file.name);
           }
@@ -980,7 +1092,7 @@
         if (failedFiles.length) {
           showBanner(`Đã nạp ${importedCount} bản ghi. Lỗi đọc tệp: ${failedFiles.join(", ")}`);
         } else {
-          showBanner(`Đã nạp thành công ${importedCount} bản ghi từ ${files.length} tệp JSON và lưu vào trình duyệt.`);
+          showBanner(`Đã nạp thủ công ${importedCount} bản ghi từ ${files.length} tệp JSON vào bộ đệm trình duyệt.`, true);
         }
       }
 
@@ -991,6 +1103,7 @@
         const payload = {
           updated_at: now.toISOString(),
           source: "thongbao.html",
+          firebase_node: FIREBASE_NODE,
           total: state.items.length,
           items: state.items
         };
@@ -998,14 +1111,13 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `notifications_${stamp}.json`;
+        a.download = `dd2_notifications_${stamp}.json`;
         document.body.appendChild(a);
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
       }
 
-      // Event listeners
       elMachineFilters.addEventListener("click", (e) => {
         const btn = e.target.closest("[data-machine]");
         if (!btn) return;
@@ -1028,36 +1140,28 @@
       elList.addEventListener("click", (e) => {
         const ackBtn = e.target.closest("[data-ack]");
         if (ackBtn) {
-          const id = ackBtn.dataset.ack;
-          const item = state.items.find((x) => x.id === id);
-          if (item) {
-            item.acknowledged = true;
-            item.acked_at = new Date().toISOString();
-            item.status = "ACK";
-            saveToStorage();
-            renderList();
-          }
+          sendAckToFirebase(ackBtn.dataset.ack, ackBtn);
           return;
         }
 
         const delBtn = e.target.closest("[data-delete]");
         if (delBtn) {
           const id = delBtn.dataset.delete;
-          state.items = state.items.filter((x) => x.id !== id);
+          state.items = state.items.filter((x) => x.record_id !== id);
           saveToStorage();
           renderList();
         }
       });
 
-      document.getElementById("btnRefresh").addEventListener("click", () => fetchNotificationsJson(true));
+      elBtnSync.addEventListener("click", () => syncFromFirebase(true));
       document.getElementById("btnExport").addEventListener("click", exportJson);
       document.getElementById("btnClear").addEventListener("click", () => {
         if (!state.items.length) return;
-        if (!confirm("Xóa toàn bộ lịch sử thông báo đang lưu trên trình duyệt?")) return;
+        if (!confirm("Xóa toàn bộ lịch sử đang lưu trên bộ đệm trình duyệt? (Không xóa dữ liệu trên Firebase)")) return;
         state.items = [];
         localStorage.removeItem(STORAGE_KEY);
         renderList();
-        showBanner("Đã xóa lịch sử trên trình duyệt. Bấm 'Tải ngay' nếu muốn đọc lại từ notifications.json.");
+        showBanner("Đã xóa bộ đệm trên trình duyệt. Bấm 'Đồng bộ Firebase ngay' để tải lại từ máy chủ.");
       });
 
       document.getElementById("btnPickFile").addEventListener("click", () => elFileInput.click());
@@ -1082,15 +1186,15 @@
         handleFiles(e.dataTransfer.files);
       });
 
-      // Init
+      // Khởi động: nạp cache offline ngay lập tức, sau đó đồng bộ Firebase
       loadFromStorage();
       renderList();
-      fetchNotificationsJson(false);
+      syncFromFirebase(false);
 
       setInterval(() => {
         state.countdown -= 1;
         if (state.countdown <= 0) {
-          fetchNotificationsJson(false);
+          syncFromFirebase(false);
         } else {
           updateSyncStrip();
         }
